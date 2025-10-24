@@ -188,7 +188,7 @@ const App: React.FC = () => {
         </section>
       </main>
       <footer className="text-center py-6 text-text/50">
-        <p>Powered by Google Gemini</p>
+        <p>Powered by xAI Grok</p>
       </footer>
     </div>
   );
