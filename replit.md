@@ -1,12 +1,12 @@
 # Chord & Scale Generator
 
 ## Overview
-An AI-powered chord progression and scale generator for guitarists, built with React, TypeScript, and Vite. Uses Google's Gemini API to generate intelligent chord progressions with multiple guitar voicings and suggested scales for improvisation.
+An AI-powered chord progression and scale generator for guitarists, built with React, TypeScript, and Vite. Uses xAI's Grok API to generate intelligent chord progressions with multiple guitar voicings and suggested scales for improvisation.
 
 ## Tech Stack
 - **Frontend**: React 19.2 with TypeScript
 - **Build Tool**: Vite 6.2
-- **AI Service**: Google Gemini API (@google/genai)
+- **AI Service**: xAI Grok API (via OpenAI SDK)
 - **Styling**: Tailwind CSS (via inline styles and CSS variables)
 
 ## Project Structure
@@ -42,17 +42,24 @@ An AI-powered chord progression and scale generator for guitarists, built with R
 ## Setup & Configuration
 - **Port**: 5000 (configured for Replit environment)
 - **Host**: 0.0.0.0 (allows proxy access)
-- **Required Secret**: GEMINI_API_KEY
+- **Required Secret**: XAI_API_KEY
+- **AI Model**: grok-beta (131K token context window)
 
 ## Recent Changes
+- **2025-10-24**: Migration from Google Gemini to xAI Grok
+  - Replaced @google/genai with openai npm package
+  - Updated service to use xAI's API endpoint (https://api.x.ai/v1)
+  - Switched to grok-beta model for chord generation
+  - Fixed module initialization issue with lazy API client creation
+  - Removed import map from index.html (Vite handles bundling)
+  - Updated environment variables to use XAI_API_KEY
 - **2025-10-24**: Initial Replit setup
   - Changed port from 3000 to 5000
-  - Configured HMR for Replit's proxy environment
   - Added .gitignore for Node.js project
   - Set up workflow for development server
 
 ## Environment Variables
-- `GEMINI_API_KEY`: Google Gemini API key (required for AI features)
+- `XAI_API_KEY`: xAI API key (required for AI features)
 
 ## User Preferences
 None documented yet.

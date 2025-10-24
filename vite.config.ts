@@ -9,15 +9,11 @@ export default defineConfig(({ mode }) => {
         port: 5000,
         host: '0.0.0.0',
         strictPort: true,
-        hmr: {
-          clientPort: 443,
-          protocol: 'wss',
-        },
       },
       plugins: [react()],
       define: {
-        'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY)
+        'process.env.API_KEY': JSON.stringify(env.XAI_API_KEY),
+        'process.env.XAI_API_KEY': JSON.stringify(env.XAI_API_KEY)
       },
       resolve: {
         alias: {
