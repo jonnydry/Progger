@@ -23,7 +23,7 @@ An AI-powered chord progression and scale generator for guitarists, built with R
 │   ├── VoicingDiagram.tsx
 │   └── VoicingsGrid.tsx
 ├── services/           # API integration
-│   └── geminiService.ts
+│   └── xaiService.ts
 ├── utils/              # Utility functions
 │   └── colorUtils.ts
 ├── App.tsx             # Main application component

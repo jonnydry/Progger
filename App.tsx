@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect, lazy, Suspense, useRef } from 
 import { Controls } from './components/Controls';
 import { VoicingsGrid } from './components/VoicingsGrid';
 import { SkeletonScaleDiagram } from './components/ScaleDiagram';
-import { generateChordProgression } from './services/geminiService';
+import { generateChordProgression } from './services/xaiService';
 import type { ProgressionResult } from './types';
 import { KEYS, MODES, THEMES, COMMON_PROGRESSIONS } from './constants';
 import { ThemeSelector } from './components/ThemeSelector';
