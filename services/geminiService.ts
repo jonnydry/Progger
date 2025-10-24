@@ -99,7 +99,7 @@ IMPORTANT: Return ONLY valid JSON, no additional text or markdown formatting.`;
     console.log("Fetching from xAI Grok API:", cacheKey);
     const openai = getOpenAI();
     const response = await openai.chat.completions.create({
-      model: "grok-beta",
+      model: "grok-4-fast-reasoning",
       messages: [
         {
           role: "system",

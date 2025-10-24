@@ -43,16 +43,17 @@ An AI-powered chord progression and scale generator for guitarists, built with R
 - **Port**: 5000 (configured for Replit environment)
 - **Host**: 0.0.0.0 (allows proxy access)
 - **Required Secret**: XAI_API_KEY
-- **AI Model**: grok-beta (131K token context window)
+- **AI Model**: grok-4-fast-reasoning
 
 ## Recent Changes
 - **2025-10-24**: Migration from Google Gemini to xAI Grok
   - Replaced @google/genai with openai npm package
   - Updated service to use xAI's API endpoint (https://api.x.ai/v1)
-  - Switched to grok-beta model for chord generation
+  - Switched to grok-4-fast-reasoning model (updated from deprecated grok-beta)
   - Fixed module initialization issue with lazy API client creation
   - Removed import map from index.html (Vite handles bundling)
   - Updated environment variables to use XAI_API_KEY
+  - Added server.allowedHosts: true to vite.config.ts for Replit proxy compatibility
 - **2025-10-24**: Initial Replit setup
   - Changed port from 3000 to 5000
   - Added .gitignore for Node.js project
