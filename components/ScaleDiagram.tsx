@@ -102,7 +102,7 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo }) => {
             <div className="relative bg-gradient-to-b from-amber-800/20 via-amber-900/40 to-amber-950/50 dark:from-yellow-950/20 dark:to-yellow-950/50 p-2 rounded">
                 {/* Fret numbers row */}
                 <div 
-                    className="grid relative z-10"
+                    className="grid relative z-20"
                     style={{ gridTemplateColumns: '2rem repeat(18, minmax(0, 1fr))' }}
                 >
                     <div /> 
