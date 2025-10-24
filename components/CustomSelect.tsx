@@ -1,0 +1,82 @@
+
+import React, { useState, useRef, useEffect } from 'react';
+
+interface CustomSelectProps {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  options: (string | { name: string; value: string })[];
+  disabled?: boolean;
+}
+
+export const CustomSelect: React.FC<CustomSelectProps> = ({ label, value, onChange, options, disabled = false }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const selectRef = useRef<HTMLDivElement>(null);
+
+  const handleSelect = (optionValue: string) => {
+    onChange(optionValue);
+    setIsOpen(false);
+  };
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (selectRef.current && !selectRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const selectedOption = options.find(opt => (typeof opt === 'string' ? opt : opt.value) === value);
+  const displayValue = selectedOption ? (typeof selectedOption === 'string' ? selectedOption : selectedOption.name) : value;
+
+  return (
+    <div className="flex flex-col relative" ref={selectRef}>
+      <label htmlFor={label} className={`mb-2 text-sm font-semibold ${disabled ? 'text-text/40' : 'text-text/70'}`}>
+        {label}
+      </label>
+      <button
+        id={label}
+        type="button"
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        className={`relative text-left bg-background border-2 border-border rounded-md px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary transition w-full flex justify-between items-center shadow-inner ${disabled ? 'bg-text/5 text-text/50 cursor-not-allowed' : 'hover:border-primary/50'}`}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        disabled={disabled}
+      >
+        {displayValue}
+        <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-text/50 transition-transform duration-200 ${isOpen ? 'transform rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      {isOpen && !disabled && (
+        <ul
+          className="absolute z-20 mt-1 w-full top-full bg-surface rounded-md shadow-lg border border-border overflow-hidden max-h-60 overflow-y-auto"
+          role="listbox"
+        >
+          {options.map((option) => {
+            const optionValue = typeof option === 'string' ? option : option.value;
+            const optionName = typeof option === 'string' ? option : option.name;
+            const isSelected = value === optionValue;
+
+            return (
+              <li
+                key={optionValue}
+                onClick={() => handleSelect(optionValue)}
+                className={`px-3 py-2 cursor-pointer text-text hover:bg-primary/80 hover:text-background transition-colors ${isSelected ? 'bg-primary text-background font-semibold' : ''}`}
+                role="option"
+                aria-selected={isSelected}
+              >
+                {optionName}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </div>
+  );
+};

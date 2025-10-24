@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chord Progression Generator</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            fontFamily: {
+              mono: ['"Source Code Pro"', 'monospace'],
+              bebas: ['"Bebas Neue"', 'sans-serif'],
+            },
+            colors: {
+              primary: 'hsl(var(--color-primary) / <alpha-value>)',
+              secondary: 'hsl(var(--color-secondary) / <alpha-value>)',
+              accent: 'hsl(var(--color-accent) / <alpha-value>)',
+              text: 'hsl(var(--color-text) / <alpha-value>)',
+              background: 'hsl(var(--color-background) / <alpha-value>)',
+              surface: 'hsl(var(--color-surface) / <alpha-value>)',
+              border: 'hsl(var(--color-border) / <alpha-value>)',
+            }
+          },
+        },
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.26.0"
+  }
+}
+</script>
+<script>
+    // Set theme on initial load to prevent flash
+    if (localStorage.theme === 'light' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: light)').matches)) {
+        document.documentElement.classList.remove('dark')
+    } else {
+        document.documentElement.classList.add('dark')
+    }
+</script>
+<style>
+    /* Default theme to prevent FOUC (Crimson Noir) */
+    :root {
+      --color-primary: 0 50% 50%;
+      --color-secondary: 0 10% 60%;
+      --color-accent: 0 60% 60%;
+      --color-text: 0 5% 20%;
+      --color-background: 0 0% 97%;
+      --color-surface: 0 0% 94%;
+      --color-border: 0 5% 20% / 0.1;
+    }
+
+    .dark {
+      --color-primary: 0 55% 60%;
+      --color-secondary: 0 5% 40%;
+      --color-accent: 0 65% 65%;
+      --color-text: 0 0% 88%;
+      --color-background: 0 0% 12%;
+      --color-surface: 0 0% 18%;
+      --color-border: 0 0% 88% / 0.15;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      opacity: 0.3;
+      background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80" width="80" height="80"><path fill="%23000000" fill-opacity="0.03" d="M0 0h40v40H0zM40 40h40v40H40z"/></svg>');
+    }
+
+    @keyframes slide-in {
+      from { 
+        opacity: 0; 
+        transform: translateY(1rem); 
+      }
+      to { 
+        opacity: 1; 
+        transform: translateY(0); 
+      }
+    }
+    .animate-slide-in {
+      animation: slide-in 0.3s ease-out forwards;
+    }
+
+    @keyframes fade-scale-in {
+      from { opacity: 0; transform: scale(0.98); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .animate-fade-scale-in {
+      animation: fade-scale-in 0.5s ease-out forwards;
+    }
+
+    @keyframes cross-fade-in {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    .animate-cross-fade-in {
+      animation: cross-fade-in 0.2s ease-in-out forwards;
+    }
+</style>
+</head>
+  <body class="font-mono bg-background text-text transition-colors duration-300">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

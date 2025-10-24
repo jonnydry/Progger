@@ -1,0 +1,5 @@
+{
+  "name": "Chord Progression Generator",
+  "description": "An application to generate interesting chord progressions with guitar voicings using AI. Select a key and mode, and let the AI provide you with creative ideas and how to play them on guitar.",
+  "requestFramePermissions": []
+}
