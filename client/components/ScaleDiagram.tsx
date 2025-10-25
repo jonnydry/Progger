@@ -160,16 +160,16 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo }) => {
             <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
         </div>
       
-      <div className="w-full bg-surface rounded-lg p-4 shadow-lg border border-border text-xs overflow-x-auto">
-        <div className="min-w-[800px] pr-4">
+      <div className="w-full bg-surface rounded-lg shadow-lg border border-border text-xs overflow-hidden">
+        <div className="min-w-[800px] px-6 py-5">
             {/* Main Fretboard Area with Fade Effect */}
             <div 
-                className="relative p-2 rounded"
+                className="relative -mx-6 -my-5 px-6 py-5"
                 style={{
-                    background: 'linear-gradient(to bottom, hsl(var(--color-primary) / 0.08), hsl(var(--color-secondary) / 0.12), hsl(var(--color-primary) / 0.15))',
-                    maskImage: 'linear-gradient(to right, transparent 0%, black 2%, black 98%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 3%, black 97%, transparent 100%)',
+                    background: 'linear-gradient(to bottom, hsl(var(--color-primary) / 0.03), hsl(var(--color-secondary) / 0.04), hsl(var(--color-primary) / 0.05))',
+                    maskImage: 'linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 4%, black 96%, transparent 100%)',
                     maskComposite: 'intersect',
-                    WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 2%, black 98%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 3%, black 97%, transparent 100%)',
+                    WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 4%, black 96%, transparent 100%)',
                     WebkitMaskComposite: 'source-in'
                 }}
             >
