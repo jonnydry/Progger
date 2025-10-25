@@ -106,7 +106,7 @@ const NoteDot: React.FC<{ noteName: string, fret: number, isRoot: boolean }> = (
             </div>
             {/* Tooltip */}
             <div className="absolute bottom-full mb-2 w-max px-2 py-1 bg-surface text-text text-xs rounded-md shadow-lg border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus:opacity-100 group-focus:visible transition-all duration-200 pointer-events-none z-20">
-                {noteName} &ndash; Fret {fret}
+                {noteName} {fret > 0 && `(${fret})`}
                 <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-surface"></div>
             </div>
         </button>
