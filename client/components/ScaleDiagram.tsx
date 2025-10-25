@@ -172,17 +172,19 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo }) => {
             <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
         </div>
       
-      <div className="w-full bg-surface rounded-lg shadow-lg border border-border overflow-x-auto">
-        <div className="min-w-[600px] md:min-w-[800px] px-4 md:px-6 py-4 md:py-5 text-[10px] md:text-xs">
+      <div className="w-full bg-surface rounded-lg shadow-lg border border-border overflow-x-auto overflow-y-hidden">
+        <div className={`${isMobile ? 'min-w-[500px]' : 'min-w-[800px]'} px-4 md:px-6 py-4 md:py-5 text-[10px] md:text-xs`}>
             {/* Main Fretboard Area with Fade Effect */}
             <div 
-                className="relative -mx-4 md:-mx-6 -my-4 md:-my-5 px-4 md:px-6 py-4 md:py-5"
+                className="relative md:-mx-6 md:-my-5 md:px-6 md:py-5"
                 style={{
                     background: 'linear-gradient(to bottom, hsl(var(--color-primary) / 0.03), hsl(var(--color-secondary) / 0.04), hsl(var(--color-primary) / 0.05))',
-                    maskImage: 'linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 4%, black 96%, transparent 100%)',
-                    maskComposite: 'intersect',
-                    WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 4%, black 96%, transparent 100%)',
-                    WebkitMaskComposite: 'source-in'
+                    ...(isMobile ? {} : {
+                        maskImage: 'linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 4%, black 96%, transparent 100%)',
+                        maskComposite: 'intersect',
+                        WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 4%, black 96%, transparent 100%)',
+                        WebkitMaskComposite: 'source-in'
+                    })
                 }}
             >
                 {/* Fret numbers row */}
