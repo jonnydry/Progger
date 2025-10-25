@@ -162,11 +162,15 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo }) => {
       
       <div className="w-full bg-surface rounded-lg p-4 shadow-lg border border-border text-xs overflow-x-auto">
         <div className="min-w-[800px] pr-4">
-            {/* Main Fretboard Area */}
+            {/* Main Fretboard Area with Fade Effect */}
             <div 
                 className="relative p-2 rounded"
                 style={{
-                    background: 'linear-gradient(to bottom, hsl(var(--color-primary) / 0.08), hsl(var(--color-secondary) / 0.12), hsl(var(--color-primary) / 0.15))'
+                    background: 'linear-gradient(to bottom, hsl(var(--color-primary) / 0.08), hsl(var(--color-secondary) / 0.12), hsl(var(--color-primary) / 0.15))',
+                    maskImage: 'linear-gradient(to right, transparent 0%, black 2%, black 98%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 3%, black 97%, transparent 100%)',
+                    maskComposite: 'intersect',
+                    WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 2%, black 98%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 3%, black 97%, transparent 100%)',
+                    WebkitMaskComposite: 'source-in'
                 }}
             >
                 {/* Fret numbers row */}
