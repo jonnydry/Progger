@@ -35,12 +35,12 @@ export const VoicingDiagram: React.FC<VoicingDiagramProps> = ({ chordName, voici
         {/* Fretboard number */}
         {effectiveFirstFret > 1 && (
           <text
-            x={PADDING - 12}
+            x={0}
             y={PADDING + FRET_HEIGHT * 0.8}
-            fontSize="12"
+            fontSize="11"
             fill="currentColor"
-            className="text-text/60"
-            textAnchor="middle"
+            className="text-text/70 font-semibold"
+            textAnchor="start"
           >
             {effectiveFirstFret}
           </text>
