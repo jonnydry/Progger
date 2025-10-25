@@ -81,6 +81,21 @@ An AI-powered chord progression and scale generator for guitarists, built with R
 - **AI Model**: grok-4-fast-reasoning with max_tokens: 1500
 
 ## Recent Changes
+- **2025-10-25**: Mobile-responsive scale diagrams
+  - Added responsive fret count: 12 frets on mobile (<768px), 17 frets on desktop
+  - Implemented dynamic window resize detection for seamless mobile/desktop transitions
+  - Reduced minimum width from 800px to 600px on mobile for better small-screen fit
+  - Responsive font sizes: 10px on mobile, 12px (text-xs) on desktop
+  - Smaller note dots on mobile: 6x6px vs 7x7px on desktop
+  - Responsive spacing: reduced padding and margins on mobile for better space utilization
+  - Adaptive grid columns: 1.5rem string labels on mobile, 2rem on desktop
+  - Filter fret inlays to only show those within visible fret range
+  - Horizontal scroll support for diagrams that exceed viewport width
+- **2025-10-25**: Scale diagram visual enhancements
+  - Implemented theme-based fretboard gradient using CSS variables (3-5% opacity)
+  - Added elegant fade effect with CSS masks to blend fretboard into card background
+  - Integrated fretboard seamlessly with display card using negative margins
+  - Created unified single-object appearance for fretboard and card
 - **2025-10-25**: ScaleDiagram performance optimizations
   - Wrapped ScaleDiagram, FretInlay, NoteDot, and ViewToggle components in React.memo to prevent unnecessary re-renders
   - Added useMemo hooks for expensive calculations (rootNoteValue, scaleNoteValues, fingeringLookup)
