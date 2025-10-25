@@ -1,5 +1,7 @@
 import OpenAI from "openai";
 import type { ChordInProgression, ProgressionResult, ScaleInfo } from '../types';
+import { getChordVoicings } from '../utils/chordLibrary';
+import { getScaleFingering, getScaleNotes } from '../utils/scaleLibrary';
 
 const getOpenAI = () => {
   if (!process.env.API_KEY) {
@@ -12,21 +14,20 @@ const getOpenAI = () => {
   });
 };
 
-interface RawChordVoicing {
-    frets: string[];
-    firstFret?: number;
-}
-
-interface RawChordInProgression {
+interface SimpleChord {
     chordName: string;
     musicalFunction: string;
     relationToKey: string;
-    voicings: RawChordVoicing[];
+}
+
+interface SimpleScale {
+    name: string;
+    rootNote: string;
 }
 
 interface ProgressionResultFromAPI {
-    progression: RawChordInProgression[];
-    scales: ScaleInfo[];
+    progression: SimpleChord[];
+    scales: SimpleScale[];
 }
 
 export async function generateChordProgression(key: string, mode: string, includeTensions: boolean, numChords: number, selectedProgression: string): Promise<ProgressionResult> {
@@ -53,23 +54,15 @@ export async function generateChordProgression(key: string, mode: string, includ
 {
   "progression": [
     {
-      "chordName": "string (e.g., 'Cmaj7', 'Am7')",
+      "chordName": "string (e.g., 'Cmaj7', 'Am7', 'G7b9')",
       "musicalFunction": "string (e.g., 'Tonic', 'Dominant 7th', 'Subdominant')",
-      "relationToKey": "string (Roman numeral like 'I', 'V7', 'vi')",
-      "voicings": [
-        {
-          "frets": ["string array of 6 items for guitar strings, use 'x' for muted, numbers as strings for frets"],
-          "firstFret": "optional integer for diagram starting fret"
-        }
-      ]
+      "relationToKey": "string (Roman numeral like 'I', 'V7', 'vi')"
     }
   ],
   "scales": [
     {
-      "name": "string (full scale name like 'G Major (Ionian)')",
-      "rootNote": "string (e.g., 'G')",
-      "notes": ["array of all notes in the scale"],
-      "fingering": [[3 integers], [3 integers], [3 integers], [3 integers], [3 integers], [3 integers]]
+      "name": "string (full scale name like 'G Major', 'A Dorian', 'C Minor Pentatonic')",
+      "rootNote": "string (e.g., 'G', 'A', 'C')"
     }
   ]
 }`;
@@ -78,19 +71,17 @@ export async function generateChordProgression(key: string, mode: string, includ
 ${progressionInstruction}
 ${tensionInstruction}
 
-For EACH chord in the progression, provide its name, its musical function (e.g., 'Tonic', 'Dominant 7th'), its relation to the key as a Roman numeral (e.g., 'I', 'V7', 'vi'), and an array of 3-4 different, playable guitar voicings at various positions on the neck.
+For EACH chord in the progression, provide:
+- chordName: The full chord name (e.g., 'Cmaj7', 'Am7', 'G7b9')
+- musicalFunction: Its role in the progression (e.g., 'Tonic', 'Dominant 7th', 'Subdominant')
+- relationToKey: Roman numeral notation (e.g., 'I', 'V7', 'vi')
 
-For each voicing, provide a 'frets' array and an optional 'firstFret'.
-The 'frets' array must have 6 items, representing guitar strings from low E (6th string) to high e (1st string).
-Use 'x' for muted strings and numbers represented as strings for frets (e.g., "0", "1", "12").
-If a voicing doesn't start at the open position, 'firstFret' should indicate the starting fret of the chord diagram.
+Additionally, suggest 2 to 3 suitable scales that can be improvised over this entire progression.
+For each scale, provide:
+- name: Full scale name (e.g., 'C Major', 'A Dorian', 'G Minor Pentatonic')
+- rootNote: The root note (e.g., 'C', 'A', 'G')
 
-Additionally, suggest a list of 2 to 3 suitable modal scales that can be improvised over this entire progression.
-For each scale, provide its full name, root note, all notes in the scale, and a "3-notes-per-string" fingering pattern.
-When listing scale notes, use standard music notation and avoid confusing enharmonic equivalents (e.g., use C instead of B#, E instead of Fb) unless required by the key signature.
-The 'fingering' property must be an array of 6 inner arrays (one per string), each containing exactly three integer fret numbers.
-
-Return the entire result as a single JSON object that adheres to this schema:
+Return ONLY valid JSON matching this schema:
 ${schemaDescription}
 
 IMPORTANT: Return ONLY valid JSON, no additional text or markdown formatting.`;
@@ -112,7 +103,7 @@ IMPORTANT: Return ONLY valid JSON, no additional text or markdown formatting.`;
       ],
       response_format: { type: "json_object" },
       temperature: 0.7,
-      max_tokens: 4000,
+      max_tokens: 1000,
     });
 
     const jsonText = response.choices[0].message.content?.trim();
@@ -125,26 +116,28 @@ IMPORTANT: Return ONLY valid JSON, no additional text or markdown formatting.`;
     if (!resultFromApi.progression || !resultFromApi.scales || !Array.isArray(resultFromApi.progression) || !Array.isArray(resultFromApi.scales)) {
         throw new Error("Invalid data structure received from API.");
     }
-    if (resultFromApi.progression.some(p => !p.voicings || p.voicings.length === 0 || !p.musicalFunction || !p.relationToKey)) {
-        throw new Error("API returned incomplete chord data (missing voicings, function, or relation to key).");
+    if (resultFromApi.progression.some(p => !p.chordName || !p.musicalFunction || !p.relationToKey)) {
+        throw new Error("API returned incomplete chord data (missing name, function, or relation to key).");
     }
-    if (resultFromApi.scales.some(s => !s.fingering || s.fingering.length !== 6 || s.fingering.some(f => !Array.isArray(f) || f.length !== 3))) {
-        throw new Error("Invalid scale fingering data received from API.");
+    if (resultFromApi.scales.some(s => !s.name || !s.rootNote)) {
+        throw new Error("API returned incomplete scale data (missing name or root note).");
     }
 
     const progression: ChordInProgression[] = resultFromApi.progression.map(chord => ({
-        ...chord,
-        voicings: chord.voicings.map(voicing => ({
-            ...voicing,
-            frets: voicing.frets.map(fret => (fret.toLowerCase() === 'x' ? 'x' : parseInt(fret, 10)))
-        }))
+        chordName: chord.chordName,
+        musicalFunction: chord.musicalFunction,
+        relationToKey: chord.relationToKey,
+        voicings: getChordVoicings(chord.chordName)
     }));
 
-    if (progression.some(c => c.voicings.some(v => v.frets.some(f => typeof f === 'number' && isNaN(f))))) {
-        throw new Error("Invalid fret number received from API. Expected numbers or 'x'.");
-    }
+    const scales: ScaleInfo[] = resultFromApi.scales.map(scale => ({
+        name: scale.name,
+        rootNote: scale.rootNote,
+        notes: getScaleNotes(scale.rootNote, scale.name),
+        fingering: getScaleFingering(scale.name, scale.rootNote)
+    }));
 
-    const finalResult = { progression, scales: resultFromApi.scales };
+    const finalResult = { progression, scales };
     
     try {
         sessionStorage.setItem(cacheKey, JSON.stringify(finalResult));
