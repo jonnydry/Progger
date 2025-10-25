@@ -163,7 +163,7 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo }) => {
       <div className="w-full bg-surface rounded-lg p-4 shadow-lg border border-border text-xs overflow-x-auto">
         <div className="min-w-[800px] pr-4">
             {/* Main Fretboard Area */}
-            <div className="relative bg-gradient-to-b from-amber-800/20 via-amber-900/40 to-amber-950/50 dark:from-yellow-950/20 dark:to-yellow-950/50 p-2 rounded">
+            <div className="relative bg-gradient-to-b from-amber-200/60 via-amber-300/70 to-amber-400/60 dark:from-yellow-950/20 dark:to-yellow-950/50 p-2 rounded">
                 {/* Fret numbers row */}
                 <div 
                     className="grid relative z-20"
