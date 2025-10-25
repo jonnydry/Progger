@@ -81,6 +81,20 @@ An AI-powered chord progression and scale generator for guitarists, built with R
 - **AI Model**: grok-4-fast-reasoning with max_tokens: 1500
 
 ## Recent Changes
+- **2025-10-25**: ScaleDiagram performance optimizations
+  - Wrapped ScaleDiagram, FretInlay, NoteDot, and ViewToggle components in React.memo to prevent unnecessary re-renders
+  - Added useMemo hooks for expensive calculations (rootNoteValue, scaleNoteValues, fingeringLookup)
+  - Converted fingering arrays to Sets for O(1) lookup performance (replaced .includes() with .has())
+  - Improved rendering efficiency for complex scale diagrams with many SVG elements
+  - Safe handling of undefined fingering data with nullish coalescing (`frets ?? []`)
+- **2025-10-25**: Chord diagram visual improvements
+  - Reduced note dot size from 9px to 7px for cleaner appearance
+  - Centered fret numbers between card border and fretboard for better visual balance
+  - Added 18px left margin to prevent overlap between fret numbers and note positions
+- **2025-10-25**: Scale diagram rendering fixes
+  - Removed duplicate fret 0 column from scale diagrams
+  - Correctly display frets 1-17 with open string notes in string label column
+  - Simplified tooltips by removing redundant "Fret" label
 - **2025-10-25**: Full-stack conversion with Replit Auth integration
   - Converted from frontend-only to full-stack architecture with Express backend (port 3001) and Vite frontend (port 5000)
   - Integrated Replit Auth for user authentication with PostgreSQL database
