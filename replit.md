@@ -56,6 +56,10 @@ An AI-powered chord progression and scale generator for guitarists, built with R
 - **AI Model**: grok-4-fast-reasoning
 
 ## Recent Changes
+- **2025-10-25**: Fixed scale diagram transposition bug
+  - Corrected `detectFingeringBaseRoot` to use low E string (fingering[0]) instead of high E string
+  - Scale patterns now correctly anchor from the 6th string, aligning with standard guitar pedagogy
+  - All scale fingerings now transpose to correct fret positions for any requested root note
 - **2025-10-25**: Major architectural refactoring to client-side data libraries
   - Created comprehensive `chordLibrary.ts` with 200+ voicings for all chord types
   - Created comprehensive `scaleLibrary.ts` with 15+ scales and multiple fingering patterns

@@ -232,7 +232,7 @@ function extractRootFromScaleName(scaleName: string): string {
 }
 
 function detectFingeringBaseRoot(fingering: number[][]): string {
-  const lowestFret = Math.min(...fingering[fingering.length - 1]);
+  const lowestFret = Math.min(...fingering[0]);
   
   const STANDARD_TUNING_LOW_E = 0;
   const fretValue = (STANDARD_TUNING_LOW_E + lowestFret) % 12;
