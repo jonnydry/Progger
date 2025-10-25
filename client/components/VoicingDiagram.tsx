@@ -13,10 +13,11 @@ export const VoicingDiagram: React.FC<VoicingDiagramProps> = ({ chordName, voici
   const STRING_COUNT = 6;
   const FRET_HEIGHT = 30;
   const STRING_WIDTH = 25;
-  const DOT_RADIUS = 9;
+  const DOT_RADIUS = 7;
   const PADDING = 20;
+  const LEFT_MARGIN = 18;
 
-  const width = (STRING_COUNT - 1) * STRING_WIDTH + PADDING * 2;
+  const width = LEFT_MARGIN + (STRING_COUNT - 1) * STRING_WIDTH + PADDING * 2;
   const height = FRET_COUNT * FRET_HEIGHT + PADDING * 2.5;
 
   const highestFret = Math.max(...frets.filter(f => typeof f === 'number').map(f => f as number));
@@ -35,7 +36,7 @@ export const VoicingDiagram: React.FC<VoicingDiagramProps> = ({ chordName, voici
         {/* Fretboard number */}
         {effectiveFirstFret > 1 && (
           <text
-            x={0}
+            x={4}
             y={PADDING + FRET_HEIGHT * 0.8}
             fontSize="11"
             fill="currentColor"
@@ -50,9 +51,9 @@ export const VoicingDiagram: React.FC<VoicingDiagramProps> = ({ chordName, voici
         {Array.from({ length: FRET_COUNT + 1 }).map((_, i) => (
           <line
             key={`fret-${i}`}
-            x1={PADDING}
+            x1={LEFT_MARGIN + PADDING}
             y1={PADDING + i * FRET_HEIGHT}
-            x2={PADDING + (STRING_COUNT - 1) * STRING_WIDTH}
+            x2={LEFT_MARGIN + PADDING + (STRING_COUNT - 1) * STRING_WIDTH}
             y2={PADDING + i * FRET_HEIGHT}
             strokeWidth={i === 0 && effectiveFirstFret === 1 ? 3 : 1}
             className={i === 0 && effectiveFirstFret === 1 ? 'stroke-text/60' : 'stroke-text/20'}
@@ -63,9 +64,9 @@ export const VoicingDiagram: React.FC<VoicingDiagramProps> = ({ chordName, voici
         {Array.from({ length: STRING_COUNT }).map((_, i) => (
           <line
             key={`string-${i}`}
-            x1={PADDING + i * STRING_WIDTH}
+            x1={LEFT_MARGIN + PADDING + i * STRING_WIDTH}
             y1={PADDING}
-            x2={PADDING + i * STRING_WIDTH}
+            x2={LEFT_MARGIN + PADDING + i * STRING_WIDTH}
             y2={PADDING + FRET_COUNT * FRET_HEIGHT}
             className="stroke-text/30"
             strokeWidth={1.5 - (i * 0.1)}
@@ -74,7 +75,7 @@ export const VoicingDiagram: React.FC<VoicingDiagramProps> = ({ chordName, voici
 
         {/* Open/Muted string indicators */}
         {frets.map((fret, i) => {
-          const cx = PADDING + i * STRING_WIDTH;
+          const cx = LEFT_MARGIN + PADDING + i * STRING_WIDTH;
           const cy = PADDING - 10;
           if (fret === 'x') {
             return (
@@ -96,7 +97,7 @@ export const VoicingDiagram: React.FC<VoicingDiagramProps> = ({ chordName, voici
           const fretIndex = fret - (effectiveFirstFret > 1 ? effectiveFirstFret -1 : 0);
           if (fretIndex < 1 || fretIndex > FRET_COUNT) return null;
 
-          const cx = PADDING + stringIndex * STRING_WIDTH;
+          const cx = LEFT_MARGIN + PADDING + stringIndex * STRING_WIDTH;
           const cy = PADDING + (fretIndex * FRET_HEIGHT) - (FRET_HEIGHT / 2);
 
           return (
