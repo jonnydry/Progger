@@ -18,6 +18,37 @@ const noteToValue = (note: string): number => {
 
 const valueToNote = (value: number): string => ALL_NOTES_SHARP[value % 12];
 
+const SCALE_PATTERNS: Record<string, number[]> = {
+  'major': [0, 2, 4, 5, 7, 9, 11],
+  'ionian': [0, 2, 4, 5, 7, 9, 11],
+  'minor': [0, 2, 3, 5, 7, 8, 10],
+  'aeolian': [0, 2, 3, 5, 7, 8, 10],
+  'dorian': [0, 2, 3, 5, 7, 9, 10],
+  'phrygian': [0, 1, 3, 5, 7, 8, 10],
+  'lydian': [0, 2, 4, 6, 7, 9, 11],
+  'mixolydian': [0, 2, 4, 5, 7, 9, 10],
+  'locrian': [0, 1, 3, 5, 6, 8, 10],
+  'harmonic minor': [0, 2, 3, 5, 7, 8, 11],
+  'melodic minor': [0, 2, 3, 5, 7, 9, 11],
+  'pentatonic major': [0, 2, 4, 7, 9],
+  'pentatonic minor': [0, 3, 5, 7, 10],
+  'blues': [0, 3, 5, 6, 7, 10],
+};
+
+const getScaleNotes = (rootNote: string, scaleName: string): number[] => {
+  const rootValue = noteToValue(rootNote);
+  if (rootValue === -1) return [];
+
+  const lowerName = scaleName.toLowerCase();
+  for (const [pattern, intervals] of Object.entries(SCALE_PATTERNS)) {
+    if (lowerName.includes(pattern)) {
+      return intervals.map(interval => (rootValue + interval) % 12);
+    }
+  }
+  
+  return [];
+};
+
 const STANDARD_TUNING = ['E', 'B', 'G', 'D', 'A', 'E']; // High to low
 const FRET_COUNT = 17;
 const INLAY_FRETS = [3, 5, 7, 9, 15];
@@ -87,7 +118,13 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo }) => {
   const [viewMode, setViewMode] = useState<'pattern' | 'map'>('pattern');
 
   const rootNoteValue = useMemo(() => noteToValue(rootNote), [rootNote]);
-  const scaleNoteValues = useMemo(() => new Set(notes.map(noteToValue)), [notes]);
+  const scaleNoteValues = useMemo(() => {
+    const calculatedNotes = getScaleNotes(rootNote, name);
+    if (calculatedNotes.length > 0) {
+      return new Set(calculatedNotes);
+    }
+    return new Set(notes.map(noteToValue).filter(v => v !== -1));
+  }, [rootNote, name, notes]);
 
   return (
     <div className="flex flex-col items-center w-full max-w-6xl mx-auto">
