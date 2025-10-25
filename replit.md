@@ -1,48 +1,68 @@
 # Chord & Scale Generator
 
 ## Overview
-An AI-powered chord progression and scale generator for guitarists, built with React, TypeScript, and Vite. Uses xAI's Grok API to generate intelligent chord progressions with multiple guitar voicings and suggested scales for improvisation.
+An AI-powered chord progression and scale generator for guitarists, built with React, TypeScript, Express, and PostgreSQL. Features a beautiful glassmorphic UI with Replit Auth integration for user authentication. Uses xAI's Grok API to generate intelligent chord progressions with multiple guitar voicings and suggested scales for improvisation.
 
 ## Tech Stack
 - **Frontend**: React 19.2 with TypeScript
+- **Backend**: Express.js with TypeScript
+- **Database**: PostgreSQL with Drizzle ORM
+- **Authentication**: Replit Auth (Google, X/Twitter, GitHub, Apple, email/password)
 - **Build Tool**: Vite 6.2
 - **AI Service**: xAI Grok API (via OpenAI SDK)
 - **Styling**: Tailwind CSS (via inline styles and CSS variables)
+- **State Management**: TanStack React Query
 
 ## Project Structure
 ```
 .
-├── components/          # React components
-│   ├── ChordDetailView.tsx
-│   ├── ColorPicker.tsx
-│   ├── Controls.tsx
-│   ├── CustomSelect.tsx
-│   ├── ScaleDiagram.tsx
-│   ├── ThemeCycler.tsx
-│   ├── ThemeSelector.tsx
-│   ├── VoicingDiagram.tsx
-│   └── VoicingsGrid.tsx
-├── services/           # API integration
-│   └── xaiService.ts   # AI service with client-side enrichment
-├── utils/              # Utility functions and data libraries
-│   ├── chordLibrary.ts # Comprehensive chord voicings with transposition
-│   ├── scaleLibrary.ts # Comprehensive scale patterns with transposition
-│   └── colorUtils.ts
-├── App.tsx             # Main application component
-├── constants.ts        # App constants (keys, modes, progressions)
-├── types.ts            # TypeScript type definitions
-└── vite.config.ts      # Vite configuration
+├── client/             # Frontend React application
+│   ├── components/     # React components
+│   │   ├── ChordDetailView.tsx
+│   │   ├── ColorPicker.tsx
+│   │   ├── Controls.tsx
+│   │   ├── CustomSelect.tsx
+│   │   ├── GlassmorphicHeader.tsx  # Glassmorphic header with auth UI
+│   │   ├── ScaleDiagram.tsx
+│   │   ├── ThemeCycler.tsx
+│   │   ├── ThemeSelector.tsx
+│   │   ├── VoicingDiagram.tsx
+│   │   └── VoicingsGrid.tsx
+│   ├── hooks/          # React hooks
+│   │   └── useAuth.ts  # Authentication hook with graceful 401 handling
+│   ├── lib/            # Client libraries
+│   │   └── queryClient.ts  # TanStack Query configuration
+│   ├── services/       # API integration
+│   │   └── xaiService.ts   # AI service with client-side enrichment
+│   ├── utils/          # Utility functions and data libraries
+│   │   ├── chordLibrary.ts # Comprehensive chord voicings with transposition
+│   │   ├── scaleLibrary.ts # Comprehensive scale patterns with transposition
+│   │   └── colorUtils.ts
+│   ├── App.tsx         # Main application component
+│   ├── constants.ts    # App constants (keys, modes, progressions)
+│   └── types.ts        # TypeScript type definitions
+├── server/             # Backend Express application
+│   ├── db.ts           # Database connection (Drizzle)
+│   ├── index.ts        # Express server entry point
+│   ├── replitAuth.ts   # Replit Auth passport strategy setup
+│   ├── routes.ts       # API routes (/api/auth/user, /api/login, etc.)
+│   └── storage.ts      # Database operations (user CRUD)
+├── shared/             # Shared types and schema
+│   └── schema.ts       # Drizzle ORM schema (users, sessions)
+└── vite.config.ts      # Vite configuration with API proxy
 ```
 
 ## Features
-- Generate chord progressions in any key and mode
-- Multiple guitar voicings for each chord (client-side library)
-- AI-suggested scales for improvisation (client-side library)
-- Automatic transposition to any root note
-- Theme customization with light/dark mode
-- Session-based caching for performance
+- **User Authentication**: Replit Auth with multiple login options (Google, X, GitHub, Apple, email/password)
+- **AI Chord Generation**: Generate chord progressions in any key and mode using Grok API
+- **Multiple Voicings**: 200+ guitar chord voicings for each chord type (client-side library)
+- **Scale Suggestions**: AI-suggested scales for improvisation with multiple fingering patterns (client-side library)
+- **Automatic Transposition**: Transpose voicings and fingerings to any root note
+- **Theme Customization**: Beautiful glassmorphic UI with light/dark mode toggle
+- **Session-Based Caching**: Performance optimization with PostgreSQL session storage
 
 ## Architecture
+- **Full-Stack Application**: Express backend (port 3001) proxied through Vite dev server (port 5000)
 - **Hybrid AI + Client-Side Approach**: AI generates creative chord progressions and scale suggestions (names only), while comprehensive client-side libraries provide all voicings and fingerings
 - **Transposition Engine**: Automatic transposition of chord voicings and scale fingerings based on detected base roots using normalized semitone calculation
 - **Data Libraries**: 
@@ -50,12 +70,27 @@ An AI-powered chord progression and scale generator for guitarists, built with R
   - `scaleLibrary.ts`: 15+ scales with multiple fingering patterns (modes, pentatonic, blues, harmonic/melodic minor, exotic scales)
 
 ## Setup & Configuration
-- **Port**: 5000 (configured for Replit environment)
+- **Frontend Port**: 5000 (Vite dev server)
+- **Backend Port**: 3001 (Express API server)
 - **Host**: 0.0.0.0 (allows proxy access)
-- **Required Secret**: XAI_API_KEY
-- **AI Model**: grok-4-fast-reasoning
+- **Required Secrets**: 
+  - `XAI_API_KEY`: xAI Grok API key for chord generation
+  - `SESSION_SECRET`: Express session encryption key (auto-provided by Replit)
+  - `DATABASE_URL`: PostgreSQL connection string (auto-provided by Replit)
+  - `REPL_ID`, `REPLIT_DOMAINS`: Replit environment variables (auto-provided)
+- **AI Model**: grok-4-fast-reasoning with max_tokens: 1500
 
 ## Recent Changes
+- **2025-10-25**: Full-stack conversion with Replit Auth integration
+  - Converted from frontend-only to full-stack architecture with Express backend (port 3001) and Vite frontend (port 5000)
+  - Integrated Replit Auth for user authentication with PostgreSQL database
+  - Created glassmorphic header component matching harborpoetry.com design aesthetic
+  - Implemented authentication flow with `/api/login`, `/api/callback`, `/api/logout`, and `/api/auth/user` endpoints
+  - Fixed critical 401 handling bug in useAuth hook to gracefully handle unauthenticated state instead of throwing errors
+  - Set up database schema with users and sessions tables using Drizzle ORM
+  - Configured Vite proxy to forward `/api/*` requests to Express backend
+  - Updated all component imports to use `@/` alias for better code organization
+  - All environment variables (SESSION_SECRET, DATABASE_URL, REPL_ID, REPLIT_DOMAINS) auto-configured by Replit
 - **2025-10-25**: Fixed scale diagram transposition bug
   - Corrected `detectFingeringBaseRoot` to use low E string (fingering[0]) instead of high E string
   - Scale patterns now correctly anchor from the 6th string, aligning with standard guitar pedagogy
