@@ -163,6 +163,48 @@ export const THEMES: ThemeOption[] = [
       surface: '280 10% 20%',   // Darker Dusty Purple/Brown
       border: '30 20% 88% / 0.15',
     }
+  },
+  {
+    name: 'Lavender Mist',
+    light: {
+      primary: '270 25% 42%',   // Muted Lavender (Darker for contrast)
+      secondary: '240 15% 40%', // Soft Slate (Darker for contrast)
+      accent: '280 35% 52%',    // Brighter Lavender (Adjusted for new primary)
+      text: '260 20% 25%',      // Dark Purple-Gray
+      background: '270 20% 98%',// Very Light Lavender
+      surface: '270 18% 95%',   // Light Lavender-Gray
+      border: '260 20% 25% / 0.1',
+    },
+    dark: {
+      primary: '270 30% 65%',   // Brighter Lavender
+      secondary: '240 18% 45%', // Medium Slate
+      accent: '280 40% 75%',    // Vibrant Lavender
+      text: '270 15% 88%',      // Pale Lavender
+      background: '260 15% 13%',// Deep Purple-Gray
+      surface: '260 15% 19%',   // Dark Purple-Gray
+      border: '270 15% 88% / 0.15',
+    }
+  },
+  {
+    name: 'Copper Bloom',
+    light: {
+      primary: '20 50% 42%',    // Muted Copper (Darker for contrast)
+      secondary: '340 30% 40%', // Dusty Rose (Darker for contrast)
+      accent: '30 60% 52%',     // Warm Bronze (Adjusted for new primary)
+      text: '15 25% 22%',       // Dark Copper-Brown
+      background: '30 30% 97%', // Peachy Cream
+      surface: '30 25% 94%',    // Light Peach
+      border: '15 25% 22% / 0.1',
+    },
+    dark: {
+      primary: '20 55% 65%',    // Brighter Copper
+      secondary: '340 25% 50%', // Muted Rose
+      accent: '30 65% 70%',     // Vibrant Bronze
+      text: '30 25% 88%',       // Pale Copper
+      background: '15 20% 14%', // Deep Copper-Brown
+      surface: '15 20% 20%',    // Dark Copper-Brown
+      border: '30 25% 88% / 0.15',
+    }
   }
 ];
 
