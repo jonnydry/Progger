@@ -1,5 +1,5 @@
 import React from 'react';
-import type { ChordVoicing } from '../types';
+import type { ChordVoicing } from '@/types';
 
 interface VoicingDiagramProps {
   chordName: string;

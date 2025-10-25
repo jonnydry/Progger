@@ -1,5 +1,5 @@
 import React from 'react';
-import type { ChordInProgression } from '../types';
+import type { ChordInProgression } from '@/types';
 import { VoicingDiagram } from './VoicingDiagram';
 
 interface ChordDetailViewProps {

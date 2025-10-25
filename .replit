@@ -1,6 +1,7 @@
 modules = ["nodejs-20", "web"]
 [agent]
 expertMode = true
+integrations = ["javascript_log_in_with_replit:1.0.0"]
 
 [nix]
 channel = "stable-25_05"
@@ -30,12 +31,12 @@ waitForPort = 5000
 outputType = "webview"
 
 [[ports]]
-localPort = 5000
-externalPort = 80
+localPort = 3001
+externalPort = 3000
 
 [[ports]]
-localPort = 34679
-externalPort = 3000
+localPort = 5000
+externalPort = 80
 
 [[ports]]
 localPort = 43805

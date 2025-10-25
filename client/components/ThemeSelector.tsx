@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import type { ThemeOption } from '../constants';
+import type { ThemeOption } from '@/constants';
 
 interface ThemeSelectorProps {
   themes: ThemeOption[];

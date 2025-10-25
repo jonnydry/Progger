@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { VoicingDiagram } from './VoicingDiagram';
-import type { ChordInProgression } from '../types';
+import type { ChordInProgression } from '@/types';
 import { ChordDetailView } from './ChordDetailView';
 
 interface VoicingsGridProps {

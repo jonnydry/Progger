@@ -1,5 +1,5 @@
 import React from 'react';
-import { KEYS, MODES, CHORD_COUNTS, COMMON_PROGRESSIONS } from '../constants';
+import { KEYS, MODES, CHORD_COUNTS, COMMON_PROGRESSIONS } from '@/constants';
 import { CustomSelect } from './CustomSelect';
 
 interface ControlsProps {

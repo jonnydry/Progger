@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import type { ScaleInfo } from '../types';
+import type { ScaleInfo } from '@/types';
 
 interface ScaleDiagramProps {
   scaleInfo: ScaleInfo;

@@ -1,6 +1,6 @@
 import React from 'react';
 import { ThemeSelector } from './ThemeSelector';
-import type { ThemeOption } from '../constants';
+import type { ThemeOption } from '@/constants';
 
 interface GlassmorphicHeaderProps {
   theme: string;

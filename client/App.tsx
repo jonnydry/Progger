@@ -3,9 +3,11 @@ import { Controls } from './components/Controls';
 import { VoicingsGrid } from './components/VoicingsGrid';
 import { SkeletonScaleDiagram } from './components/ScaleDiagram';
 import { GlassmorphicHeader } from './components/GlassmorphicHeader';
+import { useAuth } from './hooks/useAuth';
 import { generateChordProgression } from './services/xaiService';
 import type { ProgressionResult } from './types';
 import { KEYS, MODES, THEMES, COMMON_PROGRESSIONS } from './constants';
+import type { User } from '@shared/schema';
 
 const LazyScaleDiagram = lazy(() => import('./components/ScaleDiagram'));
 
@@ -21,6 +23,7 @@ const getInitialThemeIndex = (): number => {
 };
 
 const App: React.FC = () => {
+  const { user, isLoading: authLoading, isAuthenticated } = useAuth() as { user: User | undefined, isLoading: boolean, isAuthenticated: boolean };
   const [key, setKey] = useState<string>(KEYS[0]);
   const [mode, setMode] = useState<string>(MODES[0]);
   const [selectedProgression, setSelectedProgression] = useState<string>(COMMON_PROGRESSIONS[0].value);
@@ -32,6 +35,22 @@ const App: React.FC = () => {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
   const [themeIndex, setThemeIndex] = useState<number>(getInitialThemeIndex);
   const resultsRef = useRef<HTMLElement>(null);
+
+  const handleLogin = () => {
+    window.location.href = '/api/login';
+  };
+
+  const handleLogout = () => {
+    window.location.href = '/api/logout';
+  };
+
+  const userProfile = user ? {
+    name: user.firstName && user.lastName 
+      ? `${user.firstName} ${user.lastName}`.trim() 
+      : user.email || 'User',
+    email: user.email || '',
+    avatar: user.profileImageUrl || undefined,
+  } : null;
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -94,9 +113,9 @@ const App: React.FC = () => {
         themes={THEMES}
         selectedThemeIndex={themeIndex}
         onThemeSelect={setThemeIndex}
-        userProfile={null}
-        onLogin={() => console.log('Login clicked')}
-        onLogout={() => console.log('Logout clicked')}
+        userProfile={userProfile}
+        onLogin={handleLogin}
+        onLogout={handleLogout}
       />
       <main className="container mx-auto px-4 py-8 md:py-12">
         <header className="text-center mb-12">
