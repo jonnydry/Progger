@@ -1,18 +1,18 @@
-# Replit Protection Templates for NameJam
+# Replit Protection Templates for Chord & Scale Generator
 
-A collection of security-focused templates and configurations to protect the NameJam Replit project from unauthorized access, code theft, and malicious activities.
+A collection of security-focused templates and configurations to protect the Chord & Scale Generator Replit project from unauthorized access, code theft, and malicious activities.
 
 ## 📋 Project Overview
 
-This directory contains ready-to-use templates and best practices for securing the NameJam Replit application. These templates help protect the NameJam project from common issues that can occur when using external development environments like Cursor.
+This directory contains ready-to-use templates and best practices for securing the Chord & Scale Generator Replit application. These templates help protect the project from common issues that can occur when using external development environments like Cursor.
 
 ## ✨ Key Features
 
 - **Critical File Protection** - Prevents modification of `.replit`, `replit.nix`, and other infrastructure files
 - **Package Management Safety** - Guidelines for proper npm dependency management
 - **Database Schema Protection** - Prevents catastrophic database changes with Drizzle ORM
-- **Port Configuration Safety** - Ensures proper Replit port binding (NameJam uses port 5000)
-- **Environment Variable Security** - Guidelines for handling secrets via Replit Secrets
+- **Port Configuration Safety** - Ensures proper Replit port binding (uses port 5000)
+- **Environment Variable Security** - Guidelines for handling secrets via Replit Secrets (XAI_API_KEY, DATABASE_URL)
 - **Path Alias Protection** - Prevents breaking Vite path aliases (@, @shared, @assets)
 - **Build Configuration Safety** - Protects Vite and TypeScript configurations
 - **Recovery Procedures** - Step-by-step recovery if external editors break the project
@@ -21,25 +21,28 @@ This directory contains ready-to-use templates and best practices for securing t
 
 ### Prerequisites
 
-- Active Replit account with NameJam project
-- Basic understanding of NameJam's technology stack (React, Express, Drizzle)
+- Active Replit account with Chord & Scale Generator project
+- Basic understanding of the tech stack (React, Express, Drizzle, xAI Grok API)
 - Familiarity with environment variables
 
 ### Installation
 
-1. **Templates are already in NameJam project**
+1. **Templates are already in project**
    - Templates are located in `replit-protection-templates/` directory
    - No additional setup required
 
 2. **Configure Environment Variables**
    - Navigate to the "Secrets" tab in your Replit project
-   - Add required environment variables for NameJam
+   - Add required environment variables:
+     - `XAI_API_KEY` - xAI Grok API key for chord generation
+     - `SESSION_SECRET` - Auto-provided by Replit
+     - `DATABASE_URL` - Auto-provided by Replit
    - Never commit sensitive credentials to your code
 
 3. **Use the Templates**
    - Copy `cursor-replit-protection-template.md` content to Cursor → Settings → "Rules for AI"
    - Share `replit-production-guide.md` with team members
-   - Follow the guidelines when making changes to NameJam
+   - Follow the guidelines when making changes to the app
 
 4. **Test in Replit**
    - Always test changes in Replit before committing
@@ -62,7 +65,7 @@ This directory contains ready-to-use templates and best practices for securing t
    - Modify database schema in `shared/schema.ts` only
    - Always test changes in Replit first
 
-### Database Migration (NameJam)
+### Database Migration (Chord & Scale Generator)
 
 ```bash
 # 1. Modify shared/schema.ts
@@ -70,49 +73,51 @@ This directory contains ready-to-use templates and best practices for securing t
 npm run db:push --force
 ```
 
-### Port Configuration (NameJam)
+### Port Configuration (Chord & Scale Generator)
 
 ```javascript
-// NameJam uses hardcoded port 5000
-const port = 5000;
-server.listen({ port, hostname: '0.0.0.0', reusePort: true });
+// Frontend (Vite) uses port 5000
+// Backend (Express) uses port 3001
+const port = 3001;
+server.listen(port, '0.0.0.0');
 ```
 
 ## 📁 Template Files
 
-- `cursor-replit-protection-template.md` - Cursor IDE protection rules for NameJam
-- `replit-production-guide.md` - Comprehensive guide for NameJam project protection
+- `cursor-replit-protection-template.md` - Cursor IDE protection rules for Chord & Scale Generator
+- `replit-production-guide.md` - Comprehensive guide for project protection
 - `README.md` - This documentation file
 - `LICENSE` - MIT license file
 
-## 🔒 NameJam Security Best Practices
+## 🔒 Security Best Practices
 
-1. **Always use HTTPS** - Enable Replit's HTTPS for NameJam deployment
+1. **Always use HTTPS** - Enable Replit's HTTPS for deployment
 2. **Keep dependencies updated** - Regularly update npm packages to patch vulnerabilities
-3. **Validate all inputs** - Never trust user-provided data in NameJam API endpoints
-4. **Use strong authentication** - Implement proper authentication for NameJam users
-5. **Monitor and log** - Track access patterns and suspicious activities
-6. **Protect critical files** - Never modify `.replit`, `replit.nix`, or build configs
-7. **Test in Replit first** - Always verify changes work in Replit before committing
+3. **Validate all inputs** - Never trust user-provided data in API endpoints
+4. **Use Replit Auth** - Implement proper authentication with Replit Auth integration
+5. **Protect API keys** - Store XAI_API_KEY in Replit Secrets, never in code
+6. **Monitor and log** - Track access patterns and suspicious activities
+7. **Protect critical files** - Never modify `.replit`, `replit.nix`, or build configs
+8. **Test in Replit first** - Always verify changes work in Replit before committing
 
-## 🤝 Contributing to NameJam Protection
+## 🤝 Contributing to Protection Templates
 
-We welcome contributions to improve NameJam's protection templates! Here's how you can help:
+We welcome contributions to improve the protection templates! Here's how you can help:
 
 - **Improve templates** - Enhance the protection rules and guidelines
-- **Update documentation** - Help clarify setup instructions for NameJam
+- **Update documentation** - Help clarify setup instructions
 - **Report issues** - Found a bug or security concern? Let us know
-- **Suggest features** - Ideas for new protection patterns specific to NameJam
+- **Suggest features** - Ideas for new protection patterns
 
 ### How to Contribute
 
 1. Make your changes to the template files
-2. Test the changes with NameJam project
-3. Commit with clear messages (`git commit -m 'Update NameJam protection template'`)
+2. Test the changes with the Chord & Scale Generator project
+3. Commit with clear messages (`git commit -m 'Update protection template'`)
 4. Push your changes (`git push origin your-branch`)
 5. Create a Pull Request
 
-Please ensure your contributions are specific to NameJam's tech stack and requirements.
+Please ensure your contributions are specific to the project's tech stack and requirements.
 
 ## 📄 License
 
@@ -126,7 +131,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 📞 Support
 
-If you encounter issues or have questions about NameJam protection:
+If you encounter issues or have questions about project protection:
 - Check the `replit-production-guide.md` for detailed instructions
 - Review the `cursor-replit-protection-template.md` for Cursor-specific rules
 - Test changes in Replit before committing
@@ -134,4 +139,4 @@ If you encounter issues or have questions about NameJam protection:
 
 ---
 
-**⚠️ Disclaimer**: These templates provide baseline protection for NameJam but should not be considered comprehensive security. Always conduct thorough security audits for production applications and stay informed about emerging security threats.
+**⚠️ Disclaimer**: These templates provide baseline protection but should not be considered comprehensive security. Always conduct thorough security audits for production applications and stay informed about emerging security threats.
