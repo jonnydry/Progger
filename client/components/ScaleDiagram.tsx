@@ -83,7 +83,7 @@ export const SkeletonScaleDiagram: React.FC = () => (
     </div>
 );
 
-const FretInlay: React.FC<{ fret: number }> = ({ fret }) => {
+const FretInlay: React.FC<{ fret: number }> = React.memo(({ fret }) => {
     const left = `${((fret - 0.5) / FRET_COUNT) * 100}%`;
     const inlayClasses = "absolute w-2.5 h-2.5 rounded-full bg-text/5 dark:bg-text/10";
     if (fret === DOUBLE_INLAY_FRET) {
@@ -93,9 +93,9 @@ const FretInlay: React.FC<{ fret: number }> = ({ fret }) => {
         </>
     }
     return <div className={inlayClasses} style={{ left, top: '50%', transform: 'translate(-50%, -50%)' }} />
-}
+});
 
-const NoteDot: React.FC<{ noteName: string, fret: number, isRoot: boolean }> = ({ noteName, fret, isRoot }) => {
+const NoteDot: React.FC<{ noteName: string, fret: number, isRoot: boolean }> = React.memo(({ noteName, fret, isRoot }) => {
     const rootClasses = "bg-secondary text-background";
     const noteClasses = "bg-primary text-background";
 
@@ -111,12 +111,12 @@ const NoteDot: React.FC<{ noteName: string, fret: number, isRoot: boolean }> = (
             </div>
         </button>
     );
-};
+});
 
 const ViewToggle: React.FC<{
   viewMode: 'pattern' | 'map';
   setViewMode: (mode: 'pattern' | 'map') => void;
-}> = ({ viewMode, setViewMode }) => {
+}> = React.memo(({ viewMode, setViewMode }) => {
     return (
       <div className="flex items-center space-x-2 bg-text/10 p-1 rounded-md">
         <button 
@@ -133,7 +133,7 @@ const ViewToggle: React.FC<{
         </button>
       </div>
     );
-};
+});
 
 const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo }) => {
   const { name, rootNote, notes, fingering } = scaleInfo;
@@ -147,6 +147,11 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo }) => {
     }
     return new Set(notes.map(noteToValue).filter(v => v !== -1));
   }, [rootNote, name, notes]);
+
+  // Memoize fingering lookup for pattern view - convert to Sets for O(1) lookups
+  const fingeringLookup = useMemo(() => {
+    return fingering.map(frets => new Set(frets ?? []));
+  }, [fingering]);
 
   return (
     <div className="flex flex-col items-center w-full max-w-6xl mx-auto">
@@ -197,7 +202,7 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo }) => {
                             const openStringNoteValue = noteToValue(stringName);
                             let hasOpenNote = false;
                             if (viewMode === 'pattern') {
-                                hasOpenNote = fingering[5 - stringIndex]?.includes(0);
+                                hasOpenNote = fingeringLookup[5 - stringIndex]?.has(0) ?? false;
                             } else {
                                 hasOpenNote = scaleNoteValues.has(openStringNoteValue);
                             }
@@ -220,7 +225,7 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo }) => {
                                         
                                         let isNotePresent = false;
                                         if (viewMode === 'pattern') {
-                                            isNotePresent = fingering[5 - stringIndex]?.includes(fret);
+                                            isNotePresent = fingeringLookup[5 - stringIndex]?.has(fret) ?? false;
                                         } else {
                                             isNotePresent = scaleNoteValues.has(currentNoteValue);
                                         }
@@ -254,4 +259,4 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo }) => {
   );
 };
 
-export default ScaleDiagram;
+export default React.memo(ScaleDiagram);
