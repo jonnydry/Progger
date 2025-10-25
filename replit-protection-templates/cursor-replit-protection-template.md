@@ -1,17 +1,15 @@
 # REPLIT PROJECT PROTECTION RULES
 
 ## 📝 CUSTOMIZATION INSTRUCTIONS
-**Before using this prompt:**
-1. Replace all `[PLACEHOLDERS]` with your project specifics
-2. Remove framework sections that don't apply to your stack
-3. Copy the entire content and paste into Cursor → Settings → "Rules for AI"
-4. Keep this updated when your project structure changes
+**This template has been customized for the Chord & Scale Generator project.**
+- Copy the entire content and paste into Cursor → Settings → "Rules for AI"
+- Keep this updated when your project structure changes
 
 ---
 
-## CRITICAL: YOU ARE EDITING THE REST-EXPRESS REPLIT-HOSTED PROJECT
+## CRITICAL: YOU ARE EDITING THE CHORD & SCALE GENERATOR REPLIT-HOSTED PROJECT
 
-This project (rest-express) is hosted on **Replit** and has specific infrastructure requirements. Violating these rules will **break deployment**.
+This project (Chord & Scale Generator) is hosted on **Replit** and has specific infrastructure requirements. Violating these rules will **break deployment**.
 
 ### 🚨 SACRED FILES - NEVER MODIFY UNDER ANY CIRCUMSTANCES
 
@@ -22,9 +20,9 @@ This project (rest-express) is hosted on **Replit** and has specific infrastruct
 
 **Consequence of editing:** Deployment failure, broken builds, runtime errors
 
-**rest-express .replit file contains:**
+**Chord & Scale Generator .replit file contains:**
 - Run command: `npm run dev`
-- Port mappings (5000, 3000, 5173, etc.)
+- Port mappings (5000 for frontend, 3001 for backend)
 - Workflow definitions
 - Deployment configuration
 
@@ -34,42 +32,28 @@ This project (rest-express) is hosted on **Replit** and has specific infrastruct
 
 ### Package Management Files
 
-**Choose your stack and follow STRICTLY:**
-
-**Node.js (npm - rest-express uses npm):**
+**Chord & Scale Generator uses npm:**
 - `package.json` - NEVER manually edit
 - `package-lock.json` - NEVER manually edit
 - ✅ DO THIS: `npm install <package>`
 
-**Python (pip/poetry):**
-- `requirements.txt` / `pyproject.toml` - NEVER manually edit
-- `poetry.lock` / `Pipfile.lock` - NEVER manually edit  
-- ✅ DO THIS: `pip install <package>` or `poetry add <package>`
-
-**Go:**
-- `go.mod` / `go.sum` - NEVER manually edit
-- ✅ DO THIS: `go get <package>`
-
-**Rust:**
-- `Cargo.toml` / `Cargo.lock` - NEVER manually edit
-- ✅ DO THIS: `cargo add <package>`
-
 ### Build Configuration Files
 
-**rest-express Critical Config Files:**
+**Chord & Scale Generator Critical Config Files:**
 
-**React/Vite (rest-express Frontend):**
-- `vite.config.ts` - Path aliases (@, @shared, @assets), build config (NO port/host settings here)
+**React/Vite (Frontend):**
+- `vite.config.ts` - Path aliases (@, @shared, @assets), build config, proxy settings
 - `tsconfig.json` - TypeScript paths (must match build config)
+- **CRITICAL:** `server.allowedHosts: true` must be set for Replit proxy compatibility
 
-**Express (rest-express Backend):**
-- `server/index.ts` - Port binding files (respect Replit requirements)
+**Express (Backend):**
+- `server/index.ts` - Port binding files (backend on port 3001)
 
-**Database/ORM (rest-express uses Drizzle):**
+**Database/ORM (Drizzle):**
 - `drizzle.config.ts` - Database connection and migration settings
-- `shared/schema.ts` - Database schema definitions (sessions, users, stash tables)
+- `shared/schema.ts` - Database schema definitions (sessions, users)
 - NEVER change: Database URL format, connection strings, migration paths
-- **Current schema includes:** sessions, users, stash tables with proper indexes
+- **Current schema includes:** sessions, users tables with proper indexes
 
 ---
 
@@ -106,10 +90,6 @@ ALTER TABLE users ALTER COLUMN id TYPE VARCHAR; -- CATASTROPHIC
 ✅ **DO:**
 ```bash
 npm install express@5.0.0
-# or: yarn add express@5.0.0
-# or: pnpm add express@5.0.0
-# or: pip install express==5.0.0
-# or: cargo add express@5.0.0
 ```
 
 ### 3. NEVER CHANGE PORT CONFIGURATION
@@ -118,31 +98,34 @@ npm install express@5.0.0
 app.listen(3000, 'localhost')  // WRONG
 ```
 
-✅ **DO (rest-express uses port 5000):**
+✅ **DO (Chord & Scale Generator uses port 5000 for frontend, 3001 for backend):**
 ```javascript
-const port = 5000;  // rest-express is hardcoded to port 5000
-server.listen({ port, host: '0.0.0.0', reusePort: true });  // Replit requirement
-```
+// Frontend: Vite dev server on port 5000
+// vite.config.ts already configured
 
-```python
-# Python
-PORT = int(os.environ.get('PORT', 5000))
-app.run(host='0.0.0.0', port=PORT)
+// Backend: Express API server on port 3001
+const port = 3001;
+app.listen(port, '0.0.0.0');
 ```
 
 ### 4. NEVER HARDCODE SECRETS
 ❌ **DON'T:**
 ```javascript
-const API_KEY = "sk-1234567890";  // WRONG
+const XAI_API_KEY = "sk-1234567890";  // WRONG
 ```
 
 ✅ **DO:**
 ```
 Tell user: "Add to Replit Secrets:
 1. Tools → Secrets in Replit
-2. Add: [SECRET_NAME] = your-key
-3. Access: process.env.[SECRET_NAME]"
+2. Add: XAI_API_KEY = your-xai-api-key
+3. Access: process.env.XAI_API_KEY"
 ```
+
+**Chord & Scale Generator Required Secrets:**
+- `XAI_API_KEY` - xAI Grok API key for chord generation
+- `SESSION_SECRET` - Auto-provided by Replit
+- `DATABASE_URL` - Auto-provided by Replit
 
 ### 5. NEVER CREATE DEPLOYMENT CONFIGS
 ❌ **DON'T:**
@@ -161,19 +144,21 @@ Tell user: "Use Replit's Publish button to deploy"
 ## ✅ SAFE OPERATIONS
 
 ### You CAN freely modify:
-- **Application code:** `client/src/`, `server/`, `shared/` (rest-express source directories)
-- **Components/Routes:** All business logic files in client/src/components/, server/routes/
-- **Styles:** CSS/SCSS files, Tailwind config (styling only)
-- **Documentation:** README.md, docs folders, .md files
+- **Application code:** `client/`, `server/`, `shared/` (source directories)
+- **Components:** All business logic files in `client/components/`, `client/hooks/`
+- **Routes/Services:** `server/routes.ts`, `server/xaiService.ts`, `client/services/`
+- **Utilities:** `client/utils/chordLibrary.ts`, `client/utils/scaleLibrary.ts`
+- **Styles:** CSS files, inline styles (project uses Tailwind via inline styles)
+- **Documentation:** README.md, replit.md, docs folders
 
 ### Database Schema Changes (SAFE if done correctly):
 
-**Step 1:** Modify schema file (`shared/schema.ts` for rest-express)
+**Step 1:** Modify schema file (`shared/schema.ts`)
 
 **Step 2:** Run migration command:
-
-**rest-express Migration Command:**
-- Drizzle: `npm run db:push --force`
+```bash
+npm run db:push --force
+```
 
 **CRITICAL:** Never change existing ID types in Step 1
 
@@ -182,14 +167,11 @@ Tell user: "Use Replit's Publish button to deploy"
 ## 📋 MANDATORY WORKFLOWS
 
 ### For Package Installation:
-**rest-express uses npm:**
 ```bash
-# Node.js (rest-express)
 npm install <package>
 ```
 
 ### For Database Migrations:
-**rest-express Migration Pattern:**
 ```bash
 # 1. Modify shared/schema.ts
 # 2. Run migration command
@@ -199,8 +181,8 @@ npm run db:push --force
 ### For Environment Variables:
 ```
 1. Never hardcode values
-2. Tell user to add to Replit Secrets
-3. Access via process.env.VAR_NAME (or os.environ in Python)
+2. Tell user to add to Replit Secrets (especially XAI_API_KEY)
+3. Access via process.env.VAR_NAME
 ```
 
 ### For Deployment:
@@ -220,10 +202,7 @@ git checkout HEAD -- .replit package.json package-lock.json vite.config.ts drizz
 ```
 
 **Step 2: Reinstall dependencies**
-
-**rest-express Reinstall Commands:**
 ```bash
-# Node.js (rest-express)
 rm -rf node_modules package-lock.json
 npm install
 ```
@@ -243,20 +222,20 @@ npm run db:push --force
 ## 🎯 DO/DON'T QUICK REFERENCE
 
 ### ✅ DO:
-- Write application code in `client/src/`, `server/`, `shared/`
+- Write application code in `client/`, `server/`, `shared/`
 - Create new components/routes/modules
 - Add styles and assets
 - Modify database schemas in `shared/schema.ts` (then run migration)
 - Use `npm install` for packages
-- Bind to `0.0.0.0` for servers (rest-express uses port 5000)
-- Use Replit Secrets for sensitive data
+- Bind backend to port 3001 on `0.0.0.0`
+- Use Replit Secrets for sensitive data (XAI_API_KEY)
 - Test changes in Replit before committing
 
 ### 🚫 DON'T:
 - Touch `.replit` or `replit.nix`
 - Manually edit package files
 - Change database ID column types
-- Hardcode ports or secrets
+- Hardcode ports or secrets (especially XAI_API_KEY)
 - Create custom deployment scripts
 - Manually write SQL migrations
 - Change TypeScript paths without matching build config
@@ -264,58 +243,65 @@ npm run db:push --force
 
 ---
 
-## 📊 REST-EXPRESS PROJECT SPECIFICS
+## 📊 CHORD & SCALE GENERATOR PROJECT SPECIFICS
 
-### rest-express Stack:
+### Tech Stack:
 - **Language:** Node.js / TypeScript
-- **Frontend:** React with Vite
-- **Backend:** Express.js
+- **Frontend:** React 19.2 with Vite 6.2
+- **Backend:** Express.js with TypeScript
 - **Database:** PostgreSQL
 - **ORM:** Drizzle
 - **Package Manager:** npm
-- **Key Dependencies:** Radix UI, React Query, Tailwind CSS, OpenAI, Passport
+- **AI Service:** xAI Grok API (grok-4-fast-reasoning)
+- **Authentication:** Replit Auth (Google, X, GitHub, Apple, email/password)
+- **Key Dependencies:** TanStack React Query, OpenAI SDK (for xAI), Passport, Drizzle ORM
 
-### Critical Files (rest-express Project):
+### Critical Files:
 ```
 - .replit - Replit configuration (NEVER MODIFY)
-- vite.config.ts - Vite build configuration with path aliases
+- vite.config.ts - Vite build configuration with path aliases and proxy
 - drizzle.config.ts - Database connection and migration settings
 - tsconfig.json - TypeScript configuration
-- server/index.ts - Express server with port binding
+- server/index.ts - Express server with port binding (port 3001)
 - shared/schema.ts - Database schema definitions
 - package.json - Dependencies and scripts (use npm install only)
 ```
 
-### Port Configuration (rest-express Project):
+### Port Configuration:
 ```javascript
-// rest-express uses hardcoded port 5000
-const port = 5000;
-server.listen({ port, host: '0.0.0.0', reusePort: true });
+// Frontend: Vite dev server on port 5000 (proxies /api/* to backend)
+// vite.config.ts has server.allowedHosts: true for Replit compatibility
+
+// Backend: Express API server on port 3001
+const port = 3001;
+app.listen(port, '0.0.0.0');
 ```
 
-### Available Scripts (rest-express Project):
+### Available Scripts:
 ```bash
-npm run dev      # Start development server
+npm run dev      # Start development server (concurrently runs frontend + backend)
 npm run build    # Build for production
-npm run start    # Start production server
-npm run check    # TypeScript type checking
 npm run db:push  # Database migration
 ```
 
-### Migration Command (rest-express Project):
+### Migration Command:
 ```bash
 npm run db:push --force
 ```
 
-### Path Aliases (rest-express Project):
+### Path Aliases:
 ```
-# In tsconfig.json:
-'@': './client/src'
+# In tsconfig.json and vite.config.ts:
+'@': './client'
 '@shared': './shared'
-
-# In vite.config.ts (additional):
 '@assets': './attached_assets'
 ```
+
+### Important Architecture Details:
+- **Hybrid AI + Client-Side:** AI generates chord names and scale suggestions, client-side libraries provide 200+ voicings and fingerings
+- **Transposition Engine:** Automatic transposition of chord voicings and scale fingerings to any root note
+- **Client-Side Libraries:** `chordLibrary.ts` (200+ voicings), `scaleLibrary.ts` (15+ scales)
+- **API Routes:** `/api/auth/user`, `/api/login`, `/api/callback`, `/api/logout`, `/api/generate`
 
 ---
 
@@ -334,11 +320,11 @@ Before suggesting ANY change involving:
 - [ ] Am I using migration command? → Required for schema changes
 
 ### Packages:
-- [ ] Am I using install command? → Required (npm install, pip install, etc.)
+- [ ] Am I using install command? → Required (npm install)
 - [ ] Manually editing package.json? → STOP, use command instead
 
 ### Secrets:
-- [ ] Am I hardcoding API keys? → STOP, use Replit Secrets
+- [ ] Am I hardcoding API keys (XAI_API_KEY)? → STOP, use Replit Secrets
 - [ ] Suggesting environment variables? → Tell user to add via Replit Secrets
 
 ---
@@ -357,5 +343,5 @@ Before suggesting ANY change involving:
 
 ---
 
-**Last Updated:** [DATE]  
-**For Full Guide:** See `REPLIT_PROTECTION_GUIDE.md` in project root
+**Last Updated:** October 25, 2025  
+**For Full Guide:** See `replit-production-guide.md` in `replit-protection-templates/`
