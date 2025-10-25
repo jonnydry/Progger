@@ -84,7 +84,7 @@ export const SkeletonScaleDiagram: React.FC = () => (
 );
 
 const FretInlay: React.FC<{ fret: number }> = ({ fret }) => {
-    const left = `${((fret - 0.5) / (FRET_COUNT + 1)) * 100}%`;
+    const left = `${((fret - 0.5) / FRET_COUNT) * 100}%`;
     const inlayClasses = "absolute w-2.5 h-2.5 rounded-full bg-text/5 dark:bg-text/10";
     if (fret === DOUBLE_INLAY_FRET) {
         return <>
@@ -162,10 +162,10 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo }) => {
                 {/* Fret numbers row */}
                 <div 
                     className="grid relative z-20"
-                    style={{ gridTemplateColumns: '2rem repeat(18, minmax(0, 1fr))' }}
+                    style={{ gridTemplateColumns: '2rem repeat(17, minmax(0, 1fr))' }}
                 >
                     <div /> 
-                    {Array.from({ length: FRET_COUNT + 1 }).map((_, fret) => (
+                    {Array.from({ length: FRET_COUNT }, (_, idx) => idx + 1).map((fret) => (
                         <div key={`fret-num-${fret}`} className="text-center text-text/50 pb-2 h-6 flex items-center justify-center font-semibold">
                             {[3, 5, 7, 9, 12, 15].includes(fret) ? fret : ''}
                         </div>
@@ -189,46 +189,62 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo }) => {
                     {/* Note Grid */}
                     <div 
                         className="relative grid z-10"
-                        style={{ gridTemplateColumns: '2rem repeat(18, minmax(0, 1fr))' }}
+                        style={{ gridTemplateColumns: '2rem repeat(17, minmax(0, 1fr))' }}
                     >
                         {/* String rows */}
-                        {STANDARD_TUNING.map((stringName, stringIndex) => (
-                            <React.Fragment key={`string-row-${stringIndex}`}>
-                                {/* String Name */}
-                                <div className="flex items-center justify-center text-text/70 h-10 pr-2 font-bold">
-                                    {stringName}
-                                </div>
+                        {STANDARD_TUNING.map((stringName, stringIndex) => {
+                            // Check if open string (fret 0) has a note
+                            const openStringNoteValue = noteToValue(stringName);
+                            let hasOpenNote = false;
+                            if (viewMode === 'pattern') {
+                                hasOpenNote = fingering[5 - stringIndex]?.includes(0);
+                            } else {
+                                hasOpenNote = scaleNoteValues.has(openStringNoteValue);
+                            }
+                            const isOpenRoot = openStringNoteValue === rootNoteValue;
+                            
+                            return (
+                                <React.Fragment key={`string-row-${stringIndex}`}>
+                                    {/* String Name with optional open note */}
+                                    <div className="flex items-center justify-center text-text/70 h-10 pr-2 font-bold relative">
+                                        {hasOpenNote ? (
+                                            <NoteDot noteName={stringName} fret={0} isRoot={isOpenRoot} />
+                                        ) : (
+                                            stringName
+                                        )}
+                                    </div>
 
-                                {/* Fret cells */}
-                                {Array.from({ length: FRET_COUNT + 1 }).map((_, fret) => {
-                                    const currentNoteValue = (noteToValue(stringName) + fret) % 12;
-                                    
-                                    let isNotePresent = false;
-                                    if (viewMode === 'pattern') {
-                                        isNotePresent = fingering[5 - stringIndex]?.includes(fret);
-                                    } else {
-                                        isNotePresent = scaleNoteValues.has(currentNoteValue);
-                                    }
+                                    {/* Fret cells (1-17) */}
+                                    {Array.from({ length: FRET_COUNT }, (_, idx) => idx + 1).map((fret) => {
+                                        const currentNoteValue = (noteToValue(stringName) + fret) % 12;
+                                        
+                                        let isNotePresent = false;
+                                        if (viewMode === 'pattern') {
+                                            isNotePresent = fingering[5 - stringIndex]?.includes(fret);
+                                        } else {
+                                            isNotePresent = scaleNoteValues.has(currentNoteValue);
+                                        }
 
-                                    let isRoot = false;
-                                    let noteName = '';
-                                    if (isNotePresent) {
-                                        isRoot = currentNoteValue === rootNoteValue;
-                                        noteName = valueToNote(currentNoteValue);
-                                    }
+                                        let isRoot = false;
+                                        let noteName = '';
+                                        if (isNotePresent) {
+                                            isRoot = currentNoteValue === rootNoteValue;
+                                            noteName = valueToNote(currentNoteValue);
+                                        }
 
-                                    return (
-                                        <div key={`fret-${stringIndex}-${fret}`} className="flex items-center justify-center relative h-10 group">
-                                            {/* Fret wire */}
-                                            {fret > 0 && <div className={`absolute top-0 bottom-0 left-0 w-px ${fret === 12 ? 'bg-text/30' : 'bg-text/15'}`}></div>}
-                                            {fret === 0 && <div className="absolute top-0 bottom-0 left-0 w-1 bg-text/50 shadow-md"></div>}
-                                            
-                                            {isNotePresent && <NoteDot noteName={noteName} fret={fret} isRoot={isRoot} />}
-                                        </div>
-                                    );
-                                })}
-                            </React.Fragment>
-                        ))}
+                                        return (
+                                            <div key={`fret-${stringIndex}-${fret}`} className="flex items-center justify-center relative h-10 group">
+                                                {/* Fret wire */}
+                                                {fret === 1 && <div className="absolute top-0 bottom-0 left-0 w-1 bg-text/50 shadow-md"></div>}
+                                                {fret > 1 && <div className={`absolute top-0 bottom-0 left-0 w-px ${fret === 12 ? 'bg-text/30' : 'bg-text/15'}`}></div>}
+                                                
+                                                {isNotePresent && <NoteDot noteName={noteName} fret={fret} isRoot={isRoot} />}
+                                            </div>
+                                        );
+                                    })}
+                                </React.Fragment>
+                            );
+                        })}
                     </div>
                 </div>
             </div>
