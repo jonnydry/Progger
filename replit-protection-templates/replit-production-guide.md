@@ -1,17 +1,9 @@
-# 🛡️ Replit Protection Guide Template
-
-## 📝 How to Use This Template
-1. Copy this file to your new project as `REPLIT_PROTECTION_GUIDE.md`
-2. Replace all `[PLACEHOLDERS]` with your project-specific details
-3. Remove framework examples that don't apply to your stack
-4. Share with team members and external developers
-
----
+# 🛡️ Replit Protection Guide for Chord & Scale Generator
 
 ## Purpose
-This guide prevents external development environments (Cursor, VSCode, etc.) from breaking your **NameJam** Replit deployment by protecting critical infrastructure files and configurations.
+This guide prevents external development environments (Cursor, VSCode, etc.) from breaking your **Chord & Scale Generator** Replit deployment by protecting critical infrastructure files and configurations.
 
-**Why This Matters:** Replit uses specific configuration files and workflows to manage your NameJam application. Modifying these files in external editors can cause deployment failures, broken builds, and runtime errors that are difficult to debug.
+**Why This Matters:** Replit uses specific configuration files and workflows to manage your application. Modifying these files in external editors can cause deployment failures, broken builds, and runtime errors that are difficult to debug.
 
 ---
 
@@ -33,7 +25,7 @@ These files are **sacred** to Replit's operation. Any modifications will break y
 - **Located at:** Project root or `.config/nix/`
 
 #### Workflow Configurations
-- **What they do:** Define automated task sequences (like "[YOUR_WORKFLOW_NAME]")
+- **What they do:** Define automated task sequences ("Server" workflow)
 - **Why they're critical:** Control how Replit runs your development server
 - **Never change:** Workflow commands, execution order
 - **Managed through:** Replit's Workflow pane (not file-based)
@@ -44,50 +36,19 @@ These files are **sacred** to Replit's operation. Any modifications will break y
 
 ### Package Management (Modify with EXTREME Care)
 
-Choose your package manager and follow these rules:
-
-#### For Node.js Projects (npm/yarn/pnpm):
+#### For Node.js Projects (npm):
 
 **`package.json`**
 - **Safe to modify:** Adding new dependencies via commands
 - **NEVER manually edit:** Dependency versions, scripts that Replit manages
-- **Correct approach:** Use `npm install <package>` (or `yarn add`, `pnpm add`) commands only
+- **Correct approach:** Use `npm install <package>` commands only
 - **Why:** Replit's dependency tool syncs with package.json automatically
 
-**`package-lock.json` / `yarn.lock` / `pnpm-lock.yaml`**
-- **NEVER manually edit these files**
-- **Why:** Auto-generated lockfiles that ensure consistent installs
+**`package-lock.json`**
+- **NEVER manually edit this file**
+- **Why:** Auto-generated lockfile that ensures consistent installs
 - **Correct approach:** Let package manager regenerate via install commands
-- **If corrupted:** Delete and run `npm install` (or equivalent) in Replit
-
-#### For Python Projects (pip/poetry):
-
-**`requirements.txt` / `pyproject.toml`**
-- **Safe to modify:** Adding new packages via commands
-- **NEVER manually edit:** Package versions directly
-- **Correct approach:** Use `pip install <package>` or `poetry add <package>` commands only
-- **Why:** Keeps dependencies synchronized with virtual environment
-
-**`poetry.lock` / `Pipfile.lock`**
-- **NEVER manually edit these files**
-- **Why:** Auto-generated lockfiles
-- **Correct approach:** Let poetry/pipenv regenerate via install commands
-
-#### For Go Projects:
-
-**`go.mod` / `go.sum`**
-- **Safe to modify:** Via `go get` commands only
-- **NEVER manually edit:** Module versions, checksums
-- **Correct approach:** Use `go get <package>` commands
-- **Why:** Go module system manages these automatically
-
-#### For Rust Projects:
-
-**`Cargo.toml` / `Cargo.lock`**
-- **Safe to modify:** Via `cargo add` commands only
-- **NEVER manually edit:** Dependency versions directly
-- **Correct approach:** Use `cargo add <package>` commands
-- **Why:** Cargo manages dependency resolution
+- **If corrupted:** Delete and run `npm install` in Replit
 
 ---
 
@@ -95,26 +56,27 @@ Choose your package manager and follow these rules:
 
 ### Framework-Specific Configuration
 
-**NameJam Critical Config Files:**
+**Chord & Scale Generator Critical Config Files:**
 
-#### React/Vite (NameJam Frontend):
+#### React/Vite (Frontend):
 - `vite.config.ts`
-  - **Critical:** Path aliases (@, @shared, @assets), build output, server configuration
+  - **Critical:** Path aliases (@, @shared, @assets), build output, server configuration, API proxy
   - **Safe changes:** Adding new aliases (carefully)
-  - **Dangerous changes:** Changing ports, server host, proxy config
+  - **Dangerous changes:** Changing ports, server host, proxy config, removing `server.allowedHosts: true`
+  - **Required setting:** `server.allowedHosts: true` (for Replit proxy compatibility)
 
-#### Express (NameJam Backend):
+#### Express (Backend):
 - `server/index.ts`
-  - **Critical:** Port binding (hardcoded to 5000), middleware setup
-  - **Safe changes:** Adding new routes
-  - **Dangerous changes:** Changing port from Replit's requirements
+  - **Critical:** Port binding (backend on port 3001), middleware setup, Replit Auth configuration
+  - **Safe changes:** Adding new routes, services
+  - **Dangerous changes:** Changing port from 3001, modifying host binding
 
-### TypeScript Configuration (if applicable):
+### TypeScript Configuration:
 
 **`tsconfig.json`**
 - **What it controls:** TypeScript compilation settings
 - **Critical sections:**
-  - Path mappings (must match build tool's structure)
+  - Path mappings: `@` -> `./client`, `@shared` -> `./shared`
   - Module resolution strategy
   - Base URL configuration
 - **Why it's critical:** Enables imports to work in Replit environment
@@ -125,9 +87,9 @@ Choose your package manager and follow these rules:
 
 ## 💾 Database Configuration
 
-### General Database Rules
+### Drizzle Configuration (Chord & Scale Generator)
 
-**`drizzle.config.ts` (NameJam Database Config)**
+**`drizzle.config.ts`**
 
 - **What it controls:** Database connection and migration settings
 - **Critical sections:**
@@ -150,7 +112,7 @@ This is the #1 cause of catastrophic database failures:
 ALTER TABLE users ALTER COLUMN id TYPE VARCHAR; -- BREAKS EVERYTHING
 ```
 
-❌ **DON'T DO THIS (Drizzle/Prisma):**
+❌ **DON'T DO THIS (Drizzle):**
 ```typescript
 // Before: id: serial("id").primaryKey()
 // After:
@@ -168,24 +130,31 @@ id: varchar("id").primaryKey()  // WRONG - breaks all existing data
 ## ✅ SAFE TO MODIFY
 
 ### Application Code (Full Freedom)
-- **NameJam Source Directories:**
-  - `client/src/` - React frontend components and pages
+- **Chord & Scale Generator Source Directories:**
+  - `client/` - React frontend components, hooks, services, utilities
+    - `client/components/` - UI components (ChordDetailView, ScaleDiagram, VoicingDiagram, etc.)
+    - `client/hooks/` - React hooks (useAuth.ts)
+    - `client/services/` - API integration (xaiService.ts)
+    - `client/utils/` - Data libraries (chordLibrary.ts, scaleLibrary.ts, colorUtils.ts)
   - `server/` - Express backend routes and services
+    - `server/routes.ts` - API endpoints
+    - `server/xaiService.ts` - xAI Grok API integration
+    - `server/replitAuth.ts` - Replit Auth configuration
+    - `server/storage.ts` - Database operations
   - `shared/` - Shared types and database schema
+    - `shared/schema.ts` - Drizzle ORM schema
   - All application logic files
   - All route handlers
   - All component files
 
 ### Documentation & Guidelines
 - `README.md` - Project readme
-- `[PROJECT_DOCS_DIR]/` - Documentation folder
+- `replit.md` - Project documentation and preferences
 - Any `.md` files (except those in `.replit` configs)
 
 ### Styling Configuration (Generally Safe)
-Examples:
-- `tailwind.config.ts` / `tailwind.config.js` - Tailwind CSS settings
-- `postcss.config.js` - PostCSS configuration
-- `.css` / `.scss` files - Stylesheets
+- Inline styles - Project uses Tailwind CSS via inline styles and CSS variables
+- `.css` files - Global stylesheets
 - These are safe because they only affect styling, not infrastructure
 
 ---
@@ -195,83 +164,28 @@ Examples:
 ### Rule 1: Package Installation
 **NEVER manually edit dependency files**
 
-Choose your package manager:
-
-**Node.js:**
+**Node.js (Chord & Scale Generator uses npm):**
 ```bash
 # ✅ DO THIS
 npm install <package>
-yarn add <package>
-pnpm add <package>
 
 # ❌ DON'T manually edit package.json
-```
-
-**Python:**
-```bash
-# ✅ DO THIS
-pip install <package>
-poetry add <package>
-pipenv install <package>
-
-# ❌ DON'T manually edit requirements.txt or pyproject.toml
-```
-
-**Go:**
-```bash
-# ✅ DO THIS
-go get <package>
-
-# ❌ DON'T manually edit go.mod
-```
-
-**Rust:**
-```bash
-# ✅ DO THIS
-cargo add <package>
-
-# ❌ DON'T manually edit Cargo.toml
 ```
 
 ### Rule 2: Database Schema Changes
 **Use ORM/migration tools, never manual SQL**
 
-**For Drizzle (NameJam):**
+**For Drizzle (Chord & Scale Generator):**
 ```typescript
 // 1. Modify schema file (shared/schema.ts)
 export const users = pgTable("users", {
   id: serial("id").primaryKey(), // NEVER change existing ID type
-  name: varchar("name", { length: 255 })
+  name: text("name"),
+  email: text("email").unique()
 });
 
 // 2. Run migration command
 npm run db:push --force
-```
-
-**For Prisma (Node.js):**
-```bash
-# 1. Modify schema.prisma
-# 2. Run migration
-npx prisma migrate dev
-```
-
-**For SQLAlchemy (Python):**
-```bash
-# 1. Modify models.py
-# 2. Run migration
-flask db migrate
-flask db upgrade
-# or for Alembic
-alembic revision --autogenerate
-alembic upgrade head
-```
-
-**For Django (Python):**
-```bash
-# 1. Modify models.py
-# 2. Run migration
-python manage.py makemigrations
-python manage.py migrate
 ```
 
 **CRITICAL DATABASE RULES:**
@@ -283,7 +197,7 @@ python manage.py migrate
 ### Rule 3: Port Configuration
 **Respect Replit's port requirements**
 
-Replit typically requires binding to `0.0.0.0` with the port specified in `.replit` file.
+Replit requires binding to `0.0.0.0` with specific ports.
 
 ❌ **DON'T DO THIS:**
 ```javascript
@@ -291,17 +205,14 @@ Replit typically requires binding to `0.0.0.0` with the port specified in `.repl
 app.listen(3000, 'localhost')  // WRONG
 ```
 
-✅ **DO THIS (NameJam):**
+✅ **DO THIS (Chord & Scale Generator):**
 ```javascript
-// NameJam uses hardcoded port 5000
-const port = 5000;
-server.listen({ port, hostname: '0.0.0.0', reusePort: true });
-```
+// Frontend: Vite dev server on port 5000 (configured in vite.config.ts)
+// vite.config.ts has server.allowedHosts: true for Replit compatibility
 
-```python
-# Python example
-PORT = int(os.environ.get('PORT', 5000))
-app.run(host='0.0.0.0', port=PORT)
+// Backend: Express API server on port 3001
+const port = 3001;
+app.listen(port, '0.0.0.0');
 ```
 
 ### Rule 4: Environment Variables
@@ -309,16 +220,22 @@ app.run(host='0.0.0.0', port=PORT)
 
 ❌ **DON'T DO THIS:**
 ```javascript
-const API_KEY = "sk-1234567890abcdef"; // WRONG - hardcoded
+const XAI_API_KEY = "sk-1234567890abcdef"; // WRONG - hardcoded
 ```
 
 ✅ **DO THIS:**
 ```
 "Add your API key to Replit Secrets:
 1. Go to Tools > Secrets in Replit
-2. Add: [SECRET_NAME] = your-value-here
-3. Access via: process.env.[SECRET_NAME] (or os.environ in Python)"
+2. Add: XAI_API_KEY = your-xai-api-key-here
+3. Access via: process.env.XAI_API_KEY"
 ```
+
+**Chord & Scale Generator Required Secrets:**
+- `XAI_API_KEY` - xAI Grok API key for chord generation (REQUIRED)
+- `SESSION_SECRET` - Auto-provided by Replit
+- `DATABASE_URL` - Auto-provided by Replit
+- `REPL_ID`, `REPLIT_DOMAINS` - Auto-provided by Replit
 
 ### Rule 5: Deployment
 **NEVER create custom deployment configs**
@@ -346,18 +263,19 @@ Click the Publish/Deploy button in Replit when ready."
 - Write API routes/endpoints
 - Add utility functions
 - Implement business logic
-- Style with CSS frameworks
+- Add chord voicings and scale fingerings to libraries
+- Style with inline styles and CSS variables
 
 #### ✅ Modify Safe Schemas
-- Update ORM models/schemas
-- Modify type definitions
-- Create new database models
+- Update ORM models/schemas in `shared/schema.ts`
+- Modify type definitions in `client/types.ts`
+- Create new database models (after running `npm run db:push --force`)
 
 #### ✅ Test Locally
 - Run tests in external environment
 - Debug with breakpoints
 - Use local dev servers for testing
-- Install packages with proper commands
+- Install packages with `npm install` commands
 
 ### What You CANNOT Do:
 
@@ -368,10 +286,11 @@ Click the Publish/Deploy button in Replit when ready."
 - Create deployment configs
 
 #### ❌ System Configuration
-- Change port bindings
+- Change port bindings (frontend must be 5000, backend must be 3001)
 - Modify database connection strings
 - Alter build commands
 - Configure system packages
+- Remove `server.allowedHosts: true` from vite.config.ts
 
 ---
 
@@ -386,46 +305,28 @@ git status
 Look for changes to:
 - `.replit`
 - `replit.nix`
-- `[package.json / requirements.txt / go.mod / Cargo.toml]`
-- `[your-config-files]`
+- `package.json` / `package-lock.json`
+- `vite.config.ts`
+- `drizzle.config.ts`
+- `tsconfig.json`
 
 #### Step 2: Restore Critical Files
 ```bash
 # Restore individual files
 git checkout HEAD -- .replit
 git checkout HEAD -- replit.nix
-git checkout HEAD -- [config-file]
+git checkout HEAD -- vite.config.ts
 
 # Or restore all config files at once
-git checkout HEAD -- .replit replit.nix [list-your-critical-files]
+git checkout HEAD -- .replit replit.nix package.json package-lock.json vite.config.ts drizzle.config.ts tsconfig.json
 ```
 
 #### Step 3: Verify Package Installation
 
-**Node.js:**
+**Node.js (Chord & Scale Generator):**
 ```bash
 rm -rf node_modules package-lock.json
 npm install
-```
-
-**Python:**
-```bash
-rm -rf venv __pycache__
-pip install -r requirements.txt
-# or
-poetry install
-```
-
-**Go:**
-```bash
-go mod download
-go mod tidy
-```
-
-**Rust:**
-```bash
-cargo clean
-cargo build
 ```
 
 #### Step 4: Test Workflow
@@ -436,67 +337,84 @@ cargo build
 
 #### Step 5: Database Sync (if schema changed)
 
-**Drizzle (NameJam):**
+**Drizzle (Chord & Scale Generator):**
 ```bash
 npm run db:push --force
-```
-
-**Prisma:**
-```bash
-npx prisma migrate dev
-```
-
-**SQLAlchemy/Alembic:**
-```bash
-alembic upgrade head
-```
-
-**Django:**
-```bash
-python manage.py migrate
 ```
 
 ---
 
 ## 📊 PROJECT-SPECIFIC DETAILS
 
-### NameJam Tech Stack:
+### Chord & Scale Generator Tech Stack:
 - **Language:** Node.js / TypeScript
-- **Frontend:** React with Vite
-- **Backend:** Express.js
-- **Database:** PostgreSQL
+- **Frontend:** React 19.2 with Vite 6.2
+- **Backend:** Express.js with TypeScript
+- **Database:** PostgreSQL (Replit-hosted)
 - **ORM/Database Tool:** Drizzle
 - **Package Manager:** npm
-- **Other Tools:** Tailwind CSS, Radix UI, React Query
+- **AI Service:** xAI Grok API (grok-4-fast-reasoning model)
+- **Authentication:** Replit Auth (Google, X/Twitter, GitHub, Apple, email/password)
+- **State Management:** TanStack React Query
+- **Other Tools:** OpenAI SDK (for xAI), Passport, connect-pg-simple
 
 ### Critical Port Configuration:
-**NameJam Port Setup:**
+**Chord & Scale Generator Port Setup:**
 ```javascript
-// NameJam uses hardcoded port 5000
-const port = 5000;
-server.listen({ port, hostname: '0.0.0.0', reusePort: true });
+// Frontend: Vite dev server on port 5000
+// vite.config.ts:
+export default defineConfig({
+  server: {
+    host: '0.0.0.0',
+    port: 5000,
+    allowedHosts: true, // CRITICAL for Replit
+    proxy: {
+      '/api': 'http://localhost:3001'
+    }
+  }
+})
+
+// Backend: Express API server on port 3001
+const port = 3001;
+app.listen(port, '0.0.0.0');
 ```
 
-### Critical Path Aliases (NameJam):
+### Critical Path Aliases (Chord & Scale Generator):
 ```
-'@': './client/src'
+# In tsconfig.json:
+'@': './client'
 '@shared': './shared'
+
+# In vite.config.ts (additional):
 '@assets': './attached_assets'
 ```
 
-### Database Migration Pattern (NameJam):
+### Database Migration Pattern (Chord & Scale Generator):
 ```bash
-# Drizzle (NameJam)
+# Drizzle (Chord & Scale Generator)
 npm run db:push --force
 ```
 
 ### Workflow Commands:
-**NameJam Development runs:**
+**Chord & Scale Generator Development runs:**
 ```bash
 npm run dev
 ```
 
-This starts both the Vite dev server and Express backend.
+This starts both the Vite dev server (port 5000) and Express backend (port 3001) concurrently.
+
+### Architecture Highlights:
+- **Hybrid AI + Client-Side Approach:** AI generates creative chord progressions and scale suggestions (names only), while comprehensive client-side libraries provide all voicings and fingerings
+- **Transposition Engine:** Automatic transposition of chord voicings and scale fingerings based on detected base roots
+- **Data Libraries:**
+  - `chordLibrary.ts`: 200+ chord voicings across all types
+  - `scaleLibrary.ts`: 15+ scales with multiple fingering patterns
+- **API Endpoints:**
+  - `/api/auth/user` - Get current user
+  - `/api/login` - Initiate Replit Auth login
+  - `/api/callback` - OAuth callback
+  - `/api/logout` - Logout user
+  - `/api/generate` - Generate chord progression with AI
 
 ---
 
@@ -505,8 +423,9 @@ This starts both the Vite dev server and Express backend.
 ### Before Committing Changes from External Editor:
 
 **✅ SAFE:**
-- Application code in `client/src/`, `server/`, `shared/`
+- Application code in `client/`, `server/`, `shared/`
 - New components/routes/modules
+- Chord voicings and scale fingerings in utilities
 - Styles and assets
 - Documentation files
 - Database schema files in `shared/schema.ts` (then run migration)
@@ -524,8 +443,9 @@ This starts both the Vite dev server and Express backend.
 - Custom deployment scripts
 - Database connection string changes
 - **NEVER changed database ID column types**
+- Removed `server.allowedHosts: true` from vite.config.ts
 
-### Emergency Rollback (NameJam):
+### Emergency Rollback (Chord & Scale Generator):
 ```bash
 # Restore all critical files
 git checkout HEAD -- .replit replit.nix package.json package-lock.json vite.config.ts drizzle.config.ts tsconfig.json
@@ -542,29 +462,31 @@ npm run db:push --force
 ## 📚 Additional Resources
 
 - **Replit Docs:** https://docs.replit.com
-- **Your Framework Docs:** [Add your framework documentation links]
-- **Your Database/ORM Docs:** [Add your database tool docs]
-- **Project Docs:** [Link to your project documentation]
+- **xAI Docs:** https://docs.x.ai
+- **Drizzle ORM Docs:** https://orm.drizzle.team
+- **Vite Docs:** https://vitejs.dev
+- **React Query Docs:** https://tanstack.com/query
 
 ---
 
-## ✏️ Customization Checklist
+## ✏️ Template Notes
 
-Use this checklist when setting up this guide for a new project:
+This guide has been customized for the **Chord & Scale Generator** project with the following specifications:
 
-- [ ] Replace `[PROJECT_NAME]` with your actual project name
-- [ ] Fill in "Your Tech Stack" section with your actual stack
-- [ ] List your critical configuration files
-- [ ] Document your port configuration
-- [ ] Add your database migration commands
-- [ ] List your workflow commands
-- [ ] Add your path aliases (if applicable)
-- [ ] Remove framework examples that don't apply
-- [ ] Update recovery commands for your package manager
-- [ ] Add project-specific gotchas or warnings
-- [ ] Share with team members
+- Project name: Chord & Scale Generator
+- Frontend framework: React 19.2 with Vite 6.2
+- Backend framework: Express.js
+- Database: PostgreSQL with Drizzle ORM
+- AI service: xAI Grok API (grok-4-fast-reasoning)
+- Authentication: Replit Auth
+- Package manager: npm
+- Frontend port: 5000
+- Backend port: 3001
+- Database migration: `npm run db:push --force`
+- Path aliases: `@` (client), `@shared` (shared), `@assets` (attached_assets)
+- Required secrets: XAI_API_KEY, SESSION_SECRET, DATABASE_URL
 
 ---
 
-**Last Updated:** [DATE]  
+**Last Updated:** October 25, 2025  
 **For Questions:** Refer to this guide before making infrastructure changes
