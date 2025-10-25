@@ -205,6 +205,27 @@ export const THEMES: ThemeOption[] = [
       surface: '15 20% 20%',    // Dark Copper-Brown
       border: '30 25% 88% / 0.15',
     }
+  },
+  {
+    name: 'Terminal Matrix',
+    light: {
+      primary: '85 60% 40%',    // Retro Terminal Green (Darker for contrast)
+      secondary: '40 15% 38%',  // Vintage Beige-Gray (Darker for contrast)
+      accent: '85 70% 48%',     // Bright Terminal Green (Adjusted for new primary)
+      text: '85 25% 20%',       // Dark Olive-Green
+      background: '45 30% 95%', // Vintage Beige Paper
+      surface: '45 25% 91%',    // Slightly darker Beige
+      border: '85 25% 20% / 0.1',
+    },
+    dark: {
+      primary: '140 80% 55%',   // Classic Terminal Bright Green
+      secondary: '140 15% 35%', // Dark Terminal Gray-Green
+      accent: '140 90% 65%',    // Vibrant Matrix Green
+      text: '140 70% 75%',      // Pale Terminal Green
+      background: '0 0% 5%',    // Deep Terminal Black
+      surface: '140 5% 10%',    // Near-Black with green tint
+      border: '140 70% 75% / 0.15',
+    }
   }
 ];
 
