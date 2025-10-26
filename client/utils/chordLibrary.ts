@@ -1,8 +1,4 @@
-export interface ChordVoicing {
-  frets: (number | 'x')[];
-  firstFret?: number;
-  position?: string;
-}
+import type { ChordVoicing } from '@/types';
 
 export interface ChordData {
   name: string;

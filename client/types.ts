@@ -2,6 +2,7 @@
 export interface ChordVoicing {
   frets: (number | 'x')[];
   firstFret?: number;
+  position?: string;
 }
 
 // Represents one chord in the progression, which has multiple voicings

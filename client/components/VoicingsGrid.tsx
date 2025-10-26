@@ -1,14 +1,17 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { VoicingDiagram } from './VoicingDiagram';
-import type { ChordInProgression } from '@/types';
+import type { ChordInProgression, ProgressionResult } from '@/types';
 import { ChordDetailView } from './ChordDetailView';
 import { displayChordName } from '@/utils/musicTheory';
+import { useSaveToStash } from '../hooks/useStash';
 
 interface VoicingsGridProps {
   progression: ChordInProgression[];
   isLoading: boolean;
   skeletonCount?: number;
   musicalKey: string;
+  currentMode?: string;
+  progressionResult?: ProgressionResult | null;
 }
 
 const SkeletonDiagram: React.FC = () => (
@@ -35,15 +38,52 @@ const ArrowButton: React.FC<{ direction: 'left' | 'right'; onClick: () => void }
 ));
 
 
-export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoading, skeletonCount = 4, musicalKey }) => {
+const generateAutoName = (key: string, mode: string, progression: ChordInProgression[]): string => {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+  // Create chord progression string (limit to first 4 chords to keep it concise)
+  const chordNames = progression.slice(0, 4).map(p => displayChordName(p.chordName, key));
+  const progressionStr = chordNames.join(' - ');
+  const suffix = progression.length > 4 ? '...' : '';
+
+  return `${key} ${mode} - ${progressionStr}${suffix} - ${dateStr} ${timeStr}`;
+};
+
+export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoading, skeletonCount = 4, musicalKey, currentMode, progressionResult }) => {
   const [voicingIndices, setVoicingIndices] = useState<number[]>([]);
   const [expandedChordIndex, setExpandedChordIndex] = useState<number | null>(null);
+  const [showSaveForm, setShowSaveForm] = useState(false);
+  const [saveName, setSaveName] = useState('');
+  const saveToStash = useSaveToStash();
 
   useEffect(() => {
     // Reset indices when a new progression is loaded
     setVoicingIndices(new Array(progression.length).fill(0));
     setExpandedChordIndex(null);
+    setShowSaveForm(false);
+    setSaveName('');
   }, [progression]);
+
+  const handleSave = async () => {
+    if (!saveName.trim() || !progressionResult || !musicalKey || !currentMode) {
+      return;
+    }
+
+    try {
+      await saveToStash.mutateAsync({
+        name: saveName.trim(),
+        key: musicalKey,
+        mode: currentMode,
+        progressionData: progressionResult,
+      });
+      setSaveName('');
+      setShowSaveForm(false);
+    } catch (error) {
+      console.error('Failed to save to stash:', error);
+    }
+  };
 
   const handleVoicingChange = useCallback((chordIndex: number, direction: 'next' | 'prev') => {
     const numVoicings = progression[chordIndex].voicings.length;
@@ -62,6 +102,14 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
   const handleChordClick = useCallback((index: number) => {
     setExpandedChordIndex(prev => (prev === index ? null : index));
   }, []);
+
+  const handleOpenSaveForm = useCallback(() => {
+    if (progressionResult && musicalKey && currentMode) {
+      const autoName = generateAutoName(musicalKey, currentMode, progressionResult.progression);
+      setSaveName(autoName);
+      setShowSaveForm(true);
+    }
+  }, [progressionResult, musicalKey, currentMode]);
 
   if (isLoading) {
       return (
@@ -93,12 +141,73 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
   return (
     <div className="flex flex-col items-center gap-10">
       <div className="text-center bg-surface p-4 rounded-lg shadow-md border border-border">
-        <h2 className="font-bebas text-3xl font-semibold text-text/80 tracking-wide mb-1">
-          Generated Progression
-        </h2>
+        <div className="flex items-center justify-center gap-4 mb-1">
+          <h2 className="font-bebas text-3xl font-semibold text-text/80 tracking-wide">
+            Generated Progression
+          </h2>
+          {progressionResult && currentMode && (
+            <button
+              onClick={handleOpenSaveForm}
+              className="p-2 rounded-full bg-primary/90 hover:bg-primary text-background transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface"
+              title="Save to Stash"
+              aria-label="Save progression to stash"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
+                />
+              </svg>
+            </button>
+          )}
+        </div>
         <p className="text-3xl tracking-wider text-text">
             {progressionText}
         </p>
+        {showSaveForm && (
+          <div className="mt-4 space-y-3 max-w-md mx-auto">
+            <input
+              type="text"
+              value={saveName}
+              onChange={(e) => setSaveName(e.target.value)}
+              placeholder="Enter a name for this progression..."
+              className="w-full px-4 py-2 rounded-lg bg-background border border-border text-text placeholder-text/50 focus:outline-none focus:ring-2 focus:ring-primary/50"
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  handleSave();
+                }
+              }}
+              onFocus={(e) => e.target.select()}
+              autoFocus
+            />
+            <div className="flex space-x-2">
+              <button
+                onClick={handleSave}
+                disabled={!saveName.trim() || saveToStash.isPending}
+                className="flex-1 py-2 px-4 rounded-lg bg-primary/90 hover:bg-primary text-background font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+              >
+                {saveToStash.isPending ? 'Saving...' : 'Save'}
+              </button>
+              <button
+                onClick={() => {
+                  setShowSaveForm(false);
+                  setSaveName('');
+                }}
+                className="flex-1 py-2 px-4 rounded-lg bg-surface/50 hover:bg-surface text-text font-medium transition-all duration-300 border border-border"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
       </div>
       <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-8 justify-items-center w-full max-w-5xl">
         {progression.map((chord, index) => {

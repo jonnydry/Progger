@@ -179,7 +179,7 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) =>
         </div>
 
       <div className="w-full bg-surface rounded-lg shadow-lg border border-border overflow-x-auto overflow-y-hidden">
-        <div className={`${isMobile ? 'min-w-[600px]' : 'min-w-[900px]'} px-3 md:px-4 py-3 md:py-4 text-[10px] md:text-xs`}>
+        <div className={`${isMobile ? 'min-w-[600px]' : 'w-full'} px-3 md:px-4 py-3 md:py-4 text-[10px] md:text-xs`}>
             {/* Main Fretboard Area with Fade Effect */}
             <div
                 className="relative md:-mx-4 md:-my-4 md:px-4 md:py-4"

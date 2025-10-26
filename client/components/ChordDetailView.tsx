@@ -36,8 +36,8 @@ export const ChordDetailView: React.FC<ChordDetailViewProps> = ({ chord, musical
         <h3 className="text-lg font-semibold text-text/80 border-t border-border pt-4">Alternative Voicings</h3>
         <div className="mt-4 flex flex-row flex-wrap gap-4 justify-start">
           {chord.voicings.map((voicing, index) => {
-            // Create stable key from voicing data
-            const voicingKey = `${chord.chordName}-${voicing.position}-${voicing.frets.join('-')}`;
+            // Create stable key from voicing data - include index as fallback for uniqueness
+            const voicingKey = `${chord.chordName}-${index}-${voicing.position || 'std'}-${voicing.frets.join('-')}`;
             return <VoicingDiagram key={voicingKey} chordName={displayedChordName} voicing={voicing} />;
           })}
         </div>
