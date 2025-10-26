@@ -64,6 +64,8 @@ async function upsertUser(claims: any) {
   });
 }
 
+const registeredDomains = new Set<string>();
+
 export async function setupAuth(app: Express) {
   app.set("trust proxy", 1);
   app.use(getSession());
@@ -83,30 +85,56 @@ export async function setupAuth(app: Express) {
   };
 
   for (const domain of process.env.REPLIT_DOMAINS!.split(",")) {
+    const normalizedDomain = domain.trim().toLowerCase();
+    if (!normalizedDomain) {
+      console.warn('Warning: Empty domain found in REPLIT_DOMAINS');
+      continue;
+    }
+    registeredDomains.add(normalizedDomain);
     const strategy = new Strategy(
       {
-        name: `replitauth:${domain}`,
+        name: `replitauth:${normalizedDomain}`,
         config,
         scope: "openid email profile offline_access",
-        callbackURL: `https://${domain}/api/callback`,
+        callbackURL: `https://${normalizedDomain}/api/callback`,
       },
       verify
     );
     passport.use(strategy);
   }
 
+  console.log('Registered auth domains:', Array.from(registeredDomains));
+
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
 
   app.get("/api/login", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
+    const normalizedHostname = req.hostname.toLowerCase();
+    if (!registeredDomains.has(normalizedHostname)) {
+      console.error(`Authentication error: hostname "${req.hostname}" not in registered domains:`, Array.from(registeredDomains));
+      return res.status(400).send(`
+        <h1>Authentication Error</h1>
+        <p>You must access this application via the Replit preview URL, not localhost or other domains.</p>
+        <p>Current hostname: <strong>${req.hostname}</strong></p>
+        <p>Expected domains: <strong>${Array.from(registeredDomains).join(', ')}</strong></p>
+        <p>Please close this tab and use the Replit webview to access the application.</p>
+      `);
+    }
+    
+    passport.authenticate(`replitauth:${normalizedHostname}`, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
     })(req, res, next);
   });
 
   app.get("/api/callback", (req, res, next) => {
-    passport.authenticate(`replitauth:${req.hostname}`, {
+    const normalizedHostname = req.hostname.toLowerCase();
+    if (!registeredDomains.has(normalizedHostname)) {
+      console.error(`Callback error: hostname "${req.hostname}" not in registered domains`);
+      return res.redirect('/api/login');
+    }
+    
+    passport.authenticate(`replitauth:${normalizedHostname}`, {
       successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
     })(req, res, next);
