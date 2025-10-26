@@ -64,10 +64,11 @@ An AI-powered chord progression and scale generator for guitarists, built with R
 ## Architecture
 - **Full-Stack Application**: Express backend (port 3001) proxied through Vite dev server (port 5000)
 - **Hybrid AI + Client-Side Approach**: AI generates creative chord progressions and scale suggestions (names only), while comprehensive client-side libraries provide all voicings and fingerings
-- **Transposition Engine**: Automatic transposition of chord voicings and scale fingerings based on detected base roots using normalized semitone calculation
+- **Pre-Defined Voicings**: Direct lookup system with 200+ pre-defined chord voicings for accurate chord diagrams
+- **Fallback System**: Generic E-form barre chord templates for extended/uncommon chord qualities using ROOT_TO_FRET_FROM_E offset mapping
 - **Data Libraries**: 
-  - `chordLibrary.ts`: 200+ chord voicings across all types (major, minor, 7ths, extended, altered, suspended, diminished, augmented)
-  - `scaleLibrary.ts`: 15+ scales with multiple fingering patterns (modes, pentatonic, blues, harmonic/melodic minor, exotic scales)
+  - `chordLibrary.ts`: 200+ chord voicings across 12 chromatic roots × 20+ chord qualities (major, minor, 7ths, extended, altered, suspended, diminished, augmented)
+  - `scaleLibrary.ts`: 15+ scales with multiple fingering patterns and intelligent transposition engine (modes, pentatonic, blues, harmonic/melodic minor, exotic scales)
 
 ## Setup & Configuration
 - **Frontend Port**: 5000 (Vite dev server)
@@ -81,6 +82,14 @@ An AI-powered chord progression and scale generator for guitarists, built with R
 - **AI Model**: grok-4-fast-reasoning with max_tokens: 1500
 
 ## Recent Changes
+- **2025-10-26**: Fixed "strange chord diagrams" bug
+  - Completely redesigned chord library to use pre-defined voicings instead of algorithmic transposition
+  - Added 200+ accurate voicings for 12 chromatic roots × 20+ chord qualities
+  - Implemented quality-specific generic barre shapes for extended chords (maj9, min9, aug, dim7, etc.)
+  - Fixed offset calculation: uses ROOT_TO_FRET_FROM_E mapping for E-form barre chord positioning
+  - Special handling for E-root chords: uses 12th fret (octave up) instead of impossible fret 0
+  - All enharmonic equivalents (F#=Gb, Db=C#, etc.) now produce identical diagrams
+  - Architect-verified: All chord voicings are now musically accurate
 - **2025-10-25**: Mobile-responsive scale diagrams
   - Added responsive fret count: 12 frets on mobile (<768px), 17 frets on desktop
   - Implemented dynamic window resize detection for seamless mobile/desktop transitions
