@@ -236,7 +236,7 @@ export const KEYS = [
 
 export const MODES = ['Major', 'Minor'];
 
-export const CHORD_COUNTS = [3, 4, 5, 6];
+export const CHORD_COUNTS = [2, 3, 4, 5, 6, 7];
 
 export const COMMON_PROGRESSIONS = [
   { name: 'AI Generated', value: 'auto' },
