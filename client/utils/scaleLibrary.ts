@@ -233,67 +233,103 @@ function extractRootFromScaleName(scaleName: string): string {
   return match ? match[1] : 'C';
 }
 
+/**
+ * Detect the base root note of a scale fingering pattern
+ * Analyzes the lowest fret on the low E string to determine the root
+ *
+ * @param fingering - 2D array representing frets for each string [lowE, A, D, G, B, highE]
+ * @returns Root note name in sharp notation
+ */
 function detectFingeringBaseRoot(fingering: number[][]): string {
+  // Validate fingering structure
+  if (!fingering || fingering.length === 0 || !fingering[0] || fingering[0].length === 0) {
+    console.warn('Invalid fingering pattern provided to detectFingeringBaseRoot - defaulting to C');
+    return 'C';
+  }
+
+  // Get the lowest fret on the low E string (first element of fingering array)
   const lowestFret = Math.min(...fingering[0]);
 
   // Low E string open note is E, which has a note value of 4 in the chromatic scale (C=0)
   const STANDARD_TUNING_LOW_E = 4;
   const fretValue = (STANDARD_TUNING_LOW_E + lowestFret) % 12;
 
-  if (fretValue === 0) return 'C';
-  if (fretValue === 1) return 'C#';
-  if (fretValue === 2) return 'D';
-  if (fretValue === 3) return 'D#';
-  if (fretValue === 4) return 'E';
-  if (fretValue === 5) return 'F';
-  if (fretValue === 6) return 'F#';
-  if (fretValue === 7) return 'G';
-  if (fretValue === 8) return 'G#';
-  if (fretValue === 9) return 'A';
-  if (fretValue === 10) return 'A#';
-  if (fretValue === 11) return 'B';
-
-  return 'C';
+  // Use valueToNote from musicTheory for consistency
+  return valueToNote(fretValue);
 }
 
+/**
+ * Get scale fingering pattern transposed to the requested root note
+ *
+ * Process:
+ * 1. Extracts or uses provided root note
+ * 2. Normalizes scale name to match library keys
+ * 3. Retrieves base fingering pattern (Position 1)
+ * 4. Detects the base root of that pattern
+ * 5. Transposes the pattern to match the requested root
+ *
+ * @param scaleName - Scale name (e.g., "C major", "D minor pentatonic")
+ * @param rootNote - Optional explicit root note (extracted from name if not provided)
+ * @returns 2D array of fret numbers for each string [lowE, A, D, G, B, highE]
+ */
 export function getScaleFingering(scaleName: string, rootNote?: string): number[][] {
   const root = rootNote || extractRootFromScaleName(scaleName);
   const targetRootValue = noteToValue(root);
-  
+
   const normalized = normalizeScaleName(scaleName);
   const scaleData = SCALE_LIBRARY[normalized];
-  
+
   let baseFingering: number[][] | undefined;
-  
+
+  // Try to find the scale in the library
   if (scaleData && scaleData.fingerings && scaleData.fingerings.length > 0) {
-    baseFingering = scaleData.fingerings[0];
+    baseFingering = scaleData.fingerings[0];  // Use Position 1
   } else {
+    // Fallback: try fuzzy matching
+    console.warn(`Scale "${normalized}" not found in library, attempting fuzzy match...`);
     for (const [key, data] of Object.entries(SCALE_LIBRARY)) {
       if (normalized.includes(key) || key.includes(normalized)) {
         if (data.fingerings && data.fingerings.length > 0) {
+          console.info(`Matched "${normalized}" to "${key}"`);
           baseFingering = data.fingerings[0];
           break;
         }
       }
     }
   }
-  
+
+  // Ultimate fallback: use major scale
   if (!baseFingering) {
+    console.warn(`No fingering found for scale "${scaleName}" - using major scale pattern`);
     baseFingering = SCALE_LIBRARY['major'].fingerings[0];
   }
-  
+
+  // Detect the base root note of the pattern and transpose
   const baseRoot = detectFingeringBaseRoot(baseFingering);
   const semitones = calculateSemitoneDistance(baseRoot, root);
+
+  if (semitones !== 0) {
+    console.info(`Transposing ${normalized} scale from ${baseRoot} to ${root} (${semitones} semitones)`);
+  }
 
   return transposeFingering(baseFingering, semitones);
 }
 
+/**
+ * Transpose a fingering pattern by a number of semitones
+ * Clamps frets to the valid range [0, 24]
+ *
+ * @param fingering - Original fingering pattern
+ * @param semitones - Number of semitones to transpose (can be negative)
+ * @returns Transposed fingering pattern
+ */
 function transposeFingering(fingering: number[][], semitones: number): number[][] {
   if (semitones === 0) return fingering;
-  
-  return fingering.map(stringFrets => 
+
+  return fingering.map(stringFrets =>
     stringFrets.map(fret => {
       const newFret = fret + semitones;
+      // Clamp to valid guitar fret range
       if (newFret < 0) return 0;
       if (newFret > 24) return 24;
       return newFret;

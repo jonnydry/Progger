@@ -391,24 +391,51 @@ const GENERIC_BARRE_SHAPES: Record<string, ChordVoicing[]> = {
   'madd9': [{ frets: [1, 3, 3, 1, 1, 3], firstFret: 1, position: 'Barre' }],
 };
 
+// Map root notes to fret positions on the low E string (E=0)
+// Includes both sharp and flat enharmonic equivalents for complete coverage
 const ROOT_TO_FRET_FROM_E: Record<string, number> = {
-  'E': 0, 'F': 1, 'F#': 2, 'Gb': 2, 'G': 3, 
-  'Ab': 4, 'G#': 4, 'A': 5, 'Bb': 6, 'A#': 6, 'B': 7,
-  'C': 8, 'C#': 9, 'Db': 9, 'D': 10, 'Eb': 11, 'D#': 11
+  'C': 8, 'C#': 9, 'Db': 9,
+  'D': 10, 'D#': 11, 'Eb': 11,
+  'E': 0,
+  'F': 1, 'F#': 2, 'Gb': 2,
+  'G': 3, 'G#': 4, 'Ab': 4,
+  'A': 5, 'A#': 6, 'Bb': 6,
+  'B': 7
 };
 
+/**
+ * Normalize root note to a consistent format for chord lookups
+ * Standardizes enharmonic equivalents to match CHORD_VOICINGS keys
+ * Note: F# and Gb are both kept as separate entries in voicings library
+ */
 function normalizeRoot(root: string): string {
   const upper = root.toUpperCase();
-  const sharpEquivalents: Record<string, string> = {
-    'C': 'C', 'C#': 'Db', 'DB': 'Db',
-    'D': 'D', 'D#': 'Eb', 'EB': 'Eb',
+
+  // Map all sharp and flat variants to their standardized forms
+  // Prioritizes flats for most notes (C#→Db, D#→Eb, etc.) for consistency
+  // Exception: F# and Gb are both valid keys in the library
+  const normalizedRoots: Record<string, string> = {
+    'C': 'C',
+    'C#': 'Db', 'DB': 'Db',
+    'D': 'D',
+    'D#': 'Eb', 'EB': 'Eb',
     'E': 'E',
-    'F': 'F', 'F#': 'F#', 'GB': 'Gb',
-    'G': 'G', 'G#': 'Ab', 'AB': 'Ab',
-    'A': 'A', 'A#': 'Bb', 'BB': 'Bb',
+    'F': 'F',
+    'F#': 'F#', 'GB': 'Gb',  // Both variants exist in library
+    'G': 'G',
+    'G#': 'Ab', 'AB': 'Ab',
+    'A': 'A',
+    'A#': 'Bb', 'BB': 'Bb',
     'B': 'B'
   };
-  return sharpEquivalents[upper] || 'C';
+
+  const normalized = normalizedRoots[upper];
+  if (!normalized) {
+    console.warn(`Unknown root note: "${root}" - defaulting to C`);
+    return 'C';
+  }
+
+  return normalized;
 }
 
 function normalizeQuality(quality: string): string {
@@ -482,29 +509,54 @@ function extractRootAndQuality(chordName: string): { root: string; quality: stri
   };
 }
 
+/**
+ * Get the fret position for a root note on the low E string
+ * @param root - Root note (should be normalized first)
+ * @returns Fret number (0-11), defaults to 0 if not found
+ */
 function getFretOffset(root: string): number {
-  return ROOT_TO_FRET_FROM_E[root] || 0;
+  const fretPosition = ROOT_TO_FRET_FROM_E[root];
+  if (fretPosition === undefined) {
+    console.warn(`Root note "${root}" not found in fret mapping - defaulting to fret 0 (E)`);
+    return 0;
+  }
+  return fretPosition;
 }
 
+/**
+ * Get chord voicings for a given chord name
+ * 1. Tries to find specific voicings in CHORD_VOICINGS
+ * 2. Falls back to generic barre shapes if available
+ * 3. Returns "Unknown" voicing (all muted) as last resort
+ * @param chordName - Chord name (e.g., "Cmaj7", "F#m", "Bb7")
+ * @returns Array of chord voicings
+ */
 export function getChordVoicings(chordName: string): ChordVoicing[] {
   const { root, quality } = extractRootAndQuality(chordName);
   const key: ChordKey = `${root}_${quality}`;
-  
+
+  // Try to find specific voicing in library
   const voicings = CHORD_VOICINGS[key];
   if (voicings && voicings.length > 0) {
     return voicings;
   }
-  
+
+  // Fall back to generic barre shapes if quality is recognized
   const genericShapes = GENERIC_BARRE_SHAPES[quality];
   if (genericShapes && genericShapes.length > 0) {
     const fretPosition = getFretOffset(root);
     const adjustedFret = fretPosition === 0 ? 12 : fretPosition;
+
+    console.info(`Using generic barre shape for ${chordName} (${key}) at fret ${adjustedFret}`);
+
     return genericShapes.map(shape => ({
       ...shape,
       firstFret: adjustedFret,
       position: `${root} ${quality}`
     }));
   }
-  
+
+  // No voicing found - return "unknown" placeholder
+  console.warn(`⚠️ No voicing found for chord: ${chordName} (normalized to ${key}). This chord will display as all muted strings.`);
   return [{ frets: ['x', 'x', 'x', 'x', 'x', 'x'], position: 'Unknown' }];
 }
