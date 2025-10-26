@@ -83,6 +83,12 @@
 - **AI Model**: grok-4-fast-reasoning with max_tokens: 1500
 
 ## Recent Changes
+- **2025-10-26**: Fixed Replit Auth to work when opening in new tab
+  - Fixed Vite proxy configuration to preserve original hostname instead of changing to localhost
+  - Added `changeOrigin: false` and custom proxy configure function to pass through the Host header
+  - Added hostname normalization (trim + toLowerCase) to handle case-insensitive matching
+  - Added helpful error messages when accessing from unauthorized domains
+  - Authentication now works correctly when accessed via Replit preview URL or new tab
 - **2025-10-26**: Added stash feature for saving chord progressions
   - Created stash table in PostgreSQL database with user-specific persistence
   - Schema includes: id, userId (FK to users), name, key, mode, progressionData (jsonb), createdAt

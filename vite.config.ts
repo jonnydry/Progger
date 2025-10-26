@@ -16,7 +16,15 @@ export default defineConfig({
         proxy: {
           '/api': {
             target: 'http://localhost:3001',
-            changeOrigin: true,
+            changeOrigin: false,
+            ws: true,
+            configure: (proxy, _options) => {
+              proxy.on('proxyReq', (proxyReq, req, _res) => {
+                if (req.headers.host) {
+                  proxyReq.setHeader('host', req.headers.host);
+                }
+              });
+            },
           },
         },
       },
