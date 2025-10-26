@@ -233,23 +233,24 @@ function extractRootFromScaleName(scaleName: string): string {
 
 function detectFingeringBaseRoot(fingering: number[][]): string {
   const lowestFret = Math.min(...fingering[0]);
-  
-  const STANDARD_TUNING_LOW_E = 0;
+
+  // Low E string open note is E, which has a note value of 4 in the chromatic scale (C=0)
+  const STANDARD_TUNING_LOW_E = 4;
   const fretValue = (STANDARD_TUNING_LOW_E + lowestFret) % 12;
-  
-  if (fretValue === 0) return 'E';
-  if (fretValue === 1) return 'F';
-  if (fretValue === 2) return 'F#';
-  if (fretValue === 3) return 'G';
-  if (fretValue === 4) return 'G#';
-  if (fretValue === 5) return 'A';
-  if (fretValue === 6) return 'A#';
-  if (fretValue === 7) return 'B';
-  if (fretValue === 8) return 'C';
-  if (fretValue === 9) return 'C#';
-  if (fretValue === 10) return 'D';
-  if (fretValue === 11) return 'D#';
-  
+
+  if (fretValue === 0) return 'C';
+  if (fretValue === 1) return 'C#';
+  if (fretValue === 2) return 'D';
+  if (fretValue === 3) return 'D#';
+  if (fretValue === 4) return 'E';
+  if (fretValue === 5) return 'F';
+  if (fretValue === 6) return 'F#';
+  if (fretValue === 7) return 'G';
+  if (fretValue === 8) return 'G#';
+  if (fretValue === 9) return 'A';
+  if (fretValue === 10) return 'A#';
+  if (fretValue === 11) return 'B';
+
   return 'C';
 }
 
