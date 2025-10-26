@@ -64,12 +64,21 @@ export async function generateChordProgression(key: string, mode: string, includ
         throw new Error("API returned incomplete scale data (missing name or root note).");
     }
 
-    const progression: ChordInProgression[] = resultFromApi.progression.map(chord => ({
-        chordName: chord.chordName,
-        musicalFunction: chord.musicalFunction,
-        relationToKey: chord.relationToKey,
-        voicings: getChordVoicings(chord.chordName)
-    }));
+    const progression: ChordInProgression[] = resultFromApi.progression.map(chord => {
+        const voicings = getChordVoicings(chord.chordName);
+
+        // Validate that we have proper voicings (not just the "Unknown" fallback)
+        if (voicings.length === 1 && voicings[0].frets.every(f => f === 'x')) {
+            console.warn(`⚠️ No voicing found for chord: ${chord.chordName}. This chord may not display properly.`);
+        }
+
+        return {
+            chordName: chord.chordName,
+            musicalFunction: chord.musicalFunction,
+            relationToKey: chord.relationToKey,
+            voicings
+        };
+    });
 
     const scales: ScaleInfo[] = resultFromApi.scales.map(scale => ({
         name: scale.name,
