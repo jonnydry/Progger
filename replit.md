@@ -1,7 +1,7 @@
-# Chord & Scale Generator
+# PROGGER
 
 ## Overview
-An AI-powered chord progression and scale generator for guitarists, built with React, TypeScript, Express, and PostgreSQL. Features a beautiful glassmorphic UI with Replit Auth integration for user authentication. Uses xAI's Grok API to generate intelligent chord progressions with multiple guitar voicings and suggested scales for improvisation.
+**PROGGER** is an AI-powered chord progression and scale generator for guitarists, built with React, TypeScript, Express, and PostgreSQL. Features a beautiful glassmorphic UI with Replit Auth integration for user authentication. Uses xAI's Grok API to generate intelligent chord progressions with multiple guitar voicings and suggested scales for improvisation.
 
 ## Tech Stack
 - **Frontend**: React 19.2 with TypeScript
@@ -82,6 +82,12 @@ An AI-powered chord progression and scale generator for guitarists, built with R
 - **AI Model**: grok-4-fast-reasoning with max_tokens: 1500
 
 ## Recent Changes
+- **2025-10-26**: Renamed app to "PROGGER" with distinctive JetBrains Mono font
+  - Updated app name from "Chord & Scale Generator" to "PROGGER" 
+  - Applied JetBrains Mono font (bold, extrabold weights) exclusively to the PROGGER logo
+  - Updated page title to "PROGGER - Chord Progression Generator"
+  - Maintained existing font system (Source Code Pro) for rest of application
+  - Left space for logo to be added later
 - **2025-10-26**: Fixed "strange chord diagrams" bug
   - Completely redesigned chord library to use pre-defined voicings instead of algorithmic transposition
   - Added 200+ accurate voicings for 12 chromatic roots × 20+ chord qualities
