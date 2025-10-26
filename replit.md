@@ -48,7 +48,7 @@
 │   ├── routes.ts       # API routes (/api/auth/user, /api/login, etc.)
 │   └── storage.ts      # Database operations (user CRUD)
 ├── shared/             # Shared types and schema
-│   └── schema.ts       # Drizzle ORM schema (users, sessions)
+│   └── schema.ts       # Drizzle ORM schema (users, sessions, stash)
 └── vite.config.ts      # Vite configuration with API proxy
 ```
 
@@ -58,6 +58,7 @@
 - **Multiple Voicings**: 200+ guitar chord voicings for each chord type (client-side library)
 - **Scale Suggestions**: AI-suggested scales for improvisation with multiple fingering patterns (client-side library)
 - **Automatic Transposition**: Transpose voicings and fingerings to any root note
+- **Stash Feature**: Save and retrieve chord progressions for later use with user-specific persistence
 - **Theme Customization**: Beautiful glassmorphic UI with light/dark mode toggle
 - **Session-Based Caching**: Performance optimization with PostgreSQL session storage
 
@@ -82,6 +83,11 @@
 - **AI Model**: grok-4-fast-reasoning with max_tokens: 1500
 
 ## Recent Changes
+- **2025-10-26**: Added stash feature for saving chord progressions
+  - Created stash table in PostgreSQL database with user-specific persistence
+  - Schema includes: id, userId (FK to users), name, key, mode, progressionData (jsonb), createdAt
+  - Database migration executed successfully with `npm run db:push --force`
+  - Enables users to save and retrieve their favorite chord progressions
 - **2025-10-26**: Context-aware enharmonic note display following music theory conventions
   - Implemented KEY_SIGNATURE mapping in `musicTheory.ts` to classify keys as sharp, flat, or natural
   - Created `displayNote()` function to convert note names based on key context (sharps in sharp keys, flats in flat keys)
