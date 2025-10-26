@@ -72,22 +72,22 @@ const getScaleNotes = (rootNote: string, scaleName: string): number[] => {
 };
 
 const STANDARD_TUNING = ['E', 'B', 'G', 'D', 'A', 'E']; // High to low
-const FRET_COUNT_DESKTOP = 17;
-const FRET_COUNT_MOBILE = 12;
-const INLAY_FRETS = [3, 5, 7, 9, 15];
-const DOUBLE_INLAY_FRET = 12;
+const FRET_COUNT_DESKTOP = 24;
+const FRET_COUNT_MOBILE = 15;
+const INLAY_FRETS = [3, 5, 7, 9, 15, 17, 19, 21];
+const DOUBLE_INLAY_FRETS = [12, 24];
 
 export const SkeletonScaleDiagram: React.FC = () => (
-    <div className="flex flex-col items-center animate-pulse w-full max-w-5xl mx-auto">
-        <div className="h-8 w-1/3 bg-surface/80 rounded-md mb-4 self-start"></div>
-        <div className="w-full h-48 bg-surface rounded-lg border border-border"></div>
+    <div className="flex flex-col items-center animate-pulse w-full max-w-4xl mx-auto">
+        <div className="h-6 w-1/3 bg-surface/80 rounded-md mb-3 self-start"></div>
+        <div className="w-full h-32 bg-surface rounded-lg border border-border"></div>
     </div>
 );
 
 const FretInlay: React.FC<{ fret: number; fretCount: number }> = React.memo(({ fret, fretCount }) => {
     const left = `${((fret - 0.5) / fretCount) * 100}%`;
-    const inlayClasses = "absolute w-2.5 h-2.5 rounded-full bg-text/5 dark:bg-text/10";
-    if (fret === DOUBLE_INLAY_FRET) {
+    const inlayClasses = "absolute w-2 h-2 rounded-full bg-text/5 dark:bg-text/10";
+    if (DOUBLE_INLAY_FRETS.includes(fret)) {
         return <>
             <div className={inlayClasses} style={{ left, top: '33.33%', transform: 'translate(-50%, -50%)' }} />
             <div className={inlayClasses} style={{ left, top: '66.67%', transform: 'translate(-50%, -50%)' }} />
@@ -101,8 +101,8 @@ const NoteDot: React.FC<{ noteName: string, fret: number, isRoot: boolean }> = R
     const noteClasses = "bg-primary text-background";
 
     return (
-        <button type="button" className="relative w-6 h-6 md:w-7 md:h-7 flex items-center justify-center transition-transform duration-150 ease-in-out group focus:outline-none focus:z-10">
-            <div className={`relative w-full h-full rounded-full flex items-center justify-center text-[9px] md:text-xs font-bold border-2 border-surface ${isRoot ? rootClasses : noteClasses}`}>
+        <button type="button" className="relative w-5 h-5 md:w-6 md:h-6 flex items-center justify-center transition-transform duration-150 ease-in-out group focus:outline-none focus:z-10">
+            <div className={`relative w-full h-full rounded-full flex items-center justify-center text-[8px] md:text-[10px] font-bold border-2 border-surface ${isRoot ? rootClasses : noteClasses}`}>
                 {noteName}
             </div>
             {/* Tooltip */}
@@ -166,17 +166,17 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo }) => {
   }, [fingering]);
 
   return (
-    <div className="flex flex-col items-center w-full max-w-6xl mx-auto">
-        <div className="w-full flex justify-between items-center mb-4 px-1">
-            <h2 className="text-xl md:text-2xl font-semibold text-text/90">{name}</h2>
+    <div className="flex flex-col items-center w-full max-w-4xl mx-auto">
+        <div className="w-full flex justify-between items-center mb-3 px-1">
+            <h2 className="text-lg md:text-xl font-semibold text-text/90">{name}</h2>
             <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
         </div>
-      
+
       <div className="w-full bg-surface rounded-lg shadow-lg border border-border overflow-x-auto overflow-y-hidden">
-        <div className={`${isMobile ? 'min-w-[500px]' : 'min-w-[800px]'} px-4 md:px-6 py-4 md:py-5 text-[10px] md:text-xs`}>
+        <div className={`${isMobile ? 'min-w-[600px]' : 'min-w-[900px]'} px-3 md:px-4 py-3 md:py-4 text-[10px] md:text-xs`}>
             {/* Main Fretboard Area with Fade Effect */}
-            <div 
-                className="relative md:-mx-6 md:-my-5 md:px-6 md:py-5"
+            <div
+                className="relative md:-mx-4 md:-my-4 md:px-4 md:py-4"
                 style={{
                     background: 'linear-gradient(to bottom, hsl(var(--color-primary) / 0.03), hsl(var(--color-secondary) / 0.04), hsl(var(--color-primary) / 0.05))',
                     ...(isMobile ? {} : {
@@ -188,22 +188,22 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo }) => {
                 }}
             >
                 {/* Fret numbers row */}
-                <div 
+                <div
                     className="grid relative z-20"
-                    style={{ gridTemplateColumns: `${isMobile ? '1.5rem' : '2rem'} repeat(${fretCount}, minmax(0, 1fr))` }}
+                    style={{ gridTemplateColumns: `${isMobile ? '1.5rem' : '1.75rem'} repeat(${fretCount}, minmax(0, 1fr))` }}
                 >
-                    <div /> 
+                    <div />
                     {Array.from({ length: fretCount }, (_, idx) => idx + 1).map((fret) => (
-                        <div key={`fret-num-${fret}`} className="text-center text-text/50 pb-2 h-5 md:h-6 flex items-center justify-center font-semibold">
-                            {[3, 5, 7, 9, 12, 15].includes(fret) ? fret : ''}
+                        <div key={`fret-num-${fret}`} className="text-center text-text/50 pb-1 h-4 md:h-5 flex items-center justify-center font-semibold text-[9px] md:text-[10px]">
+                            {[3, 5, 7, 9, 12, 15, 17, 19, 21, 24].includes(fret) ? fret : ''}
                         </div>
                     ))}
                 </div>
             
                 {/* Strings and Notes */}
-                <div className="relative mt-[-20px] md:mt-[-24px]">
+                <div className="relative mt-[-16px] md:mt-[-20px]">
                     {/* Fret Inlays */}
-                    {[...INLAY_FRETS, DOUBLE_INLAY_FRET].filter(f => f <= fretCount).map(fret => 
+                    {[...INLAY_FRETS, ...DOUBLE_INLAY_FRETS].filter(f => f <= fretCount).map(fret =>
                         <FretInlay key={`inlay-${fret}`} fret={fret} fretCount={fretCount} />
                     )}
 
@@ -217,9 +217,9 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo }) => {
                     ))}
                     
                     {/* Note Grid */}
-                    <div 
+                    <div
                         className="relative grid z-10"
-                        style={{ gridTemplateColumns: `${isMobile ? '1.5rem' : '2rem'} repeat(${fretCount}, minmax(0, 1fr))` }}
+                        style={{ gridTemplateColumns: `${isMobile ? '1.5rem' : '1.75rem'} repeat(${fretCount}, minmax(0, 1fr))` }}
                     >
                         {/* String rows */}
                         {STANDARD_TUNING.map((stringName, stringIndex) => {
@@ -236,7 +236,7 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo }) => {
                             return (
                                 <React.Fragment key={`string-row-${stringIndex}`}>
                                     {/* String Name with optional open note */}
-                                    <div className="flex items-center justify-center text-text/70 h-8 md:h-10 pr-1 md:pr-2 font-bold relative text-[10px] md:text-xs">
+                                    <div className="flex items-center justify-center text-text/70 h-7 md:h-8 pr-1 font-bold relative text-[10px] md:text-xs">
                                         {hasOpenNote ? (
                                             <NoteDot noteName={stringName} fret={0} isRoot={isOpenRoot} />
                                         ) : (
@@ -263,10 +263,10 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo }) => {
                                         }
 
                                         return (
-                                            <div key={`fret-${stringIndex}-${fret}`} className="flex items-center justify-center relative h-8 md:h-10 group">
+                                            <div key={`fret-${stringIndex}-${fret}`} className="flex items-center justify-center relative h-7 md:h-8 group">
                                                 {/* Fret wire */}
                                                 {fret === 1 && <div className="absolute top-0 bottom-0 left-0 w-1 bg-text/50 shadow-md"></div>}
-                                                {fret > 1 && <div className={`absolute top-0 bottom-0 left-0 w-px ${fret === 12 ? 'bg-text/30' : 'bg-text/15'}`}></div>}
+                                                {fret > 1 && <div className={`absolute top-0 bottom-0 left-0 w-px ${fret === 12 || fret === 24 ? 'bg-text/30' : 'bg-text/15'}`}></div>}
                                                 
                                                 {isNotePresent && <NoteDot noteName={noteName} fret={fret} isRoot={isRoot} />}
                                             </div>
