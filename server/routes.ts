@@ -52,6 +52,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Stash routes - require authentication
+  app.get('/api/stash', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const items = await storage.getUserStashItems(userId);
+      res.json(items);
+    } catch (error) {
+      console.error("Error fetching stash items:", error);
+      res.status(500).json({ message: "Failed to fetch stash items" });
+    }
+  });
+
+  app.post('/api/stash', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { name, key, mode, progressionData } = req.body;
+
+      if (!name || !key || !mode || !progressionData) {
+        return res.status(400).json({
+          error: "Missing required fields: name, key, mode, progressionData"
+        });
+      }
+
+      const newItem = await storage.createStashItem({
+        userId,
+        name,
+        key,
+        mode,
+        progressionData,
+      });
+
+      res.status(201).json(newItem);
+    } catch (error) {
+      console.error("Error creating stash item:", error);
+      res.status(500).json({ message: "Failed to create stash item" });
+    }
+  });
+
+  app.delete('/api/stash/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id } = req.params;
+
+      await storage.deleteStashItem(id, userId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting stash item:", error);
+      res.status(500).json({ message: "Failed to delete stash item" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
