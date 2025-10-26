@@ -148,7 +148,7 @@ const App: React.FC = () => {
       />
       <main className="container mx-auto px-4 py-8 md:py-12">
         <header className="text-center mb-12">
-          <h1 className="font-bebas text-5xl sm:text-6xl md:text-8xl font-bold text-text/90 tracking-wider">
+          <h1 className="font-roboto text-5xl sm:text-6xl md:text-8xl font-bold text-text/90 tracking-wider">
             PROGGER
           </h1>
           <p className="text-lg text-text/60 mt-2 max-w-2xl mx-auto">
