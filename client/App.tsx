@@ -184,7 +184,7 @@ const App: React.FC = () => {
           {/* Loading State */}
           {isLoading && (
             <div className="space-y-16">
-              <VoicingsGrid progression={[]} isLoading={true} skeletonCount={skeletonCount} musicalKey={key} />
+              <VoicingsGrid progression={[]} isLoading={true} skeletonCount={skeletonCount} musicalKey={key} currentMode={mode} progressionResult={progressionResult} />
               <SkeletonScaleDiagram />
             </div>
           )}
@@ -192,7 +192,7 @@ const App: React.FC = () => {
           {/* Result State */}
           {!isLoading && progressionResult && (
             <div className="space-y-16">
-              <VoicingsGrid progression={progressionResult.progression} isLoading={false} musicalKey={key} />
+              <VoicingsGrid progression={progressionResult.progression} isLoading={false} musicalKey={key} currentMode={mode} progressionResult={progressionResult} />
               
               <div className="text-center border-t border-border pt-12">
                 <h2 className="font-bebas text-4xl font-semibold text-text/80 tracking-wide">
@@ -217,7 +217,7 @@ const App: React.FC = () => {
 
           {/* Initial/Empty State */}
           {!isLoading && !progressionResult && !error && (
-            <VoicingsGrid progression={[]} isLoading={false} musicalKey={key} />
+            <VoicingsGrid progression={[]} isLoading={false} musicalKey={key} currentMode={mode} progressionResult={progressionResult} />
           )}
         </section>
       </main>
