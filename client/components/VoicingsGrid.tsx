@@ -38,6 +38,19 @@ const ArrowButton: React.FC<{ direction: 'left' | 'right'; onClick: () => void }
 ));
 
 
+const generateAutoName = (key: string, mode: string, progression: ChordInProgression[]): string => {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const timeStr = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+  // Create chord progression string (limit to first 4 chords to keep it concise)
+  const chordNames = progression.slice(0, 4).map(p => displayChordName(p.chordName, key));
+  const progressionStr = chordNames.join(' - ');
+  const suffix = progression.length > 4 ? '...' : '';
+
+  return `${key} ${mode} - ${progressionStr}${suffix} - ${dateStr} ${timeStr}`;
+};
+
 export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoading, skeletonCount = 4, musicalKey, currentMode, progressionResult }) => {
   const [voicingIndices, setVoicingIndices] = useState<number[]>([]);
   const [expandedChordIndex, setExpandedChordIndex] = useState<number | null>(null);
@@ -90,6 +103,14 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
     setExpandedChordIndex(prev => (prev === index ? null : index));
   }, []);
 
+  const handleOpenSaveForm = useCallback(() => {
+    if (progressionResult && musicalKey && currentMode) {
+      const autoName = generateAutoName(musicalKey, currentMode, progressionResult.progression);
+      setSaveName(autoName);
+      setShowSaveForm(true);
+    }
+  }, [progressionResult, musicalKey, currentMode]);
+
   if (isLoading) {
       return (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-8 justify-items-center mt-8">
@@ -126,7 +147,7 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
           </h2>
           {progressionResult && currentMode && (
             <button
-              onClick={() => setShowSaveForm(!showSaveForm)}
+              onClick={handleOpenSaveForm}
               className="p-2 rounded-full bg-primary/90 hover:bg-primary text-background transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface"
               title="Save to Stash"
               aria-label="Save progression to stash"
@@ -164,6 +185,7 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
                   handleSave();
                 }
               }}
+              onFocus={(e) => e.target.select()}
               autoFocus
             />
             <div className="flex space-x-2">
