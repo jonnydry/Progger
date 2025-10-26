@@ -82,6 +82,13 @@
 - **AI Model**: grok-4-fast-reasoning with max_tokens: 1500
 
 ## Recent Changes
+- **2025-10-26**: Context-aware enharmonic note display following music theory conventions
+  - Implemented KEY_SIGNATURE mapping in `musicTheory.ts` to classify keys as sharp, flat, or natural
+  - Created `displayNote()` function to convert note names based on key context (sharps in sharp keys, flats in flat keys)
+  - Created `displayChordName()` function to apply context-aware accidentals to chord names
+  - Updated all components (VoicingsGrid, ChordDetailView, ScaleDiagram) to use context-aware notation
+  - Chord names, scale names, and fretboard notes now display correctly: F# in D major (sharp key), Gb in Db major (flat key)
+  - Musically accurate note spelling throughout the application based on selected key signature
 - **2025-10-26**: Renamed app to "PROGGER" with distinctive JetBrains Mono font
   - Updated app name from "Chord & Scale Generator" to "PROGGER" 
   - Applied JetBrains Mono font (bold, extrabold weights) exclusively to the PROGGER logo
