@@ -63,7 +63,7 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
 
   if (isLoading) {
       return (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-8 justify-items-center mt-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-8 justify-items-center mt-8">
             {Array.from({ length: skeletonCount }).map((_, i) => <SkeletonDiagram key={i} />)}
           </div>
       );
@@ -95,7 +95,7 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
             {progressionText}
         </p>
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-8 justify-items-center w-full max-w-5xl">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-8 justify-items-center w-full max-w-5xl">
         {progression.map((chord, index) => {
           const currentVoicingIndex = voicingIndices[index] ?? 0;
           const currentVoicing = chord.voicings[currentVoicingIndex];
