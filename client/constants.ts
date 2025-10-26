@@ -231,7 +231,7 @@ export const THEMES: ThemeOption[] = [
 
 
 export const KEYS = [
-  'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'
+  'C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'
 ];
 
 export const MODES = ['Major', 'Minor'];
