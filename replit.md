@@ -83,12 +83,11 @@
 - **AI Model**: grok-4-fast-reasoning with max_tokens: 1500
 
 ## Recent Changes
-- **2025-10-26**: Added multiple monospaced font options for PROGGER title
-  - Loaded 5 additional Google Fonts: Space Mono, IBM Plex Mono, Fira Code, Inconsolata, Roboto Mono
-  - Extended Tailwind config with font utility classes for easy switching
-  - Currently using Roboto Mono (font-roboto) for clean, modern aesthetic
-  - Adjusted font weight from extrabold to bold for consistency with loaded weights (700)
-  - Simple class change in GlassmorphicHeader.tsx to try different fonts
+- **2025-10-26**: Changed app font to Space Grotesk
+  - Added Space Grotesk (geometric sans-serif) to Google Fonts with weights 300-700
+  - Updated header toolbar title, big center title, and default body font to use Space Grotesk
+  - Clean, modern geometric aesthetic throughout the entire application
+  - Previous experiments with monospaced fonts: Space Mono, IBM Plex Mono, Fira Code, Inconsolata, Roboto Mono, JetBrains Mono
 - **2025-10-26**: Fixed Replit Auth to work when opening in new tab
   - Fixed Vite proxy configuration to preserve original hostname instead of changing to localhost
   - Added `changeOrigin: false` and custom proxy configure function to pass through the Host header
