@@ -66,10 +66,9 @@ export const GlassmorphicHeader: React.FC<GlassmorphicHeaderProps> = ({
                 d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
               />
             </svg>
-            <h1 className="font-space text-2xl font-bold text-text/90 tracking-tight hidden sm:block">
+            <h1 className="font-roboto text-2xl font-bold text-text/90 tracking-tight hidden sm:block">
               PROGGER
             </h1>
-            {/* Try different fonts: font-jetbrains | font-space | font-ibm | font-fira | font-inconsolata | font-roboto */}
           </div>
 
           {/* Right Side Controls */}
