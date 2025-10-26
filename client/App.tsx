@@ -159,7 +159,7 @@ const App: React.FC = () => {
           {/* Loading State */}
           {isLoading && (
             <div className="space-y-16">
-              <VoicingsGrid progression={[]} isLoading={true} skeletonCount={skeletonCount} />
+              <VoicingsGrid progression={[]} isLoading={true} skeletonCount={skeletonCount} musicalKey={key} />
               <SkeletonScaleDiagram />
             </div>
           )}
@@ -167,7 +167,7 @@ const App: React.FC = () => {
           {/* Result State */}
           {!isLoading && progressionResult && (
             <div className="space-y-16">
-              <VoicingsGrid progression={progressionResult.progression} isLoading={false} />
+              <VoicingsGrid progression={progressionResult.progression} isLoading={false} musicalKey={key} />
               
               <div className="text-center border-t border-border pt-12">
                 <h2 className="font-bebas text-4xl font-semibold text-text/80 tracking-wide">
@@ -182,7 +182,7 @@ const App: React.FC = () => {
                       className="animate-fade-scale-in"
                       style={{ animationDelay: `${index * 150}ms`, animationFillMode: 'backwards' }}
                     >
-                      <LazyScaleDiagram scaleInfo={scale} />
+                      <LazyScaleDiagram scaleInfo={scale} musicalKey={key} />
                     </div>
                   ))}
                 </Suspense>
@@ -192,7 +192,7 @@ const App: React.FC = () => {
 
           {/* Initial/Empty State */}
           {!isLoading && !progressionResult && !error && (
-            <VoicingsGrid progression={[]} isLoading={false} />
+            <VoicingsGrid progression={[]} isLoading={false} musicalKey={key} />
           )}
         </section>
       </main>

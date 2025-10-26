@@ -147,3 +147,20 @@ export function displayNote(note: string, key: string): string {
     return ALL_NOTES_FLAT[noteValue];
   }
 }
+
+/**
+ * Transform a chord name to use the appropriate accidentals based on key context
+ * @param chordName - The chord name (e.g., "C#maj7", "Gbmin")
+ * @param key - The musical key context
+ * @returns Chord name with context-appropriate accidental
+ */
+export function displayChordName(chordName: string, key: string): string {
+  // Extract the root note (first letter plus optional sharp/flat)
+  const match = chordName.match(/^([A-G][#b]?)(.*)/i);
+  if (!match) return chordName;
+  
+  const [, root, quality] = match;
+  const displayRoot = displayNote(root, key);
+  
+  return displayRoot + quality;
+}

@@ -2,11 +2,13 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { VoicingDiagram } from './VoicingDiagram';
 import type { ChordInProgression } from '@/types';
 import { ChordDetailView } from './ChordDetailView';
+import { displayChordName } from '@/utils/musicTheory';
 
 interface VoicingsGridProps {
   progression: ChordInProgression[];
   isLoading: boolean;
   skeletonCount?: number;
+  musicalKey: string;
 }
 
 const SkeletonDiagram: React.FC = () => (
@@ -33,7 +35,7 @@ const ArrowButton: React.FC<{ direction: 'left' | 'right'; onClick: () => void }
 ));
 
 
-export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoading, skeletonCount = 4 }) => {
+export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoading, skeletonCount = 4, musicalKey }) => {
   const [voicingIndices, setVoicingIndices] = useState<number[]>([]);
   const [expandedChordIndex, setExpandedChordIndex] = useState<number | null>(null);
 
@@ -84,8 +86,8 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
   }
 
   const progressionText = useMemo(() =>
-    progression.map(p => p.chordName).join(' - '),
-    [progression]
+    progression.map(p => displayChordName(p.chordName, musicalKey)).join(' - '),
+    [progression, musicalKey]
   );
 
   return (
@@ -105,6 +107,8 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
           
           if (!currentVoicing) return null;
 
+          const displayedChordName = displayChordName(chord.chordName, musicalKey);
+          
           return (
             <div key={`${chord.chordName}-${index}`} className="flex flex-col items-center gap-4">
               <div
@@ -113,11 +117,11 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
                 tabIndex={0}
                 role="button"
                 className={`cursor-pointer rounded-xl transition-all duration-300 ${expandedChordIndex === index ? 'scale-105 shadow-primary/40 shadow-2xl ring-2 ring-primary ring-offset-4 ring-offset-background' : 'hover:scale-105 hover:shadow-xl'} focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-4 focus:ring-offset-background`}
-                aria-label={`View details for ${chord.chordName}`}
+                aria-label={`View details for ${displayedChordName}`}
                 aria-expanded={expandedChordIndex === index}
               >
                 <div key={currentVoicingIndex} className="animate-cross-fade-in">
-                  <VoicingDiagram chordName={chord.chordName} voicing={currentVoicing} />
+                  <VoicingDiagram chordName={displayedChordName} voicing={currentVoicing} />
                 </div>
               </div>
               <div className="flex items-center justify-center gap-4 w-full">
@@ -135,6 +139,7 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
       {expandedChordIndex !== null && progression[expandedChordIndex] && (
         <ChordDetailView
           chord={progression[expandedChordIndex]}
+          musicalKey={musicalKey}
           onClose={() => setExpandedChordIndex(null)}
         />
       )}
