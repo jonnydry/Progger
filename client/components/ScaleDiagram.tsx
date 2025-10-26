@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import type { ScaleInfo } from '@/types';
-import { noteToValue as noteToValueBase, valueToNote, STANDARD_TUNING_NAMES } from '@/utils/musicTheory';
+import { noteToValue as noteToValueBase, valueToNote, displayNote, STANDARD_TUNING_NAMES } from '@/utils/musicTheory';
 
 interface ScaleDiagramProps {
   scaleInfo: ScaleInfo;
+  musicalKey: string;
 }
 
 // Wrapper to return -1 for invalid notes (used as sentinel value in this component)
@@ -129,7 +130,7 @@ const ViewToggle: React.FC<{
     );
 });
 
-const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo }) => {
+const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) => {
   const { name, rootNote, notes, fingering } = scaleInfo;
   const [viewMode, setViewMode] = useState<'pattern' | 'map'>('pattern');
   const [isMobile, setIsMobile] = useState(false);
@@ -164,10 +165,16 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo }) => {
     [fretCount]
   );
 
+  // Display scale name with context-aware root note
+  const displayedScaleName = useMemo(() => {
+    const displayRootNote = displayNote(rootNote, musicalKey);
+    return name.replace(rootNote, displayRootNote);
+  }, [name, rootNote, musicalKey]);
+
   return (
     <div className="flex flex-col items-center w-full max-w-4xl mx-auto">
         <div className="w-full flex justify-between items-center mb-3 px-1">
-            <h2 className="text-lg md:text-xl font-semibold text-text/90">{name}</h2>
+            <h2 className="text-lg md:text-xl font-semibold text-text/90">{displayedScaleName}</h2>
             <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
         </div>
 
@@ -231,15 +238,16 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo }) => {
                                 hasOpenNote = scaleNoteValues.has(openStringNoteValue);
                             }
                             const isOpenRoot = openStringNoteValue === rootNoteValue;
+                            const displayedStringName = displayNote(stringName, musicalKey);
                             
                             return (
                                 <React.Fragment key={`string-row-${stringIndex}`}>
                                     {/* String Name with optional open note */}
                                     <div className="flex items-center justify-center text-text/70 h-7 md:h-8 pr-1 font-bold relative text-[10px] md:text-xs">
                                         {hasOpenNote ? (
-                                            <NoteDot noteName={stringName} fret={0} isRoot={isOpenRoot} />
+                                            <NoteDot noteName={displayedStringName} fret={0} isRoot={isOpenRoot} />
                                         ) : (
-                                            stringName
+                                            displayedStringName
                                         )}
                                     </div>
 
@@ -258,7 +266,8 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo }) => {
                                         let noteName = '';
                                         if (isNotePresent) {
                                             isRoot = currentNoteValue === rootNoteValue;
-                                            noteName = valueToNote(currentNoteValue);
+                                            const rawNoteName = valueToNote(currentNoteValue);
+                                            noteName = displayNote(rawNoteName, musicalKey);
                                         }
 
                                         return (
