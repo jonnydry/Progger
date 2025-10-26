@@ -32,9 +32,11 @@ export const ChordDetailView: React.FC<ChordDetailViewProps> = ({ chord, onClose
         
         <h3 className="text-lg font-semibold text-text/80 border-t border-border pt-4">Alternative Voicings</h3>
         <div className="mt-4 flex flex-row flex-wrap gap-4 justify-start">
-          {chord.voicings.map((voicing, index) => (
-            <VoicingDiagram key={index} chordName={chord.chordName} voicing={voicing} />
-          ))}
+          {chord.voicings.map((voicing, index) => {
+            // Create stable key from voicing data
+            const voicingKey = `${chord.chordName}-${voicing.position}-${voicing.frets.join('-')}`;
+            return <VoicingDiagram key={voicingKey} chordName={chord.chordName} voicing={voicing} />;
+          })}
         </div>
       </div>
     </div>

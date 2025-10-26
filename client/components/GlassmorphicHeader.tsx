@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ThemeSelector } from './ThemeSelector';
 import type { ThemeOption } from '@/constants';
 
@@ -27,22 +27,24 @@ export const GlassmorphicHeader: React.FC<GlassmorphicHeaderProps> = ({
   onLogin,
   onLogout,
 }) => {
+  const headerStyle = useMemo(() => ({
+    backdropFilter: 'blur(12px)',
+    WebkitBackdropFilter: 'blur(12px)',
+    background: theme === 'dark'
+      ? 'rgba(0, 0, 0, 0.6)'
+      : 'rgba(255, 255, 255, 0.6)',
+    borderBottom: theme === 'dark'
+      ? '1px solid rgba(255, 255, 255, 0.1)'
+      : '1px solid rgba(0, 0, 0, 0.1)',
+    boxShadow: theme === 'dark'
+      ? '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)'
+      : '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+  }), [theme]);
+
   return (
     <header
       className="sticky top-0 z-50 w-full"
-      style={{
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        background: theme === 'dark' 
-          ? 'rgba(0, 0, 0, 0.6)' 
-          : 'rgba(255, 255, 255, 0.6)',
-        borderBottom: theme === 'dark'
-          ? '1px solid rgba(255, 255, 255, 0.1)'
-          : '1px solid rgba(0, 0, 0, 0.1)',
-        boxShadow: theme === 'dark'
-          ? '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)'
-          : '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
-      }}
+      style={headerStyle}
     >
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">

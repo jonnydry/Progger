@@ -1,23 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import type { ScaleInfo } from '@/types';
+import { noteToValue as noteToValueBase, valueToNote, STANDARD_TUNING_NAMES } from '@/utils/musicTheory';
 
 interface ScaleDiagramProps {
   scaleInfo: ScaleInfo;
 }
 
-const ALL_NOTES_SHARP = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-const ALL_NOTES_FLAT = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
-
+// Wrapper to return -1 for invalid notes (used as sentinel value in this component)
 const noteToValue = (note: string): number => {
-  if (!note || note.length === 0) return -1;
-  const normalizedNote = note.charAt(0).toUpperCase() + note.slice(1).toLowerCase();
-  let index = ALL_NOTES_SHARP.indexOf(normalizedNote);
-  if (index !== -1) return index;
-  index = ALL_NOTES_FLAT.indexOf(normalizedNote);
-  return index;
+  const value = noteToValueBase(note, -1);
+  return value;
 };
-
-const valueToNote = (value: number): string => ALL_NOTES_SHARP[value % 12];
 
 const SCALE_PATTERNS: Record<string, number[]> = {
   'harmonic minor': [0, 2, 3, 5, 7, 8, 11],
@@ -71,11 +64,11 @@ const getScaleNotes = (rootNote: string, scaleName: string): number[] => {
   return [];
 };
 
-const STANDARD_TUNING = ['E', 'B', 'G', 'D', 'A', 'E']; // High to low
+const STANDARD_TUNING = STANDARD_TUNING_NAMES; // High to low
 const FRET_COUNT_DESKTOP = 24;
 const FRET_COUNT_MOBILE = 15;
-const INLAY_FRETS = [3, 5, 7, 9, 15, 17, 19, 21];
-const DOUBLE_INLAY_FRETS = [12, 24];
+const INLAY_FRETS = [3, 5, 7, 9, 15, 17, 19, 21] as const;
+const DOUBLE_INLAY_FRETS = [12, 24] as const;
 
 export const SkeletonScaleDiagram: React.FC = () => (
     <div className="flex flex-col items-center animate-pulse w-full max-w-4xl mx-auto">
@@ -165,6 +158,12 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo }) => {
     return fingering.map(frets => new Set(frets ?? []));
   }, [fingering]);
 
+  // Memoize visible inlay frets to avoid array operations on every render
+  const visibleInlays = useMemo(() =>
+    [...INLAY_FRETS, ...DOUBLE_INLAY_FRETS].filter(f => f <= fretCount),
+    [fretCount]
+  );
+
   return (
     <div className="flex flex-col items-center w-full max-w-4xl mx-auto">
         <div className="w-full flex justify-between items-center mb-3 px-1">
@@ -203,7 +202,7 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo }) => {
                 {/* Strings and Notes */}
                 <div className="relative mt-[-16px] md:mt-[-20px]">
                     {/* Fret Inlays */}
-                    {[...INLAY_FRETS, ...DOUBLE_INLAY_FRETS].filter(f => f <= fretCount).map(fret =>
+                    {visibleInlays.map(fret =>
                         <FretInlay key={`inlay-${fret}`} fret={fret} fretCount={fretCount} />
                     )}
 

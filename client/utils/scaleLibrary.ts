@@ -1,3 +1,5 @@
+import { noteToValue, valueToNote, ALL_NOTES_SHARP, calculateSemitoneDistance } from './musicTheory';
+
 export interface ScalePattern {
   intervals: number[];
   fingerings: number[][][];
@@ -281,9 +283,8 @@ export function getScaleFingering(scaleName: string, rootNote?: string): number[
   }
   
   const baseRoot = detectFingeringBaseRoot(baseFingering);
-  const baseRootValue = noteToValue(baseRoot);
-  const semitones = ((targetRootValue - baseRootValue) + 12) % 12;
-  
+  const semitones = calculateSemitoneDistance(baseRoot, root);
+
   return transposeFingering(baseFingering, semitones);
 }
 
@@ -370,20 +371,4 @@ export function getScaleNotes(rootNote: string, scaleName: string): string[] {
   }
   
   return notes;
-}
-
-const ALL_NOTES_SHARP = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-const ALL_NOTES_FLAT = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
-
-function noteToValue(note: string): number {
-  if (!note || note.length === 0) return 0;
-  const normalizedNote = note.charAt(0).toUpperCase() + note.slice(1).toLowerCase();
-  let index = ALL_NOTES_SHARP.indexOf(normalizedNote);
-  if (index !== -1) return index;
-  index = ALL_NOTES_FLAT.indexOf(normalizedNote);
-  return index !== -1 ? index : 0;
-}
-
-function valueToNote(value: number): string {
-  return ALL_NOTES_SHARP[value % 12];
 }
