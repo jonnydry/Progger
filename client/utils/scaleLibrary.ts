@@ -1,3 +1,36 @@
+/**
+ * Scale Library - Guitar Scale Patterns Database
+ *
+ * This file contains a comprehensive library of guitar scale fingering patterns.
+ *
+ * CRITICAL GUITAR CONVENTION:
+ * All fingering arrays follow standard guitar string order:
+ * fingering[0] = Low E (6th string)
+ * fingering[1] = A (5th string)
+ * fingering[2] = D (4th string)
+ * fingering[3] = G (3rd string)
+ * fingering[4] = B (2nd string)
+ * fingering[5] = High E (1st string)
+ *
+ * Visual Representation:
+ * ┌────────────┐
+ * │ E (1st)    │ ← fingering[5] = [frets for high E]
+ * │ B (2nd)    │ ← fingering[4] = [frets for B string]
+ * │ G (3rd)    │ ← fingering[3] = [frets for G string]
+ * │ D (4th)    │ ← fingering[2] = [frets for D string]
+ * │ A (5th)    │ ← fingering[1] = [frets for A string]
+ * │ E (6th)    │ ← fingering[0] = [frets for low E]
+ * └────────────┘
+ *   Thinnest       Thickest
+ *
+ * Each inner array contains fret numbers where scale notes appear on that string.
+ *
+ * Example - C Major Position 1:
+ * fingering[0] = [8, 10, 12]  // Low E: C(8), D(10), E(12)
+ * fingering[1] = [8, 10, 12]  // A string: C(8), D(10), E(12)
+ * ...
+ */
+
 import { noteToValue, valueToNote, ALL_NOTES_SHARP, calculateSemitoneDistance } from './musicTheory';
 
 export interface ScalePattern {

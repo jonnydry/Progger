@@ -1,3 +1,27 @@
+/**
+ * Chord Library - Guitar Chord Voicings Database
+ *
+ * This file contains a comprehensive library of guitar chord voicings.
+ *
+ * CRITICAL GUITAR CONVENTION:
+ * All frets arrays follow standard guitar notation order:
+ * [Low E (6th), A (5th), D (4th), G (3rd), B (2nd), High E (1st)]
+ *
+ * Visual Representation:
+ * ┌─────────┐
+ * │ E (1st) │ ← frets[5]
+ * │ B (2nd) │ ← frets[4]
+ * │ G (3rd) │ ← frets[3]
+ * │ D (4th) │ ← frets[2]
+ * │ A (5th) │ ← frets[1]
+ * │ E (6th) │ ← frets[0]
+ * └─────────┘
+ *   Thinnest     Thickest
+ *
+ * Example: E major open = [0, 2, 2, 1, 0, 0]
+ * Produces notes: E (low) - B - E - G# - B - E (high)
+ */
+
 import type { ChordVoicing } from '@/types';
 
 export interface ChordData {
