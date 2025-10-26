@@ -101,3 +101,49 @@ export function getNoteAtFret(stringNote: string, fret: number): string {
 export function areNotesEnharmonic(note1: string, note2: string): boolean {
   return noteToValue(note1) === noteToValue(note2);
 }
+
+/**
+ * Sharp keys use sharps in their key signature
+ * Flat keys use flats in their key signature
+ */
+const SHARP_KEYS = new Set(['G', 'D', 'A', 'E', 'B', 'F#', 'C#']);
+const FLAT_KEYS = new Set(['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb']);
+
+/**
+ * Determine if a key uses sharps or flats based on music theory
+ * @param key - The musical key (e.g., 'C', 'G', 'F', 'Bb')
+ * @returns 'sharp' if key uses sharps, 'flat' if key uses flats, 'natural' for C
+ */
+export function getKeyAccidentalType(key: string): 'sharp' | 'flat' | 'natural' {
+  const normalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
+  
+  if (normalizedKey === 'C') return 'natural';
+  if (SHARP_KEYS.has(normalizedKey)) return 'sharp';
+  if (FLAT_KEYS.has(normalizedKey)) return 'flat';
+  
+  // Default to sharp for unknown keys
+  return 'sharp';
+}
+
+/**
+ * Display a note using the appropriate accidental based on the key context
+ * @param note - The note to display (can be sharp or flat notation)
+ * @param key - The musical key context (determines sharp vs flat preference)
+ * @returns Note name with context-appropriate accidental
+ */
+export function displayNote(note: string, key: string): string {
+  const noteValue = noteToValue(note);
+  const accidentalType = getKeyAccidentalType(key);
+  
+  // For natural keys (C major), prefer flats for Bb and sharps for F#
+  if (accidentalType === 'natural') {
+    return ALL_NOTES_FLAT[noteValue];
+  }
+  
+  // Use sharps for sharp keys, flats for flat keys
+  if (accidentalType === 'sharp') {
+    return ALL_NOTES_SHARP[noteValue];
+  } else {
+    return ALL_NOTES_FLAT[noteValue];
+  }
+}
