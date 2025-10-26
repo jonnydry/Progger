@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { VoicingDiagram } from './VoicingDiagram';
 import type { ChordInProgression } from '@/types';
 import { ChordDetailView } from './ChordDetailView';
@@ -17,9 +17,9 @@ const SkeletonDiagram: React.FC = () => (
     </div>
 );
 
-const ArrowButton: React.FC<{ direction: 'left' | 'right'; onClick: () => void }> = ({ direction, onClick }) => (
-  <button 
-    onClick={onClick} 
+const ArrowButton: React.FC<{ direction: 'left' | 'right'; onClick: () => void }> = React.memo(({ direction, onClick }) => (
+  <button
+    onClick={onClick}
     className="p-1.5 rounded-full bg-surface hover:bg-background text-text/80 hover:text-text transition-all duration-200 shadow-sm hover:scale-110 border border-border active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface"
   >
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -30,7 +30,7 @@ const ArrowButton: React.FC<{ direction: 'left' | 'right'; onClick: () => void }
       )}
     </svg>
   </button>
-);
+));
 
 
 export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoading, skeletonCount = 4 }) => {
@@ -43,7 +43,7 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
     setExpandedChordIndex(null);
   }, [progression]);
 
-  const handleVoicingChange = (chordIndex: number, direction: 'next' | 'prev') => {
+  const handleVoicingChange = useCallback((chordIndex: number, direction: 'next' | 'prev') => {
     const numVoicings = progression[chordIndex].voicings.length;
     setVoicingIndices(prev => {
       const newIndices = [...prev];
@@ -55,15 +55,15 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
       }
       return newIndices;
     });
-  };
+  }, [progression]);
 
-  const handleChordClick = (index: number) => {
+  const handleChordClick = useCallback((index: number) => {
     setExpandedChordIndex(prev => (prev === index ? null : index));
-  };
+  }, []);
 
   if (isLoading) {
       return (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-8 justify-items-center mt-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-8 justify-items-center mt-8">
             {Array.from({ length: skeletonCount }).map((_, i) => <SkeletonDiagram key={i} />)}
           </div>
       );
@@ -82,8 +82,11 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
       </div>
     );
   }
-  
-  const progressionText = progression.map(p => p.chordName).join(' - ');
+
+  const progressionText = useMemo(() =>
+    progression.map(p => p.chordName).join(' - '),
+    [progression]
+  );
 
   return (
     <div className="flex flex-col items-center gap-10">
@@ -95,7 +98,7 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
             {progressionText}
         </p>
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-8 justify-items-center w-full max-w-5xl">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-8 justify-items-center w-full max-w-5xl">
         {progression.map((chord, index) => {
           const currentVoicingIndex = voicingIndices[index] ?? 0;
           const currentVoicing = chord.voicings[currentVoicingIndex];

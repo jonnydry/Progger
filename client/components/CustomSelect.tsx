@@ -1,5 +1,5 @@
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 
 interface CustomSelectProps {
   label: string;
@@ -30,8 +30,15 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({ label, value, onChan
     };
   }, []);
 
-  const selectedOption = options.find(opt => (typeof opt === 'string' ? opt : opt.value) === value);
-  const displayValue = selectedOption ? (typeof selectedOption === 'string' ? selectedOption : selectedOption.name) : value;
+  const selectedOption = useMemo(() =>
+    options.find(opt => (typeof opt === 'string' ? opt : opt.value) === value),
+    [options, value]
+  );
+
+  const displayValue = useMemo(() =>
+    selectedOption ? (typeof selectedOption === 'string' ? selectedOption : selectedOption.name) : value,
+    [selectedOption, value]
+  );
 
   return (
     <div className="flex flex-col relative" ref={selectRef}>

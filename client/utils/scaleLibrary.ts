@@ -1,3 +1,5 @@
+import { noteToValue, valueToNote, ALL_NOTES_SHARP, calculateSemitoneDistance } from './musicTheory';
+
 export interface ScalePattern {
   intervals: number[];
   fingerings: number[][][];
@@ -233,23 +235,24 @@ function extractRootFromScaleName(scaleName: string): string {
 
 function detectFingeringBaseRoot(fingering: number[][]): string {
   const lowestFret = Math.min(...fingering[0]);
-  
-  const STANDARD_TUNING_LOW_E = 0;
+
+  // Low E string open note is E, which has a note value of 4 in the chromatic scale (C=0)
+  const STANDARD_TUNING_LOW_E = 4;
   const fretValue = (STANDARD_TUNING_LOW_E + lowestFret) % 12;
-  
-  if (fretValue === 0) return 'E';
-  if (fretValue === 1) return 'F';
-  if (fretValue === 2) return 'F#';
-  if (fretValue === 3) return 'G';
-  if (fretValue === 4) return 'G#';
-  if (fretValue === 5) return 'A';
-  if (fretValue === 6) return 'A#';
-  if (fretValue === 7) return 'B';
-  if (fretValue === 8) return 'C';
-  if (fretValue === 9) return 'C#';
-  if (fretValue === 10) return 'D';
-  if (fretValue === 11) return 'D#';
-  
+
+  if (fretValue === 0) return 'C';
+  if (fretValue === 1) return 'C#';
+  if (fretValue === 2) return 'D';
+  if (fretValue === 3) return 'D#';
+  if (fretValue === 4) return 'E';
+  if (fretValue === 5) return 'F';
+  if (fretValue === 6) return 'F#';
+  if (fretValue === 7) return 'G';
+  if (fretValue === 8) return 'G#';
+  if (fretValue === 9) return 'A';
+  if (fretValue === 10) return 'A#';
+  if (fretValue === 11) return 'B';
+
   return 'C';
 }
 
@@ -280,9 +283,8 @@ export function getScaleFingering(scaleName: string, rootNote?: string): number[
   }
   
   const baseRoot = detectFingeringBaseRoot(baseFingering);
-  const baseRootValue = noteToValue(baseRoot);
-  const semitones = ((targetRootValue - baseRootValue) + 12) % 12;
-  
+  const semitones = calculateSemitoneDistance(baseRoot, root);
+
   return transposeFingering(baseFingering, semitones);
 }
 
@@ -369,20 +371,4 @@ export function getScaleNotes(rootNote: string, scaleName: string): string[] {
   }
   
   return notes;
-}
-
-const ALL_NOTES_SHARP = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-const ALL_NOTES_FLAT = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
-
-function noteToValue(note: string): number {
-  if (!note || note.length === 0) return 0;
-  const normalizedNote = note.charAt(0).toUpperCase() + note.slice(1).toLowerCase();
-  let index = ALL_NOTES_SHARP.indexOf(normalizedNote);
-  if (index !== -1) return index;
-  index = ALL_NOTES_FLAT.indexOf(normalizedNote);
-  return index !== -1 ? index : 0;
-}
-
-function valueToNote(value: number): string {
-  return ALL_NOTES_SHARP[value % 12];
 }

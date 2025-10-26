@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import type { ChordVoicing } from '@/types';
 
 interface VoicingDiagramProps {
@@ -20,8 +20,15 @@ export const VoicingDiagram: React.FC<VoicingDiagramProps> = ({ chordName, voici
   const width = LEFT_MARGIN + (STRING_COUNT - 1) * STRING_WIDTH + PADDING * 2;
   const height = FRET_COUNT * FRET_HEIGHT + PADDING * 2.5;
 
-  const highestFret = Math.max(...frets.filter(f => typeof f === 'number').map(f => f as number));
-  const effectiveFirstFret = firstFret > 1 ? firstFret : (highestFret > FRET_COUNT ? highestFret - FRET_COUNT + 1 : 1);
+  const highestFret = useMemo(() =>
+    Math.max(...frets.filter(f => typeof f === 'number').map(f => f as number)),
+    [frets]
+  );
+
+  const effectiveFirstFret = useMemo(() =>
+    firstFret > 1 ? firstFret : (highestFret > FRET_COUNT ? highestFret - FRET_COUNT + 1 : 1),
+    [firstFret, highestFret]
+  );
 
   return (
     <div className="flex flex-col items-center p-3 rounded-lg bg-surface border border-border shadow-md w-full max-w-[180px]">

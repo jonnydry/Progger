@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, lazy, Suspense, useRef } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, lazy, Suspense, useRef } from 'react';
 import { Controls } from './components/Controls';
 import { VoicingsGrid } from './components/VoicingsGrid';
 import { SkeletonScaleDiagram } from './components/ScaleDiagram';
@@ -44,13 +44,13 @@ const App: React.FC = () => {
     window.location.href = '/api/logout';
   };
 
-  const userProfile = user ? {
-    name: user.firstName && user.lastName 
-      ? `${user.firstName} ${user.lastName}`.trim() 
+  const userProfile = useMemo(() => user ? {
+    name: user.firstName && user.lastName
+      ? `${user.firstName} ${user.lastName}`.trim()
       : user.email || 'User',
     email: user.email || '',
     avatar: user.profileImageUrl || undefined,
-  } : null;
+  } : null, [user]);
 
   useEffect(() => {
     const root = window.document.documentElement;
@@ -86,13 +86,17 @@ const App: React.FC = () => {
     setTheme(prevTheme => prevTheme === 'dark' ? 'light' : 'dark');
   };
 
+  const progressionLength = useMemo(() =>
+    selectedProgression === 'auto' ? numChords : selectedProgression.split('-').length,
+    [selectedProgression, numChords]
+  );
+
   const handleGenerate = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     setProgressionResult(null);
 
     try {
-      const progressionLength = selectedProgression === 'auto' ? numChords : selectedProgression.split('-').length;
       const result = await generateChordProgression(key, mode, includeTensions, progressionLength, selectedProgression);
       setProgressionResult(result);
     } catch (err) {
@@ -101,9 +105,9 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [key, mode, includeTensions, numChords, selectedProgression]);
+  }, [key, mode, includeTensions, progressionLength, selectedProgression]);
 
-  const skeletonCount = selectedProgression === 'auto' ? numChords : selectedProgression.split('-').length;
+  const skeletonCount = progressionLength;
 
   return (
     <div className="min-h-screen">
