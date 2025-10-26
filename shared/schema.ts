@@ -27,5 +27,17 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const stash = pgTable("stash", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
+  name: varchar("name").notNull(),
+  key: varchar("key").notNull(),
+  mode: varchar("mode").notNull(),
+  progressionData: jsonb("progression_data").notNull(), // Stores the full ProgressionResult
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+export type StashItem = typeof stash.$inferSelect;
+export type InsertStashItem = typeof stash.$inferInsert;

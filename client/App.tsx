@@ -3,6 +3,7 @@ import { Controls } from './components/Controls';
 import { VoicingsGrid } from './components/VoicingsGrid';
 import { SkeletonScaleDiagram } from './components/ScaleDiagram';
 import { GlassmorphicHeader } from './components/GlassmorphicHeader';
+import { StashSidebar } from './components/StashSidebar';
 import { useAuth } from './hooks/useAuth';
 import { generateChordProgression } from './services/xaiService';
 import type { ProgressionResult } from './types';
@@ -34,6 +35,7 @@ const App: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
   const [themeIndex, setThemeIndex] = useState<number>(getInitialThemeIndex);
+  const [isStashOpen, setIsStashOpen] = useState(false);
   const resultsRef = useRef<HTMLElement>(null);
 
   const handleLogin = () => {
@@ -86,6 +88,19 @@ const App: React.FC = () => {
     setTheme(prevTheme => prevTheme === 'dark' ? 'light' : 'dark');
   };
 
+  const handleLoadProgression = useCallback((loadedKey: string, loadedMode: string, progression: ProgressionResult) => {
+    setKey(loadedKey);
+    setMode(loadedMode);
+    setProgressionResult(progression);
+
+    // Scroll to results after a brief delay to allow state to update
+    setTimeout(() => {
+      if (resultsRef.current) {
+        resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 100);
+  }, []);
+
   const progressionLength = useMemo(() =>
     selectedProgression === 'auto' ? numChords : selectedProgression.split('-').length,
     [selectedProgression, numChords]
@@ -120,6 +135,16 @@ const App: React.FC = () => {
         userProfile={userProfile}
         onLogin={handleLogin}
         onLogout={handleLogout}
+        onStashClick={() => setIsStashOpen(true)}
+      />
+      <StashSidebar
+        isOpen={isStashOpen}
+        onClose={() => setIsStashOpen(false)}
+        theme={theme}
+        currentKey={key}
+        currentMode={mode}
+        currentProgression={progressionResult}
+        onLoadProgression={handleLoadProgression}
       />
       <main className="container mx-auto px-4 py-8 md:py-12">
         <header className="text-center mb-12">

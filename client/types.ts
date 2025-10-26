@@ -24,3 +24,21 @@ export interface ProgressionResult {
   progression: ChordInProgression[];
   scales: ScaleInfo[];
 }
+
+// Stash-related types
+export interface StashItemData {
+  id: string;
+  userId: string;
+  name: string;
+  key: string;
+  mode: string;
+  progressionData: ProgressionResult;
+  createdAt: string;
+}
+
+export interface CreateStashItemRequest {
+  name: string;
+  key: string;
+  mode: string;
+  progressionData: ProgressionResult;
+}

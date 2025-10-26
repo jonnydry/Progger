@@ -15,6 +15,7 @@ interface GlassmorphicHeaderProps {
   } | null;
   onLogin?: () => void;
   onLogout?: () => void;
+  onStashClick?: () => void;
 }
 
 export const GlassmorphicHeader: React.FC<GlassmorphicHeaderProps> = ({
@@ -26,6 +27,7 @@ export const GlassmorphicHeader: React.FC<GlassmorphicHeaderProps> = ({
   userProfile,
   onLogin,
   onLogout,
+  onStashClick,
 }) => {
   const headerStyle = useMemo(() => ({
     backdropFilter: 'blur(12px)',
@@ -71,6 +73,30 @@ export const GlassmorphicHeader: React.FC<GlassmorphicHeaderProps> = ({
 
           {/* Right Side Controls */}
           <div className="flex items-center space-x-2">
+            {/* Stash Button - Only show for logged in users */}
+            {userProfile && onStashClick && (
+              <button
+                onClick={onStashClick}
+                className="p-2 rounded-full text-text/70 hover:bg-surface/50 hover:text-text transition-all duration-300"
+                aria-label="Open stash"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-6 w-6"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
+                  />
+                </svg>
+              </button>
+            )}
+
             {/* Theme Color Selector */}
             <ThemeSelector
               themes={themes}
