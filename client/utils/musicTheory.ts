@@ -135,9 +135,12 @@ export function displayNote(note: string, key: string): string {
   const noteValue = noteToValue(note);
   const accidentalType = getKeyAccidentalType(key);
   
-  // For natural keys (C major), prefer flats for Bb and sharps for F#
+  // For natural keys (C major), use natural spellings where standard
+  // Prefer sharps for F# and C#, flats for Bb and Eb
   if (accidentalType === 'natural') {
-    return ALL_NOTES_FLAT[noteValue];
+    // C major natural note spellings: C, C#/Db, D, Eb, E, F, F#, G, G#/Ab, A, Bb, B
+    const naturalKeyNotes = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+    return naturalKeyNotes[noteValue];
   }
   
   // Use sharps for sharp keys, flats for flat keys
