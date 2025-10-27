@@ -152,7 +152,7 @@ const App: React.FC = () => {
           <img 
             src={proggerMascot} 
             alt="Progger - the guitar-playing frog mascot" 
-            className="w-32 sm:w-40 md:w-52 mx-auto mb-6 animate-slide-in"
+            className="w-32 sm:w-40 md:w-52 mx-auto mb-3 animate-slide-in"
           />
           <h1 className="font-grotesk text-4xl sm:text-5xl md:text-6xl font-bold text-text/90 tracking-wider">
             PROGGER
