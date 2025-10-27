@@ -147,7 +147,7 @@ const App: React.FC = () => {
         currentProgression={progressionResult}
         onLoadProgression={handleLoadProgression}
       />
-      <main className="container mx-auto px-4 py-8 md:py-12">
+      <main className="container mx-auto px-4 pt-4 pb-8 md:pt-6 md:pb-12">
         <header className="text-center mb-12">
           <img 
             src={proggerMascot} 
