@@ -9,7 +9,7 @@ import { generateChordProgression } from './services/xaiService';
 import type { ProgressionResult } from './types';
 import { KEYS, MODES, THEMES, COMMON_PROGRESSIONS } from './constants';
 import type { User } from '@shared/schema';
-import proggerMascot from '../attached_assets/Progger1MonoTrans_1761527257736.png';
+import proggerMascot from '../attached_assets/ProggerLogoMono2Lily_1761527600239.png';
 
 const LazyScaleDiagram = lazy(() => import('./components/ScaleDiagram'));
 
