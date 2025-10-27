@@ -339,7 +339,13 @@ export function getScaleFingering(scaleName: string, rootNote?: string): number[
 
   // Detect the base root note of the pattern and transpose
   const baseRoot = detectFingeringBaseRoot(baseFingering);
-  const semitones = calculateSemitoneDistance(baseRoot, root);
+  let semitones = calculateSemitoneDistance(baseRoot, root);
+
+  // Choose the shortest transposition distance to keep patterns playable
+  // If going up more than 6 semitones, go down instead (e.g., C to B: -1 instead of +11)
+  if (semitones > 6) {
+    semitones = semitones - 12; // Convert to negative (downward) transposition
+  }
 
   if (semitones !== 0) {
     console.info(`Transposing ${normalized} scale from ${baseRoot} to ${root} (${semitones} semitones)`);

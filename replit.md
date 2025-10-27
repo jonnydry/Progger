@@ -38,6 +38,12 @@ The application is a full-stack project with a React frontend (Vite dev server o
 
 ## Recent Changes
 
+### 2025-10-27: Optimized Scale Transposition Logic
+- Fixed scale fingering transposition to choose the shortest path (e.g., B major now at fret 7 instead of fret 19)
+- Algorithm now transposes down if upward transposition exceeds 6 semitones
+- All scale patterns now appear in playable, ergonomic positions (typically frets 0-12)
+- Example: C (fret 8) → B transposes by -1 semitone (down) instead of +11 semitones (up)
+
 ### 2025-10-27: New Progger Mascot! 🐸
 - Replaced music note icon with Progger frog mascot in header (32x32 monochrome version)
 - Added large Progger mascot to main hero section: guitar-playing frog sitting on a lily pad
