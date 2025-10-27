@@ -70,6 +70,37 @@ export function calculateSemitoneDistance(fromNote: string, toNote: string): num
   return ((toValue - fromValue) + 12) % 12;
 }
 
+/**
+ * Transpose a note by a given number of semitones
+ * @param note - Note to transpose
+ * @param semitones - Number of semitones to transpose (can be negative)
+ * @returns Transposed note name
+ */
+export function transposeNote(note: string, semitones: number): string {
+  const noteValue = noteToValue(note);
+  const transposedValue = ((noteValue + semitones) % 12 + 12) % 12;
+  return valueToNote(transposedValue);
+}
+
+/**
+ * Get the note at a specific fret on a given string
+ * @param stringNote - The open string note
+ * @param fret - Fret number (0-24)
+ * @returns Note name at that fret
+ */
+export function getNoteAtFret(stringNote: string, fret: number): string {
+  return transposeNote(stringNote, fret);
+}
+
+/**
+ * Check if a note is enharmonically equivalent to another
+ * @param note1 - First note
+ * @param note2 - Second note
+ * @returns True if notes are enharmonically equivalent
+ */
+export function areNotesEnharmonic(note1: string, note2: string): boolean {
+  return noteToValue(note1) === noteToValue(note2);
+}
 
 /**
  * Sharp keys use sharps in their key signature
