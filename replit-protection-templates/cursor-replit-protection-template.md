@@ -1,15 +1,22 @@
 # REPLIT PROJECT PROTECTION RULES
 
 ## 📝 CUSTOMIZATION INSTRUCTIONS
-**This template has been customized for the Chord & Scale Generator project.**
+**This template has been customized for the PROGGER project.**
 - Copy the entire content and paste into Cursor → Settings → "Rules for AI"
 - Keep this updated when your project structure changes
 
 ---
 
-## CRITICAL: YOU ARE EDITING THE CHORD & SCALE GENERATOR REPLIT-HOSTED PROJECT
+## CRITICAL: YOU ARE EDITING THE PROGGER REPLIT-HOSTED PROJECT
 
-This project (Chord & Scale Generator) is hosted on **Replit** and has specific infrastructure requirements. Violating these rules will **break deployment**.
+This project (**PROGGER** - AI-Powered Chord Progression Generator for Guitarists) is hosted on **Replit** and has specific infrastructure requirements. Violating these rules will **break deployment**.
+
+**PROGGER Features:**
+- 200+ guitar chord voicings with automatic transposition
+- 3-note-per-string scale patterns across 20+ scales
+- AI-generated chord progressions using xAI Grok API
+- Interactive fretboard diagrams with Pattern/Map modes
+- User authentication and progression stashing
 
 ### 🚨 SACRED FILES - NEVER MODIFY UNDER ANY CIRCUMSTANCES
 
@@ -20,10 +27,10 @@ This project (Chord & Scale Generator) is hosted on **Replit** and has specific 
 
 **Consequence of editing:** Deployment failure, broken builds, runtime errors
 
-**Chord & Scale Generator .replit file contains:**
+**PROGGER .replit file contains:**
 - Run command: `npm run dev`
 - Port mappings (5000 for frontend, 3001 for backend)
-- Workflow definitions
+- Workflow definitions ("Server" workflow)
 - Deployment configuration
 
 ---
@@ -32,14 +39,14 @@ This project (Chord & Scale Generator) is hosted on **Replit** and has specific 
 
 ### Package Management Files
 
-**Chord & Scale Generator uses npm:**
+**PROGGER uses npm:**
 - `package.json` - NEVER manually edit
 - `package-lock.json` - NEVER manually edit
 - ✅ DO THIS: `npm install <package>`
 
 ### Build Configuration Files
 
-**Chord & Scale Generator Critical Config Files:**
+**PROGGER Critical Config Files:**
 
 **React/Vite (Frontend):**
 - `vite.config.ts` - Path aliases (@, @shared, @assets), build config, proxy settings
@@ -98,7 +105,7 @@ npm install express@5.0.0
 app.listen(3000, 'localhost')  // WRONG
 ```
 
-✅ **DO (Chord & Scale Generator uses port 5000 for frontend, 3001 for backend):**
+✅ **DO (PROGGER uses port 5000 for frontend, 3001 for backend):**
 ```javascript
 // Frontend: Vite dev server on port 5000
 // vite.config.ts already configured
@@ -122,10 +129,11 @@ Tell user: "Add to Replit Secrets:
 3. Access: process.env.XAI_API_KEY"
 ```
 
-**Chord & Scale Generator Required Secrets:**
-- `XAI_API_KEY` - xAI Grok API key for chord generation
+**PROGGER Required Secrets:**
+- `XAI_API_KEY` - xAI Grok API key for chord progression generation (REQUIRED)
 - `SESSION_SECRET` - Auto-provided by Replit
-- `DATABASE_URL` - Auto-provided by Replit
+- `DATABASE_URL` - Auto-provided by Replit (PostgreSQL)
+- `REPL_ID`, `REPLIT_DOMAINS` - Auto-provided by Replit
 
 ### 5. NEVER CREATE DEPLOYMENT CONFIGS
 ❌ **DON'T:**
@@ -243,18 +251,19 @@ npm run db:push --force
 
 ---
 
-## 📊 CHORD & SCALE GENERATOR PROJECT SPECIFICS
+## 📊 PROGGER PROJECT SPECIFICS
 
 ### Tech Stack:
 - **Language:** Node.js / TypeScript
 - **Frontend:** React 19.2 with Vite 6.2
 - **Backend:** Express.js with TypeScript
-- **Database:** PostgreSQL
-- **ORM:** Drizzle
+- **Database:** PostgreSQL (Replit-hosted)
+- **ORM:** Drizzle ORM
 - **Package Manager:** npm
-- **AI Service:** xAI Grok API (grok-4-fast-reasoning)
+- **AI Service:** xAI Grok API (grok-4-fast-reasoning model)
 - **Authentication:** Replit Auth (Google, X, GitHub, Apple, email/password)
 - **Key Dependencies:** TanStack React Query, OpenAI SDK (for xAI), Passport, Drizzle ORM
+- **Styling:** Tailwind CSS (inline styles with CSS variables)
 
 ### Critical Files:
 ```
@@ -298,10 +307,14 @@ npm run db:push --force
 ```
 
 ### Important Architecture Details:
-- **Hybrid AI + Client-Side:** AI generates chord names and scale suggestions, client-side libraries provide 200+ voicings and fingerings
-- **Transposition Engine:** Automatic transposition of chord voicings and scale fingerings to any root note
-- **Client-Side Libraries:** `chordLibrary.ts` (200+ voicings), `scaleLibrary.ts` (15+ scales)
-- **API Routes:** `/api/auth/user`, `/api/login`, `/api/callback`, `/api/logout`, `/api/generate`
+- **Hybrid AI + Client-Side:** AI generates creative chord progressions and scale suggestions (names only), comprehensive client-side libraries provide all voicings and fingerings
+- **Transposition Engine:** Smart shortest-path transposition for chord voicings and scale fingerings (optimized for playability)
+- **Client-Side Libraries:** 
+  - `chordLibrary.ts` - 200+ chord voicings across all types (major, minor, 7ths, extensions, jazz chords)
+  - `scaleLibrary.ts` - 20+ scales with 3-note-per-string fingering patterns
+  - `musicTheory.ts` - Core music theory utilities (enharmonic display, interval calculation)
+- **Database Tables:** `users`, `sessions`, `stash` (for saving favorite progressions)
+- **API Routes:** `/api/auth/user`, `/api/login`, `/api/callback`, `/api/logout`, `/api/generate`, `/api/stash/*`
 
 ---
 
@@ -343,5 +356,6 @@ Before suggesting ANY change involving:
 
 ---
 
-**Last Updated:** October 25, 2025  
+**Last Updated:** October 27, 2025  
+**Project:** PROGGER - AI-Powered Chord Progression Generator for Guitarists  
 **For Full Guide:** See `replit-production-guide.md` in `replit-protection-templates/`

@@ -1,7 +1,9 @@
-# 🛡️ Replit Protection Guide for Chord & Scale Generator
+# 🛡️ Replit Protection Guide for PROGGER
 
 ## Purpose
-This guide prevents external development environments (Cursor, VSCode, etc.) from breaking your **Chord & Scale Generator** Replit deployment by protecting critical infrastructure files and configurations.
+This guide prevents external development environments (Cursor, VSCode, etc.) from breaking your **PROGGER** Replit deployment by protecting critical infrastructure files and configurations.
+
+**About PROGGER:** An AI-powered chord progression and scale generator for guitarists, featuring 200+ chord voicings, 3-note-per-string scale patterns, and AI-generated progressions using xAI's Grok API.
 
 **Why This Matters:** Replit uses specific configuration files and workflows to manage your application. Modifying these files in external editors can cause deployment failures, broken builds, and runtime errors that are difficult to debug.
 
@@ -56,7 +58,7 @@ These files are **sacred** to Replit's operation. Any modifications will break y
 
 ### Framework-Specific Configuration
 
-**Chord & Scale Generator Critical Config Files:**
+**PROGGER Critical Config Files:**
 
 #### React/Vite (Frontend):
 - `vite.config.ts`
@@ -87,7 +89,7 @@ These files are **sacred** to Replit's operation. Any modifications will break y
 
 ## 💾 Database Configuration
 
-### Drizzle Configuration (Chord & Scale Generator)
+### Drizzle Configuration (PROGGER)
 
 **`drizzle.config.ts`**
 
@@ -130,7 +132,7 @@ id: varchar("id").primaryKey()  // WRONG - breaks all existing data
 ## ✅ SAFE TO MODIFY
 
 ### Application Code (Full Freedom)
-- **Chord & Scale Generator Source Directories:**
+- **PROGGER Source Directories:**
   - `client/` - React frontend components, hooks, services, utilities
     - `client/components/` - UI components (ChordDetailView, ScaleDiagram, VoicingDiagram, etc.)
     - `client/hooks/` - React hooks (useAuth.ts)
@@ -175,7 +177,7 @@ npm install <package>
 ### Rule 2: Database Schema Changes
 **Use ORM/migration tools, never manual SQL**
 
-**For Drizzle (Chord & Scale Generator):**
+**For Drizzle (PROGGER):**
 ```typescript
 // 1. Modify schema file (shared/schema.ts)
 export const users = pgTable("users", {
@@ -205,7 +207,7 @@ Replit requires binding to `0.0.0.0` with specific ports.
 app.listen(3000, 'localhost')  // WRONG
 ```
 
-✅ **DO THIS (Chord & Scale Generator):**
+✅ **DO THIS (PROGGER):**
 ```javascript
 // Frontend: Vite dev server on port 5000 (configured in vite.config.ts)
 // vite.config.ts has server.allowedHosts: true for Replit compatibility
@@ -231,7 +233,7 @@ const XAI_API_KEY = "sk-1234567890abcdef"; // WRONG - hardcoded
 3. Access via: process.env.XAI_API_KEY"
 ```
 
-**Chord & Scale Generator Required Secrets:**
+**PROGGER Required Secrets:**
 - `XAI_API_KEY` - xAI Grok API key for chord generation (REQUIRED)
 - `SESSION_SECRET` - Auto-provided by Replit
 - `DATABASE_URL` - Auto-provided by Replit
@@ -323,7 +325,7 @@ git checkout HEAD -- .replit replit.nix package.json package-lock.json vite.conf
 
 #### Step 3: Verify Package Installation
 
-**Node.js (Chord & Scale Generator):**
+**Node.js (PROGGER):**
 ```bash
 rm -rf node_modules package-lock.json
 npm install
@@ -337,7 +339,7 @@ npm install
 
 #### Step 5: Database Sync (if schema changed)
 
-**Drizzle (Chord & Scale Generator):**
+**Drizzle (PROGGER):**
 ```bash
 npm run db:push --force
 ```
@@ -346,7 +348,7 @@ npm run db:push --force
 
 ## 📊 PROJECT-SPECIFIC DETAILS
 
-### Chord & Scale Generator Tech Stack:
+### PROGGER Tech Stack:
 - **Language:** Node.js / TypeScript
 - **Frontend:** React 19.2 with Vite 6.2
 - **Backend:** Express.js with TypeScript
@@ -359,7 +361,7 @@ npm run db:push --force
 - **Other Tools:** OpenAI SDK (for xAI), Passport, connect-pg-simple
 
 ### Critical Port Configuration:
-**Chord & Scale Generator Port Setup:**
+**PROGGER Port Setup:**
 ```javascript
 // Frontend: Vite dev server on port 5000
 // vite.config.ts:
@@ -379,7 +381,7 @@ const port = 3001;
 app.listen(port, '0.0.0.0');
 ```
 
-### Critical Path Aliases (Chord & Scale Generator):
+### Critical Path Aliases (PROGGER):
 ```
 # In tsconfig.json:
 '@': './client'
@@ -389,14 +391,14 @@ app.listen(port, '0.0.0.0');
 '@assets': './attached_assets'
 ```
 
-### Database Migration Pattern (Chord & Scale Generator):
+### Database Migration Pattern (PROGGER):
 ```bash
 # Drizzle (Chord & Scale Generator)
 npm run db:push --force
 ```
 
 ### Workflow Commands:
-**Chord & Scale Generator Development runs:**
+**PROGGER Development runs:**
 ```bash
 npm run dev
 ```
@@ -445,7 +447,7 @@ This starts both the Vite dev server (port 5000) and Express backend (port 3001)
 - **NEVER changed database ID column types**
 - Removed `server.allowedHosts: true` from vite.config.ts
 
-### Emergency Rollback (Chord & Scale Generator):
+### Emergency Rollback (PROGGER):
 ```bash
 # Restore all critical files
 git checkout HEAD -- .replit replit.nix package.json package-lock.json vite.config.ts drizzle.config.ts tsconfig.json
@@ -471,9 +473,9 @@ npm run db:push --force
 
 ## ✏️ Template Notes
 
-This guide has been customized for the **Chord & Scale Generator** project with the following specifications:
+This guide has been customized for the **PROGGER** project with the following specifications:
 
-- Project name: Chord & Scale Generator
+- Project name: PROGGER (AI-Powered Chord Progression Generator for Guitarists)
 - Frontend framework: React 19.2 with Vite 6.2
 - Backend framework: Express.js
 - Database: PostgreSQL with Drizzle ORM
@@ -488,5 +490,6 @@ This guide has been customized for the **Chord & Scale Generator** project with 
 
 ---
 
-**Last Updated:** October 25, 2025  
+**Last Updated:** October 27, 2025  
+**Project:** PROGGER - AI-Powered Chord Progression Generator for Guitarists  
 **For Questions:** Refer to this guide before making infrastructure changes

@@ -1,10 +1,17 @@
-# Replit Protection Templates for Chord & Scale Generator
+# Replit Protection Templates for PROGGER
 
-A collection of security-focused templates and configurations to protect the Chord & Scale Generator Replit project from unauthorized access, code theft, and malicious activities.
+A collection of security-focused templates and configurations to protect the PROGGER Replit project from unauthorized access, code theft, and malicious activities.
 
 ## 📋 Project Overview
 
-This directory contains ready-to-use templates and best practices for securing the Chord & Scale Generator Replit application. These templates help protect the project from common issues that can occur when using external development environments like Cursor.
+This directory contains ready-to-use templates and best practices for securing the PROGGER Replit application. These templates help protect the project from common issues that can occur when using external development environments like Cursor.
+
+**PROGGER** is an AI-powered chord progression and scale generator for guitarists, featuring:
+- 200+ guitar chord voicings with automatic transposition
+- 3-note-per-string scale patterns across 20+ scales
+- AI-generated chord progressions using xAI's Grok API
+- Interactive scale diagrams with Pattern and Map modes
+- User authentication and progression stashing
 
 ## ✨ Key Features
 
@@ -21,9 +28,9 @@ This directory contains ready-to-use templates and best practices for securing t
 
 ### Prerequisites
 
-- Active Replit account with Chord & Scale Generator project
-- Basic understanding of the tech stack (React, Express, Drizzle, xAI Grok API)
-- Familiarity with environment variables
+- Active Replit account with PROGGER project
+- Basic understanding of the tech stack (React, Express, PostgreSQL, Drizzle ORM, xAI Grok API)
+- Familiarity with environment variables and guitar music theory basics
 
 ### Installation
 
@@ -65,7 +72,7 @@ This directory contains ready-to-use templates and best practices for securing t
    - Modify database schema in `shared/schema.ts` only
    - Always test changes in Replit first
 
-### Database Migration (Chord & Scale Generator)
+### Database Migration (PROGGER)
 
 ```bash
 # 1. Modify shared/schema.ts
@@ -73,7 +80,7 @@ This directory contains ready-to-use templates and best practices for securing t
 npm run db:push --force
 ```
 
-### Port Configuration (Chord & Scale Generator)
+### Port Configuration (PROGGER)
 
 ```javascript
 // Frontend (Vite) uses port 5000
@@ -84,8 +91,9 @@ server.listen(port, '0.0.0.0');
 
 ## 📁 Template Files
 
-- `cursor-replit-protection-template.md` - Cursor IDE protection rules for Chord & Scale Generator
-- `replit-production-guide.md` - Comprehensive guide for project protection
+- `cursor-replit-protection-template.md` - Cursor IDE protection rules for PROGGER
+- `replit-production-guide.md` - Comprehensive guide for PROGGER protection
+- `Replit-auth-protection.md` - Replit Auth setup and troubleshooting guide
 - `README.md` - This documentation file
 - `LICENSE` - MIT license file
 
@@ -112,12 +120,12 @@ We welcome contributions to improve the protection templates! Here's how you can
 ### How to Contribute
 
 1. Make your changes to the template files
-2. Test the changes with the Chord & Scale Generator project
-3. Commit with clear messages (`git commit -m 'Update protection template'`)
-4. Push your changes (`git push origin your-branch`)
-5. Create a Pull Request
+2. Test the changes with the PROGGER project
+3. Commit with clear messages (`git commit -m 'Update protection template for PROGGER'`)
+4. Push your changes (`git push origin main`)
+5. Share improvements with the community
 
-Please ensure your contributions are specific to the project's tech stack and requirements.
+Please ensure your contributions are specific to PROGGER's tech stack (React, Express, PostgreSQL, xAI Grok API) and guitar-focused requirements.
 
 ## 📄 License
 
