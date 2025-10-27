@@ -83,6 +83,11 @@
 - **AI Model**: grok-4-fast-reasoning with max_tokens: 1500
 
 ## Recent Changes
+- **2025-10-27**: Fixed chord diagram rendering bug for barre chords
+  - Chord library contained mixed data formats: some barre chords used relative finger positions (1,2,3,4), others used absolute fret numbers
+  - Added logic in VoicingDiagram to detect and convert relative format to absolute based on presence of fret value 1 with firstFret > 1
+  - Conversion formula: absoluteFret = relativeFret + firstFret - 1
+  - All chord diagrams (open, barre, maj7, 7ths, extended chords) now render correctly
 - **2025-10-26**: Changed app font to Space Grotesk
   - Added Space Grotesk (geometric sans-serif) to Google Fonts with weights 300-700
   - Updated header toolbar title, big center title, and default body font to use Space Grotesk

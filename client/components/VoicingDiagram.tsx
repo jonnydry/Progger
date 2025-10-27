@@ -25,6 +25,19 @@ export const VoicingDiagram: React.FC<VoicingDiagramProps> = ({ chordName, voici
     [frets]
   );
 
+  // Determine if this voicing uses relative finger positions (1,2,3,4) or absolute fret numbers
+  // Relative format: fret values represent finger positions (1-4), always less than firstFret
+  // Absolute format: fret values represent actual fret numbers, should be >= firstFret
+  // If firstFret > 1 and ANY fret value is < firstFret, it's relative format
+  const usesRelativeFormat = useMemo(() => {
+    if (firstFret <= 1) return false;
+    const numericFrets = frets.filter(f => typeof f === 'number' && f > 0) as number[];
+    if (numericFrets.length === 0) return false;
+    const minFret = Math.min(...numericFrets);
+    // If minimum fret value is less than firstFret, it's using relative positions
+    return minFret < firstFret;
+  }, [frets, firstFret]);
+
   const effectiveFirstFret = useMemo(() =>
     firstFret > 1 ? firstFret : (highestFret > FRET_COUNT ? highestFret - FRET_COUNT + 1 : 1),
     [firstFret, highestFret]
@@ -101,7 +114,11 @@ export const VoicingDiagram: React.FC<VoicingDiagramProps> = ({ chordName, voici
         {frets.map((fret, stringIndex) => {
           if (typeof fret !== 'number' || fret <= 0) return null;
           
-          const fretIndex = fret - (effectiveFirstFret > 1 ? effectiveFirstFret -1 : 0);
+          // Convert relative finger positions to absolute fret numbers if needed
+          const absoluteFret = usesRelativeFormat ? fret + firstFret - 1 : fret;
+          
+          // Calculate which fret position on the diagram (1-5) this absolute fret should appear at
+          const fretIndex = absoluteFret - effectiveFirstFret + 1;
           if (fretIndex < 1 || fretIndex > FRET_COUNT) return null;
 
           const cx = LEFT_MARGIN + PADDING + stringIndex * STRING_WIDTH;
