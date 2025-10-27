@@ -35,3 +35,34 @@ The application is a full-stack project with a React frontend (Vite dev server o
 - **AI Service**: xAI Grok API (accessed via OpenAI SDK)
 - **Database**: PostgreSQL
 - **ORM**: Drizzle ORM
+
+## Recent Changes
+
+### 2025-10-27: Codebase Cleanup & Verification
+- ✅ **Verified Advanced Music Theory**: Confirmed all functions actively used
+  - `displayNote()`, `displayChordName()`, `getKeyAccidentalType()` used in VoicingsGrid, ScaleDiagram, ChordDetailView
+  - Context-aware enharmonic display working correctly (F# in D major, Gb in Db major)
+- ✅ **Verified Database Features**: All tables and CRUD operations working
+  - `users`, `sessions`, `stash` tables properly implemented in shared/schema.ts
+  - Full CRUD operations in server/storage.ts with Drizzle ORM
+- 🗑️ **Removed Bloat**:
+  - Deleted attached_assets/ folder (12 screenshot images)
+  - Removed replit-protection-templates/ (documentation templates)
+- 📝 **Updated Documentation**:
+  - Replaced outdated README.md (removed AI Studio references)
+  - Added comprehensive PROGGER-specific documentation
+  - Updated metadata.json with PROGGER branding
+- 🔧 **Preserved Utilities**: Kept all music theory functions for future features
+  - `transposeNote()`, `getNoteAtFret()`, `areNotesEnharmonic()` retained for extensibility
+
+### 2025-10-27: Chord Diagram Rendering Fix
+- Fixed critical bug in VoicingDiagram component for barre chord rendering
+- Root cause: Mixed data formats in chord library (relative finger positions vs absolute fret numbers)
+- Detection logic: `minFret < firstFret` identifies relative format voicings
+- Conversion formula: `absoluteFret = relativeFret + firstFret - 1`
+- All chord types now render correctly (open, barre, maj7, 7ths, extended chords)
+
+### 2025-10-26: Typography Update
+- Changed application font from monospace to Space Grotesk (geometric sans-serif)
+- Applied to all UI elements: header, titles, body text, controls
+- Maintains JetBrains Mono for "PROGGER" logo only
