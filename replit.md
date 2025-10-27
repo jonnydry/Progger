@@ -38,6 +38,11 @@ The application is a full-stack project with a React frontend (Vite dev server o
 
 ## Recent Changes
 
+### 2025-10-27: New Progger Mascot! 🐸
+- Replaced music note icon with Progger frog mascot in header
+- Updated branding with custom 32x32 pixel monochrome frog logo
+- Mascot displays in glassmorphic header toolbar
+
 ### 2025-10-27: Codebase Cleanup & Verification
 - ✅ **Verified Advanced Music Theory**: Confirmed all functions actively used
   - `displayNote()`, `displayChordName()`, `getKeyAccidentalType()` used in VoicingsGrid, ScaleDiagram, ChordDetailView

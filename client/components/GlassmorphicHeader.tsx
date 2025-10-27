@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { ThemeSelector } from './ThemeSelector';
 import type { ThemeOption } from '@/constants';
+import proggerLogo from '../../attached_assets/Progger1MonoTransX32_1761526977420.png';
 
 interface GlassmorphicHeaderProps {
   theme: string;
@@ -52,20 +53,11 @@ export const GlassmorphicHeader: React.FC<GlassmorphicHeaderProps> = ({
         <div className="flex items-center justify-between">
           {/* Logo / Brand */}
           <div className="flex items-center space-x-2">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-8 w-8 text-primary"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"
-              />
-            </svg>
+            <img 
+              src={proggerLogo} 
+              alt="Progger mascot" 
+              className="h-8 w-8"
+            />
             <h1 className="font-grotesk text-2xl font-bold text-text/90 tracking-tight hidden sm:block">
               PROGGER
             </h1>
