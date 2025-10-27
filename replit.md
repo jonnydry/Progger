@@ -39,9 +39,11 @@ The application is a full-stack project with a React frontend (Vite dev server o
 ## Recent Changes
 
 ### 2025-10-27: New Progger Mascot! 🐸
-- Replaced music note icon with Progger frog mascot in header
-- Updated branding with custom 32x32 pixel monochrome frog logo
-- Mascot displays in glassmorphic header toolbar
+- Replaced music note icon with Progger frog mascot in header (32x32 monochrome version)
+- Added large Progger mascot (guitar-playing frog) to main hero section above title
+- Reduced main title size from text-8xl to text-6xl for better visual hierarchy
+- Responsive mascot sizing: 128px (mobile) → 160px (tablet) → 208px (desktop)
+- Pixel art style perfectly matches PROGGER's modern, tech-forward aesthetic
 
 ### 2025-10-27: Codebase Cleanup & Verification
 - ✅ **Verified Advanced Music Theory**: Confirmed all functions actively used
