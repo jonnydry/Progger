@@ -1,5 +1,5 @@
 {
-  "name": "Chord Progression Generator",
-  "description": "An application to generate interesting chord progressions with guitar voicings using AI. Select a key and mode, and let the AI provide you with creative ideas and how to play them on guitar.",
+  "name": "PROGGER - AI Chord Progression Generator",
+  "description": "AI-powered chord progression and scale generator for guitarists. Generate intelligent chord progressions with Grok AI, explore multiple guitar voicings, get scale suggestions for improvisation, and save your favorites. Features context-aware music theory with enharmonic note display.",
   "requestFramePermissions": []
 }
