@@ -125,8 +125,10 @@ const App: React.FC = () => {
 
   const skeletonCount = progressionLength;
 
+  const isProggerTheme = THEMES[themeIndex].name === 'PROGGER';
+
   return (
-    <div className="min-h-screen bg-background">
+    <div className={`min-h-screen bg-background ${isProggerTheme ? 'progger-theme' : ''}`}>
       <GlassmorphicHeader
         theme={theme}
         toggleTheme={toggleTheme}

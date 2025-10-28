@@ -105,6 +105,72 @@
     .animate-cross-fade-in {
       animation: cross-fade-in 0.2s ease-in-out forwards;
     }
+
+    /* PROGGER Theme - Pixelated Border Effect */
+    .progger-theme .progger-pixel-border {
+      position: relative;
+      border-image: repeating-linear-gradient(
+        90deg,
+        hsl(var(--color-primary)) 0px,
+        hsl(var(--color-primary)) 3px,
+        transparent 3px,
+        transparent 6px
+      ) 1;
+      border-width: 2px;
+      border-style: solid;
+    }
+
+    .progger-theme .progger-pixel-border::before,
+    .progger-theme .progger-pixel-border::after {
+      content: '';
+      position: absolute;
+      background-image: repeating-linear-gradient(
+        90deg,
+        hsl(var(--color-primary)) 0px,
+        hsl(var(--color-primary)) 3px,
+        transparent 3px,
+        transparent 6px
+      );
+      height: 2px;
+      left: 0;
+      right: 0;
+    }
+
+    .progger-theme .progger-pixel-border::before {
+      top: -2px;
+    }
+
+    .progger-theme .progger-pixel-border::after {
+      bottom: -2px;
+    }
+
+    /* Apply pixel border to main content sections in PROGGER theme */
+    .progger-theme section {
+      position: relative;
+    }
+
+    .progger-theme section::after {
+      content: '';
+      position: absolute;
+      inset: -1px;
+      border: 2px solid transparent;
+      border-image: repeating-linear-gradient(
+        0deg,
+        hsl(var(--color-border)) 0px,
+        hsl(var(--color-border)) 4px,
+        transparent 4px,
+        transparent 8px
+      ) 1;
+      pointer-events: none;
+      border-radius: inherit;
+    }
+
+    /* Add subtle pixel effect to buttons in PROGGER theme */
+    .progger-theme button {
+      image-rendering: pixelated;
+      image-rendering: -moz-crisp-edges;
+      image-rendering: crisp-edges;
+    }
 </style>
 </head>
   <body class="font-grotesk bg-background text-text transition-colors duration-300">

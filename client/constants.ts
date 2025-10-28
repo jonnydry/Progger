@@ -226,6 +226,27 @@ export const THEMES: ThemeOption[] = [
       surface: '140 5% 10%',    // Near-Black with green tint
       border: '140 70% 75% / 0.15',
     }
+  },
+  {
+    name: 'PROGGER',
+    light: {
+      primary: '140 18% 48%',      // Lilypad green (muted sage)
+      secondary: '140 10% 40%',    // Grayed green
+      accent: '140 25% 55%',       // Brighter lilypad green
+      text: '0 0% 20%',            // Charcoal black
+      background: '0 0% 98%',      // Pure white
+      surface: '0 0% 95%',         // Light gray
+      border: '0 0% 20% / 0.1',
+    },
+    dark: {
+      primary: '140 22% 58%',      // Brighter lilypad green
+      secondary: '140 12% 45%',    // Mid-tone grayed green
+      accent: '140 30% 65%',       // Vibrant lilypad
+      text: '0 0% 90%',            // Light gray
+      background: '0 0% 8%',       // Deep charcoal
+      surface: '0 0% 13%',         // Dark gray
+      border: '0 0% 90% / 0.15',
+    }
   }
 ];
 
