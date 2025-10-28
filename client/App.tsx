@@ -21,7 +21,7 @@ const getInitialThemeIndex = (): number => {
       return index;
     }
   }
-  return 5; // Default to the Crimson Noir theme
+  return 10; // Default to the PROGGER theme
 };
 
 const App: React.FC = () => {
@@ -149,8 +149,8 @@ const App: React.FC = () => {
         currentProgression={progressionResult}
         onLoadProgression={handleLoadProgression}
       />
-      <main className="container mx-auto px-4 pt-4 pb-8 md:pt-6 md:pb-12">
-        <header className="text-center mb-12">
+      <main className="container mx-auto px-4 pt-6 pb-10 md:pt-8 md:pb-16">
+        <header className="text-center mb-16">
           <img 
             src={proggerMascot} 
             alt="Progger - the guitar-playing frog mascot" 
@@ -164,7 +164,7 @@ const App: React.FC = () => {
           </p>
         </header>
 
-        <section className="max-w-3xl mx-auto bg-surface rounded-lg p-6 shadow-lg border border-border">
+        <section className="max-w-3xl mx-auto bg-surface rounded-lg p-6 shadow-sm border-2 border-border" style={{ borderStyle: 'solid' }}>
           <Controls
             selectedKey={key}
             onKeyChange={setKey}
