@@ -126,7 +126,7 @@ const App: React.FC = () => {
   const skeletonCount = progressionLength;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-background">
       <GlassmorphicHeader
         theme={theme}
         toggleTheme={toggleTheme}
