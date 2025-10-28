@@ -1,0 +1,644 @@
+/* ============================================================================
+   PROGGER THEME - RETRO PIXEL-ART GAMING AESTHETIC
+   A complete visual overhaul with pixelated borders, scanlines, and retro vibes
+   ============================================================================ */
+
+/* ============================================================================
+   CORE THEME OVERRIDES - Remove conflicting global styles
+   ============================================================================ */
+
+/* Override the global checkerboard pattern for PROGGER theme */
+.progger-theme body::before {
+  display: none !important;
+}
+
+/* Replace with custom pixel-grid background */
+.progger-theme::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  opacity: 0.4;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      hsl(var(--color-primary) / 0.03) 2px,
+      hsl(var(--color-primary) / 0.03) 4px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 2px,
+      hsl(var(--color-primary) / 0.03) 2px,
+      hsl(var(--color-primary) / 0.03) 4px
+    );
+  pointer-events: none;
+}
+
+/* CRT Scanline Effect */
+.progger-theme::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  opacity: 0.15;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.15),
+    rgba(0, 0, 0, 0.15) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+  pointer-events: none;
+  animation: progger-scanline 8s linear infinite;
+}
+
+@keyframes progger-scanline {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(4px);
+  }
+}
+
+/* ============================================================================
+   BORDER RADIUS OVERRIDE - Sharp pixel aesthetic
+   ============================================================================ */
+
+.progger-theme .rounded-lg,
+.progger-theme .rounded,
+.progger-theme .rounded-md,
+.progger-theme .rounded-sm,
+.progger-theme .rounded-full,
+.progger-theme .rounded-xl,
+.progger-theme .rounded-2xl {
+  border-radius: 0 !important;
+}
+
+/* ============================================================================
+   MAIN CONTENT SECTIONS - Pixelated borders with corner decorations
+   ============================================================================ */
+
+.progger-theme section > div.bg-surface,
+.progger-theme section.bg-surface {
+  position: relative;
+  border: 3px solid;
+  border-image: repeating-linear-gradient(
+    90deg,
+    hsl(var(--color-primary)) 0px,
+    hsl(var(--color-primary)) 5px,
+    transparent 5px,
+    transparent 10px
+  ) 1;
+  box-shadow:
+    5px 5px 0 0 hsl(var(--color-primary) / 0.2),
+    10px 10px 0 0 hsl(var(--color-primary) / 0.1);
+}
+
+/* Top-left pixel corner decoration */
+.progger-theme section > div.bg-surface::before,
+.progger-theme section.bg-surface::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  width: 12px;
+  height: 12px;
+  background: hsl(var(--color-accent));
+  clip-path: polygon(0 0, 100% 0, 100% 33%, 33% 33%, 33% 100%, 0 100%);
+  z-index: 10;
+}
+
+/* Bottom-right pixel corner decoration */
+.progger-theme section > div.bg-surface::after,
+.progger-theme section.bg-surface::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  right: -3px;
+  width: 12px;
+  height: 12px;
+  background: hsl(var(--color-accent));
+  clip-path: polygon(100% 100%, 0 100%, 0 67%, 67% 67%, 67% 0, 100% 0);
+  z-index: 10;
+}
+
+/* ============================================================================
+   CARDS & CONTAINERS - Chord/Scale cards with pixel borders
+   ============================================================================ */
+
+.progger-theme .bg-surface.border {
+  border: 2px dashed hsl(var(--color-border)) !important;
+  border-width: 2px !important;
+  outline: 2px solid hsl(var(--color-primary) / 0.3);
+  outline-offset: 2px;
+  transition: all 0.1s ease-out;
+}
+
+.progger-theme .bg-surface.border:hover {
+  outline-color: hsl(var(--color-accent) / 0.5);
+  outline-offset: 3px;
+  box-shadow:
+    2px 2px 0 0 hsl(var(--color-accent) / 0.3),
+    4px 4px 0 0 hsl(var(--color-accent) / 0.2);
+}
+
+/* ============================================================================
+   BUTTONS - Blocky pixel style with press effect
+   ============================================================================ */
+
+.progger-theme button {
+  border-radius: 0 !important;
+  position: relative;
+  image-rendering: crisp-edges;
+  box-shadow:
+    2px 2px 0 0 hsl(var(--color-text) / 0.2);
+  transition: all 0.05s ease-out;
+  border: 2px solid transparent;
+}
+
+.progger-theme button:hover {
+  transform: translate(1px, 1px);
+  box-shadow:
+    1px 1px 0 0 hsl(var(--color-text) / 0.2);
+  border-color: hsl(var(--color-accent) / 0.3);
+}
+
+.progger-theme button:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+
+/* Primary buttons get enhanced pixel borders */
+.progger-theme button.bg-primary,
+.progger-theme button[class*="bg-primary"] {
+  border: 2px solid hsl(var(--color-text) / 0.3);
+  box-shadow:
+    3px 3px 0 0 hsl(var(--color-secondary) / 0.4);
+}
+
+.progger-theme button.bg-primary:hover,
+.progger-theme button[class*="bg-primary"]:hover {
+  box-shadow:
+    2px 2px 0 0 hsl(var(--color-secondary) / 0.4);
+}
+
+.progger-theme button.bg-primary:active,
+.progger-theme button[class*="bg-primary"]:active {
+  box-shadow:
+    1px 1px 0 0 hsl(var(--color-secondary) / 0.2);
+}
+
+/* Disabled buttons get pixelated appearance */
+.progger-theme button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: grayscale(0.5);
+  box-shadow: none;
+}
+
+/* ============================================================================
+   HEADER - Pixelated border styling
+   ============================================================================ */
+
+.progger-theme header {
+  border-bottom: 3px dashed hsl(var(--color-border)) !important;
+  background: hsl(var(--color-surface) / 0.95) !important;
+  backdrop-filter: blur(8px);
+  position: relative;
+}
+
+/* Add pixel decoration to header */
+.progger-theme header::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: repeating-linear-gradient(
+    90deg,
+    hsl(var(--color-accent)) 0px,
+    hsl(var(--color-accent)) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+}
+
+/* ============================================================================
+   IMAGES - Crisp pixel rendering
+   ============================================================================ */
+
+.progger-theme img {
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  border: 2px solid hsl(var(--color-border));
+}
+
+/* ============================================================================
+   DROPDOWNS & SELECT ELEMENTS
+   ============================================================================ */
+
+.progger-theme [role="listbox"],
+.progger-theme .absolute.bg-surface,
+.progger-theme select {
+  border: 3px solid hsl(var(--color-primary)) !important;
+  box-shadow:
+    4px 4px 0 0 hsl(var(--color-primary) / 0.3);
+  border-radius: 0 !important;
+}
+
+/* Custom select styling */
+.progger-theme select,
+.progger-theme input[type="text"],
+.progger-theme input[type="number"],
+.progger-theme textarea {
+  border: 2px solid hsl(var(--color-border)) !important;
+  border-radius: 0 !important;
+  background: hsl(var(--color-surface));
+  padding: 0.5rem;
+  font-family: 'Source Code Pro', monospace;
+  transition: all 0.1s ease-out;
+}
+
+.progger-theme select:focus,
+.progger-theme input:focus,
+.progger-theme textarea:focus {
+  outline: 2px solid hsl(var(--color-accent));
+  outline-offset: 2px;
+  border-color: hsl(var(--color-accent)) !important;
+  box-shadow:
+    2px 2px 0 0 hsl(var(--color-accent) / 0.3);
+}
+
+/* ============================================================================
+   ERROR MESSAGES - Pixelated alert styling
+   ============================================================================ */
+
+.progger-theme .bg-red-400\/20,
+.progger-theme .dark\:bg-red-900\/30,
+.progger-theme [class*="bg-red"] {
+  border: 2px dashed hsl(0 70% 50%) !important;
+  background: hsl(0 70% 50% / 0.1) !important;
+  position: relative;
+}
+
+.progger-theme .bg-red-400\/20::before,
+.progger-theme .dark\:bg-red-900\/30::before {
+  content: '⚠';
+  position: absolute;
+  top: 50%;
+  left: -20px;
+  transform: translateY(-50%);
+  font-size: 1.25rem;
+  animation: progger-blink 1s infinite;
+}
+
+/* ============================================================================
+   SCROLLBAR - Custom pixel-art scrollbar
+   ============================================================================ */
+
+.progger-theme ::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.progger-theme ::-webkit-scrollbar-track {
+  background: hsl(var(--color-surface));
+  border: 2px solid hsl(var(--color-border));
+}
+
+.progger-theme ::-webkit-scrollbar-thumb {
+  background: hsl(var(--color-primary));
+  border: 2px solid hsl(var(--color-text) / 0.2);
+  box-shadow:
+    inset 2px 2px 0 0 hsl(var(--color-accent) / 0.3);
+}
+
+.progger-theme ::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--color-accent));
+}
+
+.progger-theme ::-webkit-scrollbar-corner {
+  background: hsl(var(--color-surface));
+}
+
+/* ============================================================================
+   ANIMATIONS - PROGGER-specific effects
+   ============================================================================ */
+
+/* Pixel blink animation */
+@keyframes progger-blink {
+  0%, 49% {
+    opacity: 1;
+  }
+  50%, 100% {
+    opacity: 0.3;
+  }
+}
+
+/* Pixel glitch animation for hover states */
+@keyframes progger-glitch {
+  0% {
+    transform: translate(0);
+  }
+  20% {
+    transform: translate(-2px, 2px);
+  }
+  40% {
+    transform: translate(-2px, -2px);
+  }
+  60% {
+    transform: translate(2px, 2px);
+  }
+  80% {
+    transform: translate(2px, -2px);
+  }
+  100% {
+    transform: translate(0);
+  }
+}
+
+/* Pixel slide-in animation (replaces generic slide-in) */
+@keyframes progger-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+.progger-theme .animate-slide-in {
+  animation: progger-slide-in 0.2s steps(4) forwards !important;
+}
+
+/* Pixel fade-scale animation */
+@keyframes progger-fade-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.progger-theme .animate-fade-scale-in {
+  animation: progger-fade-scale-in 0.3s steps(6) forwards !important;
+}
+
+/* Pixel cross-fade animation */
+@keyframes progger-cross-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.progger-theme .animate-cross-fade-in {
+  animation: progger-cross-fade-in 0.15s steps(3) forwards !important;
+}
+
+/* ============================================================================
+   FOCUS STATES - Custom pixel-art focus indicators
+   ============================================================================ */
+
+.progger-theme *:focus-visible {
+  outline: 2px dashed hsl(var(--color-accent)) !important;
+  outline-offset: 3px;
+  box-shadow:
+    0 0 0 4px hsl(var(--color-accent) / 0.2);
+}
+
+/* ============================================================================
+   LINKS - Pixel-style underlines
+   ============================================================================ */
+
+.progger-theme a {
+  position: relative;
+  text-decoration: none;
+  border-bottom: 2px dashed hsl(var(--color-accent) / 0.5);
+  transition: all 0.1s ease-out;
+}
+
+.progger-theme a:hover {
+  border-bottom-color: hsl(var(--color-accent));
+  background: hsl(var(--color-accent) / 0.1);
+  padding: 0 4px;
+}
+
+/* ============================================================================
+   TOOLTIPS & POPOVERS
+   ============================================================================ */
+
+.progger-theme [role="tooltip"],
+.progger-theme .tooltip {
+  border: 2px solid hsl(var(--color-primary)) !important;
+  border-radius: 0 !important;
+  box-shadow:
+    3px 3px 0 0 hsl(var(--color-primary) / 0.4);
+  background: hsl(var(--color-surface)) !important;
+  font-family: 'Source Code Pro', monospace;
+  padding: 0.5rem;
+}
+
+/* ============================================================================
+   SPECIAL EFFECTS - CRT Monitor glow
+   ============================================================================ */
+
+.progger-theme .bg-primary,
+.progger-theme button.bg-primary {
+  box-shadow:
+    0 0 5px hsl(var(--color-primary) / 0.5),
+    3px 3px 0 0 hsl(var(--color-secondary) / 0.4),
+    inset 0 0 10px hsl(var(--color-accent) / 0.1);
+}
+
+/* ============================================================================
+   PIXEL DIVIDERS
+   ============================================================================ */
+
+.progger-theme hr {
+  border: none;
+  height: 3px;
+  background: repeating-linear-gradient(
+    90deg,
+    hsl(var(--color-border)) 0px,
+    hsl(var(--color-border)) 6px,
+    transparent 6px,
+    transparent 12px
+  );
+  margin: 1.5rem 0;
+}
+
+/* ============================================================================
+   TABLES - Pixel grid styling
+   ============================================================================ */
+
+.progger-theme table {
+  border-collapse: separate;
+  border-spacing: 0;
+  border: 3px solid hsl(var(--color-primary));
+}
+
+.progger-theme th,
+.progger-theme td {
+  border: 1px solid hsl(var(--color-border));
+  padding: 0.5rem;
+  background: hsl(var(--color-surface));
+}
+
+.progger-theme th {
+  background: hsl(var(--color-primary) / 0.2);
+  font-family: 'Source Code Pro', monospace;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.progger-theme tr:hover td {
+  background: hsl(var(--color-accent) / 0.1);
+}
+
+/* ============================================================================
+   LOADING STATES - Pixel spinner
+   ============================================================================ */
+
+@keyframes progger-spin {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(90deg); }
+  50% { transform: rotate(180deg); }
+  75% { transform: rotate(270deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.progger-theme .animate-spin {
+  animation: progger-spin 0.8s steps(4) infinite !important;
+}
+
+/* ============================================================================
+   BADGES & TAGS
+   ============================================================================ */
+
+.progger-theme .badge,
+.progger-theme .tag,
+.progger-theme [class*="badge"],
+.progger-theme [class*="tag"] {
+  border: 2px solid hsl(var(--color-primary));
+  border-radius: 0 !important;
+  padding: 0.25rem 0.5rem;
+  font-family: 'Source Code Pro', monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  box-shadow:
+    2px 2px 0 0 hsl(var(--color-primary) / 0.3);
+}
+
+/* ============================================================================
+   MODALS & DIALOGS
+   ============================================================================ */
+
+.progger-theme [role="dialog"],
+.progger-theme .modal {
+  border: 4px solid hsl(var(--color-primary)) !important;
+  border-radius: 0 !important;
+  box-shadow:
+    8px 8px 0 0 hsl(var(--color-primary) / 0.3),
+    16px 16px 0 0 hsl(var(--color-primary) / 0.1);
+  background: hsl(var(--color-background)) !important;
+}
+
+/* ============================================================================
+   CODE BLOCKS - Enhanced pixel styling
+   ============================================================================ */
+
+.progger-theme pre,
+.progger-theme code {
+  border: 2px solid hsl(var(--color-border));
+  background: hsl(var(--color-surface) / 0.5) !important;
+  border-radius: 0 !important;
+  font-family: 'Source Code Pro', monospace;
+  padding: 0.25rem 0.5rem;
+}
+
+.progger-theme pre {
+  padding: 1rem;
+  overflow-x: auto;
+  box-shadow:
+    inset 2px 2px 0 0 hsl(var(--color-primary) / 0.1);
+}
+
+/* ============================================================================
+   CURSOR - Custom pixelated cursor (optional)
+   ============================================================================ */
+
+.progger-theme {
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><rect width="2" height="2" fill="black"/><rect x="2" y="2" width="2" height="2" fill="black"/><rect x="4" y="4" width="2" height="2" fill="black"/><rect x="6" y="6" width="2" height="2" fill="black"/><rect x="4" y="6" width="2" height="2" fill="white"/><rect x="2" y="4" width="2" height="2" fill="white"/><rect width="2" height="2" x="0" y="2" fill="white"/></svg>'), auto;
+}
+
+.progger-theme button,
+.progger-theme a,
+.progger-theme select,
+.progger-theme input[type="button"] {
+  cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16"><rect x="6" y="2" width="4" height="4" fill="black"/><rect x="4" y="6" width="8" height="4" fill="black"/><rect x="6" y="10" width="4" height="4" fill="black"/><rect x="7" y="3" width="2" height="2" fill="white"/><rect x="5" y="7" width="6" height="2" fill="white"/></svg>'), pointer;
+}
+
+/* ============================================================================
+   UTILITY CLASSES
+   ============================================================================ */
+
+/* Add pixel corners to any element */
+.progger-theme .pixel-corners {
+  position: relative;
+}
+
+.progger-theme .pixel-corners::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  width: 8px;
+  height: 8px;
+  background: hsl(var(--color-accent));
+  clip-path: polygon(0 0, 100% 0, 100% 25%, 25% 25%, 25% 100%, 0 100%);
+}
+
+.progger-theme .pixel-corners::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  background: hsl(var(--color-accent));
+  clip-path: polygon(100% 100%, 0 100%, 0 75%, 75% 75%, 75% 0, 100% 0);
+}
+
+/* Glitch effect on hover */
+.progger-theme .pixel-glitch:hover {
+  animation: progger-glitch 0.3s infinite;
+}
+
+/* Pixel shadow utility */
+.progger-theme .pixel-shadow {
+  box-shadow:
+    2px 2px 0 0 hsl(var(--color-primary) / 0.4),
+    4px 4px 0 0 hsl(var(--color-primary) / 0.2);
+}
+
+.progger-theme .pixel-shadow-lg {
+  box-shadow:
+    4px 4px 0 0 hsl(var(--color-primary) / 0.4),
+    8px 8px 0 0 hsl(var(--color-primary) / 0.2),
+    12px 12px 0 0 hsl(var(--color-primary) / 0.1);
+}
