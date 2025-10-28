@@ -38,6 +38,25 @@ The application is a full-stack project with a React frontend (Vite dev server o
 
 ## Recent Changes
 
+### 2025-10-28: PROGGER Theme Redesign - "Pixel Frog Studio"
+- 🎨 **New Signature Theme**: Introduced frog-inspired green color palette
+  - Light mode: Lily pad white background (`130 25% 96%`), deep forest green text (`140 40% 20%`), bright mint accents (`110 40% 60%`)
+  - Dark mode: Deep moss background (`140 30% 12%`), bright frog green accents (`110 45% 65%`), pale green text (`130 20% 88%`)
+- 🖼️ **Pixel Art Accents**: Added subtle retro styling without overwhelming the design
+  - Dotted border utilities (`.pixel-border`) for pixel grid aesthetics
+  - Pixel corner decorations (`.pixel-corners`) for retro UI feel
+  - Minimal flat button hover effects with subtle transforms
+- ✨ **Refined Glassmorphic Header**: Cleaner, flatter design
+  - Reduced blur from 12px to 6px for improved clarity
+  - Increased background opacity (0.6 → 0.75) for better contrast
+  - Simplified shadows (flat 1px shadow instead of layered)
+- 🎯 **Default Theme**: PROGGER theme now set as default (index 10)
+- 📏 **Minimalist Spacing**: Increased whitespace for cleaner layout
+  - Hero section: `mb-12` → `mb-16` (more breathing room)
+  - Main padding: `pt-4 pb-8` → `pt-6 pb-10` (desktop: `pt-6 pb-12` → `pt-8 pb-16`)
+  - Controls section: `shadow-lg` → `shadow-sm` with `border-2` for cleaner definition
+- 🔧 **Fixed Background**: Added `bg-background` class to main container to prevent transparency issues
+
 ### 2025-10-27: Optimized Scale Transposition Logic
 - Fixed scale fingering transposition to choose the shortest path (e.g., B major now at fret 7 instead of fret 19)
 - Algorithm now transposes down if upward transposition exceeds 6 semitones
