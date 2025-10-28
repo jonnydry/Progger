@@ -31,17 +31,17 @@ export const GlassmorphicHeader: React.FC<GlassmorphicHeaderProps> = ({
   onStashClick,
 }) => {
   const headerStyle = useMemo(() => ({
-    backdropFilter: 'blur(12px)',
-    WebkitBackdropFilter: 'blur(12px)',
+    backdropFilter: 'blur(6px)',
+    WebkitBackdropFilter: 'blur(6px)',
     background: theme === 'dark'
-      ? 'rgba(0, 0, 0, 0.6)'
-      : 'rgba(255, 255, 255, 0.6)',
+      ? 'rgba(0, 0, 0, 0.75)'
+      : 'rgba(255, 255, 255, 0.75)',
     borderBottom: theme === 'dark'
-      ? '1px solid rgba(255, 255, 255, 0.1)'
-      : '1px solid rgba(0, 0, 0, 0.1)',
+      ? '1px solid rgba(255, 255, 255, 0.15)'
+      : '1px solid rgba(0, 0, 0, 0.15)',
     boxShadow: theme === 'dark'
-      ? '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)'
-      : '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+      ? '0 1px 3px rgba(0, 0, 0, 0.2)'
+      : '0 1px 3px rgba(0, 0, 0, 0.1)',
   }), [theme]);
 
   return (
