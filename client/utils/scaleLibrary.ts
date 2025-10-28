@@ -45,11 +45,16 @@ export const SCALE_LIBRARY: ScaleLibrary = {
   'major': {
     intervals: [0, 2, 4, 5, 7, 9, 11],
     fingerings: [
+      // Position 1: Starting at C (8th fret on low E)
       [[8, 10, 12], [8, 10, 12], [9, 10, 12], [9, 10, 12], [10, 12, 13], [8, 10, 12]],
-      [[3, 5, 7], [3, 5, 7], [4, 5, 7], [4, 5, 7], [5, 7, 8], [3, 5, 7]],
-      [[0, 2, 3], [0, 2, 3], [0, 2, 4], [0, 2, 4], [0, 2, 3], [0, 2, 3]],
-      [[5, 7, 8], [5, 7, 8], [5, 7, 9], [5, 7, 9], [7, 8, 10], [5, 7, 8]],
-      [[10, 12, 14], [10, 12, 13], [10, 12, 14], [10, 12, 14], [12, 13, 15], [10, 12, 14]],
+      // Position 2: Starting at A (5th fret on low E)
+      [[5, 7, 9], [5, 7, 9], [5, 7, 9], [5, 7, 9], [7, 9, 10], [5, 7, 9]],
+      // Position 3: Starting at F (1st fret on low E) - Open position with capo-like fingering
+      [[1, 3, 4], [1, 3, 4], [2, 3, 4], [2, 3, 4], [1, 3, 4], [1, 3, 4]],
+      // Position 4: Starting at Bb (6th fret on low E) - Common jazz position
+      [[6, 8, 10], [6, 8, 10], [7, 8, 10], [7, 8, 10], [8, 10, 11], [6, 8, 10]],
+      // Position 5: Starting at Eb (11th fret on low E)
+      [[11, 13, 15], [11, 13, 15], [12, 13, 15], [12, 13, 15], [13, 15, 16], [11, 13, 15]],
     ],
     positions: ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'],
   },
@@ -164,9 +169,9 @@ export const SCALE_LIBRARY: ScaleLibrary = {
     fingerings: [
       [[5, 8, 10], [5, 8, 10], [5, 7, 10], [5, 7, 10], [5, 8, 10], [5, 8, 10]],
       [[0, 3, 5], [0, 3, 5], [0, 2, 5], [0, 2, 5], [0, 3, 5], [0, 3, 5]],
-      [[8, 10, 13], [8, 10, 13], [7, 10, 12], [7, 10, 12], [8, 10, 13], [8, 10, 13]],
-      [[13, 15, 17], [13, 15, 17], [12, 15, 17], [12, 15, 17], [13, 15, 17], [13, 15, 17]],
-      [[17, 20, 22], [17, 20, 22], [17, 19, 22], [17, 19, 22], [17, 20, 22], [17, 20, 22]],
+      [[10, 12, 15], [10, 12, 15], [8, 12, 15], [8, 12, 15], [10, 12, 15], [10, 12, 15]],
+      [[15, 17, 19], [15, 17, 20], [15, 17, 20], [15, 17, 20], [15, 17, 19], [15, 17, 19]],
+      [[20, 22, 24], [20, 22, 24], [20, 22, 24], [20, 22, 24], [20, 22, 24], [20, 22, 24]],
     ],
     positions: ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'],
   },
@@ -305,7 +310,7 @@ function detectFingeringBaseRoot(fingering: number[][]): string {
  * @param rootNote - Optional explicit root note (extracted from name if not provided)
  * @returns 2D array of fret numbers for each string [lowE, A, D, G, B, highE]
  */
-export function getScaleFingering(scaleName: string, rootNote?: string): number[][] {
+export function getScaleFingering(scaleName: string, rootNote?: string, positionIndex: number = 0): number[][] {
   const root = rootNote || extractRootFromScaleName(scaleName);
   const targetRootValue = noteToValue(root);
 
@@ -316,7 +321,9 @@ export function getScaleFingering(scaleName: string, rootNote?: string): number[
 
   // Try to find the scale in the library
   if (scaleData && scaleData.fingerings && scaleData.fingerings.length > 0) {
-    baseFingering = scaleData.fingerings[0];  // Use Position 1
+    // Use the specified position index, clamping to available positions
+    const safePositionIndex = Math.max(0, Math.min(positionIndex, scaleData.fingerings.length - 1));
+    baseFingering = scaleData.fingerings[safePositionIndex];
   } else {
     // Fallback: try fuzzy matching
     console.warn(`Scale "${normalized}" not found in library, attempting fuzzy match...`);

@@ -18,34 +18,110 @@ interface ProgressionResultFromAPI {
     scales: SimpleScale[];
 }
 
-export async function generateChordProgression(key: string, mode: string, includeTensions: boolean, numChords: number, selectedProgression: string): Promise<ProgressionResult> {
-  const cacheKey = `progression-${key}-${mode}-${includeTensions}-${numChords}-${selectedProgression}`;
+interface CacheEntry {
+  data: ProgressionResult;
+  timestamp: number;
+  ttl: number; // Time to live in milliseconds
+}
+
+const CACHE_TTL_24HOURS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
+function getCacheKey(key: string, mode: string, includeTensions: boolean, numChords: number, selectedProgression: string): string {
+  return `progression-${key}-${mode}-${includeTensions}-${numChords}-${selectedProgression}`;
+}
+
+function getFromCache(cacheKey: string): ProgressionResult | null {
   try {
-    const cachedResult = sessionStorage.getItem(cacheKey);
-    if (cachedResult) {
+    const cachedItem = localStorage.getItem(cacheKey);
+    if (!cachedItem) return null;
+
+    const entry: CacheEntry = JSON.parse(cachedItem);
+    const now = Date.now();
+
+    // Check if cache entry is still valid
+    if (now - entry.timestamp < entry.ttl) {
       console.log("Serving from cache:", cacheKey);
-      return JSON.parse(cachedResult) as ProgressionResult;
+      return entry.data;
+    } else {
+      // Remove expired cache entry
+      localStorage.removeItem(cacheKey);
     }
   } catch (error) {
-    console.warn("Could not read from session storage", error);
+    console.warn("Could not read from localStorage", error);
+  }
+  return null;
+}
+
+function setCache(cacheKey: string, data: ProgressionResult): void {
+  try {
+    const entry: CacheEntry = {
+      data,
+      timestamp: Date.now(),
+      ttl: CACHE_TTL_24HOURS
+    };
+    localStorage.setItem(cacheKey, JSON.stringify(entry));
+  } catch (error) {
+    console.warn("Could not write to localStorage", error);
+  }
+}
+
+function clearExpiredCache(): void {
+  try {
+    const keys = Object.keys(localStorage);
+    const now = Date.now();
+
+    keys.forEach(key => {
+      if (key.startsWith('progression-')) {
+        try {
+          const entry: CacheEntry = JSON.parse(localStorage.getItem(key)!);
+          if (now - entry.timestamp >= entry.ttl) {
+            localStorage.removeItem(key);
+          }
+        } catch (error) {
+          // If we can't parse it, remove it
+          localStorage.removeItem(key);
+        }
+      }
+    });
+  } catch (error) {
+    console.warn("Error during cache cleanup", error);
+  }
+}
+
+export async function generateChordProgression(key: string, mode: string, includeTensions: boolean, numChords: number, selectedProgression: string): Promise<ProgressionResult> {
+  const cacheKey = getCacheKey(key, mode, includeTensions, numChords, selectedProgression);
+
+  // Try to get from cache first
+  const cachedResult = getFromCache(cacheKey);
+  if (cachedResult) {
+    return cachedResult;
   }
   
   try {
     console.log("Fetching from backend API:", cacheKey);
 
-    const response = await fetch('/api/generate-progression', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        key,
-        mode,
-        includeTensions,
-        numChords,
-        selectedProgression,
-      }),
+    // Create a timeout promise that rejects after 30 seconds
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Request timed out after 30 seconds')), 30000);
     });
+
+    // Race between the fetch and the timeout
+    const response = await Promise.race([
+      fetch('/api/generate-progression', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          key,
+          mode,
+          includeTensions,
+          numChords,
+          selectedProgression,
+        }),
+      }),
+      timeoutPromise
+    ]) as Response;
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
@@ -88,11 +164,13 @@ export async function generateChordProgression(key: string, mode: string, includ
     }));
 
     const finalResult = { progression, scales };
-    
-    try {
-        sessionStorage.setItem(cacheKey, JSON.stringify(finalResult));
-    } catch (error) {
-        console.warn("Could not write to session storage", error);
+
+    // Cache the result with 24-hour TTL
+    setCache(cacheKey, finalResult);
+
+    // Periodically clean up expired cache entries (1% chance on each request)
+    if (Math.random() < 0.01) {
+      clearExpiredCache();
     }
 
     return finalResult;

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import type { ScaleInfo } from '@/types';
-import { noteToValue as noteToValueBase, valueToNote, displayNote, STANDARD_TUNING_NAMES } from '@/utils/musicTheory';
-import { getScaleIntervals } from '@/utils/scaleLibrary';
+import type { ScaleInfo } from '../types';
+import { noteToValue as noteToValueBase, valueToNote, displayNote, STANDARD_TUNING_NAMES } from '../utils/musicTheory';
+import { getScaleIntervals, getScaleFingering, SCALE_LIBRARY } from '../utils/scaleLibrary';
 
 interface ScaleDiagramProps {
   scaleInfo: ScaleInfo;
@@ -86,7 +86,7 @@ const ViewToggle: React.FC<{
 }> = React.memo(({ viewMode, setViewMode }) => {
     return (
       <div className="flex items-center space-x-2 bg-text/10 p-1 rounded-md">
-        <button 
+        <button
             onClick={() => setViewMode('pattern')}
             className={`px-3 py-1 text-sm font-semibold rounded transition-colors duration-200 ${viewMode === 'pattern' ? 'bg-surface shadow' : 'text-text/60 hover:text-text'}`}
         >
@@ -102,9 +102,37 @@ const ViewToggle: React.FC<{
     );
 });
 
+const PositionSelector: React.FC<{
+  positions: string[];
+  currentPosition: number;
+  setCurrentPosition: (position: number) => void;
+}> = React.memo(({ positions, currentPosition, setCurrentPosition }) => {
+  if (positions.length <= 1) return null;
+
+  return (
+    <div className="flex items-center space-x-1 bg-text/10 p-1 rounded-md">
+      <span className="text-sm text-text/70 px-2">Pos:</span>
+      {positions.map((position, index) => (
+        <button
+          key={position}
+          onClick={() => setCurrentPosition(index)}
+          className={`px-2 py-1 text-sm font-semibold rounded transition-colors duration-200 ${
+            currentPosition === index
+              ? 'bg-secondary text-background shadow'
+              : 'text-text/60 hover:text-text hover:bg-surface/50'
+          }`}
+        >
+          {index + 1}
+        </button>
+      ))}
+    </div>
+  );
+});
+
 const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) => {
-  const { name, rootNote, notes, fingering } = scaleInfo;
+  const { name, rootNote, notes } = scaleInfo;
   const [viewMode, setViewMode] = useState<'pattern' | 'map'>('pattern');
+  const [currentPosition, setCurrentPosition] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
   // Detect mobile screen size
@@ -126,16 +154,46 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) =>
     return new Set(notes.map(noteToValue).filter(v => v !== -1));
   }, [rootNote, name, notes]);
 
+  // Generate position-aware fingering
+  const currentFingering = useMemo(() => {
+    return getScaleFingering(name, rootNote, currentPosition);
+  }, [name, rootNote, currentPosition]);
+
   // Memoize fingering lookup for pattern view - convert to Sets for O(1) lookups
   const fingeringLookup = useMemo(() => {
-    return fingering.map(frets => new Set(frets ?? []));
-  }, [fingering]);
+    return currentFingering.map(frets => new Set(frets ?? []));
+  }, [currentFingering]);
 
   // Memoize visible inlay frets to avoid array operations on every render
   const visibleInlays = useMemo(() =>
     [...INLAY_FRETS, ...DOUBLE_INLAY_FRETS].filter(f => f <= fretCount),
     [fretCount]
   );
+
+  // Get available positions for the current scale
+  const availablePositions = useMemo(() => {
+    const normalized = name.toLowerCase().trim();
+    let scaleKey = '';
+
+    if (normalized.includes('pentatonic')) {
+      scaleKey = normalized.includes('major') ? 'pentatonic major' : 'pentatonic minor';
+    } else if (normalized.includes('major')) {
+      scaleKey = 'major';
+    } else if (normalized.includes('minor')) {
+      scaleKey = 'minor';
+    } else {
+      // For other scales, try to match the base name
+      for (const [key] of Object.entries(SCALE_LIBRARY)) {
+        if (normalized.includes(key) || key.includes(normalized)) {
+          scaleKey = key;
+          break;
+        }
+      }
+    }
+
+    const scaleData = SCALE_LIBRARY[scaleKey];
+    return scaleData?.positions || ['Position 1'];
+  }, [name]);
 
   // Display scale name with context-aware root note
   const displayedScaleName = useMemo(() => {
@@ -147,7 +205,14 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) =>
     <div className="flex flex-col items-center w-full max-w-4xl mx-auto">
         <div className="w-full flex justify-between items-center mb-3 px-1">
             <h2 className="text-lg md:text-xl font-semibold text-text/90">{displayedScaleName}</h2>
-            <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
+            <div className="flex items-center space-x-2">
+              <PositionSelector
+                positions={availablePositions}
+                currentPosition={currentPosition}
+                setCurrentPosition={setCurrentPosition}
+              />
+              <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
+            </div>
         </div>
 
       <div className="w-full bg-surface rounded-lg shadow-lg border border-border overflow-x-auto overflow-y-hidden">

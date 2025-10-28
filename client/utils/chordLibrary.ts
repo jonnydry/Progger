@@ -22,7 +22,7 @@
  * Produces notes: E (low) - B - E - G# - B - E (high)
  */
 
-import type { ChordVoicing } from '@/types';
+import type { ChordVoicing } from '../types';
 
 export interface ChordData {
   name: string;
@@ -131,7 +131,8 @@ const CHORD_VOICINGS: Record<ChordKey, ChordVoicing[]> = {
     { frets: [0, 2, 2, 2, 0, 0], position: 'Open' },
   ],
   'E_sus4': [
-    { frets: [0, 2, 2, 2, 0, 0], position: 'Open' },
+    { frets: [0, 2, 2, 2, 5, 0], position: 'Open' },
+    { frets: [1, 3, 3, 3, 1, 1], firstFret: 7, position: 'Barre 7th' },
   ],
 
   'F_major': [
@@ -149,6 +150,7 @@ const CHORD_VOICINGS: Record<ChordKey, ChordVoicing[]> = {
     { frets: ['x', 'x', 3, 2, 1, 2], firstFret: 1, position: 'Partial' },
   ],
   'F_maj7': [
+    { frets: [5, 7, 6, 6, 5, 5], firstFret: 5, position: 'Barre 5th' },
     { frets: [1, 3, 2, 2, 1, 1], firstFret: 1, position: 'Barre 1st' },
     { frets: ['x', 'x', 3, 2, 1, 0], position: 'Open' },
   ],
@@ -340,8 +342,8 @@ const CHORD_VOICINGS: Record<ChordKey, ChordVoicing[]> = {
   ],
 
   'Bb_major': [
-    { frets: ['x', 1, 3, 3, 3, 1], firstFret: 1, position: 'Barre 1st' },
     { frets: [6, 8, 8, 7, 6, 6], firstFret: 6, position: 'Barre 6th' },
+    { frets: ['x', 1, 3, 3, 3, 1], firstFret: 1, position: 'Barre 1st' },
   ],
   'Bb_minor': [
     { frets: ['x', 1, 3, 3, 2, 1], firstFret: 1, position: 'Barre 1st' },
