@@ -107,69 +107,114 @@
     }
 
     /* PROGGER Theme - Pixelated Border Effect */
-    .progger-theme .progger-pixel-border {
+
+    /* Override rounded corners for sharper pixel aesthetic */
+    .progger-theme .rounded-lg,
+    .progger-theme .rounded,
+    .progger-theme .rounded-full {
+      border-radius: 0 !important;
+    }
+
+    /* Main content sections with pixelated borders */
+    .progger-theme section > div.bg-surface,
+    .progger-theme section.bg-surface {
       position: relative;
+      border: 3px solid;
       border-image: repeating-linear-gradient(
         90deg,
         hsl(var(--color-primary)) 0px,
-        hsl(var(--color-primary)) 3px,
-        transparent 3px,
-        transparent 6px
+        hsl(var(--color-primary)) 5px,
+        transparent 5px,
+        transparent 10px
       ) 1;
-      border-width: 2px;
-      border-style: solid;
+      box-shadow:
+        5px 5px 0 0 hsl(var(--color-primary) / 0.2),
+        10px 10px 0 0 hsl(var(--color-primary) / 0.1);
     }
 
-    .progger-theme .progger-pixel-border::before,
-    .progger-theme .progger-pixel-border::after {
+    /* Pixel corners decoration */
+    .progger-theme section > div.bg-surface::before,
+    .progger-theme section.bg-surface::before {
       content: '';
       position: absolute;
-      background-image: repeating-linear-gradient(
-        90deg,
-        hsl(var(--color-primary)) 0px,
-        hsl(var(--color-primary)) 3px,
-        transparent 3px,
-        transparent 6px
-      );
-      height: 2px;
-      left: 0;
-      right: 0;
+      top: -3px;
+      left: -3px;
+      width: 12px;
+      height: 12px;
+      background: hsl(var(--color-accent));
+      clip-path: polygon(0 0, 100% 0, 100% 33%, 33% 33%, 33% 100%, 0 100%);
     }
 
-    .progger-theme .progger-pixel-border::before {
-      top: -2px;
-    }
-
-    .progger-theme .progger-pixel-border::after {
-      bottom: -2px;
-    }
-
-    /* Apply pixel border to main content sections in PROGGER theme */
-    .progger-theme section {
-      position: relative;
-    }
-
-    .progger-theme section::after {
+    .progger-theme section > div.bg-surface::after,
+    .progger-theme section.bg-surface::after {
       content: '';
       position: absolute;
-      inset: -1px;
-      border: 2px solid transparent;
-      border-image: repeating-linear-gradient(
-        0deg,
-        hsl(var(--color-border)) 0px,
-        hsl(var(--color-border)) 4px,
-        transparent 4px,
-        transparent 8px
-      ) 1;
-      pointer-events: none;
-      border-radius: inherit;
+      bottom: -3px;
+      right: -3px;
+      width: 12px;
+      height: 12px;
+      background: hsl(var(--color-accent));
+      clip-path: polygon(100% 100%, 0 100%, 0 67%, 67% 67%, 67% 0, 100% 0);
     }
 
-    /* Add subtle pixel effect to buttons in PROGGER theme */
+    /* Chord/Scale cards with pixel borders */
+    .progger-theme .bg-surface.border {
+      border: 2px dashed hsl(var(--color-border)) !important;
+      border-width: 2px !important;
+      outline: 2px solid hsl(var(--color-primary) / 0.3);
+      outline-offset: 2px;
+    }
+
+    /* Buttons with blocky pixel style */
     .progger-theme button {
+      border-radius: 0 !important;
+      position: relative;
+      image-rendering: crisp-edges;
+      box-shadow:
+        2px 2px 0 0 hsl(var(--color-text) / 0.2);
+    }
+
+    .progger-theme button:hover {
+      transform: translate(1px, 1px);
+      box-shadow:
+        1px 1px 0 0 hsl(var(--color-text) / 0.2);
+    }
+
+    .progger-theme button:active {
+      transform: translate(2px, 2px);
+      box-shadow: none;
+    }
+
+    /* Primary buttons get pixel borders */
+    .progger-theme button.bg-primary,
+    .progger-theme button[class*="bg-primary"] {
+      border: 2px solid hsl(var(--color-text) / 0.3);
+    }
+
+    /* Header styling in PROGGER theme */
+    .progger-theme header {
+      border-bottom: 3px dashed hsl(var(--color-border)) !important;
+    }
+
+    /* Images get crisp pixel rendering */
+    .progger-theme img {
       image-rendering: pixelated;
       image-rendering: -moz-crisp-edges;
       image-rendering: crisp-edges;
+    }
+
+    /* Dropdown/select elements */
+    .progger-theme [role="listbox"],
+    .progger-theme .absolute.bg-surface {
+      border: 3px solid hsl(var(--color-primary)) !important;
+      box-shadow:
+        4px 4px 0 0 hsl(var(--color-primary) / 0.3);
+    }
+
+    /* Error messages */
+    .progger-theme .bg-red-400\/20,
+    .progger-theme .dark\:bg-red-900\/30 {
+      border: 2px dashed !important;
     }
 </style>
 </head>
