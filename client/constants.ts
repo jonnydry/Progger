@@ -226,27 +226,6 @@ export const THEMES: ThemeOption[] = [
       surface: '140 5% 10%',    // Near-Black with green tint
       border: '140 70% 75% / 0.15',
     }
-  },
-  {
-    name: 'PROGGER',
-    light: {
-      primary: '90 75% 38%',       // Bright lime green
-      secondary: '270 30% 48%',    // Muted purple
-      accent: '330 85% 55%',       // Hot pink
-      text: '270 45% 18%',         // Dark purple
-      background: '40 45% 97%',    // Cream
-      surface: '40 40% 93%',       // Darker cream
-      border: '270 45% 18% / 0.15',
-    },
-    dark: {
-      primary: '90 85% 60%',       // Neon lime green
-      secondary: '270 35% 45%',    // Medium purple
-      accent: '330 90% 65%',       // Hot magenta
-      text: '90 35% 95%',          // Light with lime tint
-      background: '270 45% 8%',    // Deep purple
-      surface: '270 40% 12%',      // Lighter purple
-      border: '90 35% 95% / 0.2',
-    }
   }
 ];
 
