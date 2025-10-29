@@ -402,6 +402,288 @@ const CHORD_VOICINGS: Record<ChordKey, ChordVoicing[]> = {
     { frets: [0, 2, 2, 'x', 'x', 'x'], position: 'Open' },
     { frets: [0, 2, 2, 'x', 'x', 'x'], firstFret: 12, position: 'Barre 12th' },
   ],
+
+  // A-string root voicings - chords that position root notes on the A string (fret 1)
+  // These provide alternative voicings with the root emphasized on the A string
+
+  // E root on A string (fret 7) - E is fret 7 on A string
+  'E_major_Aroot': [
+    { frets: [4, 7, 9, 9, 9, 7], firstFret: 4, position: 'A-string Root' },
+  ],
+  'E_minor_Aroot': [
+    { frets: [4, 7, 9, 9, 8, 7], firstFret: 4, position: 'A-string Root' },
+  ],
+
+  // F root on A string (fret 8) - F is fret 8 on A string
+  'F_major_Aroot': [
+    { frets: [5, 8, 10, 10, 10, 8], firstFret: 5, position: 'A-string Root' },
+  ],
+  'F_minor_Aroot': [
+    { frets: [5, 8, 10, 10, 9, 8], firstFret: 5, position: 'A-string Root' },
+  ],
+
+  // F# root on A string (fret 9) - F# is fret 9 on A string
+  'F#_major_Aroot': [
+    { frets: [6, 9, 11, 11, 11, 9], firstFret: 6, position: 'A-string Root' },
+  ],
+  'F#_minor_Aroot': [
+    { frets: [6, 9, 11, 11, 10, 9], firstFret: 6, position: 'A-string Root' },
+  ],
+
+  // G root on A string (fret 10) - G is fret 10 on A string
+  'G_major_Aroot': [
+    { frets: [7, 10, 12, 12, 12, 10], firstFret: 7, position: 'A-string Root' },
+  ],
+  'G_minor_Aroot': [
+    { frets: [7, 10, 12, 12, 11, 10], firstFret: 7, position: 'A-string Root' },
+  ],
+
+  // A# root on A string (fret 11) - A# is fret 11 on A string
+  'A#_major_Aroot': [
+    { frets: [8, 11, 13, 13, 13, 11], firstFret: 8, position: 'A-string Root' },
+  ],
+  'A#_minor_Aroot': [
+    { frets: [8, 11, 13, 13, 12, 11], firstFret: 8, position: 'A-string Root' },
+  ],
+
+  // B root on A string (fret 12) - B is fret 12 on A string
+  'B_major_Aroot': [
+    { frets: [9, 12, 14, 14, 14, 12], firstFret: 9, position: 'A-string Root' },
+  ],
+  'B_minor_Aroot': [
+    { frets: [9, 12, 14, 14, 13, 12], firstFret: 9, position: 'A-string Root' },
+  ],
+
+  // C# root on A string (fret 13) - C# is fret 13 on A string
+  'C#_major_Aroot': [
+    { frets: [10, 13, 15, 15, 15, 13], firstFret: 10, position: 'A-string Root' },
+  ],
+  'C#_minor_Aroot': [
+    { frets: [10, 13, 15, 15, 14, 13], firstFret: 10, position: 'A-string Root' },
+  ],
+
+  // D# root on A string (fret 14) - D# is fret 14 on A string
+  'D#_major_Aroot': [
+    { frets: [11, 14, 16, 16, 16, 14], firstFret: 11, position: 'A-string Root' },
+  ],
+  'D#_minor_Aroot': [
+    { frets: [11, 14, 16, 16, 15, 14], firstFret: 11, position: 'A-string Root' },
+  ],
+
+  // Additional A-string root voicings for lower frets
+  // These are partial chords that emphasize the A string root
+
+  // A root on A string (fret 0) - simplified power chord form
+  'A_power_Aroot': [
+    { frets: ['x', 0, 2, 2, 'x', 'x'], position: 'A-string Root' },
+  ],
+
+  // E root on A string (alternative voicing)
+  'E_power_Aroot': [
+    { frets: ['x', 7, 9, 9, 'x', 'x'], firstFret: 7, position: 'A-string Root' },
+  ],
+
+  // D root on A string (partial chord)
+  'D_power_Aroot': [
+    { frets: ['x', 'x', 7, 7, 'x', 'x'], firstFret: 10, position: 'A-string Root' },
+  ],
+
+  // G root on A string (partial chord alternative)
+  'G_power_Aroot': [
+    { frets: ['x', 10, 12, 12, 'x', 'x'], firstFret: 10, position: 'A-string Root' },
+  ],
+
+  // Minor/Major Seventh Chords (min/maj7) - hybrid chords with minor triad + major 7th
+  'C_min/maj7': [
+    { frets: ['x', 3, 2, 0, 0, 0], position: 'Open' },
+    { frets: [3, 1, 2, 0, 'x', 'x'], firstFret: 8, position: 'Barre 8th' },
+  ],
+  'F_min/maj7': [
+    { frets: [5, 7, 6, 6, 5, 5], firstFret: 5, position: 'Barre 5th' },
+  ],
+  'G_min/maj7': [
+    { frets: [3, 5, 4, 4, 3, 3], firstFret: 3, position: 'Barre 3rd' },
+  ],
+  'A_min/maj7': [
+    { frets: [1, 3, 2, 2, 1, 1], firstFret: 5, position: 'Barre 5th' },
+  ],
+  'D_min/maj7': [
+    { frets: ['x', 'x', 0, 2, 1, 2], position: 'Open' },
+    { frets: [1, 3, 2, 2, 1, 1], firstFret: 10, position: 'Barre 10th' },
+  ],
+  'E_min/maj7': [
+    { frets: [0, 2, 1, 1, 0, 0], position: 'Open' },
+  ],
+  'Bb_min/maj7': [
+    { frets: [1, 3, 2, 2, 1, 1], firstFret: 6, position: 'Barre 6th' },
+  ],
+  'Eb_min/maj7': [
+    { frets: ['x', 'x', 1, 3, 1, 3], position: 'Open' },
+    { frets: [1, 3, 2, 2, 1, 1], firstFret: 11, position: 'Barre 11th' },
+  ],
+  'Ab_min/maj7': [
+    { frets: [4, 6, 5, 5, 4, 4], firstFret: 4, position: 'Barre 4th' },
+  ],
+  'Db_min/maj7': [
+    { frets: ['x', 4, 6, 5, 6, 4], firstFret: 4, position: 'Barre 4th' },
+  ],
+  'F#_min/maj7': [
+    { frets: [2, 4, 3, 3, 2, 2], firstFret: 2, position: 'Barre 2nd' },
+  ],
+  'Gb_min/maj7': [
+    { frets: [2, 4, 3, 3, 2, 2], firstFret: 2, position: 'Barre 2nd' },
+  ],
+
+  // Complex Extension Voicings - specific jazz chords with concrete fingerings
+  // Dominant 7#9 chords (Hendrix favorite, tritone + augmented 9th)
+  'C_7#9': [
+    { frets: [1, 3, 1, 2, 4, 4], firstFret: 8, position: 'Barre 8th' },
+  ],
+  'G_7#9': [
+    { frets: [3, 5, 3, 4, 3, 3], firstFret: 3, position: 'Barre 3rd' },
+  ],
+  'F_7#9': [
+    { frets: [1, 3, 1, 2, 4, 1], firstFret: 8, position: 'Barre 8th' },
+  ],
+  'Bb_7#9': [
+    { frets: ['x', 1, 3, 1, 3, 4], firstFret: 6, position: 'Barre 6th' },
+  ],
+  'Eb_7#9': [
+    { frets: ['x', 'x', 1, 3, 2, 4], position: 'Open' },
+    { frets: [1, 3, 1, 2, 4, 1], firstFret: 11, position: 'Barre 11th' },
+  ],
+  'Ab_7#9': [
+    { frets: [4, 6, 4, 5, 4, 4], firstFret: 4, position: 'Barre 4th' },
+  ],
+
+  // Dominant 7#11 chords (#11 is the same as b5, creates Lydian dominant sound)
+  'C_7#11': [
+    { frets: [1, 3, 1, 2, 4, 1], firstFret: 8, position: 'Barre 8th' },
+  ],
+  'G_7#11': [
+    { frets: [3, 5, 3, 4, 5, 3], firstFret: 3, position: 'Barre 3rd' },
+  ],
+  'F_7#11': [
+    { frets: [1, 3, 2, 2, 2, 1], firstFret: 8, position: 'Barre 8th' },
+  ],
+  'D_7#11': [
+    { frets: ['x', 'x', 0, 2, 3, 1], position: 'Open' },
+  ],
+  'Bb_7#11': [
+    { frets: ['x', 1, 3, 2, 3, 1], firstFret: 6, position: 'Barre 6th' },
+  ],
+  'Eb_7#11': [
+    { frets: ['x', 'x', 1, 3, 4, 2], position: 'Open' },
+  ],
+
+  // Dominant 7b9b13 chords (super alteration with both flat 9th and flat 13th)
+  'C_7b9b13': [
+    { frets: [1, 3, 1, 2, 2, 3], firstFret: 8, position: 'Barre 8th' },
+  ],
+  'G_7b9b13': [
+    { frets: [3, 5, 3, 4, 4, 5], firstFret: 3, position: 'Barre 3rd' },
+  ],
+  'F_7b9b13': [
+    { frets: [1, 3, 1, 2, 0, 3], firstFret: 8, position: 'Barre 8th' },
+  ],
+  'Bb_7b9b13': [
+    { frets: [1, 3, 1, 2, 2, 3], firstFret: 6, position: 'Barre 6th' },
+  ],
+  'Eb_7b9b13': [
+    { frets: ['x', 'x', 1, 3, 2, 0], position: 'Partial' },
+  ],
+  'Ab_7b9b13': [
+    { frets: [4, 6, 4, 5, 5, 6], firstFret: 4, position: 'Barre 4th' },
+  ],
+
+  // Dominant 7#9b13 chords (Modern jazz sound, #9 + flat 13)
+  'C_7#9b13': [
+    { frets: [1, 3, 1, 2, 4, 3], firstFret: 8, position: 'Barre 8th' },
+  ],
+  'G_7#9b13': [
+    { frets: [3, 5, 3, 4, 6, 5], firstFret: 3, position: 'Barre 3rd' },
+  ],
+  'F_7#9b13': [
+    { frets: [1, 3, 1, 2, 4, 2], firstFret: 8, position: 'Barre 8th' },
+  ],
+  'Bb_7#9b13': [
+    { frets: ['x', 1, 3, 1, 3, 3], firstFret: 6, position: 'Barre 6th' },
+  ],
+  'Eb_7#9b13': [
+    { frets: ['x', 'x', 1, 3, 4, 3], position: 'Open' },
+  ],
+  'Ab_7#9b13': [
+    { frets: [4, 6, 4, 5, 7, 6], firstFret: 4, position: 'Barre 4th' },
+  ],
+
+  // Additional complex jazz extensions on other common roots
+  'A_7#9': [
+    { frets: ['x', 0, 2, 0, 2, 3], position: 'Open' },
+  ],
+  'A_7#11': [
+    { frets: ['x', 0, 2, 2, 1, 4], position: 'Open' },
+  ],
+  'B_7#9': [
+    { frets: ['x', 2, 4, 2, 4, 3], firstFret: 2, position: 'Barre 2nd' },
+  ],
+  'B_7#11': [
+    { frets: ['x', 2, 0, 2, 1, 2], position: 'Open' },
+  ],
+
+  // Quartal Chords - Built in Perfect Fourths (Classic Quartal Harmony)
+  // C quartal stack: C-F-Bb-Eb (fundamental quartal voicing)
+  'C_quartal': [
+    { frets: [8, 8, 10, 10, 10, 8], firstFret: 8, position: 'Quartal Stack' },
+    { frets: [1, 1, 3, 3, 3, 1], firstFret: 8, position: 'Compact Quartal' },
+  ],
+  // F quartal stack: F-Bb-Eb-Ab (simple quartal voicing)
+  'F_quartal': [
+    { frets: [1, 1, 3, 3, 1, 1], firstFret: 8, position: 'Quartal Stack' },
+  ],
+  // G quartal stack: G-C-F-Bb (jazzy quartal voicing)
+  'G_quartal': [
+    { frets: [3, 3, 5, 5, 3, 3], firstFret: 3, position: 'Quartal Stack' },
+  ],
+  // A quartal stack: A-D-G-C (modern quartal voicing)
+  'A_quartal': [
+    { frets: [5, 5, 7, 7, 5, 5], firstFret: 5, position: 'Quartal Stack' },
+  ],
+  // Bb quartal stack: Bb-Eb-Ab-Db (dark quartal voicing)
+  'Bb_quartal': [
+    { frets: [6, 6, 8, 8, 6, 6], firstFret: 6, position: 'Quartal Stack' },
+  ],
+  // Eb quartal stack: Eb-Ab-Db-Gb (extended quartal voicing)
+  'Eb_quartal': [
+    { frets: [11, 11, 13, 13, 11, 11], firstFret: 11, position: 'Quartal Stack' },
+  ],
+  // D quartal stack: D-G-C-F (bright quartal voicing)
+  'D_quartal': [
+    { frets: [10, 10, 12, 12, 10, 10], firstFret: 10, position: 'Quartal Stack' },
+  ],
+  // E quartal stack: E-A-D-G (open quartal voicing)
+  'E_quartal': [
+    { frets: [0, 0, 2, 2, 0, 0], position: 'Open Quartal' },
+    { frets: [0, 2, 2, 1, 0, 0], position: 'Open Quartal Variant' },
+  ],
+  // B quartal stack: B-E-A-D (upper register quartal)
+  'B_quartal': [
+    { frets: [7, 7, 9, 9, 7, 7], firstFret: 7, position: 'Quartal Stack' },
+  ],
+  // Ab quartal stack: Ab-Db-Gb-B (avant-garde quartal)
+  'Ab_quartal': [
+    { frets: [4, 4, 6, 6, 4, 4], firstFret: 4, position: 'Quartal Stack' },
+  ],
+  // Db quartal stack: Db-Gb-B-E (aztec quartal)
+  'Db_quartal': [
+    { frets: [9, 9, 11, 11, 9, 9], firstFret: 9, position: 'Quartal Stack' },
+  ],
+  // F# quartal stack: F#-B-E-A (sharp quartal)
+  'F#_quartal': [
+    { frets: [2, 2, 4, 4, 2, 2], firstFret: 2, position: 'Quartal Stack' },
+  ],
+  'Gb_quartal': [
+    { frets: [2, 2, 4, 4, 2, 2], firstFret: 2, position: 'Quartal Stack' },
+  ],
 };
 
 const GENERIC_BARRE_SHAPES: Record<string, ChordVoicing[]> = {
@@ -419,6 +701,7 @@ const GENERIC_BARRE_SHAPES: Record<string, ChordVoicing[]> = {
   // Seventh chords
   '7': [{ frets: [1, 3, 1, 2, 1, 1], firstFret: 1, position: 'Barre' }],
   'maj7': [{ frets: [1, 3, 2, 2, 1, 1], firstFret: 1, position: 'Barre' }],
+  'min/maj7': [{ frets: [1, 3, 2, 1, 1, 1], firstFret: 1, position: 'Barre' }],
   'min7': [{ frets: [1, 3, 1, 1, 1, 1], firstFret: 1, position: 'Barre' }],
   'min7b5': [{ frets: ['x', 'x', 1, 2, 2, 2], firstFret: 1, position: 'Partial' }],
 
@@ -478,7 +761,7 @@ import { noteToValue } from './musicTheory';
  * Preserves F#/Gb and C#/Db distinctions when both forms exist in library
  */
 function normalizeRoot(root: string): string {
-  const upper = root.toUpperCase().toLowerCase(); // normalize case
+  const upper = root.toLowerCase(); // normalize case
 
   // Create a mapping that prioritizes the form that exists in our library
   // Check if both sharp and flat forms exist, and choose the primary one
@@ -541,6 +824,7 @@ function normalizeQuality(quality: string): string {
   // Seventh chords
   if (q === '7' || q === 'dom7' || q === 'dominant7') return '7';
   if (q === 'maj7' || q === 'major7' || q === 'M7' || q === 'Δ7' || q === 'Δ') return 'maj7';
+  if (q === 'm/maj7' || q === 'min/maj7' || q === 'm7+' || q === 'min7/maj7') return 'min/maj7';
   if (q === 'm7' || q === 'min7' || q === 'minor7' || q === '-7') return 'min7';
   if (q === 'dim7' || q === 'o7' || q === '°7') return 'dim7';
   if (q.startsWith('m7b5') || q === 'ø' || q === 'half-dim' || q === 'ø7') return 'min7b5';
