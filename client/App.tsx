@@ -27,7 +27,7 @@ const getInitialThemeIndex = (): number => {
 const App: React.FC = () => {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth() as { user: User | undefined, isLoading: boolean, isAuthenticated: boolean };
   const [key, setKey] = useState<string>(KEYS[0]);
-  const [mode, setMode] = useState<string>(MODES[0]);
+  const [mode, setMode] = useState<string>(MODES[0].value);
   const [selectedProgression, setSelectedProgression] = useState<string>(COMMON_PROGRESSIONS[0].value);
   const [numChords, setNumChords] = useState<number>(4);
   const [includeTensions, setIncludeTensions] = useState<boolean>(false);

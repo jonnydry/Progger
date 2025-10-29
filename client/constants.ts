@@ -234,7 +234,30 @@ export const KEYS = [
   'C', 'Db', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'
 ];
 
-export const MODES = ['Major', 'Minor'];
+export interface ModeOption {
+  name: string;
+  value: string;
+  description: string;
+  group: 'major' | 'minor' | 'diminished';
+}
+
+export const MODES: ModeOption[] = [
+  // Major Modes
+  { name: 'Ionian (Major)', value: 'Major', description: 'Bright, happy - same as Major scale', group: 'major' },
+  { name: 'Lydian', value: 'Lydian', description: 'Dreamy, floating - Major with raised 4th', group: 'major' },
+  { name: 'Mixolydian', value: 'Mixolydian', description: 'Bluesy, rock - Major with lowered 7th', group: 'major' },
+  
+  // Minor Modes
+  { name: 'Aeolian (Minor)', value: 'Minor', description: 'Melancholic, sad - same as Minor scale', group: 'minor' },
+  { name: 'Dorian', value: 'Dorian', description: 'Jazzy minor - Minor with raised 6th', group: 'minor' },
+  { name: 'Phrygian', value: 'Phrygian', description: 'Dark, Spanish - Minor with lowered 2nd', group: 'minor' },
+  
+  // Diminished Mode
+  { name: 'Locrian', value: 'Locrian', description: 'Unstable, dissonant - rarely used', group: 'diminished' },
+];
+
+// Helper function to get all mode values as a flat array (for backward compatibility)
+export const MODE_VALUES = MODES.map(m => m.value);
 
 export const CHORD_COUNTS = [2, 3, 4, 5, 6, 7];
 
