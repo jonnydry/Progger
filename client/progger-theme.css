@@ -1,6 +1,7 @@
 /* ============================================================================
-   PROGGER THEME - RETRO PIXEL-ART GAMING AESTHETIC
-   A complete visual overhaul with pixelated borders, scanlines, and retro vibes
+   PROGGER THEME v2
+   Minimal retro-futurist pixel atmosphere inspired by the mascot palette.
+   Layered CRT glow, precise border steps, and subtle motion accents.
    ============================================================================ */
 
 /* ============================================================================
@@ -18,49 +19,38 @@
   position: fixed;
   inset: 0;
   z-index: -2;
-  opacity: 0.4;
-  background-image:
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 2px,
-      hsl(var(--color-primary) / 0.03) 2px,
-      hsl(var(--color-primary) / 0.03) 4px
-    ),
-    repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 2px,
-      hsl(var(--color-primary) / 0.03) 2px,
-      hsl(var(--color-primary) / 0.03) 4px
-    );
   pointer-events: none;
+  background:
+    radial-gradient(120% 90% at 100% 0%, hsl(var(--color-accent) / 0.18), transparent 60%),
+    radial-gradient(140% 70% at 0% 100%, hsl(var(--color-primary) / 0.24), transparent 65%),
+    linear-gradient(135deg, hsl(var(--color-background)), hsl(var(--color-background)) 40%, hsl(var(--color-primary) / 0.08) 100%),
+    repeating-linear-gradient(0deg, transparent 0 3px, hsl(var(--color-primary) / 0.04) 3px 4px),
+    repeating-linear-gradient(90deg, transparent 0 3px, hsl(var(--color-primary) / 0.04) 3px 4px);
+  mix-blend-mode: normal;
+  opacity: 0.88;
 }
 
-/* CRT Scanline Effect */
+/* CRT Scanline + chroma drift */
 .progger-theme::after {
   content: '';
   position: fixed;
   inset: 0;
   z-index: -1;
-  opacity: 0.15;
-  background: repeating-linear-gradient(
-    0deg,
-    rgba(0, 0, 0, 0.15),
-    rgba(0, 0, 0, 0.15) 1px,
-    transparent 1px,
-    transparent 3px
-  );
   pointer-events: none;
-  animation: progger-scanline 8s linear infinite;
+  background-image:
+    linear-gradient(180deg, hsl(var(--color-accent) / 0.08), transparent 55%),
+    repeating-linear-gradient(0deg, hsla(170, 40%, 4%, 0.25), hsla(170, 40%, 4%, 0.25) 1px, transparent 1px, transparent 4px);
+  background-blend-mode: screen;
+  opacity: 0.6;
+  animation: progger-scanline 12s linear infinite;
 }
 
 @keyframes progger-scanline {
   0% {
-    transform: translateY(0);
+    background-position: 0 0, 0 0;
   }
   100% {
-    transform: translateY(4px);
+    background-position: 0 120px, 0 8px;
   }
 }
 
@@ -85,45 +75,38 @@
 .progger-theme section > div.bg-surface,
 .progger-theme section.bg-surface {
   position: relative;
-  border: 3px solid;
-  border-image: repeating-linear-gradient(
-    90deg,
-    hsl(var(--color-primary)) 0px,
-    hsl(var(--color-primary)) 5px,
-    transparent 5px,
-    transparent 10px
-  ) 1;
+  background:
+    linear-gradient(180deg, hsl(var(--color-surface) / 0.96), hsl(var(--color-surface) / 0.88));
+  border: 2px solid hsl(var(--color-border));
+  outline: 1px solid hsl(var(--color-primary) / 0.5);
+  outline-offset: -3px;
   box-shadow:
-    5px 5px 0 0 hsl(var(--color-primary) / 0.2),
-    10px 10px 0 0 hsl(var(--color-primary) / 0.1);
+    0 0 0 1px hsl(var(--color-primary) / 0.35),
+    6px 6px 0 0 hsl(var(--color-primary) / 0.18),
+    12px 12px 0 0 hsl(var(--color-primary) / 0.08);
 }
 
-/* Top-left pixel corner decoration */
 .progger-theme section > div.bg-surface::before,
 .progger-theme section.bg-surface::before {
   content: '';
   position: absolute;
-  top: -3px;
-  left: -3px;
-  width: 12px;
-  height: 12px;
-  background: hsl(var(--color-accent));
-  clip-path: polygon(0 0, 100% 0, 100% 33%, 33% 33%, 33% 100%, 0 100%);
-  z-index: 10;
+  inset: 4px;
+  border: 1px solid hsl(var(--color-primary) / 0.3);
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, hsl(var(--color-primary) / 0.08) 0, transparent 20%, transparent 80%, hsl(var(--color-primary) / 0.08) 100%);
+  mask: linear-gradient(0deg, transparent 0 4px, #000 4px calc(100% - 4px), transparent calc(100% - 4px) 100%);
 }
 
-/* Bottom-right pixel corner decoration */
 .progger-theme section > div.bg-surface::after,
 .progger-theme section.bg-surface::after {
   content: '';
   position: absolute;
-  bottom: -3px;
-  right: -3px;
-  width: 12px;
-  height: 12px;
-  background: hsl(var(--color-accent));
-  clip-path: polygon(100% 100%, 0 100%, 0 67%, 67% 67%, 67% 0, 100% 0);
-  z-index: 10;
+  inset: -2px;
+  border: 2px solid transparent;
+  border-image: repeating-linear-gradient(90deg, hsl(var(--color-accent) / 0.7) 0 6px, transparent 6px 12px) 1;
+  filter: drop-shadow(0 0 6px hsl(var(--color-accent) / 0.25));
+  pointer-events: none;
 }
 
 /* ============================================================================
@@ -131,19 +114,40 @@
    ============================================================================ */
 
 .progger-theme .bg-surface.border {
-  border: 2px dashed hsl(var(--color-border)) !important;
-  border-width: 2px !important;
-  outline: 2px solid hsl(var(--color-primary) / 0.3);
-  outline-offset: 2px;
-  transition: all 0.1s ease-out;
+  position: relative;
+  border: 1px solid hsl(var(--color-border)) !important;
+  background:
+    linear-gradient(180deg, hsl(var(--color-surface) / 0.98), hsl(var(--color-surface) / 0.9));
+  box-shadow:
+    inset 0 0 0 1px hsl(var(--color-primary) / 0.35),
+    4px 4px 0 0 hsl(var(--color-primary) / 0.22),
+    8px 8px 0 0 hsl(var(--color-primary) / 0.1);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+
+.progger-theme .bg-surface.border::after {
+  content: '';
+  position: absolute;
+  inset: 6px;
+  border: 1px solid hsl(var(--color-primary) / 0.25);
+  background:
+    repeating-linear-gradient(90deg, transparent 0 6px, hsl(var(--color-accent) / 0.08) 6px 12px);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
 }
 
 .progger-theme .bg-surface.border:hover {
-  outline-color: hsl(var(--color-accent) / 0.5);
-  outline-offset: 3px;
+  transform: translate(-2px, -2px);
   box-shadow:
-    2px 2px 0 0 hsl(var(--color-accent) / 0.3),
-    4px 4px 0 0 hsl(var(--color-accent) / 0.2);
+    inset 0 0 0 1px hsl(var(--color-primary) / 0.45),
+    6px 6px 0 0 hsl(var(--color-accent) / 0.4),
+    12px 12px 0 0 hsl(var(--color-accent) / 0.2);
+  filter: saturate(1.05);
+}
+
+.progger-theme .bg-surface.border:hover::after {
+  opacity: 1;
 }
 
 /* ============================================================================
@@ -151,45 +155,81 @@
    ============================================================================ */
 
 .progger-theme button {
-  border-radius: 0 !important;
   position: relative;
-  image-rendering: crisp-edges;
+  border-radius: 0 !important;
+  border: 1px solid hsl(var(--color-border));
+  background:
+    linear-gradient(180deg, hsl(var(--color-primary) / 0.9), hsl(var(--color-primary) / 0.72));
+  color: hsl(var(--color-text));
   box-shadow:
-    2px 2px 0 0 hsl(var(--color-text) / 0.2);
-  transition: all 0.05s ease-out;
-  border: 2px solid transparent;
+    inset 0 0 0 1px hsl(var(--color-text) / 0.08),
+    3px 3px 0 0 hsl(var(--color-secondary) / 0.45);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.1s ease;
+  image-rendering: pixelated;
+  padding: 0.65rem 1.2rem;
+}
+
+.progger-theme button::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  background: linear-gradient(90deg, hsl(var(--color-accent) / 0.18), transparent 45%, transparent 55%, hsl(var(--color-accent) / 0.18) 100%);
+  mix-blend-mode: screen;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
 }
 
 .progger-theme button:hover {
-  transform: translate(1px, 1px);
+  transform: translate(-1px, -1px);
   box-shadow:
-    1px 1px 0 0 hsl(var(--color-text) / 0.2);
-  border-color: hsl(var(--color-accent) / 0.3);
+    inset 0 0 0 1px hsl(var(--color-text) / 0.12),
+    4px 4px 0 0 hsl(var(--color-accent) / 0.5);
+  filter: saturate(1.05);
 }
 
 .progger-theme button:active {
-  transform: translate(2px, 2px);
-  box-shadow: none;
+  transform: translate(0, 0);
+  box-shadow:
+    inset 0 0 0 1px hsl(var(--color-text) / 0.16),
+    1px 1px 0 0 hsl(var(--color-accent) / 0.35);
+}
+
+.progger-theme button:hover::before,
+.progger-theme button:focus-visible::before {
+  opacity: 0.55;
 }
 
 /* Primary buttons get enhanced pixel borders */
 .progger-theme button.bg-primary,
 .progger-theme button[class*="bg-primary"] {
-  border: 2px solid hsl(var(--color-text) / 0.3);
+  border-color: hsl(var(--color-primary));
+  background:
+    linear-gradient(180deg, hsl(var(--color-accent) / 0.85), hsl(var(--color-primary)));
+  color: hsl(var(--color-background));
   box-shadow:
-    3px 3px 0 0 hsl(var(--color-secondary) / 0.4);
+    inset 0 0 0 1px hsl(var(--color-background) / 0.8),
+    4px 4px 0 0 hsl(var(--color-accent) / 0.55),
+    0 0 12px hsl(var(--color-accent) / 0.45);
+  animation: progger-neon-pulse 2.8s steps(5, end) infinite alternate;
 }
 
 .progger-theme button.bg-primary:hover,
 .progger-theme button[class*="bg-primary"]:hover {
   box-shadow:
-    2px 2px 0 0 hsl(var(--color-secondary) / 0.4);
+    inset 0 0 0 1px hsl(var(--color-background) / 0.9),
+    6px 6px 0 0 hsl(var(--color-accent) / 0.65),
+    0 0 16px hsl(var(--color-accent) / 0.6);
 }
 
 .progger-theme button.bg-primary:active,
 .progger-theme button[class*="bg-primary"]:active {
   box-shadow:
-    1px 1px 0 0 hsl(var(--color-secondary) / 0.2);
+    inset 0 0 0 2px hsl(var(--color-background) / 0.9),
+    2px 2px 0 0 hsl(var(--color-primary) / 0.45);
 }
 
 /* Disabled buttons get pixelated appearance */
@@ -205,27 +245,31 @@
    ============================================================================ */
 
 .progger-theme header {
-  border-bottom: 3px dashed hsl(var(--color-border)) !important;
-  background: hsl(var(--color-surface) / 0.95) !important;
-  backdrop-filter: blur(8px);
   position: relative;
+  border-bottom: 1px solid hsl(var(--color-border)) !important;
+  background:
+    linear-gradient(180deg, hsl(var(--color-background) / 0.92), hsl(var(--color-surface) / 0.86)) !important;
+  backdrop-filter: blur(14px) saturate(1.1);
+  box-shadow: 0 12px 24px -20px hsl(var(--color-primary) / 0.65);
 }
 
-/* Add pixel decoration to header */
+.progger-theme header::before {
+  content: '';
+  position: absolute;
+  inset-inline: 24px;
+  bottom: -5px;
+  height: 6px;
+  background: repeating-linear-gradient(90deg, hsl(var(--color-accent) / 0.8) 0 8px, transparent 8px 16px);
+  filter: drop-shadow(0 0 8px hsl(var(--color-accent) / 0.5));
+}
+
 .progger-theme header::after {
   content: '';
   position: absolute;
-  bottom: -3px;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: repeating-linear-gradient(
-    90deg,
-    hsl(var(--color-accent)) 0px,
-    hsl(var(--color-accent)) 6px,
-    transparent 6px,
-    transparent 12px
-  );
+  inset: 0;
+  margin: 10px;
+  border: 1px solid hsl(var(--color-primary) / 0.18);
+  pointer-events: none;
 }
 
 /* ============================================================================
@@ -236,7 +280,12 @@
   image-rendering: pixelated;
   image-rendering: -moz-crisp-edges;
   image-rendering: crisp-edges;
-  border: 2px solid hsl(var(--color-border));
+  border: 1px solid hsl(var(--color-primary) / 0.35);
+  box-shadow:
+    4px 4px 0 0 hsl(var(--color-primary) / 0.25),
+    8px 8px 0 0 hsl(var(--color-secondary) / 0.18),
+    0 0 14px hsl(var(--color-accent) / 0.2);
+  background: hsl(var(--color-background) / 0.92);
 }
 
 /* ============================================================================
@@ -246,10 +295,13 @@
 .progger-theme [role="listbox"],
 .progger-theme .absolute.bg-surface,
 .progger-theme select {
-  border: 3px solid hsl(var(--color-primary)) !important;
+  border: 1px solid hsl(var(--color-border)) !important;
   box-shadow:
-    4px 4px 0 0 hsl(var(--color-primary) / 0.3);
+    6px 6px 0 0 hsl(var(--color-primary) / 0.22),
+    0 0 8px hsl(var(--color-accent) / 0.18);
   border-radius: 0 !important;
+  background:
+    linear-gradient(180deg, hsl(var(--color-surface) / 0.96), hsl(var(--color-surface) / 0.88));
 }
 
 /* Custom select styling */
@@ -257,9 +309,10 @@
 .progger-theme input[type="text"],
 .progger-theme input[type="number"],
 .progger-theme textarea {
-  border: 2px solid hsl(var(--color-border)) !important;
+  border: 1px solid hsl(var(--color-border)) !important;
   border-radius: 0 !important;
-  background: hsl(var(--color-surface));
+  background:
+    linear-gradient(180deg, hsl(var(--color-surface) / 0.94), hsl(var(--color-surface) / 0.86));
   padding: 0.5rem;
   font-family: 'Source Code Pro', monospace;
   transition: all 0.1s ease-out;
@@ -269,10 +322,11 @@
 .progger-theme input:focus,
 .progger-theme textarea:focus {
   outline: 2px solid hsl(var(--color-accent));
-  outline-offset: 2px;
+  outline-offset: 3px;
   border-color: hsl(var(--color-accent)) !important;
   box-shadow:
-    2px 2px 0 0 hsl(var(--color-accent) / 0.3);
+    3px 3px 0 0 hsl(var(--color-accent) / 0.35),
+    0 0 8px hsl(var(--color-accent) / 0.2);
 }
 
 /* ============================================================================
@@ -282,20 +336,29 @@
 .progger-theme .bg-red-400\/20,
 .progger-theme .dark\:bg-red-900\/30,
 .progger-theme [class*="bg-red"] {
-  border: 2px dashed hsl(0 70% 50%) !important;
-  background: hsl(0 70% 50% / 0.1) !important;
   position: relative;
+  border: 1px solid hsl(0 68% 54% / 0.7) !important;
+  background:
+    linear-gradient(180deg, hsl(0 70% 50% / 0.12), hsl(0 70% 50% / 0.18)) !important;
+  box-shadow:
+    inset 0 0 0 1px hsl(0 68% 54% / 0.35),
+    4px 4px 0 0 hsl(var(--color-primary) / 0.18);
 }
 
 .progger-theme .bg-red-400\/20::before,
 .progger-theme .dark\:bg-red-900\/30::before {
-  content: '⚠';
+  content: '';
   position: absolute;
-  top: 50%;
-  left: -20px;
-  transform: translateY(-50%);
-  font-size: 1.25rem;
-  animation: progger-blink 1s infinite;
+  top: 12px;
+  left: -18px;
+  width: 14px;
+  height: 14px;
+  background:
+    linear-gradient(90deg, hsl(0 100% 74%), hsl(40 100% 64%));
+  box-shadow:
+    2px 2px 0 0 hsl(0 68% 54%),
+    0 0 10px hsl(40 100% 64% / 0.6);
+  animation: progger-blink 1.1s steps(4, end) infinite;
 }
 
 /* ============================================================================
@@ -308,19 +371,22 @@
 }
 
 .progger-theme ::-webkit-scrollbar-track {
-  background: hsl(var(--color-surface));
-  border: 2px solid hsl(var(--color-border));
+  background: hsl(var(--color-background));
+  border: 1px solid hsl(var(--color-border));
 }
 
 .progger-theme ::-webkit-scrollbar-thumb {
-  background: hsl(var(--color-primary));
-  border: 2px solid hsl(var(--color-text) / 0.2);
+  background:
+    linear-gradient(180deg, hsl(var(--color-primary) / 0.95), hsl(var(--color-primary) / 0.7));
+  border: 1px solid hsl(var(--color-background));
   box-shadow:
-    inset 2px 2px 0 0 hsl(var(--color-accent) / 0.3);
+    inset 2px 2px 0 0 hsl(var(--color-accent) / 0.35),
+    2px 2px 0 0 hsl(var(--color-primary) / 0.25);
 }
 
 .progger-theme ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--color-accent));
+  background:
+    linear-gradient(180deg, hsl(var(--color-accent) / 0.9), hsl(var(--color-primary) / 0.85));
 }
 
 .progger-theme ::-webkit-scrollbar-corner {
@@ -360,6 +426,21 @@
   }
   100% {
     transform: translate(0);
+  }
+}
+
+@keyframes progger-neon-pulse {
+  0% {
+    filter: drop-shadow(0 0 0 hsl(var(--color-accent) / 0));
+  }
+  45% {
+    filter: drop-shadow(0 0 12px hsl(var(--color-accent) / 0.4));
+  }
+  70% {
+    filter: drop-shadow(0 0 20px hsl(var(--color-accent) / 0.55));
+  }
+  100% {
+    filter: drop-shadow(0 0 10px hsl(var(--color-accent) / 0.35));
   }
 }
 
@@ -412,10 +493,12 @@
    ============================================================================ */
 
 .progger-theme *:focus-visible {
-  outline: 2px dashed hsl(var(--color-accent)) !important;
-  outline-offset: 3px;
+  outline: 2px solid hsl(var(--color-accent)) !important;
+  outline-offset: 4px;
   box-shadow:
-    0 0 0 4px hsl(var(--color-accent) / 0.2);
+    0 0 0 2px hsl(var(--color-background)),
+    0 0 0 6px hsl(var(--color-accent) / 0.25);
+  filter: saturate(1.05);
 }
 
 /* ============================================================================
@@ -425,14 +508,14 @@
 .progger-theme a {
   position: relative;
   text-decoration: none;
-  border-bottom: 2px dashed hsl(var(--color-accent) / 0.5);
-  transition: all 0.1s ease-out;
+  border-bottom: 1px solid hsl(var(--color-accent) / 0.5);
+  transition: color 0.12s ease, background 0.12s ease, border-color 0.12s ease;
 }
 
 .progger-theme a:hover {
   border-bottom-color: hsl(var(--color-accent));
-  background: hsl(var(--color-accent) / 0.1);
-  padding: 0 4px;
+  color: hsl(var(--color-accent));
+  background: linear-gradient(90deg, hsl(var(--color-accent) / 0.18), transparent 60%);
 }
 
 /* ============================================================================
@@ -457,9 +540,9 @@
 .progger-theme .bg-primary,
 .progger-theme button.bg-primary {
   box-shadow:
-    0 0 5px hsl(var(--color-primary) / 0.5),
-    3px 3px 0 0 hsl(var(--color-secondary) / 0.4),
-    inset 0 0 10px hsl(var(--color-accent) / 0.1);
+    0 0 18px hsl(var(--color-accent) / 0.35),
+    4px 4px 0 0 hsl(var(--color-primary) / 0.35),
+    inset 0 0 12px hsl(var(--color-background) / 0.45);
 }
 
 /* ============================================================================
@@ -468,14 +551,11 @@
 
 .progger-theme hr {
   border: none;
-  height: 3px;
-  background: repeating-linear-gradient(
-    90deg,
-    hsl(var(--color-border)) 0px,
-    hsl(var(--color-border)) 6px,
-    transparent 6px,
-    transparent 12px
-  );
+  height: 4px;
+  background:
+    linear-gradient(90deg, hsl(var(--color-primary) / 0.6), hsl(var(--color-accent) / 0.65));
+  box-shadow:
+    0 0 10px hsl(var(--color-accent) / 0.4);
   margin: 1.5rem 0;
 }
 
@@ -486,18 +566,19 @@
 .progger-theme table {
   border-collapse: separate;
   border-spacing: 0;
-  border: 3px solid hsl(var(--color-primary));
+  border: 2px solid hsl(var(--color-primary));
+  background: hsl(var(--color-surface) / 0.92);
 }
 
 .progger-theme th,
 .progger-theme td {
   border: 1px solid hsl(var(--color-border));
   padding: 0.5rem;
-  background: hsl(var(--color-surface));
+  background: linear-gradient(180deg, hsl(var(--color-surface) / 0.98), hsl(var(--color-surface) / 0.9));
 }
 
 .progger-theme th {
-  background: hsl(var(--color-primary) / 0.2);
+  background: linear-gradient(180deg, hsl(var(--color-primary) / 0.25), hsl(var(--color-primary) / 0.18));
   font-family: 'Source Code Pro', monospace;
   font-weight: 700;
   text-transform: uppercase;
@@ -532,7 +613,7 @@
 .progger-theme .tag,
 .progger-theme [class*="badge"],
 .progger-theme [class*="tag"] {
-  border: 2px solid hsl(var(--color-primary));
+  border: 1px solid hsl(var(--color-primary));
   border-radius: 0 !important;
   padding: 0.25rem 0.5rem;
   font-family: 'Source Code Pro', monospace;
@@ -541,7 +622,10 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   box-shadow:
-    2px 2px 0 0 hsl(var(--color-primary) / 0.3);
+    2px 2px 0 0 hsl(var(--color-primary) / 0.3),
+    inset 0 0 0 1px hsl(var(--color-accent) / 0.3);
+  background:
+    linear-gradient(180deg, hsl(var(--color-surface) / 0.96), hsl(var(--color-surface) / 0.88));
 }
 
 /* ============================================================================
@@ -550,12 +634,14 @@
 
 .progger-theme [role="dialog"],
 .progger-theme .modal {
-  border: 4px solid hsl(var(--color-primary)) !important;
+  border: 2px solid hsl(var(--color-primary)) !important;
   border-radius: 0 !important;
+  background:
+    linear-gradient(180deg, hsl(var(--color-background) / 0.96), hsl(var(--color-surface) / 0.92)) !important;
   box-shadow:
-    8px 8px 0 0 hsl(var(--color-primary) / 0.3),
-    16px 16px 0 0 hsl(var(--color-primary) / 0.1);
-  background: hsl(var(--color-background)) !important;
+    6px 6px 0 0 hsl(var(--color-primary) / 0.32),
+    12px 12px 0 0 hsl(var(--color-accent) / 0.18),
+    0 18px 40px -24px hsl(var(--color-primary) / 0.6);
 }
 
 /* ============================================================================
@@ -564,8 +650,9 @@
 
 .progger-theme pre,
 .progger-theme code {
-  border: 2px solid hsl(var(--color-border));
-  background: hsl(var(--color-surface) / 0.5) !important;
+  border: 1px solid hsl(var(--color-border));
+  background:
+    linear-gradient(180deg, hsl(var(--color-surface) / 0.88), hsl(var(--color-surface) / 0.78)) !important;
   border-radius: 0 !important;
   font-family: 'Source Code Pro', monospace;
   padding: 0.25rem 0.5rem;
@@ -575,7 +662,7 @@
   padding: 1rem;
   overflow-x: auto;
   box-shadow:
-    inset 2px 2px 0 0 hsl(var(--color-primary) / 0.1);
+    inset 3px 3px 0 0 hsl(var(--color-primary) / 0.18);
 }
 
 /* ============================================================================
@@ -632,13 +719,13 @@
 /* Pixel shadow utility */
 .progger-theme .pixel-shadow {
   box-shadow:
-    2px 2px 0 0 hsl(var(--color-primary) / 0.4),
-    4px 4px 0 0 hsl(var(--color-primary) / 0.2);
+    3px 3px 0 0 hsl(var(--color-primary) / 0.4),
+    6px 6px 0 0 hsl(var(--color-accent) / 0.25);
 }
 
 .progger-theme .pixel-shadow-lg {
   box-shadow:
     4px 4px 0 0 hsl(var(--color-primary) / 0.4),
-    8px 8px 0 0 hsl(var(--color-primary) / 0.2),
-    12px 12px 0 0 hsl(var(--color-primary) / 0.1);
+    8px 8px 0 0 hsl(var(--color-accent) / 0.25),
+    14px 14px 0 0 hsl(var(--color-accent) / 0.12);
 }

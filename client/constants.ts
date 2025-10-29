@@ -230,22 +230,22 @@ export const THEMES: ThemeOption[] = [
   {
     name: 'PROGGER',
     light: {
-      primary: '130 35% 45%',      // Deep Forest Green
-      secondary: '140 25% 55%',    // Sage Green
-      accent: '110 40% 60%',       // Bright Mint Green
-      text: '140 40% 20%',         // Dark Forest Text
-      background: '130 25% 96%',   // Lily Pad White
-      surface: '130 20% 92%',      // Soft Mint Surface
-      border: '140 40% 20% / 0.12',
+      primary: '152 34% 46%',      // Leafy mid-tone green
+      secondary: '162 24% 32%',    // Deep pond green
+      accent: '82 68% 62%',        // Neon sprout highlight
+      text: '165 14% 18%',         // Charcoal pine
+      background: '150 40% 96%',   // Misty lily pad haze
+      surface: '150 32% 92%',      // Soft frosted mint
+      border: '162 24% 32% / 0.18',
     },
     dark: {
-      primary: '110 45% 65%',      // Bright Frog Green
-      secondary: '130 25% 45%',    // Muted Sage
-      accent: '110 50% 70%',       // Vibrant Mint
-      text: '130 20% 88%',         // Pale Green-White
-      background: '140 30% 12%',   // Deep Moss
-      surface: '140 25% 17%',      // Dark Moss Surface
-      border: '130 20% 88% / 0.15',
+      primary: '150 38% 56%',      // Luminous lily pad
+      secondary: '160 30% 42%',    // Shadowed evergreen
+      accent: '80 82% 70%',        // Electric firefly glow
+      text: '130 35% 90%',         // Moonlit mint
+      background: '170 24% 9%',    // Midnight lagoon
+      surface: '165 28% 15%',      // Deep tidepool
+      border: '150 38% 70% / 0.25',
     }
   }
 ];
