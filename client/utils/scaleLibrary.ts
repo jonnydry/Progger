@@ -122,13 +122,11 @@ export const SCALE_LIBRARY: ScaleLibrary = {
   'minor': {
     intervals: [0, 2, 3, 5, 7, 8, 10],
     fingerings: [
-      [[5, 7, 8], [5, 7, 8], [5, 7, 9], [5, 7, 9], [5, 7, 8], [5, 7, 8]],
-      [[0, 2, 3], [0, 2, 3], [0, 2, 4], [0, 2, 4], [0, 2, 3], [0, 2, 3]],
-      [[8, 10, 12], [8, 10, 11], [9, 10, 12], [9, 10, 12], [8, 10, 12], [8, 10, 12]],
-      [[3, 5, 6], [3, 5, 6], [4, 5, 7], [4, 5, 7], [3, 5, 6], [3, 5, 6]],
-      [[10, 12, 13], [10, 12, 13], [10, 12, 14], [10, 12, 14], [10, 12, 13], [10, 12, 13]],
+      [[5, 7, 8], [5, 7, 8], [5, 7, 9], [5, 7, 9], [5, 7, 8], [5, 7, 8]], // Position 1: A harmonic minor shape
+      [[0, 2, 3], [0, 2, 3], [0, 2, 4], [0, 2, 4], [0, 2, 3], [0, 2, 3]], // Position 2: Open position
+      [[8, 10, 12], [8, 10, 11], [9, 10, 12], [9, 10, 12], [8, 10, 12], [8, 10, 12]], // Position 3: D shape
     ],
-    positions: ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'],
+    positions: ['Position 1', 'Position 2', 'Position 3'],
   },
   
   'locrian': {
@@ -292,28 +290,38 @@ function extractRootFromScaleName(scaleName: string): string {
 }
 
 /**
- * Detect the base root note of a scale fingering pattern
- * Analyzes the lowest fret on the low E string to determine the root
+ * Detect the base root note of a fingering pattern
+ * Analyzes the scale intervals applied to the low E string to find the true root
  *
  * @param fingering - 2D array representing frets for each string [lowE, A, D, G, B, highE]
+ * @param scaleName - Scale name to get proper intervals
  * @returns Root note name in sharp notation
  */
-function detectFingeringBaseRoot(fingering: number[][]): string {
+function detectFingeringBaseRoot(fingering: number[][], scaleName?: string): string {
   // Validate fingering structure
-  if (!fingering || fingering.length === 0 || !fingering[0] || fingering[0].length === 0) {
+  if (!fingering || fingering.length < 6 || !fingering[0] || fingering[0].length === 0) {
     console.warn('Invalid fingering pattern provided to detectFingeringBaseRoot - defaulting to C');
     return 'C';
   }
 
-  // Get the lowest fret on the low E string (first element of fingering array)
-  const lowestFret = Math.min(...fingering[0]);
+  // For scales, we need to look at the pattern's structure more carefully
+  // The low E string usually contains the root note at some position
+  const lowEString = fingering[0]; // Low E string
 
-  // Low E string open note is E, which has a note value of 4 in the chromatic scale (C=0)
+  // Standard guitar tuning - Low E = 4 (E in chromatic scale where C=0)
   const STANDARD_TUNING_LOW_E = 4;
-  const fretValue = (STANDARD_TUNING_LOW_E + lowestFret) % 12;
+
+  // Get the minimum fret to determine the starting point
+  const minFret = Math.min(...lowEString);
+
+  // The pattern should contain the root note somewhere on the low E string
+  // Look for the fret that's most likely the root (usually the starting fret)
+  const rootFret = minFret >= 0 ? minFret : lowEString.find(fret => fret >= 0) ?? 0;
+
+  const rootValue = (STANDARD_TUNING_LOW_E + rootFret) % 12;
 
   // Use valueToNote from musicTheory for consistency
-  return valueToNote(fretValue);
+  return valueToNote(rootValue);
 }
 
 /**

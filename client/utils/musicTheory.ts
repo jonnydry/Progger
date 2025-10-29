@@ -103,6 +103,28 @@ export function areNotesEnharmonic(note1: string, note2: string): boolean {
 }
 
 /**
+ * Define key signatures and their preferred accidental types
+ * Sharp keys use flats when they contain fewer flats than sharps of the same key
+ */
+const KEY_ACCIDENTAL_PREFERENCES: Record<string, { type: 'sharp' | 'flat' | 'natural', flats: number, sharps: number }> = {
+  'C': { type: 'natural', flats: 0, sharps: 0 },
+  'G': { type: 'sharp', flats: 6, sharps: 1 },
+  'D': { type: 'sharp', flats: 5, sharps: 2 },
+  'A': { type: 'sharp', flats: 4, sharps: 3 },
+  'E': { type: 'sharp', flats: 3, sharps: 4 },
+  'B': { type: 'sharp', flats: 2, sharps: 5 },
+  'F#': { type: 'sharp', flats: 1, sharps: 6 },
+  'C#': { type: 'sharp', flats: 0, sharps: 7 },
+  'F': { type: 'flat', flats: 1, sharps: 6 },
+  'Bb': { type: 'flat', flats: 2, sharps: 5 },
+  'Eb': { type: 'flat', flats: 3, sharps: 4 },
+  'Ab': { type: 'flat', flats: 4, sharps: 3 },
+  'Db': { type: 'flat', flats: 5, sharps: 2 },
+  'Gb': { type: 'flat', flats: 6, sharps: 1 },
+  'Cb': { type: 'flat', flats: 7, sharps: 0 }
+};
+
+/**
  * Sharp keys use sharps in their key signature
  * Flat keys use flats in their key signature
  */
@@ -115,13 +137,14 @@ const FLAT_KEYS = new Set(['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb']);
  * @returns 'sharp' if key uses sharps, 'flat' if key uses flats, 'natural' for C
  */
 export function getKeyAccidentalType(key: string): 'sharp' | 'flat' | 'natural' {
-  const normalizedKey = key.charAt(0).toUpperCase() + key.slice(1);
-  
-  if (normalizedKey === 'C') return 'natural';
-  if (SHARP_KEYS.has(normalizedKey)) return 'sharp';
-  if (FLAT_KEYS.has(normalizedKey)) return 'flat';
-  
-  // Default to sharp for unknown keys
+  const normalizedKey = key.charAt(0).toUpperCase() + key.slice(1).toLowerCase();
+
+  const keyInfo = KEY_ACCIDENTAL_PREFERENCES[normalizedKey];
+  if (keyInfo) {
+    return keyInfo.type;
+  }
+
+  // Fallback for unknown keys - prefer sharps
   return 'sharp';
 }
 
@@ -134,21 +157,21 @@ export function getKeyAccidentalType(key: string): 'sharp' | 'flat' | 'natural' 
 export function displayNote(note: string, key: string): string {
   const noteValue = noteToValue(note);
   const accidentalType = getKeyAccidentalType(key);
-  
-  // For natural keys (C major), use natural spellings where standard
-  // Prefer sharps for F# and C#, flats for Bb and Eb
+
+  // For C major (natural keys), use conventional spellings:
+  // C, C#, D, Eb, E, F, F#, G, Ab, A, Bb, B
   if (accidentalType === 'natural') {
-    // C major natural note spellings: C, C#/Db, D, Eb, E, F, F#, G, G#/Ab, A, Bb, B
-    const naturalKeyNotes = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
-    return naturalKeyNotes[noteValue];
+    const cMajorSpellings = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+    return cMajorSpellings[noteValue];
   }
-  
-  // Use sharps for sharp keys, flats for flat keys
+
+  // For sharp keys, use sharp notation
   if (accidentalType === 'sharp') {
     return ALL_NOTES_SHARP[noteValue];
-  } else {
-    return ALL_NOTES_FLAT[noteValue];
   }
+
+  // For flat keys, use flat notation
+  return ALL_NOTES_FLAT[noteValue];
 }
 
 /**

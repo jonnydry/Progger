@@ -1,4 +1,8 @@
 import OpenAI from "openai";
+import { redisCache, getProgressionCacheKey } from './cache';
+import { pendingRequests } from './pendingRequests';
+import { buildOptimizedPrompt, createPromptFingerprint, estimateTokenUsage, type ProgressionRequest } from './promptOptimization';
+import { withRetry, xaiCircuitBreaker } from './retryLogic';
 
 const getOpenAI = () => {
   const apiKey = process.env.XAI_API_KEY;
@@ -34,140 +38,129 @@ export async function generateChordProgression(
   numChords: number,
   selectedProgression: string
 ): Promise<ProgressionResultFromAPI> {
-  // Calculate appropriate number of tension chords based on progression length
-  const minTensionChords = Math.max(1, Math.floor(numChords * 0.2)); // At least 20%
-  const maxTensionChords = Math.ceil(numChords * 0.4); // At most 40%
+  // Create cache key using semantic fingerprinting
+  const cacheKey = getProgressionCacheKey(key, mode, includeTensions, numChords, selectedProgression);
 
-  const tensionInstruction = includeTensions
-    ? `Include ${minTensionChords} to ${maxTensionChords} chords with harmonic tension to add color and movement.
+  // Step 1: Check if we have a similar request already pending (deduplication)
+  const pending = pendingRequests.get(cacheKey);
+  if (pending) {
+    console.log("⚡ Returning pending request for:", cacheKey);
+    return pending;
+  }
 
-TENSION CHORD GUIDELINES:
-- Secondary dominants (e.g., V7/V, V7/ii): Dominant chords that resolve to diatonic chords
-- Tritone substitutions: bII7 chords resolving down a half-step
-- Altered dominants: Use extensions like 7b9, 7#9, 7b5, 7#5, 7alt on dominant function chords
-- Extended chords: 9ths, 11ths, 13ths for smooth voice leading
-- Half-diminished (m7b5): Common in minor keys and as secondary ii chords
-- Suspended dominants: 7sus4 chords for delayed resolution
+  // Step 2: Check Redis cache for existing result
+  const cachedResult = await redisCache.get<ProgressionResultFromAPI>(cacheKey);
+  if (cachedResult) {
+    console.log("⚡ Cache hit for:", cacheKey);
+    return cachedResult;
+  }
 
-MUSIC THEORY RULES:
-- Tension chords should have clear voice leading and resolution
-- Altered dominants (7b9, 7#9, 7alt) work best on V7 chords or secondary dominants
-- Don't use tensions on tonic chords unless it's a maj7 or maj9
-- In ${mode === 'Major' ? 'major' : 'minor'} keys, respect the key signature
-- Use appropriate accidentals: ${key.includes('b') ? 'prefer flats' : key.includes('#') ? 'prefer sharps' : 'use standard spelling'}
+  // Create request object for optimization
+  const request: ProgressionRequest = {
+    key,
+    mode,
+    includeTensions,
+    numChords,
+    selectedProgression
+  };
 
-VOICING PREFERENCE:
-Use chord extensions that have guitar voicings: maj7, min7, 7, 9, maj9, min9, 7b9, 7#9, 7alt, 7sus4, min7b5, dim7`
-    : `Keep the progression diatonic to ${key} ${mode}. Use primarily triads and basic seventh chords (maj7, min7, 7) that fit naturally within the key signature.`;
+  // Step 3: Build optimized prompt
+  const promptComponents = buildOptimizedPrompt(request);
+  console.log(`📊 Estimated token usage: ~${estimateTokenUsage(promptComponents)} tokens`);
 
-  const progressionInstruction = selectedProgression === 'auto'
-    ? `Generate a musically coherent ${numChords}-chord progression in the key of ${key} ${mode}.
-       The progression should follow common harmonic movement patterns and sound pleasing on guitar.`
-    : `Generate the specific chord progression "${selectedProgression}" using Nashville Number System conventions in the key of ${key} ${mode}.
+  // Step 4: Create async operation with all optimizations
+  const generateWithOptimizations = async (): Promise<ProgressionResultFromAPI> => {
+    console.log("🤖 Generating with XAI Grok API");
 
-ROMAN NUMERAL INTERPRETATION:
-- Uppercase (I, IV, V): Major chords
-- Lowercase (ii, iii, vi): Minor chords
-- Diminished: ii° or vii°
-- Add 7th chords for jazz/contemporary sound: Imaj7, ii7, V7, etc.
+    const openai = getOpenAI();
 
-EXAMPLES:
-${mode === 'Major'
-  ? `In ${key} Major: I = ${key}maj7, ii = min7, iii = min7, IV = maj7, V = 7, vi = min7, vii° = min7b5`
-  : `In ${key} Minor: i = ${key}min7, ii° = min7b5, III = maj7, iv = min7, v = min7, VI = maj7, VII = 7`}
+    return await xaiCircuitBreaker.execute(async () => {
+      const response = await openai.chat.completions.create({
+        model: "grok-4-fast-reasoning",
+        messages: [
+          {
+            role: "system",
+            content: "You are a music theory expert. Always respond with valid JSON matching the exact schema provided."
+          },
+          {
+            role: "user",
+            content: promptComponents.fullPrompt
+          }
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.7,
+        max_tokens: 1000,
+      });
 
-The number of chords should exactly match the progression pattern.`;
+      const jsonText = response.choices[0].message.content?.trim();
+      if (!jsonText) {
+        throw new Error("Empty response from API");
+      }
 
-  const schemaDescription = `
-{
-  "progression": [
-    {
-      "chordName": "string (IMPORTANT: Use exact chord notation - e.g., 'Cmaj7', 'Am7', 'G7b9', 'D7alt', 'Fmaj9')",
-      "musicalFunction": "string (e.g., 'Tonic Major 7th', 'Dominant 7th with flat 9', 'Subdominant Major 7th')",
-      "relationToKey": "string (Roman numeral like 'Imaj7', 'V7', 'iim7', 'V7/ii')"
-    }
-  ],
-  "scales": [
-    {
-      "name": "string (full scale name like 'G Major', 'A Dorian', 'C Minor Pentatonic', 'G Altered')",
-      "rootNote": "string (e.g., 'G', 'A', 'C' - match the key signature accidental preference)"
-    }
-  ]
-}`;
+      const resultFromApi = JSON.parse(jsonText) as ProgressionResultFromAPI;
 
-  const prompt = `You are a music theory expert specializing in jazz and contemporary guitar harmony.
+      // Validate response structure
+      if (!resultFromApi.progression || !resultFromApi.scales ||
+          !Array.isArray(resultFromApi.progression) || !Array.isArray(resultFromApi.scales)) {
+        throw new Error("Invalid data structure received from API.");
+      }
+      if (resultFromApi.progression.some(p => !p.chordName || !p.musicalFunction || !p.relationToKey)) {
+        throw new Error("API returned incomplete chord data (missing name, function, or relation to key).");
+      }
+      if (resultFromApi.scales.some(s => !s.name || !s.rootNote)) {
+        throw new Error("API returned incomplete scale data (missing name or root note).");
+      }
 
-TASK:
-${progressionInstruction}
-${tensionInstruction}
+      return resultFromApi;
+    });
+  };
 
-CRITICAL REQUIREMENTS:
-1. Use EXACT chord notation that matches guitar voicing standards
-2. Chord names must include quality: maj7, min7, 7, 9, 7b9, 7#9, 7alt, etc.
-3. Respect the key signature: ${key.includes('b') ? 'use flats (Bb, Eb, Ab)' : key.includes('#') ? 'use sharps (F#, C#, G#)' : 'use standard note spelling'}
-4. Ensure smooth voice leading between chords
-5. Provide accurate Roman numeral analysis for each chord
-
-For EACH chord in the progression, provide:
-- chordName: EXACT chord name with quality (e.g., 'Cmaj7', 'Am7', 'G7b9', 'D7alt', 'Bm7b5')
-- musicalFunction: Detailed role (e.g., 'Tonic Major 7th', 'Secondary Dominant to ii', 'Altered Dominant')
-- relationToKey: Roman numeral (e.g., 'Imaj7', 'V7', 'iim7', 'V7/ii', 'bII7')
-
-Additionally, suggest 2 to 3 suitable scales for improvisation over this progression:
-- name: Full scale name (e.g., '${key} Major', '${key} Dorian', '${key} Altered Scale')
-- rootNote: The root note matching key signature preference
-
-Return ONLY valid JSON matching this schema:
-${schemaDescription}
-
-IMPORTANT: Return ONLY valid JSON, no additional text or markdown formatting.`;
+  // Step 5: Register pending request for deduplication
+  pendingRequests.set(cacheKey, generateWithOptimizations());
 
   try {
-    console.log("Fetching from xAI Grok API");
-    const openai = getOpenAI();
-    const response = await openai.chat.completions.create({
-      model: "grok-4-fast-reasoning",
-      messages: [
-        {
-          role: "system",
-          content: "You are a music theory expert. Always respond with valid JSON matching the exact schema provided."
-        },
-        {
-          role: "user",
-          content: prompt
-        }
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.7,
-      max_tokens: 1000,
-    });
+    // Step 6: Execute with intelligent retry logic
+    const result = await withRetry(
+      generateWithOptimizations,
+      {
+        maxRetries: 3,
+        initialDelay: 2000, // Start with 2 seconds
+        maxDelay: 15000,    // Max 15 seconds
+        backoffMultiplier: 1.5,
+        jitterFactor: 0.2
+      },
+      (stats) => {
+        console.log(`🔄 Retry ${stats.attemptNumber}/${stats.totalRetries} after ${stats.totalDelay}ms`);
+      }
+    );
 
-    const jsonText = response.choices[0].message.content?.trim();
-    if (!jsonText) {
-      throw new Error("Empty response from API");
-    }
+    // Step 7: Cache successful result (24 hour TTL)
+    await redisCache.set(cacheKey, result, 86400);
 
-    const resultFromApi = JSON.parse(jsonText) as ProgressionResultFromAPI;
+    // Log cache statistics
+    const cacheStats = { cacheKey, tokens: estimateTokenUsage(promptComponents) };
+    console.log("✅ Generated and cached progression:", cacheStats);
 
-    if (!resultFromApi.progression || !resultFromApi.scales || !Array.isArray(resultFromApi.progression) || !Array.isArray(resultFromApi.scales)) {
-      throw new Error("Invalid data structure received from API.");
-    }
-    if (resultFromApi.progression.some(p => !p.chordName || !p.musicalFunction || !p.relationToKey)) {
-      throw new Error("API returned incomplete chord data (missing name, function, or relation to key).");
-    }
-    if (resultFromApi.scales.some(s => !s.name || !s.rootNote)) {
-      throw new Error("API returned incomplete scale data (missing name or root note).");
-    }
+    return result;
 
-    return resultFromApi;
   } catch (error) {
-    console.error("Error generating chord progression:", error);
+    console.error("❌ Error generating chord progression:", error);
+
+    // Enhanced error classification
     if (error instanceof SyntaxError) {
       throw new Error("Failed to parse the response from the AI. The format was invalid.");
     }
     if (error instanceof Error) {
+      // Enhance error messages with more context
+      if (error.message.includes('Circuit breaker is OPEN')) {
+        throw new Error("XAI API is temporarily unavailable (circuit breaker activated). Please try again later.");
+      }
+      if (error.message.includes('timed out')) {
+        throw new Error("XAI API request timed out. The service may be busy.");
+      }
       throw error;
     }
+
     throw new Error("Failed to generate chord progression. The AI might be busy, or the request was invalid.");
   }
 }

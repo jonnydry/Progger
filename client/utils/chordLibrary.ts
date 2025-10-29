@@ -361,6 +361,47 @@ const CHORD_VOICINGS: Record<ChordKey, ChordVoicing[]> = {
     { frets: ['x', 1, 3, 1, 2, 1], firstFret: 1, position: 'Barre 1st' },
     { frets: [1, 3, 1, 1, 1, 1], firstFret: 6, position: 'Barre 6th' },
   ],
+
+  // Add missing common chords
+  'C_9': [
+    { frets: ['x', 3, 2, 3, 3, 0], position: 'Open' },
+    { frets: [1, 3, 1, 2, 1, 3], firstFret: 8, position: 'Barre 8th' },
+  ],
+  'G_9': [
+    { frets: [3, 0, 0, 0, 0, 1], position: 'Open' },
+  ],
+  'D_9': [
+    { frets: ['x', 'x', 0, 2, 1, 0], position: 'Open' },
+    { frets: [1, 3, 1, 2, 1, 3], firstFret: 10, position: 'Barre 10th' },
+  ],
+  'A_9': [
+    { frets: ['x', 0, 2, 0, 0, 0], position: 'Open' },
+  ],
+  'E_9': [
+    { frets: [0, 2, 0, 1, 0, 2], position: 'Open' },
+  ],
+
+  // Add power chords (5)
+  'C_5': [
+    { frets: ['x', 3, 5, 5, 'x', 'x'], firstFret: 3, position: 'Barre 3rd' },
+    { frets: [1, 3, 3, 'x', 'x', 'x'], firstFret: 8, position: 'Barre 8th' },
+  ],
+  'G_5': [
+    { frets: [3, 5, 5, 'x', 'x', 'x'], firstFret: 3, position: 'Barre 3rd' },
+    { frets: ['x', 'x', 5, 4, 'x', 'x'], firstFret: 10, position: 'Interior' },
+  ],
+  'D_5': [
+    { frets: ['x', 'x', 0, 2, 3, 'x'], position: 'Open' },
+    { frets: [1, 3, 3, 'x', 'x', 'x'], firstFret: 5, position: 'Barre 5th' },
+  ],
+  'A_5': [
+    { frets: ['x', 0, 2, 2, 'x', 'x'], position: 'Open' },
+    { frets: [5, 7, 7, 'x', 'x', 'x'], firstFret: 5, position: 'Barre 5th' },
+  ],
+  'E_5': [
+    { frets: [0, 2, 2, 'x', 'x', 'x'], position: 'Open' },
+    { frets: [0, 2, 2, 'x', 'x', 'x'], firstFret: 12, position: 'Barre 12th' },
+  ],
 };
 
 const GENERIC_BARRE_SHAPES: Record<string, ChordVoicing[]> = {
@@ -429,39 +470,59 @@ const ROOT_TO_FRET_FROM_E: Record<string, number> = {
   'B': 7
 };
 
+import { noteToValue } from './musicTheory';
+
 /**
  * Normalize root note to a consistent format for chord lookups
- * Standardizes enharmonic equivalents to match CHORD_VOICINGS keys
- * Note: F# and Gb are both kept as separate entries in voicings library
+ * Chooses the enharmonic spelling that exists in the chord library
+ * Preserves F#/Gb and C#/Db distinctions when both forms exist in library
  */
 function normalizeRoot(root: string): string {
-  const upper = root.toUpperCase();
+  const upper = root.toUpperCase().toLowerCase(); // normalize case
 
-  // Map all sharp and flat variants to their standardized forms
-  // Prioritizes flats for most notes (C#→Db, D#→Eb, etc.) for consistency
-  // Exception: F# and Gb are both valid keys in the library
-  const normalizedRoots: Record<string, string> = {
-    'C': 'C',
-    'C#': 'Db', 'DB': 'Db',
-    'D': 'D',
-    'D#': 'Eb', 'EB': 'Eb',
-    'E': 'E',
-    'F': 'F',
-    'F#': 'F#', 'GB': 'Gb',  // Both variants exist in library
-    'G': 'G',
-    'G#': 'Ab', 'AB': 'Ab',
-    'A': 'A',
-    'A#': 'Bb', 'BB': 'Bb',
-    'B': 'B'
+  // Create a mapping that prioritizes the form that exists in our library
+  // Check if both sharp and flat forms exist, and choose the primary one
+  const enharmonicMap: Record<string, string[]> = {
+    'c': ['C'],
+    'c#': ['C#', 'Db'],
+    'db': ['Db', 'C#'],
+    'd': ['D'],
+    'd#': ['D#', 'Eb'],
+    'eb': ['Eb', 'D#'],
+    'e': ['E'],
+    'f': ['F'],
+    'f#': ['F#', 'Gb'],
+    'gb': ['Gb', 'F#'],
+    'g': ['G'],
+    'g#': ['G#', 'Ab'],
+    'ab': ['Ab', 'G#'],
+    'a': ['A'],
+    'a#': ['A#', 'Bb'],
+    'bb': ['Bb', 'A#'],
+    'b': ['B']
   };
 
-  const normalized = normalizedRoots[upper];
-  if (!normalized) {
+  // Get possible enharmonic spellings
+  const possibilities = enharmonicMap[upper] || [upper.charAt(0).toUpperCase() + upper.slice(1)];
+
+  // For each possibility, check if it exists in our chord library
+  for (const possibility of possibilities) {
+    // Check if this root has any chords in the library
+    const hasChords = Object.keys(CHORD_VOICINGS).some(key => key.startsWith(possibility + '_'));
+    if (hasChords) {
+      return possibility;
+    }
+  }
+
+  // If none of the enharmonic equivalents exist, default to the first one
+  const firstPossibility = possibilities[0];
+  if (!firstPossibility) {
     console.warn(`Unknown root note: "${root}" - defaulting to C`);
     return 'C';
   }
 
-  return normalized;
+  console.warn(`Root note "${root}" normalized to "${firstPossibility}" (no chords found for this or enharmonic equivalents)`);
+  return firstPossibility;
 }
 
 function normalizeQuality(quality: string): string {
@@ -557,6 +618,117 @@ function getFretOffset(root: string): number {
  * @param chordName - Chord name (e.g., "Cmaj7", "F#m", "Bb7")
  * @returns Array of chord voicings
  */
+/**
+ * Find the closest matching chord when exact chord is not found
+ * Prioritizes chords with same root note, then similar chord qualities
+ */
+export function findClosestChordVoicings(chordName: string): ChordVoicing[] {
+  const { root, quality } = extractRootAndQuality(chordName);
+  const targetKey: ChordKey = `${root}_${quality}`;
+
+  // If exact match exists, return it
+  if (CHORD_VOICINGS[targetKey] && CHORD_VOICINGS[targetKey].length > 0) {
+    return CHORD_VOICINGS[targetKey];
+  }
+
+  const candidates: Array<{ key: string; voicings: ChordVoicing[]; similarity: number }> = [];
+
+  // Build similarity scoring system
+  for (const [key, voicings] of Object.entries(CHORD_VOICINGS)) {
+    const [chordRoot, chordQuality] = key.split('_') as [string, string];
+    let similarity = 0;
+
+    // Same root note = high similarity (50 points)
+    if (chordRoot === root) {
+      similarity += 50;
+
+      // Quality similarity scoring
+      const qualityMap: Record<string, string[]> = {
+        'major': ['major', '6', 'add9', '7'],
+        'minor': ['minor', 'min7', '6'],
+        'dim': ['dim', 'dim7', 'min7b5'],
+        'aug': ['aug', '7#5'],
+        '7': ['7', '9', 'maj7'],
+        'maj7': ['maj7', '9', 'maj9'],
+        'min7': ['min7', 'min9', 'min11']
+      };
+
+      const relatedQualities = qualityMap[quality] || [];
+      if (chordQuality === quality) {
+        similarity += 40; // Exact quality match
+      } else if (relatedQualities.includes(chordQuality)) {
+        similarity += 20; // Related quality
+      } else {
+        similarity += 5; // Same root, different quality
+      }
+    } else {
+      // Different root - lower similarity based on chromatic distance
+      const targetValue = noteToValue(root);
+      const candidateValue = noteToValue(chordRoot);
+      const distance = Math.min(
+        Math.abs(targetValue - candidateValue),
+        12 - Math.abs(targetValue - candidateValue) // Account for octave equivalence
+      );
+      similarity = Math.max(5, 25 - distance * 2); // 5-25 points based on distance
+    }
+
+    if (similarity > 10) { // Only consider reasonably similar chords
+      candidates.push({ key, voicings, similarity });
+    }
+  }
+
+  // Sort by similarity (highest first) and return the best match
+  candidates.sort((a, b) => b.similarity - a.similarity);
+
+  if (candidates.length > 0) {
+    const bestMatch = candidates[0];
+    console.info(`🧠 Smart fallback: "${chordName}" (${targetKey}) → "${bestMatch.key}" (similarity: ${bestMatch.similarity})`);
+    return bestMatch.voicings;
+  }
+
+  // Ultimate fallback - use generic barre shape
+  console.warn(`🤔 No good chord match found for "${chordName}", using generic barre shape`);
+  return getGenericBarreVoicings(chordName);
+}
+
+/**
+ * Generate theoretical voicings using barre chord shapes when no specific chord found
+ */
+function getGenericBarreVoicings(chordName: string): ChordVoicing[] {
+  const { root, quality } = extractRootAndQuality(chordName);
+
+  // Try generic shapes first
+  const genericShapes = GENERIC_BARRE_SHAPES[quality];
+  if (genericShapes && genericShapes.length > 0) {
+    const fretPosition = getFretOffset(root);
+    const adjustedFret = fretPosition === 0 ? 12 : fretPosition;
+
+    console.info(`Using generic barre shape for ${chordName} (${quality}) at fret ${adjustedFret}`);
+
+    return genericShapes.map(shape => ({
+      ...shape,
+      firstFret: adjustedFret,
+      position: `${root} ${quality} (theoretical)`
+    }));
+  }
+
+  // Last resort - basic major chord shape as template
+  console.warn(`⚠️ Using basic major chord template for "${chordName}"`);
+  const fretPosition = getFretOffset(root);
+  const majorTemplate: ChordVoicing[] = [
+    { frets: [1, 3, 3, 2, 1, 1], firstFret: fretPosition, position: `${root} (adapted)` }
+  ];
+
+  return majorTemplate;
+}
+
+/**
+ * Check if a voicing is just muted strings (our old "unknown" fallback)
+ */
+export function isMutedVoicing(voicing: ChordVoicing): boolean {
+  return voicing.frets.every(fret => fret === 'x');
+}
+
 export function getChordVoicings(chordName: string): ChordVoicing[] {
   const { root, quality } = extractRootAndQuality(chordName);
   const key: ChordKey = `${root}_${quality}`;
@@ -567,22 +739,6 @@ export function getChordVoicings(chordName: string): ChordVoicing[] {
     return voicings;
   }
 
-  // Fall back to generic barre shapes if quality is recognized
-  const genericShapes = GENERIC_BARRE_SHAPES[quality];
-  if (genericShapes && genericShapes.length > 0) {
-    const fretPosition = getFretOffset(root);
-    const adjustedFret = fretPosition === 0 ? 12 : fretPosition;
-
-    console.info(`Using generic barre shape for ${chordName} (${key}) at fret ${adjustedFret}`);
-
-    return genericShapes.map(shape => ({
-      ...shape,
-      firstFret: adjustedFret,
-      position: `${root} ${quality}`
-    }));
-  }
-
-  // No voicing found - return "unknown" placeholder
-  console.warn(`⚠️ No voicing found for chord: ${chordName} (normalized to ${key}). This chord will display as all muted strings.`);
-  return [{ frets: ['x', 'x', 'x', 'x', 'x', 'x'], position: 'Unknown' }];
+  // Smart fallback: find closest match instead of muted strings
+  return findClosestChordVoicings(chordName);
 }
