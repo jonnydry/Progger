@@ -66,6 +66,7 @@ export const SCALE_LIBRARY: ScaleLibrary = {
       [[3, 5, 7], [3, 5, 7], [4, 5, 7], [4, 5, 7], [5, 7, 8], [3, 5, 7]],
       [[0, 2, 3], [0, 2, 3], [0, 2, 4], [0, 2, 4], [0, 2, 3], [0, 2, 3]],
     ],
+    positions: ['Position 1', 'Position 2', 'Position 3'],
   },
   
   'dorian': {
@@ -75,6 +76,7 @@ export const SCALE_LIBRARY: ScaleLibrary = {
       [[5, 7, 8], [5, 7, 8], [5, 7, 9], [5, 7, 9], [5, 7, 8], [5, 7, 8]],
       [[0, 2, 3], [0, 2, 3], [0, 2, 4], [0, 2, 4], [0, 2, 3], [0, 2, 3]],
     ],
+    positions: ['Position 1', 'Position 2', 'Position 3'],
   },
   
   'phrygian': {
@@ -84,6 +86,7 @@ export const SCALE_LIBRARY: ScaleLibrary = {
       [[3, 5, 6], [3, 5, 7], [4, 5, 7], [4, 5, 7], [3, 5, 7], [3, 5, 6]],
       [[0, 1, 3], [0, 2, 3], [0, 2, 4], [0, 2, 4], [0, 2, 3], [0, 1, 3]],
     ],
+    positions: ['Position 1', 'Position 2', 'Position 3'],
   },
   
   'lydian': {
@@ -93,6 +96,7 @@ export const SCALE_LIBRARY: ScaleLibrary = {
       [[2, 4, 6], [2, 4, 6], [3, 4, 6], [4, 6, 7], [4, 6, 7], [2, 4, 6]],
       [[0, 2, 4], [0, 2, 4], [1, 2, 4], [2, 4, 5], [2, 4, 5], [0, 2, 4]],
     ],
+    positions: ['Position 1', 'Position 2', 'Position 3'],
   },
   
   'mixolydian': {
@@ -102,6 +106,7 @@ export const SCALE_LIBRARY: ScaleLibrary = {
       [[5, 7, 9], [5, 7, 8], [5, 7, 9], [5, 7, 9], [5, 7, 8], [5, 7, 9]],
       [[0, 2, 4], [0, 2, 3], [0, 2, 4], [0, 2, 4], [0, 2, 3], [0, 2, 4]],
     ],
+    positions: ['Position 1', 'Position 2', 'Position 3'],
   },
   
   'aeolian': {
@@ -111,6 +116,7 @@ export const SCALE_LIBRARY: ScaleLibrary = {
       [[0, 2, 3], [0, 2, 3], [0, 2, 4], [0, 2, 4], [0, 2, 3], [0, 2, 3]],
       [[8, 10, 12], [8, 10, 11], [9, 10, 12], [9, 10, 12], [8, 10, 12], [8, 10, 12]],
     ],
+    positions: ['Position 1', 'Position 2', 'Position 3'],
   },
   
   'minor': {
@@ -132,6 +138,7 @@ export const SCALE_LIBRARY: ScaleLibrary = {
       [[1, 3, 5], [2, 3, 5], [2, 4, 5], [2, 4, 5], [1, 3, 5], [1, 3, 5]],
       [[0, 1, 3], [0, 1, 3], [0, 2, 3], [0, 2, 3], [0, 1, 3], [0, 1, 3]],
     ],
+    positions: ['Position 1', 'Position 2', 'Position 3'],
   },
   
   'harmonic minor': {
@@ -141,6 +148,7 @@ export const SCALE_LIBRARY: ScaleLibrary = {
       [[0, 2, 3], [0, 2, 3], [0, 2, 4], [0, 2, 4], [0, 3, 4], [0, 2, 3]],
       [[8, 10, 11], [8, 10, 11], [9, 10, 12], [9, 10, 12], [8, 11, 12], [8, 10, 11]],
     ],
+    positions: ['Position 1', 'Position 2', 'Position 3'],
   },
   
   'melodic minor': {
@@ -150,6 +158,7 @@ export const SCALE_LIBRARY: ScaleLibrary = {
       [[0, 2, 3], [0, 2, 4], [0, 2, 4], [0, 2, 4], [0, 2, 4], [0, 2, 3]],
       [[8, 10, 12], [8, 10, 12], [9, 10, 12], [9, 10, 12], [8, 10, 12], [8, 10, 12]],
     ],
+    positions: ['Position 1', 'Position 2', 'Position 3'],
   },
   
   'pentatonic major': {
@@ -183,6 +192,7 @@ export const SCALE_LIBRARY: ScaleLibrary = {
       [[0, 3, 5], [0, 3, 5], [0, 2, 3], [0, 2, 3], [0, 3, 5], [0, 3, 5]],
       [[10, 13, 15], [10, 13, 15], [10, 12, 13], [10, 12, 13], [10, 13, 15], [10, 13, 15]],
     ],
+    positions: ['Position 1', 'Position 2', 'Position 3'],
   },
   
   'whole tone': {
@@ -191,6 +201,7 @@ export const SCALE_LIBRARY: ScaleLibrary = {
       [[6, 8, 10], [6, 8, 10], [6, 8, 10], [7, 9, 11], [7, 9, 11], [6, 8, 10]],
       [[1, 3, 5], [1, 3, 5], [1, 3, 5], [2, 4, 6], [2, 4, 6], [1, 3, 5]],
     ],
+    positions: ['Position 1', 'Position 2'],
   },
   
   'diminished': {
@@ -199,6 +210,7 @@ export const SCALE_LIBRARY: ScaleLibrary = {
       [[6, 7, 9], [6, 8, 9], [6, 7, 9], [7, 8, 10], [6, 8, 9], [6, 7, 9]],
       [[1, 2, 4], [1, 3, 4], [1, 2, 4], [2, 3, 5], [1, 3, 4], [1, 2, 4]],
     ],
+    positions: ['Position 1', 'Position 2'],
   },
   
   'altered': {
@@ -207,6 +219,7 @@ export const SCALE_LIBRARY: ScaleLibrary = {
       [[6, 7, 9], [7, 8, 10], [6, 8, 9], [7, 9, 10], [6, 8, 10], [6, 7, 9]],
       [[1, 2, 4], [2, 3, 5], [1, 3, 4], [2, 4, 5], [1, 3, 5], [1, 2, 4]],
     ],
+    positions: ['Position 1', 'Position 2'],
   },
   
   'bebop dominant': {
@@ -215,6 +228,7 @@ export const SCALE_LIBRARY: ScaleLibrary = {
       [[8, 10, 11], [8, 10, 12], [9, 10, 11], [9, 10, 12], [10, 11, 13], [8, 10, 11]],
       [[3, 5, 6], [3, 5, 7], [4, 5, 6], [4, 5, 7], [5, 6, 8], [3, 5, 6]],
     ],
+    positions: ['Position 1', 'Position 2'],
   },
   
   'bebop major': {
@@ -223,6 +237,7 @@ export const SCALE_LIBRARY: ScaleLibrary = {
       [[8, 9, 11], [8, 10, 12], [9, 10, 12], [9, 11, 12], [8, 10, 12], [8, 9, 11]],
       [[3, 4, 6], [3, 5, 7], [4, 5, 7], [4, 6, 7], [3, 5, 7], [3, 4, 6]],
     ],
+    positions: ['Position 1', 'Position 2'],
   },
   
   'phrygian dominant': {
@@ -231,6 +246,7 @@ export const SCALE_LIBRARY: ScaleLibrary = {
       [[8, 9, 12], [8, 10, 12], [9, 10, 12], [9, 10, 12], [8, 10, 12], [8, 9, 12]],
       [[3, 4, 7], [3, 5, 7], [4, 5, 7], [4, 5, 7], [3, 5, 7], [3, 4, 7]],
     ],
+    positions: ['Position 1', 'Position 2'],
   },
   
   'hungarian minor': {
@@ -239,6 +255,7 @@ export const SCALE_LIBRARY: ScaleLibrary = {
       [[5, 7, 8], [5, 7, 8], [5, 8, 9], [5, 7, 9], [5, 8, 9], [5, 7, 8]],
       [[0, 2, 3], [0, 2, 3], [0, 3, 4], [0, 2, 4], [0, 3, 4], [0, 2, 3]],
     ],
+    positions: ['Position 1', 'Position 2'],
   },
   
   'gypsy': {
@@ -247,6 +264,7 @@ export const SCALE_LIBRARY: ScaleLibrary = {
       [[5, 7, 8], [5, 7, 8], [5, 8, 9], [5, 7, 9], [5, 8, 9], [5, 7, 8]],
       [[0, 2, 3], [0, 2, 3], [0, 3, 4], [0, 2, 4], [0, 3, 4], [0, 2, 3]],
     ],
+    positions: ['Position 1', 'Position 2'],
   },
   
   'lydian dominant': {
@@ -255,6 +273,7 @@ export const SCALE_LIBRARY: ScaleLibrary = {
       [[7, 9, 11], [7, 9, 10], [8, 9, 11], [9, 11, 12], [9, 10, 12], [7, 9, 11]],
       [[2, 4, 6], [2, 4, 5], [3, 4, 6], [4, 6, 7], [4, 5, 7], [2, 4, 6]],
     ],
+    positions: ['Position 1', 'Position 2'],
   },
   
   'super locrian': {
@@ -263,6 +282,7 @@ export const SCALE_LIBRARY: ScaleLibrary = {
       [[6, 7, 9], [7, 8, 10], [6, 8, 9], [7, 9, 10], [6, 8, 10], [6, 7, 9]],
       [[1, 2, 4], [2, 3, 5], [1, 3, 4], [2, 4, 5], [1, 3, 5], [1, 2, 4]],
     ],
+    positions: ['Position 1', 'Position 2'],
   },
 };
 
