@@ -38,10 +38,12 @@ The application is a full-stack project with a React frontend (Vite dev server o
 
 ## Recent Changes
 
-### 2025-10-28: PROGGER Theme Redesign - "Pixel Frog Studio"
-- 🎨 **New Signature Theme**: Introduced frog-inspired green color palette
-  - Light mode: Lily pad white background (`130 25% 96%`), deep forest green text (`140 40% 20%`), bright mint accents (`110 40% 60%`)
-  - Dark mode: Deep moss background (`140 30% 12%`), bright frog green accents (`110 45% 65%`), pale green text (`130 20% 88%`)
+### 2025-10-29: PROGGER Theme Redesign - "Retro Arcade"
+- 🎮 **Bold New PROGGER Theme**: Complete redesign with vibrant retro arcade aesthetic
+  - Dark mode: Deep purple background (`270 45% 8%`), neon lime green (`90 85% 60%`), hot magenta accents (`330 90% 65%`)
+  - Light mode: Warm cream background (`40 45% 97%`), bright lime green (`90 75% 38%`), hot pink accents (`330 85% 55%`)
+  - High contrast, energetic palette matching the playful pixel frog mascot
+  - Inspired by classic arcade cabinets with electric neon colors
 - 🖼️ **Pixel Art Accents**: Added subtle retro styling without overwhelming the design
   - Dotted border utilities (`.pixel-border`) for pixel grid aesthetics
   - Pixel corner decorations (`.pixel-corners`) for retro UI feel
@@ -50,7 +52,7 @@ The application is a full-stack project with a React frontend (Vite dev server o
   - Reduced blur from 12px to 6px for improved clarity
   - Increased background opacity (0.6 → 0.75) for better contrast
   - Simplified shadows (flat 1px shadow instead of layered)
-- 🎯 **Default Theme**: Changed back to Crimson Noir (index 5) - PROGGER theme available as option
+- 🎯 **Default Theme**: Crimson Noir (index 5) - PROGGER theme available via theme picker
 - 📏 **Minimalist Spacing**: Increased whitespace for cleaner layout
   - Hero section: `mb-12` → `mb-16` (more breathing room)
   - Main padding: `pt-4 pb-8` → `pt-6 pb-10` (desktop: `pt-6 pb-12` → `pt-8 pb-16`)
