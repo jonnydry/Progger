@@ -1,7 +1,7 @@
 import React, { useState, useMemo, lazy, Suspense } from 'react';
 import type { ScaleInfo } from '../types';
 import { noteToValue as noteToValueBase, valueToNote, displayNote, STANDARD_TUNING_NAMES } from '../utils/musicTheory';
-import { getScaleIntervals, getScaleFingering, SCALE_LIBRARY } from '../utils/scaleLibrary';
+import { getScaleIntervals, getScaleFingering, SCALE_LIBRARY, normalizeScaleName } from '../utils/scaleLibrary';
 
 const LazyScaleDiagramModal = lazy(() => import('./ScaleDiagramModal'));
 
@@ -164,25 +164,8 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) =>
 
   // Get available positions for the current scale
   const availablePositions = useMemo(() => {
-    const normalized = name.toLowerCase().trim();
-    let scaleKey = '';
-
-    if (normalized.includes('pentatonic')) {
-      scaleKey = normalized.includes('major') ? 'pentatonic major' : 'pentatonic minor';
-    } else if (normalized.includes('major')) {
-      scaleKey = 'major';
-    } else if (normalized.includes('minor')) {
-      scaleKey = 'minor';
-    } else {
-      // For other scales, try to match the base name
-      for (const [key] of Object.entries(SCALE_LIBRARY)) {
-        if (normalized.includes(key) || key.includes(normalized)) {
-          scaleKey = key;
-          break;
-        }
-      }
-    }
-
+    // Use proper scale name normalization to match SCALE_LIBRARY keys
+    const scaleKey = normalizeScaleName(name);
     const scaleData = SCALE_LIBRARY[scaleKey];
     return scaleData?.positions || ['Position 1'];
   }, [name]);

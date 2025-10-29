@@ -25,18 +25,12 @@ export const VoicingDiagram: React.FC<VoicingDiagramProps> = ({ chordName, voici
     [frets]
   );
 
-  // Determine if this voicing uses relative finger positions (1,2,3,4) or absolute fret numbers
-  // Relative format: fret values represent finger positions (1-4), always less than firstFret
-  // Absolute format: fret values represent actual fret numbers, should be >= firstFret
-  // If firstFret > 1 and ANY fret value is < firstFret, it's relative format
+  // Determine if this voicing uses relative positioning to firstFret (barre chords)
+  // Barre chords (firstFret > 1) always use relative positioning where fret values
+  // represent offsets from the barre position. Open chords never use relative positioning.
   const usesRelativeFormat = useMemo(() => {
-    if (firstFret <= 1) return false;
-    const numericFrets = frets.filter(f => typeof f === 'number' && f > 0) as number[];
-    if (numericFrets.length === 0) return false;
-    const minFret = Math.min(...numericFrets);
-    // If minimum fret value is less than firstFret, it's using relative positions
-    return minFret < firstFret;
-  }, [frets, firstFret]);
+    return firstFret > 1; // Barre chords always use relative positioning
+  }, [firstFret]);
 
   const effectiveFirstFret = useMemo(() =>
     firstFret > 1 ? firstFret : (highestFret > FRET_COUNT ? highestFret - FRET_COUNT + 1 : 1),

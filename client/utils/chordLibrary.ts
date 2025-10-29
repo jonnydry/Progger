@@ -811,6 +811,44 @@ function normalizeRoot(root: string): string {
 function normalizeQuality(quality: string): string {
   const q = quality.toLowerCase().replace(/\s+/g, '').trim();
 
+  // Handle compound chord qualities by breaking them down
+  // Pattern: base_quality + extensions (e.g., maj7#11, 7b9b13, 9#11)
+
+  // Check for advanced jazz extensions first (compound qualities)
+  // These must be checked before simpler patterns to avoid partial matches
+
+  // Major 7th with extensions
+  if (q.includes('maj7')) {
+    if (q.includes('#11')) return 'maj7#11';
+    if (q.includes('b13')) return 'maj7b13';
+    if (q.includes('#9')) return 'maj7#9';
+    return 'maj7'; // fallback to maj7
+  }
+
+  // Minor/major 7th (special case - minor triad, major 7th)
+  if (q === 'm/maj7' || q === 'min/maj7' || q === 'm7+' || q === 'min7/maj7') return 'min/maj7';
+
+  // Dominant 7th extensions (most complex first)
+  if (q.startsWith('7')) {
+    if (q.includes('b9b13')) return '7b9b13';
+    if (q.includes('#9b13')) return '7#9b13';
+    if (q.includes('b9')) return '7b9';  // check before #9 to avoid conflicts
+    if (q.includes('#9')) return '7#9';
+    if (q.includes('#11')) return '7#11';
+    if (q.includes('b13')) return '7b13';
+    if (q.includes('b5')) return '7b5';
+    if (q.includes('#5') || q.includes('+5') || q.includes('+')) return '7#5';
+    if (q.includes('alt')) return '7alt';
+    if (q.includes('sus4') || q.includes('sus')) return '7sus4';
+    return '7'; // fallback to dominant 7th
+  }
+
+  // Extended chords (9ths, 11ths, 13ths) with additional tensions
+  if (q.startsWith('9')) {
+    if (q.includes('#11')) return '9#11';
+    return '9';
+  }
+
   // Basic triads
   if (!q || q === 'maj' || q === 'major' || q === 'M') return 'major';
   if (q === 'm' || q === 'min' || q === 'minor' || q === '-') return 'minor';
@@ -821,28 +859,17 @@ function normalizeQuality(quality: string): string {
   if (q === 'sus2') return 'sus2';
   if (q === 'sus4' || q === 'sus') return 'sus4';
 
-  // Seventh chords
-  if (q === '7' || q === 'dom7' || q === 'dominant7') return '7';
-  if (q === 'maj7' || q === 'major7' || q === 'M7' || q === 'Δ7' || q === 'Δ') return 'maj7';
-  if (q === 'm/maj7' || q === 'min/maj7' || q === 'm7+' || q === 'min7/maj7') return 'min/maj7';
+  // Seventh chords (basic forms)
+  if (q === 'dom7' || q === 'dominant7') return '7';
+  if (q === 'major7' || q === 'M7' || q === 'Δ7' || q === 'Δ') return 'maj7';
   if (q === 'm7' || q === 'min7' || q === 'minor7' || q === '-7') return 'min7';
   if (q === 'dim7' || q === 'o7' || q === '°7') return 'dim7';
+
+  // Diminished/min7b5 chords
   if (q.startsWith('m7b5') || q === 'ø' || q === 'half-dim' || q === 'ø7') return 'min7b5';
 
-  // Altered dominant chords (tension chords)
-  if (q === '7b9' || q === '7(b9)') return '7b9';
-  if (q === '7#9' || q === '7(#9)') return '7#9';
-  if (q === '7b5' || q === '7(b5)' || q === '7-5') return '7b5';
-  if (q === '7#5' || q === '7(#5)' || q === '7+5' || q === '7+') return '7#5';
-  if (q === '7alt' || q === 'alt7' || q === '7altered') return '7alt';
-  if (q === '7b13' || q === '7(b13)') return '7b13';
-  if (q === '7#11' || q === '7(#11)') return '7#11';
-  if (q === '7b9b13' || q === '7(b9,b13)') return '7b9b13';
-  if (q === '7#9b13' || q === '7(#9,b13)') return '7#9b13';
-  if (q === '7sus4' || q === '7sus') return '7sus4';
-
-  // Extended chords (9ths, 11ths, 13ths)
-  if (q === '9' || q === 'dom9') return '9';
+  // Extended chords (9ths, 11ths, 13ths) basic forms
+  if (q === 'dom9') return '9';
   if (q === 'maj9' || q === 'M9' || q === 'Δ9') return 'maj9';
   if (q === 'm9' || q === 'min9' || q === '-9') return 'min9';
   if (q === '11' || q === 'dom11') return '11';
@@ -851,8 +878,6 @@ function normalizeQuality(quality: string): string {
   if (q === '13' || q === 'dom13') return '13';
   if (q === 'maj13' || q === 'M13' || q === 'Δ13') return 'maj13';
   if (q === 'm13' || q === 'min13' || q === '-13') return 'min13';
-  if (q === '9#11' || q === '9(#11)') return '9#11';
-  if (q === '9sus4' || q === '9sus') return '9sus4';
 
   // Sixth chords
   if (q === '6') return '6';
@@ -864,9 +889,12 @@ function normalizeQuality(quality: string): string {
   if (q === 'add11') return 'add11';
   if (q === 'madd9' || q === 'm(add9)') return 'madd9';
 
+  // Suspended 9th chords
+  if (q === '9sus4' || q === '9sus') return '9sus4';
+
   // If nothing matches, log warning and return major as fallback
   if (q) {
-    console.warn(`Unknown chord quality: "${quality}" - defaulting to major`);
+    console.warn(`Unknown chord quality: "${quality}" - defaulting to major (check for missing extensions)`);
   }
   return 'major';
 }

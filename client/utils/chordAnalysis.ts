@@ -63,6 +63,13 @@ const CHORD_FORMULAS: Record<string, { formula: string; intervals: number[] }> =
   '7sus4': { formula: '1-4-5-♭7', intervals: [0, 5, 7, 10] },
   '9sus4': { formula: '1-4-5-♭7-9', intervals: [0, 5, 7, 10, 14] },
   '9#11': { formula: '1-3-5-♭7-9-#11', intervals: [0, 4, 7, 10, 14, 18] },
+
+  // Complex compound extensions
+  'maj7#11': { formula: '1-3-5-7-#11', intervals: [0, 4, 7, 11, 18] },
+  'maj7b13': { formula: '1-3-5-7-♭13', intervals: [0, 4, 7, 11, 20] },
+  'maj7#9': { formula: '1-3-5-7-#9', intervals: [0, 4, 7, 11, 15] },
+  '7b9b13': { formula: '1-3-5-♭7-♭9-♭13', intervals: [0, 4, 7, 10, 13, 20] },
+  '7#9b13': { formula: '1-3-5-♭7-#9-♭13', intervals: [0, 4, 7, 10, 15, 20] },
 };
 
 const INTERVAL_NAMES = [

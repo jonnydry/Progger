@@ -428,34 +428,36 @@ export function getScaleIntervals(scaleName: string): number[] {
   return SCALE_LIBRARY['major'].intervals;
 }
 
-function normalizeScaleName(name: string): string {
+
+
+export function normalizeScaleName(name: string): string {
   const lower = name.toLowerCase().trim();
-  
+
   if (lower.includes('pentatonic')) {
     if (lower.includes('major')) return 'pentatonic major';
     if (lower.includes('minor')) return 'pentatonic minor';
   }
-  
+
   if (lower.includes('blues')) return 'blues';
-  
+
   if (lower.includes('harmonic') && lower.includes('minor')) return 'harmonic minor';
   if (lower.includes('melodic') && lower.includes('minor')) return 'melodic minor';
-  
+
   if (lower.includes('whole tone')) return 'whole tone';
   if (lower.includes('diminished')) return 'diminished';
   if (lower.includes('altered')) return 'altered';
-  
+
   if (lower.includes('bebop')) {
     if (lower.includes('dominant')) return 'bebop dominant';
     if (lower.includes('major')) return 'bebop major';
   }
-  
+
   if (lower.includes('phrygian dominant')) return 'phrygian dominant';
   if (lower.includes('hungarian')) return 'hungarian minor';
   if (lower.includes('gypsy')) return 'gypsy';
   if (lower.includes('lydian dominant')) return 'lydian dominant';
   if (lower.includes('super locrian')) return 'super locrian';
-  
+
   if (lower.includes('ionian')) return 'ionian';
   if (lower.includes('dorian')) return 'dorian';
   if (lower.includes('phrygian')) return 'phrygian';
@@ -463,22 +465,22 @@ function normalizeScaleName(name: string): string {
   if (lower.includes('mixolydian')) return 'mixolydian';
   if (lower.includes('aeolian')) return 'aeolian';
   if (lower.includes('locrian')) return 'locrian';
-  
+
   if (lower.includes('major')) return 'major';
   if (lower.includes('minor')) return 'minor';
-  
+
   return 'major';
 }
 
 export function getScaleNotes(rootNote: string, scaleName: string): string[] {
   const intervals = getScaleIntervals(scaleName);
   const noteValue = noteToValue(rootNote);
-  
+
   const notes: string[] = [];
   for (const interval of intervals) {
     const noteVal = (noteValue + interval) % 12;
     notes.push(valueToNote(noteVal));
   }
-  
+
   return notes;
 }
