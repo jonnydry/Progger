@@ -21,7 +21,7 @@ const getInitialThemeIndex = (): number => {
       return index;
     }
   }
-  return 10; // Default to the PROGGER theme
+  return 5; // Default to Crimson Noir theme
 };
 
 const App: React.FC = () => {

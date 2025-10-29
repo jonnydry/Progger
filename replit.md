@@ -50,7 +50,7 @@ The application is a full-stack project with a React frontend (Vite dev server o
   - Reduced blur from 12px to 6px for improved clarity
   - Increased background opacity (0.6 → 0.75) for better contrast
   - Simplified shadows (flat 1px shadow instead of layered)
-- 🎯 **Default Theme**: PROGGER theme now set as default (index 10)
+- 🎯 **Default Theme**: Changed back to Crimson Noir (index 5) - PROGGER theme available as option
 - 📏 **Minimalist Spacing**: Increased whitespace for cleaner layout
   - Hero section: `mb-12` → `mb-16` (more breathing room)
   - Main padding: `pt-4 pb-8` → `pt-6 pb-10` (desktop: `pt-6 pb-12` → `pt-8 pb-16`)
