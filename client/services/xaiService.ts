@@ -39,7 +39,16 @@ interface CacheEntry {
 const CACHE_TTL_24HOURS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
 function getCacheKey(key: string, mode: string, includeTensions: boolean, numChords: number, selectedProgression: string): string {
-  return `progression-${key}-${mode}-${includeTensions}-${numChords}-${selectedProgression}`;
+  // Match server cache key format exactly (server/cache.ts)
+  const semanticParts = [
+    key.toLowerCase(),
+    mode.toLowerCase(),
+    includeTensions ? 'tensions' : 'no-tensions',
+    numChords.toString(),
+    selectedProgression.toLowerCase().replace(/[^a-z0-9]/g, '-')
+  ];
+  
+  return `progression:${semanticParts.join(':')}`;
 }
 
 function getFromCache(cacheKey: string): ProgressionResult | null {
@@ -83,20 +92,40 @@ function clearExpiredCache(): void {
     const now = Date.now();
 
     keys.forEach(key => {
-      if (key.startsWith('progression-')) {
+      // Check for both old format (progression-) and new format (progression:)
+      if (key.startsWith('progression-') || key.startsWith('progression:')) {
         try {
           const entry: CacheEntry = JSON.parse(localStorage.getItem(key)!);
           if (now - entry.timestamp >= entry.ttl) {
             localStorage.removeItem(key);
           }
         } catch (error) {
-          // If we can't parse it, remove it
+          // If we can't parse it, remove it (includes old format entries)
           localStorage.removeItem(key);
         }
       }
     });
   } catch (error) {
     console.warn("Error during cache cleanup", error);
+  }
+}
+
+// Clear all progression cache entries (useful for debugging)
+export function clearAllProgressionCache(): void {
+  try {
+    const keys = Object.keys(localStorage);
+    let cleared = 0;
+    
+    keys.forEach(key => {
+      if (key.startsWith('progression-') || key.startsWith('progression:')) {
+        localStorage.removeItem(key);
+        cleared++;
+      }
+    });
+    
+    console.log(`🗑️ Cleared ${cleared} progression cache entries`);
+  } catch (error) {
+    console.warn("Error clearing progression cache", error);
   }
 }
 

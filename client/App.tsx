@@ -5,7 +5,7 @@ import { SkeletonScaleDiagram } from './components/ScaleDiagram';
 import { GlassmorphicHeader } from './components/GlassmorphicHeader';
 import { StashSidebar } from './components/StashSidebar';
 import { useAuth } from './hooks/useAuth';
-import { generateChordProgression } from './services/xaiService';
+import { generateChordProgression, clearAllProgressionCache } from './services/xaiService';
 import type { ProgressionResult } from './types';
 import { KEYS, MODES, THEMES, COMMON_PROGRESSIONS } from './constants';
 import type { User } from '@shared/schema';
@@ -84,6 +84,12 @@ const App: React.FC = () => {
       resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, [isLoading, progressionResult]);
+
+  // Expose cache clearing function for debugging
+  useEffect(() => {
+    (window as any).clearProgCache = clearAllProgressionCache;
+    console.log('💡 Debug: Call window.clearProgCache() to clear all progression cache');
+  }, []);
 
   const toggleTheme = () => {
     setTheme(prevTheme => prevTheme === 'dark' ? 'light' : 'dark');

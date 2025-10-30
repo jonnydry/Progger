@@ -38,6 +38,16 @@ The application is a full-stack project with a React frontend (Vite dev server o
 
 ## Recent Changes
 
+### 2025-10-30: Fixed Cache Key Mismatch Bug
+- 🐛 **Bug Fix**: Resolved chord generation displaying only 1 chord instead of all 4
+  - Root cause: Client and server cache key formats were mismatched
+  - Client used: `progression-d-phrygian-true-4-auto` (dashes, boolean string)
+  - Server used: `progression:d:phrygian:tensions:4:auto` (colons, 'tensions' keyword)
+  - **Solution**: Updated client `getCacheKey()` to match server format exactly
+  - Added `clearAllProgressionCache()` debugging utility (accessible via `window.clearProgCache()`)
+  - Improved cache cleanup to handle both old and new format entries
+- ✅ **Result**: Chord progressions now properly display all generated chords
+
 ### 2025-10-30: Finalized 12-Theme Collection
 - 🎨 **Sapphire Reverb**: Deep blues with electric cyan accents
   - Light mode: Icy white background with deep sapphire blue and electric cyan
