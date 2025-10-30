@@ -249,7 +249,7 @@ export const THEMES: ThemeOption[] = [
     }
   },
   {
-    name: 'Bubblegum Reverb',
+    name: 'Cotton Candy',
     light: {
       primary: '340 100% 80%',  // Baby Pink
       secondary: '0 0% 60%',    // Light Gray
