@@ -44,9 +44,9 @@ The application is a full-stack project with a React frontend (Vite dev server o
   - Dark mode: Deep navy background with bright sapphire and vibrant cyan accents
   - Distinct from Oceanic Slate with more saturated, energetic blues
 - 💕 **Velvet Echo**: Soft, lighter pink palette (replaced Amber Resonance)
-  - Light mode: Very light blush background with soft rose pink and bright coral accents
-  - Dark mode: Soft dark rose with light pink and bright coral highlights
-  - Unique pink theme offering gentle, romantic aesthetic with lighter tones
+  - Light mode: Nearly white background with medium rose and bright pink accents
+  - Dark mode: Baby pink on black - vibrant baby pink text and accents on near-black background
+  - Unique pink theme offering gentle, romantic aesthetic with pastel tones
 - 🎵 **12 Themes Total**: Now matching the 12 notes in music (C through B)
   - Rosewood & Ivory, Oceanic Slate, Forest Whisper, Midnight Indigo, Golden Hour
   - Crimson Noir (default), Mojave Dusk, Lavender Mist, Copper Bloom, Terminal Matrix

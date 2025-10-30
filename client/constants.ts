@@ -251,22 +251,22 @@ export const THEMES: ThemeOption[] = [
   {
     name: 'Velvet Echo',
     light: {
-      primary: '340 50% 48%',   // Soft Rose Pink
-      secondary: '330 30% 45%', // Dusty Rose
-      accent: '350 70% 60%',    // Bright Coral Pink
-      text: '330 40% 25%',      // Soft Burgundy
-      background: '340 60% 98%', // Very Light Blush
-      surface: '340 50% 95%',   // Pale Rose
-      border: '330 40% 25% / 0.1',
+      primary: '340 60% 45%',   // Medium Rose
+      secondary: '330 35% 42%', // Dusty Mauve
+      accent: '350 75% 58%',    // Bright Pink
+      text: '340 50% 22%',      // Deep Rose
+      background: '340 40% 98%', // Nearly White Pink Tint
+      surface: '340 35% 95%',   // Very Pale Pink
+      border: '340 50% 22% / 0.1',
     },
     dark: {
-      primary: '340 65% 65%',   // Light Pink
-      secondary: '330 35% 50%', // Medium Rose
-      accent: '350 75% 70%',    // Bright Coral
-      text: '340 40% 92%',      // Very Pale Pink
-      background: '330 25% 15%', // Soft Dark Rose
-      surface: '330 20% 20%',   // Muted Dark Rose
-      border: '340 40% 92% / 0.15',
+      primary: '340 100% 85%',  // Baby Pink
+      secondary: '330 100% 80%', // Light Baby Pink
+      accent: '350 100% 90%',   // Bright Baby Pink
+      text: '340 100% 88%',     // Baby Pink Text
+      background: '0 0% 8%',    // Near Black
+      surface: '0 0% 12%',      // Dark Gray
+      border: '340 100% 88% / 0.15',
     }
   }
 ];
