@@ -1,12 +1,5 @@
 # REPLIT PROJECT PROTECTION RULES
 
-## 📝 CUSTOMIZATION INSTRUCTIONS
-**This template has been customized for the PROGGER project.**
-- Copy the entire content and paste into Cursor → Settings → "Rules for AI"
-- Keep this updated when your project structure changes
-
----
-
 ## CRITICAL: YOU ARE EDITING THE PROGGER REPLIT-HOSTED PROJECT
 
 This project (**PROGGER** - AI-Powered Chord Progression Generator for Guitarists) is hosted on **Replit** and has specific infrastructure requirements. Violating these rules will **break deployment**.
@@ -18,7 +11,9 @@ This project (**PROGGER** - AI-Powered Chord Progression Generator for Guitarist
 - Interactive fretboard diagrams with Pattern/Map modes
 - User authentication and progression stashing
 
-### 🚨 SACRED FILES - NEVER MODIFY UNDER ANY CIRCUMSTANCES
+---
+
+## 🚨 SACRED FILES - NEVER MODIFY UNDER ANY CIRCUMSTANCES
 
 **NEVER touch these files:**
 - `.replit` - Controls Replit run commands, workflows, deployment, port mappings
@@ -52,9 +47,11 @@ This project (**PROGGER** - AI-Powered Chord Progression Generator for Guitarist
 - `vite.config.ts` - Path aliases (@, @shared, @assets), build config, proxy settings
 - `tsconfig.json` - TypeScript paths (must match build config)
 - **CRITICAL:** `server.allowedHosts: true` must be set for Replit proxy compatibility
+- **CRITICAL:** `changeOrigin: false` in proxy config (or auth will break in new tabs)
 
 **Express (Backend):**
-- `server/index.ts` - Port binding files (backend on port 3001)
+- `server/index.ts` - Port binding (backend on port 3001)
+- `server/replitAuth.ts` - Replit Auth configuration with hostname normalization
 
 **Database/ORM (Drizzle):**
 - `drizzle.config.ts` - Database connection and migration settings
@@ -145,6 +142,37 @@ Tell user: "Add to Replit Secrets:
 ✅ **DO:**
 ```
 Tell user: "Use Replit's Publish button to deploy"
+```
+
+### 6. NEVER BREAK VITE PROXY FOR AUTH
+❌ **DON'T:**
+```typescript
+// This breaks Replit Auth in new browser tabs
+proxy: {
+  '/api': {
+    target: 'http://localhost:3001',
+    changeOrigin: true,  // ← BREAKS AUTHENTICATION!
+  },
+}
+```
+
+✅ **DO:**
+```typescript
+// Preserve hostname for OAuth callbacks
+proxy: {
+  '/api': {
+    target: 'http://localhost:3001',
+    changeOrigin: false,  // ← Preserve original hostname
+    ws: true,
+    configure: (proxy, _options) => {
+      proxy.on('proxyReq', (proxyReq, req, _res) => {
+        if (req.headers.host) {
+          proxyReq.setHeader('host', req.headers.host);
+        }
+      });
+    },
+  },
+}
 ```
 
 ---
@@ -238,6 +266,7 @@ npm run db:push --force
 - Bind backend to port 3001 on `0.0.0.0`
 - Use Replit Secrets for sensitive data (XAI_API_KEY)
 - Test changes in Replit before committing
+- Set `changeOrigin: false` in Vite proxy config
 
 ### 🚫 DON'T:
 - Touch `.replit` or `replit.nix`
@@ -248,6 +277,7 @@ npm run db:push --force
 - Manually write SQL migrations
 - Change TypeScript paths without matching build config
 - Commit infrastructure changes from external editors
+- Use `changeOrigin: true` in Vite proxy (breaks auth in new tabs)
 
 ---
 
@@ -272,6 +302,7 @@ npm run db:push --force
 - drizzle.config.ts - Database connection and migration settings
 - tsconfig.json - TypeScript configuration
 - server/index.ts - Express server with port binding (port 3001)
+- server/replitAuth.ts - Replit Auth setup with hostname normalization
 - shared/schema.ts - Database schema definitions
 - package.json - Dependencies and scripts (use npm install only)
 ```
@@ -326,6 +357,7 @@ Before suggesting ANY change involving:
 - [ ] Am I modifying `.replit` or `replit.nix`? → STOP, DON'T DO IT
 - [ ] Am I manually editing package files? → STOP, use install command
 - [ ] Will this change ports/hosts? → STOP, verify Replit requirements first
+- [ ] Am I setting `changeOrigin: true` in Vite proxy? → STOP, use false instead
 
 ### Database:
 - [ ] Am I changing ID column types? → STOP, CATASTROPHIC ERROR
@@ -356,6 +388,6 @@ Before suggesting ANY change involving:
 
 ---
 
-**Last Updated:** October 27, 2025  
+**Last Updated:** October 30, 2025  
 **Project:** PROGGER - AI-Powered Chord Progression Generator for Guitarists  
-**For Full Guide:** See `replit-production-guide.md` in `replit-protection-templates/`
+**For Full Guide:** See `replit-developer-guide.md` in `replit-protection-templates/`
