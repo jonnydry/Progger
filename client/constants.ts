@@ -251,13 +251,13 @@ export const THEMES: ThemeOption[] = [
   {
     name: 'Velvet Echo',
     light: {
-      primary: '340 60% 45%',   // Medium Rose
-      secondary: '330 35% 42%', // Dusty Mauve
-      accent: '350 75% 58%',    // Bright Pink
-      text: '340 50% 22%',      // Deep Rose
-      background: '340 40% 98%', // Nearly White Pink Tint
-      surface: '340 35% 95%',   // Very Pale Pink
-      border: '340 50% 22% / 0.1',
+      primary: '340 100% 80%',  // Baby Pink
+      secondary: '0 0% 60%',    // Light Gray
+      accent: '350 100% 85%',   // Bright Baby Pink
+      text: '0 0% 30%',         // Medium Gray
+      background: '0 0% 99%',   // Nearly White
+      surface: '0 0% 96%',      // Light Gray
+      border: '0 0% 30% / 0.1',
     },
     dark: {
       primary: '340 100% 85%',  // Baby Pink
