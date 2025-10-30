@@ -226,6 +226,48 @@ export const THEMES: ThemeOption[] = [
       surface: '140 5% 10%',    // Near-Black with green tint
       border: '140 70% 75% / 0.15',
     }
+  },
+  {
+    name: 'Sapphire Reverb',
+    light: {
+      primary: '210 65% 42%',   // Deep Sapphire Blue (Darker for contrast)
+      secondary: '200 35% 40%', // Steel Blue (Darker for contrast)
+      accent: '190 75% 52%',    // Electric Cyan
+      text: '215 50% 20%',      // Dark Navy
+      background: '210 35% 97%', // Icy White
+      surface: '210 30% 94%',   // Light Blue-Gray
+      border: '215 50% 20% / 0.1',
+    },
+    dark: {
+      primary: '210 70% 60%',   // Bright Sapphire
+      secondary: '200 35% 45%', // Medium Steel
+      accent: '190 85% 65%',    // Vibrant Cyan
+      text: '210 25% 90%',      // Pale Blue-White
+      background: '220 40% 10%', // Deep Navy
+      surface: '220 35% 15%',   // Darker Navy
+      border: '210 25% 90% / 0.15',
+    }
+  },
+  {
+    name: 'Amber Resonance',
+    light: {
+      primary: '30 70% 38%',    // Rich Amber (Darker for contrast)
+      secondary: '25 45% 38%',  // Burnt Sienna (Darker for contrast)
+      accent: '40 80% 50%',     // Bright Honey
+      text: '20 40% 18%',       // Deep Brown
+      background: '40 50% 96%', // Warm Cream
+      surface: '40 45% 92%',    // Light Honey
+      border: '20 40% 18% / 0.1',
+    },
+    dark: {
+      primary: '30 75% 62%',    // Glowing Amber
+      secondary: '25 40% 50%',  // Warm Sienna
+      accent: '40 85% 68%',     // Bright Honey Glow
+      text: '40 45% 90%',       // Pale Cream
+      background: '25 35% 12%', // Deep Amber Brown
+      surface: '25 30% 17%',    // Darker Brown
+      border: '40 45% 90% / 0.15',
+    }
   }
 ];
 
