@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { ThemeSelector } from './ThemeSelector';
 import type { ThemeOption } from '@/constants';
-import proggerLogo from '../../attached_assets/Progger1MonoTransX32_1761526977420.png';
+import proggerLogo from '../../attached_assets/Progger1MonoTrans_1761783298433.png';
 
 interface GlassmorphicHeaderProps {
   theme: string;
