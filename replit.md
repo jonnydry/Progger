@@ -43,14 +43,14 @@ The application is a full-stack project with a React frontend (Vite dev server o
   - Light mode: Icy white background with deep sapphire blue and electric cyan
   - Dark mode: Deep navy background with bright sapphire and vibrant cyan accents
   - Distinct from Oceanic Slate with more saturated, energetic blues
-- 💕 **Velvet Echo**: Soft, lighter pink palette (replaced Amber Resonance)
+- 💕 **Bubblegum Reverb**: Sweet baby pink palette (replaced Amber Resonance)
   - Light mode: Baby pink accents on nearly white background with light gray surfaces
   - Dark mode: Baby pink on black - vibrant baby pink text and accents on near-black background
-  - Unique pink theme offering gentle, romantic aesthetic with cohesive pastel baby pink tones
+  - Unique pink theme offering playful, fun aesthetic with cohesive bubblegum pink tones
 - 🎵 **12 Themes Total**: Now matching the 12 notes in music (C through B)
   - Rosewood & Ivory, Oceanic Slate, Forest Whisper, Midnight Indigo, Golden Hour
   - Crimson Noir (default), Mojave Dusk, Lavender Mist, Copper Bloom, Terminal Matrix
-  - Sapphire Reverb, Velvet Echo
+  - Sapphire Reverb, Bubblegum Reverb
 
 ### 2025-10-29: UI Refinements
 - 🖼️ **Pixel Art Accents**: Added subtle retro styling without overwhelming the design
