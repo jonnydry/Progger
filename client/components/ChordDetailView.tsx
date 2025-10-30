@@ -3,6 +3,7 @@ import type { ChordInProgression, ChordVoicing } from '@/types';
 import { VoicingDiagram } from './VoicingDiagram';
 import { displayChordName } from '@/utils/musicTheory';
 import { analyzeChord, getChordFormula, getChordIntervals, getChordNotes, getScalesContainingChord } from '@/utils/chordAnalysis';
+import { getChordVoicings } from '@/utils/chordLibrary';
 
 interface ChordDetailViewProps {
   chord: ChordInProgression;
@@ -41,33 +42,51 @@ export const ChordDetailView: React.FC<ChordDetailViewProps> = ({ chord, musical
   // Analyze chord using our new utility
   const chordAnalysis = analyzeChord(chord.chordName, musicalKey);
 
+  // Fetch ALL available voicings directly from the chord library
+  // This ensures we get the complete set, not just what was in the progression
+  const allVoicings = React.useMemo(() => {
+    return getChordVoicings(chord.chordName);
+  }, [chord.chordName]);
+
   // Organize voicings by type
   const voicingGroups = React.useMemo(() => {
     const groups: Record<string, ChordVoicing[]> = {
       'Open': [],
       'Barre': [],
-      'Partial': []
+      'Partial': [],
+      'A-string Root': [],
+      'Quartal': [],
+      'Interior': [],
+      'Other': []
     };
 
-    chord.voicings.forEach(voicing => {
+    allVoicings.forEach(voicing => {
       const position = voicing.position || '';
-      if (position.toLowerCase().includes('open')) {
+      const positionLower = position.toLowerCase();
+      
+      if (positionLower.includes('open')) {
         groups['Open'].push(voicing);
-      } else if (position.toLowerCase().includes('barre') || position.includes('Barre')) {
+      } else if (positionLower.includes('barre') || position.includes('Barre')) {
         groups['Barre'].push(voicing);
-      } else if (position.toLowerCase().includes('partial')) {
+      } else if (positionLower.includes('partial')) {
         groups['Partial'].push(voicing);
+      } else if (positionLower.includes('a-string root') || positionLower.includes('a-string')) {
+        groups['A-string Root'].push(voicing);
+      } else if (positionLower.includes('quartal')) {
+        groups['Quartal'].push(voicing);
+      } else if (positionLower.includes('interior')) {
+        groups['Interior'].push(voicing);
       } else if (position === '') {
         // Default to Open if no position specified
         groups['Open'].push(voicing);
       } else {
-        // Unknown position, add to Open as fallback
-        groups['Open'].push(voicing);
+        // Unknown position types go to "Other"
+        groups['Other'].push(voicing);
       }
     });
 
     return groups;
-  }, [chord.voicings]);
+  }, [allVoicings]);
 
   return (
     <div className="mt-8 max-w-6xl mx-auto w-full animate-slide-in">
@@ -148,35 +167,53 @@ export const ChordDetailView: React.FC<ChordDetailViewProps> = ({ chord, musical
             Guitar Voicings
           </h3>
 
-          {(voicingGroups['Open'].length > 0 || voicingGroups['Barre'].length > 0 || voicingGroups['Partial'].length > 0) ? (
-            <div className="space-y-6">
-              <VoicingGroup
-                title="Open Position"
-                voicings={voicingGroups['Open']}
-                chordName={chord.chordName}
-                displayedChordName={displayedChordName}
-              />
-              <VoicingGroup
-                title="Barre Position"
-                voicings={voicingGroups['Barre']}
-                chordName={chord.chordName}
-                displayedChordName={displayedChordName}
-              />
-              <VoicingGroup
-                title="Partial Position"
-                voicings={voicingGroups['Partial']}
-                chordName={chord.chordName}
-                displayedChordName={displayedChordName}
-              />
-            </div>
-          ) : (
-            <div className="flex flex-row flex-wrap gap-4 justify-start">
-              {chord.voicings.map((voicing, index) => {
-                const voicingKey = `${chord.chordName}-${index}-${voicing.position || 'std'}-${voicing.frets.join('-')}`;
-                return <VoicingDiagram key={voicingKey} chordName={displayedChordName} voicing={voicing} />;
-              })}
-            </div>
-          )}
+          {(() => {
+            // Check if we have any grouped voicings
+            const hasGroupedVoicings = Object.values(voicingGroups).some(group => group.length > 0);
+            
+            if (!hasGroupedVoicings) {
+              // Fallback: show all voicings ungrouped
+              return (
+                <div className="flex flex-row flex-wrap gap-4 justify-start">
+                  {allVoicings.map((voicing, index) => {
+                    const voicingKey = `${chord.chordName}-${index}-${voicing.position || 'std'}-${voicing.frets.join('-')}`;
+                    return <VoicingDiagram key={voicingKey} chordName={displayedChordName} voicing={voicing} />;
+                  })}
+                </div>
+              );
+            }
+
+            // Display groups in order of importance, only showing non-empty groups
+            const groupOrder = ['Open', 'Barre', 'Partial', 'A-string Root', 'Quartal', 'Interior', 'Other'];
+            const groupTitles: Record<string, string> = {
+              'Open': 'Open Position',
+              'Barre': 'Barre Position',
+              'Partial': 'Partial Position',
+              'A-string Root': 'A-string Root',
+              'Quartal': 'Quartal Voicings',
+              'Interior': 'Interior Position',
+              'Other': 'Other Voicings'
+            };
+
+            return (
+              <div className="space-y-6">
+                {groupOrder.map(groupKey => {
+                  const voicings = voicingGroups[groupKey];
+                  if (voicings.length === 0) return null;
+                  
+                  return (
+                    <VoicingGroup
+                      key={groupKey}
+                      title={groupTitles[groupKey]}
+                      voicings={voicings}
+                      chordName={chord.chordName}
+                      displayedChordName={displayedChordName}
+                    />
+                  );
+                })}
+              </div>
+            );
+          })()}
         </div>
       </div>
     </div>
