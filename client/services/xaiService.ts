@@ -13,6 +13,7 @@ import {
   createErrorLog
 } from '../utils/errors';
 import { getProcessingConfig } from '../utils/processingConfig';
+import { getProgressionCacheKey } from '@shared/cacheUtils';
 
 interface SimpleChord {
     chordName: string;
@@ -37,19 +38,7 @@ interface CacheEntry {
 }
 
 const CACHE_TTL_24HOURS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
-
-function getCacheKey(key: string, mode: string, includeTensions: boolean, numChords: number, selectedProgression: string): string {
-  // Match server cache key format exactly (server/cache.ts)
-  const semanticParts = [
-    key.toLowerCase(),
-    mode.toLowerCase(),
-    includeTensions ? 'tensions' : 'no-tensions',
-    numChords.toString(),
-    selectedProgression.toLowerCase().replace(/[^a-z0-9]/g, '-')
-  ];
-  
-  return `progression:${semanticParts.join(':')}`;
-}
+const MAX_CACHE_ENTRIES = 50; // Maximum number of cache entries to prevent quota exceeded errors
 
 function getFromCache(cacheKey: string): ProgressionResult | null {
   try {
@@ -73,8 +62,49 @@ function getFromCache(cacheKey: string): ProgressionResult | null {
   return null;
 }
 
+function enforceCacheLimits(): void {
+  try {
+    const keys = Object.keys(localStorage).filter(k => 
+      k.startsWith('progression:') || k.startsWith('progression-')
+    );
+    
+    if (keys.length > MAX_CACHE_ENTRIES) {
+      // Get all entries with timestamps
+      const entries = keys.map(key => {
+        try {
+          const cachedItem = localStorage.getItem(key);
+          if (!cachedItem) return null;
+          const entry: CacheEntry = JSON.parse(cachedItem);
+          return {
+            key,
+            timestamp: entry.timestamp || 0
+          };
+        } catch {
+          return { key, timestamp: 0 };
+        }
+      }).filter((e): e is { key: string; timestamp: number } => e !== null);
+      
+      // Sort by timestamp (oldest first)
+      entries.sort((a, b) => a.timestamp - b.timestamp);
+      
+      // Remove oldest 20% of entries
+      const toRemove = Math.floor(entries.length * 0.2);
+      for (let i = 0; i < toRemove; i++) {
+        localStorage.removeItem(entries[i].key);
+      }
+      
+      console.log(`Enforced cache limits: removed ${toRemove} oldest entries`);
+    }
+  } catch (error) {
+    console.warn("Error enforcing cache limits", error);
+  }
+}
+
 function setCache(cacheKey: string, data: ProgressionResult): void {
   try {
+    // Enforce cache limits before adding new entry
+    enforceCacheLimits();
+    
     const entry: CacheEntry = {
       data,
       timestamp: Date.now(),
@@ -82,7 +112,23 @@ function setCache(cacheKey: string, data: ProgressionResult): void {
     };
     localStorage.setItem(cacheKey, JSON.stringify(entry));
   } catch (error) {
-    console.warn("Could not write to localStorage", error);
+    // If we hit quota, try to clean up and retry once
+    if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+      console.warn("localStorage quota exceeded, cleaning up cache");
+      enforceCacheLimits();
+      try {
+        const entry: CacheEntry = {
+          data,
+          timestamp: Date.now(),
+          ttl: CACHE_TTL_24HOURS
+        };
+        localStorage.setItem(cacheKey, JSON.stringify(entry));
+      } catch (retryError) {
+        console.warn("Could not write to localStorage after cleanup", retryError);
+      }
+    } else {
+      console.warn("Could not write to localStorage", error);
+    }
   }
 }
 
@@ -131,7 +177,7 @@ export function clearAllProgressionCache(): void {
 
 export async function generateChordProgression(key: string, mode: string, includeTensions: boolean, numChords: number, selectedProgression: string): Promise<ProgressionResult> {
   const config = getProcessingConfig();
-  const cacheKey = getCacheKey(key, mode, includeTensions, numChords, selectedProgression);
+  const cacheKey = getProgressionCacheKey(key, mode, includeTensions, numChords, selectedProgression);
 
   // Try to get from cache first
   const cachedResult = getFromCache(cacheKey);

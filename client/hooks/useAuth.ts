@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
+import type { User } from "@shared/schema";
 
-async function fetchUser() {
+async function fetchUser(): Promise<User | null> {
   const res = await fetch("/api/auth/user", {
     credentials: "include",
   });
@@ -16,7 +17,11 @@ async function fetchUser() {
   return res.json();
 }
 
-export function useAuth() {
+export function useAuth(): {
+  user: User | undefined;
+  isLoading: boolean;
+  isAuthenticated: boolean;
+} {
   const { data: user, isLoading } = useQuery({
     queryKey: ["/api/auth/user"],
     queryFn: fetchUser,

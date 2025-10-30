@@ -2,6 +2,8 @@
  * Intelligent retry logic with exponential backoff and circuit breaker
  */
 
+import { logger } from './utils/logger';
+
 export interface RetryConfig {
   maxRetries: number;
   initialDelay: number;
@@ -111,12 +113,17 @@ export async function withRetry<T>(
 
       // Check if the error is retryable
       if (!isRetryableError(error)) {
-        console.warn(`Non-retryable error on attempt ${attempt}:`, error);
+        logger.warn('Non-retryable error encountered', { attempt, totalRetries: cfg.maxRetries, error });
         break;
       }
 
       const delay = calculateRetryDelay(attempt, cfg);
-      console.log(`Retry attempt ${attempt}/${cfg.maxRetries} after ${delay}ms delay. Error: ${lastError.message}`);
+      logger.debug('Retrying operation', {
+        attempt,
+        totalRetries: cfg.maxRetries,
+        delayMs: delay,
+        error: lastError.message,
+      });
 
       // Call retry hook if provided
       if (onRetry) {
@@ -165,7 +172,7 @@ export class CircuitBreaker {
       // Check if we should transition to half-open
       if (now - this.lastFailureTime > this.recoveryTimeout) {
         this.state = 'half-open';
-        console.log('Circuit breaker transitioning to half-open');
+        logger.info('Circuit breaker transitioning to half-open');
       } else {
         throw new Error('Circuit breaker is OPEN - operation rejected');
       }
@@ -176,7 +183,7 @@ export class CircuitBreaker {
 
       // Success - reset on half-open, stay closed otherwise
       if (this.state === 'half-open') {
-        console.log('Circuit breaker recovered to closed');
+        logger.info('Circuit breaker recovered to closed');
         this.state = 'closed';
         this.failureCount = 0;
       }
@@ -189,7 +196,10 @@ export class CircuitBreaker {
       // Check if we should open the circuit
       if (this.failureCount >= this.failureThreshold) {
         this.state = 'open';
-        console.log(`Circuit breaker OPEN after ${this.failureCount} failures`);
+        logger.warn('Circuit breaker OPEN', {
+          failureCount: this.failureCount,
+          threshold: this.failureThreshold,
+        });
       }
 
       throw error;

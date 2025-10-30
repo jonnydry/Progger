@@ -8,7 +8,6 @@ import { useAuth } from './hooks/useAuth';
 import { generateChordProgression, clearAllProgressionCache } from './services/xaiService';
 import type { ProgressionResult } from './types';
 import { KEYS, MODES, THEMES, COMMON_PROGRESSIONS } from './constants';
-import type { User } from '@shared/schema';
 import proggerMascot from '../attached_assets/ProggerLogoMono2Lily_1761527600239.png';
 
 const LazyScaleDiagram = lazy(() => import('./components/ScaleDiagram'));
@@ -25,7 +24,7 @@ const getInitialThemeIndex = (): number => {
 };
 
 const App: React.FC = () => {
-  const { user, isLoading: authLoading, isAuthenticated } = useAuth() as { user: User | undefined, isLoading: boolean, isAuthenticated: boolean };
+  const { user, isLoading: authLoading, isAuthenticated } = useAuth();
   const [key, setKey] = useState<string>(KEYS[0]);
   const [mode, setMode] = useState<string>(MODES[0].value);
   const [selectedProgression, setSelectedProgression] = useState<string>(COMMON_PROGRESSIONS[0].value);

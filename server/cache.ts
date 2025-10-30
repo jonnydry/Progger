@@ -1,4 +1,6 @@
 import { createClient, RedisClientType } from 'redis';
+import { getProgressionCacheKey as getSharedCacheKey } from '../shared/cacheUtils';
+import { logger } from './utils/logger';
 
 class RedisCache {
   private client: RedisClientType;
@@ -11,11 +13,11 @@ class RedisCache {
 
     this.client.on('connect', () => {
       this.isConnected = true;
-      console.log('Redis cache connected');
+      logger.info('Redis cache connected');
     });
 
     this.client.on('error', (err) => {
-      console.warn('Redis cache connection error:', err.message);
+      logger.warn('Redis cache connection error', { error: err.message });
       this.isConnected = false;
     });
 
@@ -27,7 +29,7 @@ class RedisCache {
     try {
       await this.client.connect();
     } catch (error) {
-      console.warn('Failed to connect to Redis cache, falling back to in-memory caching:', error);
+      logger.warn('Failed to connect to Redis cache, falling back to in-memory caching', { error });
     }
   }
 
@@ -40,7 +42,7 @@ class RedisCache {
 
       return JSON.parse(value) as T;
     } catch (error) {
-      console.warn('Redis cache get error:', error);
+      logger.warn('Redis cache get error', { error, key });
       return null;
     }
   }
@@ -56,7 +58,7 @@ class RedisCache {
         await this.client.set(key, serialized);
       }
     } catch (error) {
-      console.warn('Redis cache set error:', error);
+      logger.warn('Redis cache set error', { error, key });
     }
   }
 
@@ -67,7 +69,7 @@ class RedisCache {
       const result = await this.client.exists(key);
       return result === 1;
     } catch (error) {
-      console.warn('Redis cache exists error:', error);
+      logger.warn('Redis cache exists error', { error, key });
       return false;
     }
   }
@@ -78,7 +80,7 @@ class RedisCache {
     try {
       await this.client.del(key);
     } catch (error) {
-      console.warn('Redis cache delete error:', error);
+      logger.warn('Redis cache delete error', { error, key });
     }
   }
 
@@ -90,16 +92,7 @@ class RedisCache {
     numChords: number,
     selectedProgression: string
   ): string {
-    // Create a semantic fingerprint based on the meaningful parts of the request
-    const semanticParts = [
-      key.toLowerCase(),
-      mode.toLowerCase(),
-      includeTensions ? 'tensions' : 'no-tensions',
-      numChords.toString(),
-      selectedProgression.toLowerCase().replace(/[^a-z0-9]/g, '-')
-    ];
-
-    return `progression:${semanticParts.join(':')}`;
+    return getSharedCacheKey(key, mode, includeTensions, numChords, selectedProgression);
   }
 
   // Check if similar requests exist (for deduplication)
@@ -114,7 +107,7 @@ class RedisCache {
       const exists = await this.exists(cacheKey);
       return exists ? cacheKey : null;
     } catch (error) {
-      console.warn('Redis cache similarity check error:', error);
+      logger.warn('Redis cache similarity check error', { error, cacheKey });
       return null;
     }
   }
@@ -124,22 +117,5 @@ class RedisCache {
 export const redisCache = new RedisCache();
 export { RedisCache };
 
-// Utility function for cache key generation
-export function getProgressionCacheKey(
-  key: string,
-  mode: string,
-  includeTensions: boolean,
-  numChords: number,
-  selectedProgression: string
-): string {
-  // Create a semantic fingerprint based on the meaningful parts of the request
-  const semanticParts = [
-    key.toLowerCase(),
-    mode.toLowerCase(),
-    includeTensions ? 'tensions' : 'no-tensions',
-    numChords.toString(),
-    selectedProgression.toLowerCase().replace(/[^a-z0-9]/g, '-')
-  ];
-
-  return `progression:${semanticParts.join(':')}`;
-}
+// Re-export shared cache key utility for convenience
+export { getProgressionCacheKey } from '../shared/cacheUtils';

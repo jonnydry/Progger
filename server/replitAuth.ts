@@ -7,6 +7,23 @@ import type { Express, RequestHandler } from "express";
 import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
+import { logger } from "./utils/logger";
+
+// Type definition for authenticated user in Express session
+export interface AuthenticatedUser {
+  claims: {
+    sub: string;
+    email?: string;
+    first_name?: string;
+    last_name?: string;
+    profile_image_url?: string;
+    exp?: number;
+    [key: string]: unknown;
+  };
+  access_token?: string;
+  refresh_token?: string;
+  expires_at?: number;
+}
 
 if (!process.env.REPLIT_DOMAINS) {
   throw new Error("Environment variable REPLIT_DOMAINS not provided");
@@ -45,7 +62,7 @@ export function getSession() {
 }
 
 function updateUserSession(
-  user: any,
+  user: AuthenticatedUser,
   tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers
 ) {
   user.claims = tokens.claims();
@@ -78,7 +95,9 @@ export async function setupAuth(app: Express) {
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
   ) => {
-    const user = {};
+    const user: AuthenticatedUser = {
+      claims: {},
+    };
     updateUserSession(user, tokens);
     await upsertUser(tokens.claims());
     verified(null, user);
@@ -87,7 +106,7 @@ export async function setupAuth(app: Express) {
   for (const domain of process.env.REPLIT_DOMAINS!.split(",")) {
     const normalizedDomain = domain.trim().toLowerCase();
     if (!normalizedDomain) {
-      console.warn('Warning: Empty domain found in REPLIT_DOMAINS');
+      logger.warn('Empty domain found in REPLIT_DOMAINS');
       continue;
     }
     registeredDomains.add(normalizedDomain);
@@ -103,7 +122,7 @@ export async function setupAuth(app: Express) {
     passport.use(strategy);
   }
 
-  console.log('Registered auth domains:', Array.from(registeredDomains));
+  logger.info('Registered auth domains', { domains: Array.from(registeredDomains) });
 
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
@@ -111,7 +130,10 @@ export async function setupAuth(app: Express) {
   app.get("/api/login", (req, res, next) => {
     const normalizedHostname = req.hostname.toLowerCase();
     if (!registeredDomains.has(normalizedHostname)) {
-      console.error(`Authentication error: hostname "${req.hostname}" not in registered domains:`, Array.from(registeredDomains));
+      logger.warn('Authentication error: hostname not in registered domains', {
+        hostname: req.hostname,
+        registeredDomains: Array.from(registeredDomains),
+      });
       return res.status(400).send(`
         <h1>Authentication Error</h1>
         <p>You must access this application via the Replit preview URL, not localhost or other domains.</p>
@@ -130,7 +152,10 @@ export async function setupAuth(app: Express) {
   app.get("/api/callback", (req, res, next) => {
     const normalizedHostname = req.hostname.toLowerCase();
     if (!registeredDomains.has(normalizedHostname)) {
-      console.error(`Callback error: hostname "${req.hostname}" not in registered domains`);
+      logger.warn('Callback error: hostname not in registered domains', {
+        hostname: req.hostname,
+        registeredDomains: Array.from(registeredDomains),
+      });
       return res.redirect('/api/login');
     }
     
@@ -153,9 +178,9 @@ export async function setupAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
-  const user = req.user as any;
+  const user = req.user as AuthenticatedUser | undefined;
 
-  if (!req.isAuthenticated() || !user.expires_at) {
+  if (!req.isAuthenticated() || !user || !user.expires_at) {
     return res.status(401).json({ message: "Unauthorized" });
   }
 

@@ -3,6 +3,8 @@ import { redisCache, getProgressionCacheKey } from './cache';
 import { pendingRequests } from './pendingRequests';
 import { buildOptimizedPrompt, createPromptFingerprint, estimateTokenUsage, type ProgressionRequest } from './promptOptimization';
 import { withRetry, xaiCircuitBreaker } from './retryLogic';
+import { logger } from './utils/logger';
+import { validateAPIResponse, APIValidationError } from './utils/apiValidation';
 
 const getOpenAI = () => {
   const apiKey = process.env.XAI_API_KEY;
@@ -44,14 +46,14 @@ export async function generateChordProgression(
   // Step 1: Check if we have a similar request already pending (deduplication)
   const pending = pendingRequests.get(cacheKey);
   if (pending) {
-    console.log("⚡ Returning pending request for:", cacheKey);
+    logger.debug("Returning pending request", { cacheKey });
     return pending;
   }
 
   // Step 2: Check Redis cache for existing result
   const cachedResult = await redisCache.get<ProgressionResultFromAPI>(cacheKey);
   if (cachedResult) {
-    console.log("⚡ Cache hit for:", cacheKey);
+    logger.debug("Cache hit", { cacheKey });
     return cachedResult;
   }
 
@@ -66,11 +68,14 @@ export async function generateChordProgression(
 
   // Step 3: Build optimized prompt
   const promptComponents = buildOptimizedPrompt(request);
-  console.log(`📊 Estimated token usage: ~${estimateTokenUsage(promptComponents)} tokens`);
+  logger.debug("Prompt built", { 
+    estimatedTokens: estimateTokenUsage(promptComponents),
+    cacheKey 
+  });
 
   // Step 4: Create async operation with all optimizations
   const generateWithOptimizations = async (): Promise<ProgressionResultFromAPI> => {
-    console.log("🤖 Generating with XAI Grok API");
+    logger.info("Generating chord progression with XAI Grok API", { cacheKey });
 
     const openai = getOpenAI();
 
@@ -97,19 +102,15 @@ export async function generateChordProgression(
         throw new Error("Empty response from API");
       }
 
-      const resultFromApi = JSON.parse(jsonText) as ProgressionResultFromAPI;
+      const parsedResult = JSON.parse(jsonText);
 
-      // Validate response structure
-      if (!resultFromApi.progression || !resultFromApi.scales ||
-          !Array.isArray(resultFromApi.progression) || !Array.isArray(resultFromApi.scales)) {
-        throw new Error("Invalid data structure received from API.");
-      }
-      if (resultFromApi.progression.some(p => !p.chordName || !p.musicalFunction || !p.relationToKey)) {
-        throw new Error("API returned incomplete chord data (missing name, function, or relation to key).");
-      }
-      if (resultFromApi.scales.some(s => !s.name || !s.rootNote)) {
-        throw new Error("API returned incomplete scale data (missing name or root note).");
-      }
+      // Enhanced validation with format checking
+      const resultFromApi = validateAPIResponse(parsedResult);
+
+      logger.debug("API response validated successfully", {
+        chordCount: resultFromApi.progression.length,
+        scaleCount: resultFromApi.scales.length,
+      });
 
       return resultFromApi;
     });
@@ -130,24 +131,37 @@ export async function generateChordProgression(
         jitterFactor: 0.2
       },
       (stats) => {
-        console.log(`🔄 Retry ${stats.attemptNumber}/${stats.totalRetries} after ${stats.totalDelay}ms`);
+        logger.warn("Retrying chord progression generation", {
+          attempt: stats.attemptNumber,
+          totalRetries: stats.totalRetries,
+          delayMs: stats.totalDelay,
+          cacheKey,
+        });
       }
     );
 
     // Step 7: Cache successful result (24 hour TTL)
     await redisCache.set(cacheKey, result, 86400);
 
-    // Log cache statistics
-    const cacheStats = { cacheKey, tokens: estimateTokenUsage(promptComponents) };
-    console.log("✅ Generated and cached progression:", cacheStats);
+    logger.info("Chord progression generated and cached", {
+      cacheKey,
+      tokens: estimateTokenUsage(promptComponents),
+      chordCount: result.progression.length,
+      scaleCount: result.scales.length,
+    });
 
     return result;
 
   } catch (error) {
-    console.error("❌ Error generating chord progression:", error);
+    logger.error("Error generating chord progression", error, { cacheKey });
 
     // Enhanced error classification
+    if (error instanceof APIValidationError) {
+      logger.error("API response validation failed", error, { cacheKey });
+      throw new Error(`Invalid response from AI: ${error.message}`);
+    }
     if (error instanceof SyntaxError) {
+      logger.error("JSON parse error from API response", error, { cacheKey });
       throw new Error("Failed to parse the response from the AI. The format was invalid.");
     }
     if (error instanceof Error) {
