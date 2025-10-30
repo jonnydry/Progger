@@ -249,24 +249,24 @@ export const THEMES: ThemeOption[] = [
     }
   },
   {
-    name: 'Amber Resonance',
+    name: 'Velvet Echo',
     light: {
-      primary: '30 70% 38%',    // Rich Amber (Darker for contrast)
-      secondary: '25 45% 38%',  // Burnt Sienna (Darker for contrast)
-      accent: '40 80% 50%',     // Bright Honey
-      text: '20 40% 18%',       // Deep Brown
-      background: '40 50% 96%', // Warm Cream
-      surface: '40 45% 92%',    // Light Honey
-      border: '20 40% 18% / 0.1',
+      primary: '330 65% 42%',   // Deep Rose (Darker for contrast)
+      secondary: '320 35% 40%', // Mauve (Darker for contrast)
+      accent: '340 75% 55%',    // Hot Pink
+      text: '340 50% 20%',      // Deep Burgundy
+      background: '340 45% 97%', // Soft Blush
+      surface: '340 35% 94%',   // Light Rose
+      border: '340 50% 20% / 0.1',
     },
     dark: {
-      primary: '30 75% 62%',    // Glowing Amber
-      secondary: '25 40% 50%',  // Warm Sienna
-      accent: '40 85% 68%',     // Bright Honey Glow
-      text: '40 45% 90%',       // Pale Cream
-      background: '25 35% 12%', // Deep Amber Brown
-      surface: '25 30% 17%',    // Darker Brown
-      border: '40 45% 90% / 0.15',
+      primary: '330 70% 62%',   // Bright Magenta
+      secondary: '320 40% 45%', // Deep Rose
+      accent: '340 85% 68%',    // Electric Fuchsia
+      text: '340 30% 90%',      // Pale Pink
+      background: '340 40% 12%', // Deep Burgundy
+      surface: '340 35% 17%',   // Darker Burgundy
+      border: '340 30% 90% / 0.15',
     }
   }
 ];

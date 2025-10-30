@@ -38,19 +38,19 @@ The application is a full-stack project with a React frontend (Vite dev server o
 
 ## Recent Changes
 
-### 2025-10-29: Added Two New Themes - Complete Set of 12
+### 2025-10-30: Finalized 12-Theme Collection
 - 🎨 **Sapphire Reverb**: Deep blues with electric cyan accents
   - Light mode: Icy white background with deep sapphire blue and electric cyan
   - Dark mode: Deep navy background with bright sapphire and vibrant cyan accents
   - Distinct from Oceanic Slate with more saturated, energetic blues
-- 🎨 **Amber Resonance**: Warm honey/amber/burnt orange palette
-  - Light mode: Warm cream background with rich amber and bright honey accents
-  - Dark mode: Deep amber brown with glowing amber and honey highlights
-  - Richer and warmer than Golden Hour, focusing on amber/sienna tones
+- 💕 **Velvet Echo**: Luxurious pink/magenta palette (replaced Amber Resonance)
+  - Light mode: Soft blush background with deep rose and hot pink accents
+  - Dark mode: Deep burgundy with bright magenta and electric fuchsia
+  - Unique pink theme offering romantic, bold aesthetic
 - 🎵 **12 Themes Total**: Now matching the 12 notes in music (C through B)
   - Rosewood & Ivory, Oceanic Slate, Forest Whisper, Midnight Indigo, Golden Hour
   - Crimson Noir (default), Mojave Dusk, Lavender Mist, Copper Bloom, Terminal Matrix
-  - Sapphire Reverb, Amber Resonance
+  - Sapphire Reverb, Velvet Echo
 
 ### 2025-10-29: UI Refinements
 - 🖼️ **Pixel Art Accents**: Added subtle retro styling without overwhelming the design
