@@ -56,7 +56,7 @@ export const GlassmorphicHeader: React.FC<GlassmorphicHeaderProps> = ({
             <img 
               src={proggerLogo} 
               alt="Progger mascot" 
-              className="h-8 w-8"
+              className="h-10 w-10"
             />
             <h1 className="font-grotesk text-2xl font-bold text-text/90 tracking-tight hidden sm:block">
               PROGGER
