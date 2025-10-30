@@ -11,7 +11,7 @@ The application is a full-stack project with a React frontend (Vite dev server o
 
 **UI/UX Decisions:**
 - A glassmorphic UI design is consistently applied, including a glassmorphic header with authentication elements.
-- Theme customization features light/dark mode toggle and allows color scheme adjustments.
+- Theme customization features light/dark mode toggle and 12 color schemes (one for each musical note).
 - The default font is Space Grotesk for a clean, modern aesthetic, with JetBrains Mono used exclusively for the "PROGGER" logo.
 - Mobile responsiveness is a key design consideration, with adaptive layouts for scale diagrams and reduced element sizes on smaller screens.
 
@@ -37,6 +37,20 @@ The application is a full-stack project with a React frontend (Vite dev server o
 - **ORM**: Drizzle ORM
 
 ## Recent Changes
+
+### 2025-10-29: Added Two New Themes - Complete Set of 12
+- 🎨 **Sapphire Reverb**: Deep blues with electric cyan accents
+  - Light mode: Icy white background with deep sapphire blue and electric cyan
+  - Dark mode: Deep navy background with bright sapphire and vibrant cyan accents
+  - Distinct from Oceanic Slate with more saturated, energetic blues
+- 🎨 **Amber Resonance**: Warm honey/amber/burnt orange palette
+  - Light mode: Warm cream background with rich amber and bright honey accents
+  - Dark mode: Deep amber brown with glowing amber and honey highlights
+  - Richer and warmer than Golden Hour, focusing on amber/sienna tones
+- 🎵 **12 Themes Total**: Now matching the 12 notes in music (C through B)
+  - Rosewood & Ivory, Oceanic Slate, Forest Whisper, Midnight Indigo, Golden Hour
+  - Crimson Noir (default), Mojave Dusk, Lavender Mist, Copper Bloom, Terminal Matrix
+  - Sapphire Reverb, Amber Resonance
 
 ### 2025-10-29: UI Refinements
 - 🖼️ **Pixel Art Accents**: Added subtle retro styling without overwhelming the design
