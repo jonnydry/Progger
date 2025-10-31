@@ -6,6 +6,7 @@ import { GlassmorphicHeader } from './components/GlassmorphicHeader';
 import { StashSidebar } from './components/StashSidebar';
 import { useAuth } from './hooks/useAuth';
 import { generateChordProgression, clearAllProgressionCache } from './services/xaiService';
+import { validateChordLibrary } from './utils/chordLibrary';
 import type { ProgressionResult } from './types';
 import { KEYS, MODES, THEMES, COMMON_PROGRESSIONS } from './constants';
 import proggerMascot from '../attached_assets/ProggerLogoMono2Lily_1761527600239.png';
@@ -45,6 +46,10 @@ const App: React.FC = () => {
   const handleLogout = () => {
     window.location.href = '/api/logout';
   };
+
+  useEffect(() => {
+    validateChordLibrary();
+  }, []);
 
   const userProfile = useMemo(() => user ? {
     name: user.firstName && user.lastName
