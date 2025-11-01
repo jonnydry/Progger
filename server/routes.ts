@@ -2,9 +2,10 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, type AuthenticatedUser } from "./replitAuth";
-import { generateChordProgression } from "./xaiService";
+import { generateChordProgression, analyzeCustomProgression } from "./xaiService";
 import { ValidationError } from "./utils/validation";
 import { validateProgressionRequestMiddleware, validateStashRequestMiddleware } from "./middleware/validation";
+import { validateCustomProgressionRequest } from "./utils/validation";
 import { logger } from "./utils/logger";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -50,6 +51,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
       res.status(500).json({ error: errorMessage });
+    }
+  });
+
+  app.post('/api/analyze-custom-progression', async (req, res) => {
+    try {
+      const { chords } = validateCustomProgressionRequest(req.body);
+
+      const result = await analyzeCustomProgression(chords);
+
+      logger.info("Custom progression analyzed successfully", {
+        chordCount: chords.length,
+        resultChordCount: result.progression.length,
+        scaleCount: result.scales.length,
+      });
+
+      res.json(result);
+    } catch (error) {
+      logger.error("Error in /api/analyze-custom-progression", error, {
+        body: req.body,
+      });
+      
+      if (error instanceof ValidationError) {
+        res.status(400).json({ error: error.message });
+      } else {
+        const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
+        res.status(500).json({ error: errorMessage });
+      }
     }
   });
 

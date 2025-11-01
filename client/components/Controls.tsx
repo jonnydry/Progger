@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { KEYS, MODES, CHORD_COUNTS, COMMON_PROGRESSIONS, type ModeOption } from '@/constants';
+import { KEYS, MODES, CHORD_COUNTS, COMMON_PROGRESSIONS, ROOT_NOTES, CHORD_QUALITIES, type ModeOption } from '@/constants';
 import { CustomSelect } from './CustomSelect';
+import { WheelPicker } from './WheelPicker';
 
 interface ControlsProps {
   selectedKey: string;
@@ -15,6 +16,14 @@ interface ControlsProps {
   onTensionsChange: (checked: boolean) => void;
   onGenerate: () => void;
   isLoading: boolean;
+  // BYO mode props
+  isBYOMode?: boolean;
+  onBYOChange?: (enabled: boolean) => void;
+  customProgression?: Array<{ root: string; quality: string }>;
+  onCustomProgressionChange?: (progression: Array<{ root: string; quality: string }>) => void;
+  numCustomChords?: number;
+  onNumCustomChordsChange?: (count: number) => void;
+  onAnalyzeCustom?: () => void;
 }
 
 const ModeSelect: React.FC<{
@@ -200,6 +209,123 @@ const ModeSelect: React.FC<{
   );
 };
 
+const CustomProgressionInput: React.FC<{
+  numChords: number;
+  onNumChordsChange: (count: number) => void;
+  customProgression: Array<{ root: string; quality: string }>;
+  onCustomProgressionChange: (progression: Array<{ root: string; quality: string }>) => void;
+  onAnalyze: () => void;
+  isLoading: boolean;
+}> = ({ numChords, onNumChordsChange, customProgression, onCustomProgressionChange, onAnalyze, isLoading }) => {
+  useEffect(() => {
+    // Initialize or resize progression array when numChords changes
+    const newProgression = [...customProgression];
+    while (newProgression.length < numChords) {
+      newProgression.push({ root: 'C', quality: 'major' });
+    }
+    while (newProgression.length > numChords) {
+      newProgression.pop();
+    }
+    if (newProgression.length !== customProgression.length) {
+      onCustomProgressionChange(newProgression);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [numChords]);
+
+  const handleChordChange = (index: number, field: 'root' | 'quality', value: string) => {
+    const newProgression = [...customProgression];
+    newProgression[index] = { ...newProgression[index], [field]: value };
+    onCustomProgressionChange(newProgression);
+  };
+
+  const getChordDisplayName = (chord: { root: string; quality: string }) => {
+    if (chord.quality === 'major') {
+      return chord.root;
+    }
+    if (chord.quality === 'minor') {
+      return `${chord.root}m`;
+    }
+    if (chord.quality === 'min7') {
+      return `${chord.root}m7`;
+    }
+    if (chord.quality === 'maj7') {
+      return `${chord.root}maj7`;
+    }
+    if (chord.quality === 'dim') {
+      return `${chord.root}dim`;
+    }
+    if (chord.quality === 'aug') {
+      return `${chord.root}aug`;
+    }
+    if (chord.quality === 'sus2') {
+      return `${chord.root}sus2`;
+    }
+    if (chord.quality === 'sus4') {
+      return `${chord.root}sus4`;
+    }
+    return `${chord.root}${chord.quality}`;
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-center">
+        <WheelPicker
+          label="Number of Chords"
+          options={CHORD_COUNTS.map(String)}
+          value={String(numChords)}
+          onChange={(val) => onNumChordsChange(Number(val))}
+        />
+      </div>
+
+      <div className="space-y-4">
+        {customProgression.map((chord, index) => (
+          <div key={index} className="bg-background/50 rounded-lg p-4 border border-border">
+            <div className="text-sm font-semibold text-text/70 mb-3">
+              Chord {index + 1}: <span className="text-primary font-bold">{getChordDisplayName(chord)}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <WheelPicker
+                label="Root"
+                options={ROOT_NOTES}
+                value={chord.root}
+                onChange={(val) => handleChordChange(index, 'root', val)}
+              />
+              <WheelPicker
+                label="Quality"
+                options={CHORD_QUALITIES}
+                value={chord.quality}
+                onChange={(val) => handleChordChange(index, 'quality', val)}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="pt-2">
+        <button
+          onClick={onAnalyze}
+          disabled={isLoading}
+          className="w-full relative bg-primary text-background font-bold py-3 px-4 rounded-md hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 ease-in-out flex items-center justify-center border-b-4 border-primary/50 active:border-b-0 active:translate-y-1 shadow-lg hover:shadow-accent/40"
+        >
+          <span className="relative">
+            {isLoading ? (
+              <span className="flex items-center">
+                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-background" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Analyzing...
+              </span>
+            ) : (
+              'Analyze Progression'
+            )}
+          </span>
+        </button>
+      </div>
+    </div>
+  );
+};
+
 export const Controls: React.FC<ControlsProps> = ({
   selectedKey,
   onKeyChange,
@@ -213,75 +339,155 @@ export const Controls: React.FC<ControlsProps> = ({
   onTensionsChange,
   onGenerate,
   isLoading,
+  isBYOMode = false,
+  onBYOChange,
+  customProgression = [],
+  onCustomProgressionChange,
+  numCustomChords = 4,
+  onNumCustomChordsChange,
+  onAnalyzeCustom,
 }) => {
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  const handleBYOToggle = (enabled: boolean) => {
+    if (onBYOChange) {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        onBYOChange(enabled);
+        setTimeout(() => setIsTransitioning(false), 300);
+      }, 50);
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <CustomSelect
-          label="Key"
-          value={selectedKey}
-          onChange={onKeyChange}
-          options={KEYS}
-        />
-        <ModeSelect
-          label="Mode"
-          value={selectedMode}
-          onChange={onModeChange}
-        />
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-         <CustomSelect
-          label="Progression"
-          value={selectedProgression}
-          onChange={onProgressionChange}
-          options={COMMON_PROGRESSIONS}
-        />
-        <CustomSelect
-          label="Chords"
-          value={String(numChords)}
-          onChange={(val) => onNumChordsChange(Number(val))}
-          options={CHORD_COUNTS.map(String)}
-          disabled={selectedProgression !== 'auto'}
-        />
-      </div>
-
-      <div className="flex items-center justify-center pt-2">
-        <label htmlFor="tensions-toggle" className="flex items-center cursor-pointer select-none group">
-          <span className="mr-4 text-text/80 group-hover:text-text transition-colors font-semibold">Tension Chords</span>
-          <div className="relative">
-             <input
-              id="tensions-toggle"
-              type="checkbox"
-              className="sr-only peer"
-              checked={includeTensions}
-              onChange={(e) => onTensionsChange(e.target.checked)}
+    <div className="relative overflow-hidden">
+      {/* Swipe container */}
+      <div
+        className="flex transition-transform duration-300 ease-in-out"
+        style={{
+          transform: `translateX(${isBYOMode ? '-100%' : '0%'})`,
+        }}
+      >
+        {/* Standard Controls */}
+        <div className="w-full flex-shrink-0 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <CustomSelect
+              label="Key"
+              value={selectedKey}
+              onChange={onKeyChange}
+              options={KEYS}
             />
-            <div className="w-12 h-6 bg-text/20 rounded-full shadow-inner peer-focus:ring-2 peer-focus:ring-primary peer-focus:ring-offset-2 peer-focus:ring-offset-surface transition-all"></div>
-            <div className="absolute left-1 top-1 w-4 h-4 bg-background rounded-full shadow-md transition-transform peer-checked:translate-x-6 peer-checked:bg-primary peer-checked:shadow-primary/50 peer-checked:shadow-lg"></div>
+            <ModeSelect
+              label="Mode"
+              value={selectedMode}
+              onChange={onModeChange}
+            />
           </div>
-        </label>
-      </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+             <CustomSelect
+              label="Progression"
+              value={selectedProgression}
+              onChange={onProgressionChange}
+              options={COMMON_PROGRESSIONS}
+            />
+            <CustomSelect
+              label="Chords"
+              value={String(numChords)}
+              onChange={(val) => onNumChordsChange(Number(val))}
+              options={CHORD_COUNTS.map(String)}
+              disabled={selectedProgression !== 'auto'}
+            />
+          </div>
 
-      <div className="pt-2">
-        <button
-          onClick={onGenerate}
-          disabled={isLoading}
-          className="w-full relative bg-primary text-background font-bold py-3 px-4 rounded-md hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 ease-in-out flex items-center justify-center border-b-4 border-primary/50 active:border-b-0 active:translate-y-1 shadow-lg hover:shadow-accent/40"
-        >
-          <span className="relative">
-            {isLoading ? (
-              <span className="flex items-center">
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-background" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Generating...
-              </span>
-            ) : (
-              'Generate Progression'
+          <div className="flex items-center justify-center gap-6 pt-2">
+            <label htmlFor="tensions-toggle" className="flex items-center cursor-pointer select-none group">
+              <span className="mr-4 text-text/80 group-hover:text-text transition-colors font-semibold">Tension Chords</span>
+              <div className="relative">
+                 <input
+                  id="tensions-toggle"
+                  type="checkbox"
+                  className="sr-only peer"
+                  checked={includeTensions}
+                  onChange={(e) => onTensionsChange(e.target.checked)}
+                />
+                <div className="w-12 h-6 bg-text/20 rounded-full shadow-inner peer-focus:ring-2 peer-focus:ring-primary peer-focus:ring-offset-2 peer-focus:ring-offset-surface transition-all"></div>
+                <div className="absolute left-1 top-1 w-4 h-4 bg-background rounded-full shadow-md transition-transform peer-checked:translate-x-6 peer-checked:bg-primary peer-checked:shadow-primary/50 peer-checked:shadow-lg"></div>
+              </div>
+            </label>
+            
+            {onBYOChange && (
+              <label htmlFor="byo-toggle" className="flex items-center cursor-pointer select-none group">
+                <span className="mr-4 text-text/80 group-hover:text-text transition-colors font-semibold">BYO</span>
+                <div className="relative">
+                   <input
+                    id="byo-toggle"
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={isBYOMode}
+                    onChange={(e) => handleBYOToggle(e.target.checked)}
+                  />
+                  <div className="w-12 h-6 bg-text/20 rounded-full shadow-inner peer-focus:ring-2 peer-focus:ring-primary peer-focus:ring-offset-2 peer-focus:ring-offset-surface transition-all"></div>
+                  <div className="absolute left-1 top-1 w-4 h-4 bg-background rounded-full shadow-md transition-transform peer-checked:translate-x-6 peer-checked:bg-primary peer-checked:shadow-primary/50 peer-checked:shadow-lg"></div>
+                </div>
+              </label>
             )}
-          </span>
-        </button>
+          </div>
+
+          <div className="pt-2">
+            <button
+              onClick={onGenerate}
+              disabled={isLoading}
+              className="w-full relative bg-primary text-background font-bold py-3 px-4 rounded-md hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 ease-in-out flex items-center justify-center border-b-4 border-primary/50 active:border-b-0 active:translate-y-1 shadow-lg hover:shadow-accent/40"
+            >
+              <span className="relative">
+                {isLoading ? (
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-background" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Generating...
+                  </span>
+                ) : (
+                  'Generate Progression'
+                )}
+              </span>
+            </button>
+          </div>
+        </div>
+
+        {/* Custom Progression Input */}
+        {onCustomProgressionChange && onNumCustomChordsChange && onAnalyzeCustom && (
+          <div className="w-full flex-shrink-0 space-y-6">
+            <div className="flex items-center justify-center gap-6 pt-2">
+              {onBYOChange && (
+                <label htmlFor="byo-toggle-back" className="flex items-center cursor-pointer select-none group">
+                  <span className="mr-4 text-text/80 group-hover:text-text transition-colors font-semibold">BYO</span>
+                  <div className="relative">
+                     <input
+                      id="byo-toggle-back"
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={isBYOMode}
+                      onChange={(e) => handleBYOToggle(e.target.checked)}
+                    />
+                    <div className="w-12 h-6 bg-text/20 rounded-full shadow-inner peer-focus:ring-2 peer-focus:ring-primary peer-focus:ring-offset-2 peer-focus:ring-offset-surface transition-all"></div>
+                    <div className="absolute left-1 top-1 w-4 h-4 bg-background rounded-full shadow-md transition-transform peer-checked:translate-x-6 peer-checked:bg-primary peer-checked:shadow-primary/50 peer-checked:shadow-lg"></div>
+                  </div>
+                </label>
+              )}
+            </div>
+            
+            <CustomProgressionInput
+              numChords={numCustomChords}
+              onNumChordsChange={onNumCustomChordsChange}
+              customProgression={customProgression}
+              onCustomProgressionChange={onCustomProgressionChange}
+              onAnalyze={onAnalyzeCustom}
+              isLoading={isLoading}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -362,3 +362,184 @@ export async function generateChordProgression(key: string, mode: string, includ
     throw new Error("Failed to generate chord progression. The service may be temporarily unavailable.");
   }
 }
+
+export async function analyzeCustomProgression(chords: string[]): Promise<ProgressionResult> {
+  const cacheKey = `custom:${chords.join('-')}`;
+
+  // Try to get from cache first
+  const cachedResult = getFromCache(cacheKey);
+  if (cachedResult) {
+    return cachedResult;
+  }
+  
+  try {
+    console.log("Analyzing custom progression:", chords);
+
+    // Create a timeout promise that rejects after 30 seconds
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('Request timed out after 30 seconds')), 30000);
+    });
+
+    // Race between the fetch and the timeout
+    let response: Response;
+    try {
+      response = await Promise.race([
+        fetch('/api/analyze-custom-progression', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ chords }),
+        }),
+        timeoutPromise
+      ]) as Response;
+    } catch (error) {
+      // Network-level failure
+      throw new APIUnavailableError('/api/analyze-custom-progression', undefined);
+    }
+
+    if (!response.ok) {
+      // API returned error status
+      throw new APIUnavailableError('/api/analyze-custom-progression', response.status);
+    }
+
+    let resultFromApi: ProgressionResultFromAPI;
+    try {
+      resultFromApi = await response.json() as ProgressionResultFromAPI;
+
+      // Validate API response structure
+      if (!resultFromApi.progression || !resultFromApi.scales || !Array.isArray(resultFromApi.progression) || !Array.isArray(resultFromApi.scales)) {
+          throw new Error("Invalid data structure received from API.");
+      }
+      if (resultFromApi.progression.some(p => !p.chordName || !p.musicalFunction || !p.relationToKey)) {
+          throw new Error("API returned incomplete chord data (missing name, function, or relation to key).");
+      }
+      if (resultFromApi.scales.some(s => !s.name || !s.rootNote)) {
+          throw new Error("API returned incomplete scale data (missing name or root note).");
+      }
+    } catch (parseError) {
+      throw new InvalidAPIResponseError('Valid JSON matching API schema', `${parseError}`);
+    }
+
+    // Enhanced processing: Parallel computation of voicings and scale data
+    console.log(`🎵 Processing ${resultFromApi.progression.length} chords and ${resultFromApi.scales.length} scales in parallel`);
+
+    const [chordPromises, scalePromises] = await Promise.allSettled([
+      // Parallel chord processing with enhanced error handling
+      Promise.allSettled(
+        resultFromApi.progression.map(async (chord) => {
+          const voicings = getChordVoicings(chord.chordName);
+
+          // Enhanced validation with smart fallback detection
+          if (voicings.length === 1 && isMutedVoicing(voicings[0])) {
+            console.warn(`🧠 Smart fallback used for chord: ${chord.chordName}`);
+          }
+
+          return {
+            chordName: chord.chordName,
+            musicalFunction: chord.musicalFunction,
+            relationToKey: chord.relationToKey,
+            voicings
+          };
+        })
+      ),
+      // Parallel scale processing
+      Promise.allSettled(
+        resultFromApi.scales.map(async (scale) => ({
+          name: scale.name,
+          rootNote: scale.rootNote,
+          notes: getScaleNotes(scale.rootNote, scale.name),
+          fingering: getScaleFingering(scale.name, scale.rootNote)
+        }))
+      )
+    ]);
+
+    // Resilience: Handle partial failures gracefully
+    const progression: ChordInProgression[] = chordPromises.status === 'fulfilled'
+      ? chordPromises.value.map(result =>
+          result.status === 'fulfilled'
+            ? result.value
+            : {
+                chordName: 'Unknown',
+                musicalFunction: 'Unknown',
+                relationToKey: 'unknown',
+                voicings: [{ frets: ['x', 'x', 'x', 'x', 'x', 'x'], position: 'Error' }]
+              }
+        )
+      : [];
+
+    const scales: ScaleInfo[] = scalePromises.status === 'fulfilled'
+      ? scalePromises.value.map(result =>
+          result.status === 'fulfilled'
+            ? result.value
+            : {
+                name: 'Unknown',
+                rootNote: 'C',
+                notes: ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
+                fingering: [[0, 2, 4, 5, 7, 9, 11]]
+              }
+        )
+      : [];
+
+    console.log(`✅ Processed ${progression.length} chords and ${scales.length} scales successfully`);
+
+    const finalResult = { progression, scales };
+
+    // Cache the result with 24-hour TTL
+    setCache(cacheKey, finalResult);
+
+    // Periodically clean up expired cache entries (1% chance on each request)
+    if (Math.random() < 0.01) {
+      clearExpiredCache();
+    }
+
+    return finalResult;
+  } catch (error) {
+    console.error("Error analyzing custom progression:", createErrorLog(error, { chords, cacheKey }));
+
+    // Handle API response validation errors
+    if (error instanceof Error && error.message.includes("Invalid data structure") ||
+        error.message.includes("incomplete chord data") ||
+        error.message.includes("incomplete scale data")) {
+      throw new InvalidAPIResponseError(
+        'ProgressionResult { progression: SimpleChord[], scales: SimpleScale[] }',
+        error.message
+      );
+    }
+
+    // Check if this is a recoverable error
+    if (isRecoverableError(error)) {
+      console.log(`🔄 Attempting automatic recovery for ${error.name}`);
+
+      try {
+        let recoveredResult;
+        if (error instanceof APIUnavailableError) {
+          recoveredResult = await error.recover(cacheKey);
+        } else if (error instanceof InvalidAPIResponseError) {
+          recoveredResult = await error.recover('C', chords.length);
+        } else {
+          recoveredResult = await error.recover();
+        }
+
+        if (recoveredResult) {
+          console.log(`✅ Successfully recovered from ${error.name}`);
+          return recoveredResult;
+        }
+      } catch (recoveryError) {
+        console.warn(`❌ Recovery failed for ${error.name}:`, recoveryError);
+      }
+    }
+
+    // Re-throw the original error or create a user-friendly message
+    if (error instanceof SyntaxError) {
+      throw new InvalidAPIResponseError('Valid JSON', 'SyntaxError during JSON parsing');
+    }
+
+    if (error instanceof MusicTheoryError) {
+      throw error; // Re-throw our custom errors
+    }
+
+    // Generic fallback for unexpected errors
+    throw new Error("Failed to analyze custom progression. The service may be temporarily unavailable.");
+  }
+}

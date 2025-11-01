@@ -1,5 +1,4 @@
 
-
 export interface ThemeColors {
   primary: string;
   secondary: string;
@@ -326,4 +325,66 @@ export const COMMON_PROGRESSIONS = [
 
   // --- Chromatic / Other ---
   { name: 'I-III-IV-iv (Chromatic Pop)', value: 'I-III-IV-iv' },
+];
+
+// Root notes for wheel picker (matching system format)
+export const ROOT_NOTES = [
+  'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B',
+  'Db', 'Eb', 'Gb', 'Ab', 'Bb'
+];
+
+// Chord qualities for wheel picker (based on chordLibrary.ts normalization)
+// These are the qualities that get normalized and used in the system
+export const CHORD_QUALITIES = [
+  // Basic triads
+  'major',
+  'minor',
+  'dim',
+  'aug',
+  // Suspended
+  'sus2',
+  'sus4',
+  // Seventh chords
+  '7',
+  'maj7',
+  'min7',
+  'dim7',
+  'min7b5',
+  // Extended chords
+  '9',
+  'maj9',
+  'min9',
+  '11',
+  'maj11',
+  'min11',
+  '13',
+  'maj13',
+  'min13',
+  // Altered dominants
+  '7b9',
+  '7#9',
+  '7b5',
+  '7#5',
+  '7alt',
+  '7sus4',
+  // Complex extensions
+  '7b9b13',
+  '7#9b13',
+  '9#11',
+  'maj7#11',
+  'maj7b13',
+  'maj7#9',
+  // Sixth chords
+  '6',
+  'min6',
+  '6/9',
+  // Add chords
+  'add9',
+  'add11',
+  'madd9',
+  // Suspended 9th
+  '9sus4',
+  // Special
+  'min/maj7',
+  '5', // Power chord
 ];

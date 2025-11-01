@@ -5,7 +5,7 @@ import { SkeletonScaleDiagram } from './components/ScaleDiagram';
 import { GlassmorphicHeader } from './components/GlassmorphicHeader';
 import { StashSidebar } from './components/StashSidebar';
 import { useAuth } from './hooks/useAuth';
-import { generateChordProgression, clearAllProgressionCache } from './services/xaiService';
+import { generateChordProgression, analyzeCustomProgression, clearAllProgressionCache } from './services/xaiService';
 import { validateChordLibrary } from './utils/chordLibrary';
 import type { ProgressionResult } from './types';
 import { KEYS, MODES, THEMES, COMMON_PROGRESSIONS } from './constants';
@@ -37,6 +37,14 @@ const App: React.FC = () => {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
   const [themeIndex, setThemeIndex] = useState<number>(getInitialThemeIndex);
   const [isStashOpen, setIsStashOpen] = useState(false);
+  const [isBYOMode, setIsBYOMode] = useState(false);
+  const [customProgression, setCustomProgression] = useState<Array<{ root: string; quality: string }>>([
+    { root: 'C', quality: 'major' },
+    { root: 'A', quality: 'minor' },
+    { root: 'F', quality: 'major' },
+    { root: 'G', quality: 'major' },
+  ]);
+  const [numCustomChords, setNumCustomChords] = useState<number>(4);
   const resultsRef = useRef<HTMLElement>(null);
 
   const handleLogin = () => {
@@ -133,7 +141,62 @@ const App: React.FC = () => {
     }
   }, [key, mode, includeTensions, progressionLength, selectedProgression]);
 
-  const skeletonCount = progressionLength;
+  const formatChordName = useCallback((root: string, quality: string): string => {
+    // Format chord names to match system expectations
+    // Based on chordLibrary.ts normalization patterns
+    if (quality === 'major') {
+      return root;
+    }
+    if (quality === 'minor') {
+      return `${root}m`;
+    }
+    if (quality === 'min7') {
+      return `${root}m7`;
+    }
+    if (quality === 'maj7') {
+      return `${root}maj7`;
+    }
+    if (quality === 'dim') {
+      return `${root}dim`;
+    }
+    if (quality === 'aug') {
+      return `${root}aug`;
+    }
+    if (quality === 'sus2') {
+      return `${root}sus2`;
+    }
+    if (quality === 'sus4') {
+      return `${root}sus4`;
+    }
+    // For other qualities, append directly
+    return `${root}${quality}`;
+  }, []);
+
+  const handleAnalyzeCustom = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    setProgressionResult(null);
+
+    try {
+      // Format chord names from root + quality
+      const formattedChords = customProgression.map(chord => formatChordName(chord.root, chord.quality));
+
+      const result = await analyzeCustomProgression(formattedChords);
+      setProgressionResult(result);
+      
+      // Update key and mode based on AI-detected values (from progression result if available)
+      // For now, we'll let the AI handle this in the response
+    } catch (err) {
+      console.error(err);
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [customProgression, formatChordName]);
+
+  const skeletonCount = useMemo(() => {
+    return isBYOMode ? numCustomChords : progressionLength;
+  }, [isBYOMode, numCustomChords, progressionLength]);
 
   const isProggerTheme = THEMES[themeIndex].name === 'PROGGER';
 
@@ -188,6 +251,13 @@ const App: React.FC = () => {
             onTensionsChange={setIncludeTensions}
             onGenerate={handleGenerate}
             isLoading={isLoading}
+            isBYOMode={isBYOMode}
+            onBYOChange={setIsBYOMode}
+            customProgression={customProgression}
+            onCustomProgressionChange={setCustomProgression}
+            numCustomChords={numCustomChords}
+            onNumCustomChordsChange={setNumCustomChords}
+            onAnalyzeCustom={handleAnalyzeCustom}
           />
         </section>
 

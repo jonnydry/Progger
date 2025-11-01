@@ -82,3 +82,38 @@ export function validateProgressionRequest(body: unknown): ProgressionRequest {
   };
 }
 
+export function validateCustomProgressionRequest(body: unknown): { chords: string[] } {
+  if (!body || typeof body !== 'object') {
+    throw new ValidationError('Request body must be an object');
+  }
+
+  const req = body as Record<string, unknown>;
+
+  // Validate chords array
+  if (!req.chords || !Array.isArray(req.chords)) {
+    throw new ValidationError('chords must be an array');
+  }
+
+  if (req.chords.length < 1 || req.chords.length > 12) {
+    throw new ValidationError('chords array must contain between 1 and 12 chords');
+  }
+
+  // Validate each chord is a string
+  for (let i = 0; i < req.chords.length; i++) {
+    const chord = req.chords[i];
+    if (typeof chord !== 'string') {
+      throw new ValidationError(`chords[${i}] must be a string`);
+    }
+    if (chord.trim().length === 0) {
+      throw new ValidationError(`chords[${i}] cannot be empty`);
+    }
+    if (chord.length > 50) {
+      throw new ValidationError(`chords[${i}] must be 50 characters or less`);
+    }
+  }
+
+  return {
+    chords: req.chords as string[],
+  };
+}
+
