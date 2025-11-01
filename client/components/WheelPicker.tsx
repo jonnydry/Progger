@@ -16,6 +16,7 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [startY, setStartY] = useState(0);
   const [scrollTop, setScrollTop] = useState(0);
+  const [isHovering, setIsHovering] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const lastWheelTimeRef = useRef(0);
   const optionHeight = 40; // Height of each option in pixels
@@ -33,6 +34,24 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
       containerRef.current.scrollTop = scrollPosition;
     }
   }, [currentIndex, optionHeight]);
+
+  // Prevent page scrolling when hovering over wheel picker
+  useEffect(() => {
+    const preventDefault = (e: WheelEvent) => {
+      e.preventDefault();
+    };
+
+    if (isHovering && containerRef.current) {
+      // Add non-passive wheel listener to aggressively prevent scrolling
+      containerRef.current.addEventListener('wheel', preventDefault, { passive: false });
+      
+      return () => {
+        if (containerRef.current) {
+          containerRef.current.removeEventListener('wheel', preventDefault);
+        }
+      };
+    }
+  }, [isHovering]);
 
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -156,10 +175,14 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
             touchAction: 'none',
             overscrollBehavior: 'contain',
           }}
+          onMouseEnter={() => setIsHovering(true)}
+          onMouseLeave={() => {
+            setIsHovering(false);
+            handleMouseUp();
+          }}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
