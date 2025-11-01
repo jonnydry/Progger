@@ -360,10 +360,10 @@ export const Controls: React.FC<ControlsProps> = ({
   };
 
   return (
-    <div className="relative">
+    <div className="relative overflow-hidden">
       {/* Standard Controls */}
       <div 
-        className={`space-y-6 transition-all duration-300 ${isBYOMode ? 'opacity-0 pointer-events-none absolute inset-0' : 'opacity-100'}`}
+        className={`space-y-6 transition-all duration-500 ease-in-out ${isBYOMode ? 'translate-x-[-100%] opacity-0 pointer-events-none absolute inset-0' : 'translate-x-0 opacity-100'}`}
       >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <CustomSelect
@@ -454,7 +454,7 @@ export const Controls: React.FC<ControlsProps> = ({
       {/* Custom Progression Input */}
       {onCustomProgressionChange && onNumCustomChordsChange && onAnalyzeCustom && (
         <div 
-          className={`space-y-6 transition-all duration-300 ${!isBYOMode ? 'opacity-0 pointer-events-none absolute inset-0' : 'opacity-100'}`}
+          className={`space-y-6 transition-all duration-500 ease-in-out ${!isBYOMode ? 'translate-x-[100%] opacity-0 pointer-events-none absolute inset-0' : 'translate-x-0 opacity-100'}`}
         >
             <div className="flex items-center justify-center gap-6 pt-2">
               {onBYOChange && (
