@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { KEYS, MODES, CHORD_COUNTS, COMMON_PROGRESSIONS, ROOT_NOTES, CHORD_QUALITIES, type ModeOption } from '@/constants';
 import { CustomSelect } from './CustomSelect';
 import { WheelPicker } from './WheelPicker';
@@ -33,7 +34,9 @@ const ModeSelect: React.FC<{
 }> = ({ label, value, onChange }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   const selectRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const handleSelect = (optionValue: string) => {
     onChange(optionValue);
@@ -101,12 +104,24 @@ const ModeSelect: React.FC<{
     }
   }, [isAdvancedMode, isOpen]);
 
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY + 4,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+      });
+    }
+  }, [isOpen]);
+
   return (
-    <div className="flex flex-col relative" ref={selectRef}>
+    <div className="flex flex-col" ref={selectRef}>
       <label htmlFor={label} className="mb-2 text-sm font-semibold text-text/70">
         {label}
       </label>
       <button
+        ref={buttonRef}
         id={label}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
@@ -120,9 +135,14 @@ const ModeSelect: React.FC<{
         </svg>
       </button>
 
-      {isOpen && (
+      {isOpen && createPortal(
         <ul
-          className="absolute z-20 mt-1 w-full top-full bg-surface rounded-md shadow-lg border border-border max-h-80 overflow-y-auto"
+          className="fixed z-50 bg-surface rounded-md shadow-lg border border-border max-h-80 overflow-y-auto"
+          style={{
+            top: `${dropdownPosition.top}px`,
+            left: `${dropdownPosition.left}px`,
+            width: `${dropdownPosition.width}px`,
+          }}
           role="listbox"
         >
           {/* Basic Modes - Always shown */}
@@ -203,7 +223,8 @@ const ModeSelect: React.FC<{
               </React.Fragment>
             );
           })}
-        </ul>
+        </ul>,
+        document.body
       )}
     </div>
   );
@@ -376,7 +397,7 @@ export const Controls: React.FC<ControlsProps> = ({
   };
 
   return (
-    <div className="relative overflow-x-hidden">
+    <div className="relative overflow-hidden">
       {/* Standard Controls */}
       <div 
         className={`space-y-6 transition-all duration-500 ease-in-out ${isBYOMode ? 'translate-x-[-100%] opacity-0 pointer-events-none absolute inset-0' : 'translate-x-0 opacity-100'}`}

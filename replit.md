@@ -60,3 +60,10 @@ The application is a full-stack project with a React frontend (Vite dev server o
   - CSS isolation: `touchAction: 'none'`, `overscrollBehavior: 'contain'`
   - Throttled to 100ms for controlled scrolling
   - Page completely locked when hovering over wheel pickers
+- 🎯 **Portal-Based Dropdowns**: Fixed dropdown clipping and blank scroll space issues
+  - **Problem**: `overflow-hidden` for swipe animation was clipping dropdown menus vertically
+  - **Issue**: Allowing vertical overflow created blank scrollable space from absolutely positioned panels
+  - **Solution**: Implemented React portals rendering dropdowns to `document.body`
+  - **Architecture**: Dropdowns now render outside Controls container with computed positioning
+  - **Benefits**: Full dropdown visibility + no layout conflicts + no blank scroll space
+  - **Implementation**: Both `CustomSelect` and `ModeSelect` use `createPortal` with dynamic positioning via `getBoundingClientRect()`

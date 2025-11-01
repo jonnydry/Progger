@@ -1,5 +1,6 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 
 interface CustomSelectProps {
   label: string;
@@ -11,7 +12,9 @@ interface CustomSelectProps {
 
 export const CustomSelect: React.FC<CustomSelectProps> = ({ label, value, onChange, options, disabled = false }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   const selectRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
 
   const handleSelect = (optionValue: string) => {
     onChange(optionValue);
@@ -30,6 +33,17 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({ label, value, onChan
     };
   }, []);
 
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY + 4,
+        left: rect.left + window.scrollX,
+        width: rect.width,
+      });
+    }
+  }, [isOpen]);
+
   const selectedOption = useMemo(() =>
     options.find(opt => (typeof opt === 'string' ? opt : opt.value) === value),
     [options, value]
@@ -41,11 +55,12 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({ label, value, onChan
   );
 
   return (
-    <div className="flex flex-col relative" ref={selectRef}>
+    <div className="flex flex-col" ref={selectRef}>
       <label htmlFor={label} className={`mb-2 text-sm font-semibold ${disabled ? 'text-text/40' : 'text-text/70'}`}>
         {label}
       </label>
       <button
+        ref={buttonRef}
         id={label}
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
@@ -60,9 +75,14 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({ label, value, onChan
         </svg>
       </button>
 
-      {isOpen && !disabled && (
+      {isOpen && !disabled && createPortal(
         <ul
-          className="absolute z-20 mt-1 w-full top-full bg-surface rounded-md shadow-lg border border-border max-h-60 overflow-y-auto"
+          className="fixed z-50 bg-surface rounded-md shadow-lg border border-border max-h-60 overflow-y-auto"
+          style={{
+            top: `${dropdownPosition.top}px`,
+            left: `${dropdownPosition.left}px`,
+            width: `${dropdownPosition.width}px`,
+          }}
           role="listbox"
         >
           {options.map((option) => {
@@ -82,7 +102,8 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({ label, value, onChan
               </li>
             );
           })}
-        </ul>
+        </ul>,
+        document.body
       )}
     </div>
   );
