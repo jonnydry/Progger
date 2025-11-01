@@ -62,7 +62,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({ label, value, onChan
 
       {isOpen && !disabled && (
         <ul
-          className="absolute z-20 mt-1 w-full top-full bg-surface rounded-md shadow-lg border border-border overflow-hidden max-h-60 overflow-y-auto"
+          className="absolute z-20 mt-1 w-full top-full bg-surface rounded-md shadow-lg border border-border max-h-60 overflow-y-auto"
           role="listbox"
         >
           {options.map((option) => {

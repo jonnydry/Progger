@@ -122,7 +122,7 @@ const ModeSelect: React.FC<{
 
       {isOpen && (
         <ul
-          className="absolute z-20 mt-1 w-full top-full bg-surface rounded-md shadow-lg border border-border overflow-hidden max-h-80 overflow-y-auto"
+          className="absolute z-20 mt-1 w-full top-full bg-surface rounded-md shadow-lg border border-border max-h-80 overflow-y-auto"
           role="listbox"
         >
           {/* Basic Modes - Always shown */}
