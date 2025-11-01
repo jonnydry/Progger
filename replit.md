@@ -52,6 +52,7 @@ The application is a full-stack project with a React frontend (Vite dev server o
     - Waits 150ms after scrolling stops before processing
     - Requires 50px threshold to move 1 item (prevents accidental micro-scrolls)
     - Can move multiple items based on scroll magnitude
+    - Added `e.stopPropagation()` to isolate wheel events from page scrolling
   - **Result**: Smooth, controlled scrolling on desktop while maintaining responsive touch behavior
 - 🔧 **Backend Fix**: Corrected syntax error in `xaiService.ts` (missing closing braces in `generateChordProgression` function)
 

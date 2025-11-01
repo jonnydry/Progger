@@ -107,6 +107,7 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
   const handleWheel = (e: React.WheelEvent) => {
     if (!containerRef.current) return;
     e.preventDefault();
+    e.stopPropagation(); // Prevent event from bubbling to page scroll
     
     // Accumulate scroll delta
     accumulatedDeltaRef.current += e.deltaY;
