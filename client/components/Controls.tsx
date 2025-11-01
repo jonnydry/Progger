@@ -268,13 +268,29 @@ const CustomProgressionInput: React.FC<{
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-center">
-        <WheelPicker
-          label="Number of Chords"
-          options={CHORD_COUNTS.map(String)}
-          value={String(numChords)}
-          onChange={(val) => onNumChordsChange(Number(val))}
-        />
+      <div className="space-y-3">
+        <label className="block text-center text-sm font-semibold text-text/70">
+          Number of Chords
+        </label>
+        <div className="flex items-center justify-center gap-3 flex-wrap">
+          {CHORD_COUNTS.map((count) => (
+            <button
+              key={count}
+              onClick={() => onNumChordsChange(count)}
+              className={`
+                relative px-5 py-2.5 rounded-lg font-bold text-lg
+                transition-all duration-300 ease-out
+                border-2 shadow-md
+                ${count === numChords
+                  ? 'bg-primary text-background border-primary scale-110 shadow-primary/50 shadow-lg'
+                  : 'bg-background/30 text-text/80 border-border hover:border-primary/50 hover:scale-105 hover:shadow-lg hover:text-text'
+                }
+              `}
+            >
+              {count}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="space-y-4">

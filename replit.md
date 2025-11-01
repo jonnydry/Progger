@@ -37,3 +37,26 @@ The application is a full-stack project with a React frontend (Vite dev server o
 - **AI Service**: xAI Grok API (accessed via OpenAI SDK)
 - **Database**: PostgreSQL
 - **ORM**: Drizzle ORM
+
+## Recent Changes
+
+### 2025-11-01: BYO UI Enhancements & Control Reorganization
+- 🎸 **BYO Chord Selector Redesign**: Replaced vertical wheel picker with horizontal button array
+  - **New Design**: Clean left-to-right array of numbered buttons (2-8 chords)
+  - **Animations**: Selected button scales to 110% with glowing shadow, hover effects scale to 105%
+  - **Theme Integration**: Active state uses primary color with enhanced shadows, inactive has subtle glassmorphic style
+  - **Persistent Data**: Existing chord selections preserved when increasing count, removed from end when decreasing
+  - **UX**: More intuitive and faster to use than wheel picker for this use case
+- 📐 **Control Layout Reorganization**: Aligned toggles with their related controls
+  - **New Structure**: 2-column grid for toggles matching dropdown positions above
+  - "Tension Chords" toggle centered under "Progression" dropdown
+  - "BYO" toggle centered under "Chords" dropdown
+  - Creates clearer visual hierarchy and logical grouping
+- 🎭 **Swipe Animation**: Changed BYO toggle from fade to horizontal swipe
+  - Standard panel slides left, BYO panel slides in from right (500ms ease-in-out)
+  - Maintains absolute positioning to prevent layout shifts
+- 🖱️ **MacBook Trackpad Fix**: Multi-layered scroll prevention for wheel pickers
+  - Non-passive wheel listener with hover-based activation
+  - CSS isolation: `touchAction: 'none'`, `overscrollBehavior: 'contain'`
+  - Throttled to 100ms for controlled scrolling
+  - Page completely locked when hovering over wheel pickers
