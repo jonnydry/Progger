@@ -46,14 +46,14 @@ The application is a full-stack project with a React frontend (Vite dev server o
   - **Result**: Card now properly sizes to only visible content (Standard or BYO mode)
 - 🖱️ **Scroll Fix**: Fixed desktop mouse wheel scrolling too fast in BYO wheel pickers
   - **Problem**: Mouse wheel events fired rapidly on desktop, causing unusably fast scrolling through chord options
-  - **Solution**: Implemented debounced scroll handling with delta accumulation
+  - **Solution**: Implemented throttled scroll handling for responsive yet controlled scrolling
   - **Implementation**: 
-    - Accumulates scroll delta values from multiple events
-    - Waits 150ms after scrolling stops before processing
-    - Requires 50px threshold to move 1 item (prevents accidental micro-scrolls)
-    - Can move multiple items based on scroll magnitude
+    - Throttles wheel events to maximum once per 100ms (10 items/second max)
+    - Responds immediately to first scroll event (no delay)
+    - Ignores rapid-fire events within throttle window
     - Added `e.stopPropagation()` to isolate wheel events from page scrolling
-  - **Result**: Smooth, controlled scrolling on desktop while maintaining responsive touch behavior
+    - Works naturally with both mouse wheels and trackpads
+  - **Result**: Responsive, controlled scrolling on desktop with immediate feedback
 - 🔧 **Backend Fix**: Corrected syntax error in `xaiService.ts` (missing closing braces in `generateChordProgression` function)
 
 ### 2025-11-01: Enhanced Replit Protection Templates

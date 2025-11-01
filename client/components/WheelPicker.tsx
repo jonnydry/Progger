@@ -17,10 +17,10 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
   const [startY, setStartY] = useState(0);
   const [scrollTop, setScrollTop] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
-  const wheelTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const accumulatedDeltaRef = useRef(0);
+  const lastWheelTimeRef = useRef(0);
   const optionHeight = 40; // Height of each option in pixels
   const visibleOptions = 5; // Number of visible options (odd number for center selection)
+  const wheelThrottleMs = 100; // Throttle wheel events to max once per 100ms
 
   const currentIndex = useMemo(() => {
     const index = options.indexOf(value);
@@ -34,14 +34,6 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
     }
   }, [currentIndex, optionHeight]);
 
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (wheelTimeoutRef.current) {
-        clearTimeout(wheelTimeoutRef.current);
-      }
-    };
-  }, []);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
@@ -109,32 +101,21 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
     e.preventDefault();
     e.stopPropagation(); // Prevent event from bubbling to page scroll
     
-    // Accumulate scroll delta
-    accumulatedDeltaRef.current += e.deltaY;
-    
-    // Clear existing timeout
-    if (wheelTimeoutRef.current) {
-      clearTimeout(wheelTimeoutRef.current);
+    // Throttle wheel events - only process once per wheelThrottleMs
+    const now = Date.now();
+    if (now - lastWheelTimeRef.current < wheelThrottleMs) {
+      return; // Ignore this event, too soon after last one
     }
+    lastWheelTimeRef.current = now;
     
-    // Set a debounce timeout - only process after scrolling stops for 150ms
-    wheelTimeoutRef.current = setTimeout(() => {
-      const threshold = 50; // Require at least 50px of accumulated scroll
-      const steps = Math.floor(Math.abs(accumulatedDeltaRef.current) / threshold);
-      
-      if (steps > 0) {
-        const direction = accumulatedDeltaRef.current > 0 ? 1 : -1;
-        const currentIndex = options.indexOf(value);
-        const newIndex = Math.max(0, Math.min(currentIndex + direction * steps, options.length - 1));
-        
-        if (newIndex !== currentIndex) {
-          onChange(options[newIndex]);
-        }
-      }
-      
-      // Reset accumulated delta
-      accumulatedDeltaRef.current = 0;
-    }, 150);
+    // Determine direction and move by 1 item
+    const direction = e.deltaY > 0 ? 1 : -1;
+    const currentIndex = options.indexOf(value);
+    const newIndex = Math.max(0, Math.min(currentIndex + direction, options.length - 1));
+    
+    if (newIndex !== currentIndex) {
+      onChange(options[newIndex]);
+    }
   };
 
   const handleClick = (index: number) => {
