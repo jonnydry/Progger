@@ -38,6 +38,14 @@ The application is a full-stack project with a React frontend (Vite dev server o
 
 ## Recent Changes
 
+### 2025-11-01: Fixed BYO Feature Layout Issue
+- 🎨 **UI Fix**: Resolved main menu card extending with excessive empty space
+  - **Problem**: When BYO feature was added, both Standard and BYO panels existed in DOM simultaneously, causing container to expand to fit both
+  - **Solution**: Changed from swipe animation to fade-in/fade-out transition with absolute positioning
+  - **Implementation**: Hidden panel uses `opacity-0 pointer-events-none absolute inset-0` to prevent contributing to container height
+  - **Result**: Card now properly sizes to only visible content (Standard or BYO mode)
+- 🔧 **Backend Fix**: Corrected syntax error in `xaiService.ts` (missing closing braces in `generateChordProgression` function)
+
 ### 2025-11-01: Enhanced Replit Protection Templates
 - 📝 **Added Development vs Production Mode Guidelines**: Comprehensive documentation to prevent AI assistants from interfering with production environments
   - **New Section Added**: "DEVELOPMENT vs PRODUCTION MODE" in both protection template files

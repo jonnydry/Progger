@@ -174,6 +174,11 @@ export async function generateChordProgression(
       }
       throw error;
     }
+    throw new Error(`Unexpected error: ${JSON.stringify(error)}`);
+  } finally {
+    pendingRequests.delete(cacheKey);
+  }
+}
 
 export async function analyzeCustomProgression(
   chords: string[]

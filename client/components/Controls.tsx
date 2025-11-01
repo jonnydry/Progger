@@ -360,16 +360,11 @@ export const Controls: React.FC<ControlsProps> = ({
   };
 
   return (
-    <div className="relative overflow-hidden">
-      {/* Swipe container */}
-      <div
-        className="flex transition-transform duration-300 ease-in-out"
-        style={{
-          transform: `translateX(${isBYOMode ? '-100%' : '0%'})`,
-        }}
+    <div className="relative">
+      {/* Standard Controls */}
+      <div 
+        className={`space-y-6 transition-all duration-300 ${isBYOMode ? 'opacity-0 pointer-events-none absolute inset-0' : 'opacity-100'}`}
       >
-        {/* Standard Controls */}
-        <div className="w-full flex-shrink-0 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <CustomSelect
               label="Key"
@@ -456,9 +451,11 @@ export const Controls: React.FC<ControlsProps> = ({
           </div>
         </div>
 
-        {/* Custom Progression Input */}
-        {onCustomProgressionChange && onNumCustomChordsChange && onAnalyzeCustom && (
-          <div className="w-full flex-shrink-0 space-y-6">
+      {/* Custom Progression Input */}
+      {onCustomProgressionChange && onNumCustomChordsChange && onAnalyzeCustom && (
+        <div 
+          className={`space-y-6 transition-all duration-300 ${!isBYOMode ? 'opacity-0 pointer-events-none absolute inset-0' : 'opacity-100'}`}
+        >
             <div className="flex items-center justify-center gap-6 pt-2">
               {onBYOChange && (
                 <label htmlFor="byo-toggle-back" className="flex items-center cursor-pointer select-none group">
@@ -486,9 +483,8 @@ export const Controls: React.FC<ControlsProps> = ({
               onAnalyze={onAnalyzeCustom}
               isLoading={isLoading}
             />
-          </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
