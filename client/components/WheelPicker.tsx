@@ -137,7 +137,7 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
           {label}
         </label>
       )}
-      <div className="relative">
+      <div className="relative" style={{ touchAction: 'none', overscrollBehavior: 'contain' }}>
         {/* Selection indicator */}
         <div
           className="absolute left-0 right-0 pointer-events-none z-10 bg-primary/20 border-y-2 border-primary/50 rounded-md"
@@ -153,6 +153,8 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
           className="relative overflow-hidden bg-background border-2 border-border rounded-md shadow-inner"
           style={{
             height: visibleOptions * optionHeight,
+            touchAction: 'none',
+            overscrollBehavior: 'contain',
           }}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
