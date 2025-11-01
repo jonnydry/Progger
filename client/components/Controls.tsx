@@ -376,7 +376,7 @@ export const Controls: React.FC<ControlsProps> = ({
   };
 
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative overflow-x-hidden">
       {/* Standard Controls */}
       <div 
         className={`space-y-6 transition-all duration-500 ease-in-out ${isBYOMode ? 'translate-x-[-100%] opacity-0 pointer-events-none absolute inset-0' : 'translate-x-0 opacity-100'}`}
