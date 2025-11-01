@@ -394,38 +394,42 @@ export const Controls: React.FC<ControlsProps> = ({
             />
           </div>
 
-          <div className="flex items-center justify-center gap-6 pt-2">
-            <label htmlFor="tensions-toggle" className="flex items-center cursor-pointer select-none group">
-              <span className="mr-4 text-text/80 group-hover:text-text transition-colors font-semibold">Tension Chords</span>
-              <div className="relative">
-                 <input
-                  id="tensions-toggle"
-                  type="checkbox"
-                  className="sr-only peer"
-                  checked={includeTensions}
-                  onChange={(e) => onTensionsChange(e.target.checked)}
-                />
-                <div className="w-12 h-6 bg-text/20 rounded-full shadow-inner peer-focus:ring-2 peer-focus:ring-primary peer-focus:ring-offset-2 peer-focus:ring-offset-surface transition-all"></div>
-                <div className="absolute left-1 top-1 w-4 h-4 bg-background rounded-full shadow-md transition-transform peer-checked:translate-x-6 peer-checked:bg-primary peer-checked:shadow-primary/50 peer-checked:shadow-lg"></div>
-              </div>
-            </label>
-            
-            {onBYOChange && (
-              <label htmlFor="byo-toggle" className="flex items-center cursor-pointer select-none group">
-                <span className="mr-4 text-text/80 group-hover:text-text transition-colors font-semibold">BYO</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+            <div className="flex items-center justify-center">
+              <label htmlFor="tensions-toggle" className="flex items-center cursor-pointer select-none group">
+                <span className="mr-4 text-text/80 group-hover:text-text transition-colors font-semibold">Tension Chords</span>
                 <div className="relative">
                    <input
-                    id="byo-toggle"
+                    id="tensions-toggle"
                     type="checkbox"
                     className="sr-only peer"
-                    checked={isBYOMode}
-                    onChange={(e) => handleBYOToggle(e.target.checked)}
+                    checked={includeTensions}
+                    onChange={(e) => onTensionsChange(e.target.checked)}
                   />
                   <div className="w-12 h-6 bg-text/20 rounded-full shadow-inner peer-focus:ring-2 peer-focus:ring-primary peer-focus:ring-offset-2 peer-focus:ring-offset-surface transition-all"></div>
                   <div className="absolute left-1 top-1 w-4 h-4 bg-background rounded-full shadow-md transition-transform peer-checked:translate-x-6 peer-checked:bg-primary peer-checked:shadow-primary/50 peer-checked:shadow-lg"></div>
                 </div>
               </label>
-            )}
+            </div>
+            
+            <div className="flex items-center justify-center">
+              {onBYOChange && (
+                <label htmlFor="byo-toggle" className="flex items-center cursor-pointer select-none group">
+                  <span className="mr-4 text-text/80 group-hover:text-text transition-colors font-semibold">BYO</span>
+                  <div className="relative">
+                     <input
+                      id="byo-toggle"
+                      type="checkbox"
+                      className="sr-only peer"
+                      checked={isBYOMode}
+                      onChange={(e) => handleBYOToggle(e.target.checked)}
+                    />
+                    <div className="w-12 h-6 bg-text/20 rounded-full shadow-inner peer-focus:ring-2 peer-focus:ring-primary peer-focus:ring-offset-2 peer-focus:ring-offset-surface transition-all"></div>
+                    <div className="absolute left-1 top-1 w-4 h-4 bg-background rounded-full shadow-md transition-transform peer-checked:translate-x-6 peer-checked:bg-primary peer-checked:shadow-primary/50 peer-checked:shadow-lg"></div>
+                  </div>
+                </label>
+              )}
+            </div>
           </div>
 
           <div className="pt-2">
