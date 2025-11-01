@@ -17,6 +17,8 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
   const [startY, setStartY] = useState(0);
   const [scrollTop, setScrollTop] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const wheelTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const accumulatedDeltaRef = useRef(0);
   const optionHeight = 40; // Height of each option in pixels
   const visibleOptions = 5; // Number of visible options (odd number for center selection)
 
@@ -31,6 +33,15 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
       containerRef.current.scrollTop = scrollPosition;
     }
   }, [currentIndex, optionHeight]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (wheelTimeoutRef.current) {
+        clearTimeout(wheelTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
@@ -97,13 +108,32 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
     if (!containerRef.current) return;
     e.preventDefault();
     
-    const delta = e.deltaY > 0 ? 1 : -1;
-    const currentIndex = options.indexOf(value);
-    const newIndex = Math.max(0, Math.min(currentIndex + delta, options.length - 1));
+    // Accumulate scroll delta
+    accumulatedDeltaRef.current += e.deltaY;
     
-    if (newIndex !== currentIndex) {
-      onChange(options[newIndex]);
+    // Clear existing timeout
+    if (wheelTimeoutRef.current) {
+      clearTimeout(wheelTimeoutRef.current);
     }
+    
+    // Set a debounce timeout - only process after scrolling stops for 150ms
+    wheelTimeoutRef.current = setTimeout(() => {
+      const threshold = 50; // Require at least 50px of accumulated scroll
+      const steps = Math.floor(Math.abs(accumulatedDeltaRef.current) / threshold);
+      
+      if (steps > 0) {
+        const direction = accumulatedDeltaRef.current > 0 ? 1 : -1;
+        const currentIndex = options.indexOf(value);
+        const newIndex = Math.max(0, Math.min(currentIndex + direction * steps, options.length - 1));
+        
+        if (newIndex !== currentIndex) {
+          onChange(options[newIndex]);
+        }
+      }
+      
+      // Reset accumulated delta
+      accumulatedDeltaRef.current = 0;
+    }, 150);
   };
 
   const handleClick = (index: number) => {

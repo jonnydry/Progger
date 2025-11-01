@@ -38,12 +38,21 @@ The application is a full-stack project with a React frontend (Vite dev server o
 
 ## Recent Changes
 
-### 2025-11-01: Fixed BYO Feature Layout Issue
+### 2025-11-01: Fixed BYO Feature Layout & Scroll Issues
 - 🎨 **UI Fix**: Resolved main menu card extending with excessive empty space
   - **Problem**: When BYO feature was added, both Standard and BYO panels existed in DOM simultaneously, causing container to expand to fit both
   - **Solution**: Changed from swipe animation to fade-in/fade-out transition with absolute positioning
   - **Implementation**: Hidden panel uses `opacity-0 pointer-events-none absolute inset-0` to prevent contributing to container height
   - **Result**: Card now properly sizes to only visible content (Standard or BYO mode)
+- 🖱️ **Scroll Fix**: Fixed desktop mouse wheel scrolling too fast in BYO wheel pickers
+  - **Problem**: Mouse wheel events fired rapidly on desktop, causing unusably fast scrolling through chord options
+  - **Solution**: Implemented debounced scroll handling with delta accumulation
+  - **Implementation**: 
+    - Accumulates scroll delta values from multiple events
+    - Waits 150ms after scrolling stops before processing
+    - Requires 50px threshold to move 1 item (prevents accidental micro-scrolls)
+    - Can move multiple items based on scroll magnitude
+  - **Result**: Smooth, controlled scrolling on desktop while maintaining responsive touch behavior
 - 🔧 **Backend Fix**: Corrected syntax error in `xaiService.ts` (missing closing braces in `generateChordProgression` function)
 
 ### 2025-11-01: Enhanced Replit Protection Templates
