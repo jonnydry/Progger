@@ -38,6 +38,18 @@ The application is a full-stack project with a React frontend (Vite dev server o
 
 ## Recent Changes
 
+### 2025-11-01: Enhanced Replit Protection Templates
+- 📝 **Added Development vs Production Mode Guidelines**: Comprehensive documentation to prevent AI assistants from interfering with production environments
+  - **New Section Added**: "DEVELOPMENT vs PRODUCTION MODE" in both protection template files
+  - **Environment Detection**: Clear indicators for dev mode (`REPLIT_DEV_DOMAIN`) vs production (`REPLIT_DEPLOYMENT=1`)
+  - **Capability Matrix**: Explicit list of what can/cannot be done in each environment
+  - **Critical Rules**: Never modify production database, never write environment-specific code paths, never bypass Replit's publish flow
+  - **User Guidance Templates**: What to tell users when they ask about production changes
+  - **Safety Warnings**: Destructive scripts require user review before publishing
+- 🛡️ **Production Protection**: AI assistants work in development mode only, users manage production via Replit's Database pane and Publish button
+- 📊 **Code Examples**: Clear DO/DON'T examples for environment detection and data manipulation
+- ✅ **Architect Review**: Guidelines are clear, comprehensive, and adequately protect production environments
+
 ### 2025-10-31: Chord Data Normalization & Validation
 - 🎸 **Fixed Data Consistency Issue**: Normalized 93 chord voicings from absolute to relative format
   - **Problem**: Barre chords were inconsistently stored - some used absolute fret positions, others used relative offsets

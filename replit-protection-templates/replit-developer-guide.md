@@ -12,17 +12,232 @@ This guide helps you safely develop and deploy **PROGGER** (AI-Powered Chord Pro
 
 ## Table of Contents
 
-1. [Critical Files: Never Modify](#critical-files-never-modify)
-2. [High-Risk Files: Modify with Care](#high-risk-files-modify-with-care)
-3. [Safe to Modify](#safe-to-modify)
-4. [Database Best Practices](#database-best-practices)
-5. [Authentication Troubleshooting](#authentication-troubleshooting)
-6. [Port Configuration](#port-configuration)
-7. [Environment Variables](#environment-variables)
-8. [Package Management](#package-management)
-9. [Deployment](#deployment)
-10. [Recovery Procedures](#recovery-procedures)
-11. [Project-Specific Details](#project-specific-details)
+1. [Development vs Production Mode](#development-vs-production-mode)
+2. [Critical Files: Never Modify](#critical-files-never-modify)
+3. [High-Risk Files: Modify with Care](#high-risk-files-modify-with-care)
+4. [Safe to Modify](#safe-to-modify)
+5. [Database Best Practices](#database-best-practices)
+6. [Authentication Troubleshooting](#authentication-troubleshooting)
+7. [Port Configuration](#port-configuration)
+8. [Environment Variables](#environment-variables)
+9. [Package Management](#package-management)
+10. [Deployment](#deployment)
+11. [Recovery Procedures](#recovery-procedures)
+12. [Project-Specific Details](#project-specific-details)
+
+---
+
+## Development vs Production Mode
+
+Replit provides **two separate environments** for your application: Development (workspace) and Production (published apps). Understanding the differences is critical to avoid accidentally modifying production data or infrastructure.
+
+### Environment Detection
+
+#### Development Mode (Workspace)
+**Indicators:**
+- `REPLIT_DEV_DOMAIN` environment variable is available (e.g., `your-app.replit.dev`)
+- `REPLIT_DEPLOYMENT` environment variable is NOT set
+- Running in Replit workspace with file-watching and hot-reloading
+- Changes take effect immediately
+
+**What you're working on:**
+- Live development environment
+- Development database (safe to experiment)
+- Temporary preview URL
+
+#### Production Mode (Published/Deployed)
+**Indicators:**
+- `REPLIT_DEPLOYMENT=1` environment variable is set
+- `REPLIT_DEV_DOMAIN` environment variable is NOT available
+- Running on Replit's cloud infrastructure
+- Snapshot of code at time of publishing
+
+**What users see:**
+- Published version of your app
+- Production database (live data)
+- Custom domain (if configured)
+
+### Capabilities by Environment
+
+#### Development Mode - Full Control ✅
+
+**Application Code:**
+- ✅ Edit source files in `client/`, `server/`, `shared/`
+- ✅ Add/remove dependencies with `npm install`
+- ✅ Modify build configurations (carefully)
+- ✅ Test changes immediately with live-reload
+
+**Database:**
+- ✅ Modify schema in `shared/schema.ts`
+- ✅ Run migrations: `npm run db:push --force`
+- ✅ Add/delete test data freely
+- ✅ Experiment with queries
+- ✅ No risk to production data
+
+**Deployment:**
+- ✅ Test changes locally
+- ✅ Preview in Replit webview
+- ✅ Use "Open in new tab" to test
+
+#### Production Mode - Restricted Access 🚫
+
+**Application Code:**
+- ℹ️ Production runs a **snapshot** from when you last published
+- 🚫 Code changes in workspace don't affect production until you republish
+- ✅ User must click "Publish" to deploy changes
+
+**Database:**
+- 🚫 **NEVER modify production database programmatically**
+- 🚫 **NEVER run automated migrations against production**
+- 🚫 **NEVER write code that deletes production data**
+- ✅ Schema changes from development apply when user publishes
+- ✅ User can manually edit production data via Database pane
+
+**Environment Variables:**
+- ℹ️ Production may have different secrets than development
+- ℹ️ Some development-only variables are unavailable in production
+
+### Critical Rules for AI Assistants & Developers
+
+#### Rule 1: Work in Development Only
+
+**As an AI assistant or developer, you should:**
+- ✅ Make all changes in the development workspace
+- ✅ Test with the development database
+- ✅ Assume you're always in development mode
+- 🚫 Never write code that directly manipulates production
+
+**Example - WRONG:**
+```typescript
+// ❌ DON'T DO THIS
+if (process.env.REPLIT_DEPLOYMENT === '1') {
+  // Production-specific database cleanup
+  await db.delete(oldRecords).where(lt(created_at, thirtyDaysAgo));
+}
+```
+
+**Example - CORRECT:**
+```typescript
+// ✅ DO THIS - development only
+// Note: User will manually clean up production data if needed
+await db.delete(oldRecords).where(lt(created_at, thirtyDaysAgo));
+```
+
+#### Rule 2: Let User Manage Production Data
+
+**When user asks to modify production data:**
+
+❌ **DON'T say:**
+"I'll write a script to delete that production data"
+
+✅ **DO say:**
+"I can only work in the development environment. To modify production data:
+
+1. Open the Replit Database pane
+2. Switch to 'Production Database' view
+3. Manually edit/delete the records using the database viewer
+
+Alternatively, I can help you create a one-time admin script for development testing, which you could carefully run against production if needed."
+
+#### Rule 3: Schema Changes Flow Development → Production
+
+**Correct workflow:**
+1. Developer/AI modifies `shared/schema.ts` in development
+2. Run `npm run db:push --force` in development
+3. Test schema changes with development database
+4. User clicks "Publish" when ready
+5. Replit applies schema changes to production automatically
+
+**NEVER:**
+- Run migrations directly against production
+- Suggest code that checks for production mode to run migrations
+- Bypass Replit's publish flow
+
+### Environment Variables Reference
+
+**Development Mode:**
+- `REPLIT_DEV_DOMAIN` - Available (your development URL)
+- `DATABASE_URL` - Points to development database
+- `XAI_API_KEY` - Your development API key (from Secrets)
+- `SESSION_SECRET` - Development session secret
+
+**Production Mode:**
+- `REPLIT_DEPLOYMENT=1` - Set to indicate production
+- `REPLIT_DEV_DOMAIN` - **Not available**
+- `DATABASE_URL` - Points to production database
+- `XAI_API_KEY` - Production API key (may differ from dev)
+- `SESSION_SECRET` - Production session secret
+
+### Testing Before Publishing
+
+**Pre-publish checklist:**
+1. ✅ Test all features in development workspace
+2. ✅ Verify database migrations work in development
+3. ✅ Check "Open in new tab" for full browser testing
+4. ✅ Review console logs for errors
+5. ✅ Ensure no hardcoded secrets
+6. ✅ Confirm no production-specific code paths
+7. ✅ Test authentication flow
+
+**Then user clicks "Publish" to deploy to production**
+
+### Common Mistakes to Avoid
+
+#### ❌ Mistake 1: Environment-Specific Code
+```typescript
+// WRONG - different behavior in production
+if (process.env.REPLIT_DEPLOYMENT === '1') {
+  enableAdvancedFeatures(); // Production-only features
+}
+```
+
+**Why it's wrong:** Creates inconsistency between dev and prod, hard to test
+
+#### ❌ Mistake 2: Production Data Manipulation
+```typescript
+// WRONG - automated production cleanup
+if (process.env.REPLIT_DEPLOYMENT === '1') {
+  await cleanupOldData(); // Dangerous in production
+}
+```
+
+**Why it's wrong:** Could accidentally delete important production data
+
+#### ❌ Mistake 3: Ignoring Publish Flow
+```typescript
+// WRONG - trying to auto-deploy
+if (changes detected) {
+  triggerReplit Publish(); // Not how Replit works
+}
+```
+
+**Why it's wrong:** User controls publishing, not code
+
+#### ❌ Mistake 4: Creating Destructive Scripts Without Warnings
+```typescript
+// RISKY - data deletion script without safeguards
+export async function cleanupOldUsers() {
+  await db.delete(users).where(lt(users.lastLogin, oneYearAgo));
+  // No warning, user might accidentally publish and run in production
+}
+```
+
+**Why it's wrong:** User might publish this and run it against production database
+
+**Better approach:**
+```typescript
+// ✅ SAFER - with warnings and confirmation
+export async function cleanupOldUsers() {
+  if (process.env.REPLIT_DEPLOYMENT === '1') {
+    console.warn('⚠️ Running in PRODUCTION - manual confirmation required');
+    // Could add additional confirmation prompt
+  }
+  console.log('Cleaning up users inactive for 1+ year...');
+  await db.delete(users).where(lt(users.lastLogin, oneYearAgo));
+}
+```
+
+**Note:** Manual environment detection (`if (process.env.REPLIT_DEPLOYMENT)`) is acceptable for logging, debugging, or safety checks, but NOT for creating different code paths that change application behavior.
 
 ---
 
@@ -615,6 +830,6 @@ npm run db:push --force
 
 ---
 
-**Last Updated:** October 30, 2025  
+**Last Updated:** November 1, 2025  
 **Project:** PROGGER - AI-Powered Chord Progression Generator for Guitarists  
 **For Quick Reference:** See `replit-ai-rules.md` for AI assistant guidelines

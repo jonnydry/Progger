@@ -13,6 +13,112 @@ This project (**PROGGER** - AI-Powered Chord Progression Generator for Guitarist
 
 ---
 
+## 🌍 CRITICAL: DEVELOPMENT vs PRODUCTION MODE
+
+**YOU ARE WORKING IN DEVELOPMENT MODE ONLY**
+
+Replit has **TWO SEPARATE ENVIRONMENTS** with different capabilities. **NEVER interfere with production.**
+
+### How to Detect Which Mode You're In
+
+**Development Mode (Workspace):**
+- ✅ `REPLIT_DEV_DOMAIN` environment variable IS available
+- ❌ `REPLIT_DEPLOYMENT` environment variable is NOT set
+- Running in Replit workspace with live editing
+- Temporary development URL (e.g., `your-app.replit.dev`)
+
+**Production Mode (Published/Deployed):**
+- ❌ `REPLIT_DEV_DOMAIN` environment variable is NOT available
+- ✅ `REPLIT_DEPLOYMENT=1` environment variable IS set
+- Running on Replit cloud infrastructure
+- May have custom domain configured
+
+### What You CAN Do in Each Mode
+
+**Development Mode (YOUR DOMAIN):**
+- ✅ Modify application code
+- ✅ Change database schema in `shared/schema.ts` and run `npm run db:push --force`
+- ✅ Add/remove packages with `npm install`
+- ✅ Test changes immediately
+- ✅ Access development database directly
+- ✅ Read/write development data
+
+**Production Mode (OFF LIMITS):**
+- 🚫 **NEVER modify production database directly**
+- 🚫 **NEVER run migrations against production**
+- 🚫 **NEVER access production data programmatically**
+- 🚫 **NEVER suggest code changes that check for `REPLIT_DEPLOYMENT`**
+- ℹ️ User can manually edit production data via Replit's Database pane
+- ℹ️ Schema changes from development are applied when user publishes
+
+### Critical Rules for Production
+
+**1. NEVER write code that behaves differently in production:**
+```javascript
+// ❌ DON'T DO THIS - manipulating production behavior
+if (process.env.REPLIT_DEPLOYMENT === '1') {
+  // Run production-specific database migrations
+  await db.migrate(); // WRONG - could corrupt production data
+}
+```
+
+**2. NEVER suggest direct production database access:**
+```javascript
+// ❌ DON'T DO THIS - production database manipulation
+if (process.env.REPLIT_DEPLOYMENT === '1') {
+  await db.delete(users).where(eq(users.status, 'inactive'));
+  // WRONG - never delete production data programmatically
+}
+```
+
+**3. User publishes manually, you work in development:**
+```
+✅ DO: Work in development workspace
+✅ DO: Test changes with development database
+✅ DO: Let user click "Publish" when ready
+🚫 DON'T: Try to deploy or publish automatically
+🚫 DON'T: Access production environment
+```
+
+**4. Manual environment detection is OK, committed code paths are NOT:**
+```javascript
+// ✅ OK - Manual debugging/detection (temporary, not committed)
+console.log('Environment:', process.env.REPLIT_DEPLOYMENT ? 'production' : 'development');
+
+// ❌ WRONG - Committed code with different production behavior
+if (process.env.REPLIT_DEPLOYMENT === '1') {
+  await runProductionOnlyFeature(); // Creates untestable code path
+}
+```
+
+**5. Destructive scripts require user review before publishing:**
+```
+If you create admin/maintenance scripts that delete data:
+⚠️ Warn user: "This script deletes data. Test thoroughly in 
+development. Do NOT publish without careful review, as it will 
+run against production database."
+```
+
+### When User Asks About Production
+
+**If user says:** "Delete this data from production" or "Fix the production database"
+
+**You should say:**
+```
+I can only work in the development environment. To modify production data:
+
+1. Open the Database pane in Replit
+2. Select "Production Database"
+3. Manually edit the data using the database viewer
+
+Schema changes: I'll update the development schema, then you can 
+publish to apply those changes to production.
+```
+
+**REMEMBER:** You are an AI assistant working in the **development workspace only**. The production environment is managed by the user through Replit's Publish feature and Database pane.
+
+---
+
 ## 🚨 SACRED FILES - NEVER MODIFY UNDER ANY CIRCUMSTANCES
 
 **NEVER touch these files:**
@@ -388,6 +494,6 @@ Before suggesting ANY change involving:
 
 ---
 
-**Last Updated:** October 30, 2025  
+**Last Updated:** November 1, 2025  
 **Project:** PROGGER - AI-Powered Chord Progression Generator for Guitarists  
 **For Full Guide:** See `replit-developer-guide.md` in `replit-protection-templates/`
