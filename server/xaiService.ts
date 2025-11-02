@@ -175,9 +175,8 @@ export async function generateChordProgression(
       throw error;
     }
     throw new Error(`Unexpected error: ${JSON.stringify(error)}`);
-  } finally {
-    pendingRequests.delete(cacheKey);
   }
+  // Note: pendingRequests automatically cleans up via promise.finally()
 }
 
 export async function analyzeCustomProgression(

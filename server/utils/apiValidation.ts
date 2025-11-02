@@ -28,9 +28,9 @@ export class APIValidationError extends Error {
 
 /**
  * Pattern to match valid chord names
- * Examples: C, Cmaj7, Am7, G7b9, D7alt, Bm7b5, F#maj9, Ab7sus4
+ * Examples: C, Cmaj7, Am7, Dm7, G7b9, D7alt, Bm7b5, F#maj9, Ab7sus4, CM7, Cm7
  */
-const CHORD_NAME_PATTERN = /^[A-G][#b]?(maj|min|dim|aug)?\d*(sus\d+)?(add\d+)?(b\d+|#\d+)?(\/[A-G][#b]?)?$/i;
+const CHORD_NAME_PATTERN = /^[A-G][#b]?(maj|min|dim|aug|M|m)?\d*(sus\d+)?(add\d+)?(b\d+|#\d+|alt)?(\/[A-G][#b]?)?$/i;
 
 /**
  * Pattern to match valid Roman numeral notation

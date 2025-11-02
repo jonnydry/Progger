@@ -40,6 +40,14 @@ The application is a full-stack project with a React frontend (Vite dev server o
 
 ## Recent Changes
 
+### 2025-11-02: Critical Validation Bug Fixes
+- 🐛 **Fixed Chord Generation Failures**: Resolved three critical validation bugs preventing chord progressions from generating
+  - **Roman Numeral Validation**: Updated regex pattern to accept quality indicators (Imaj7, iim7, V7, V7b9, V7alt, etc.)
+  - **Chord Name Validation**: Updated regex to accept shorthand notation ("m" for minor, "M" for major, "alt" for altered)
+  - **Pending Requests Cleanup**: Removed invalid manual delete call; PendingRequestManager auto-cleans via promise.finally()
+  - **Impact**: All chord progressions now generate correctly with full requested number of chords
+  - **Files Modified**: `server/utils/apiValidation.ts`, `server/xaiService.ts`
+
 ### 2025-11-02: Security Hardening
 - 🔒 **Rate Limiting**: Added protection against API abuse and DoS attacks
   - **Configuration**: 50 requests per 15 minutes per IP for AI generation endpoints
