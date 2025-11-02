@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { StashItemData, CreateStashItemRequest } from '../types';
+import { addCsrfHeaders, clearCsrfToken } from '../utils/csrf';
 
 // Fetch all stash items for the authenticated user
 export function useStash() {
@@ -27,16 +28,22 @@ export function useSaveToStash() {
 
   return useMutation({
     mutationFn: async (data: CreateStashItemRequest) => {
+      const headers = await addCsrfHeaders({
+        'Content-Type': 'application/json',
+      });
+      
       const response = await fetch('/api/stash', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         credentials: 'include',
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
+        // Clear CSRF token on 403 to force refresh
+        if (response.status === 403) {
+          clearCsrfToken();
+        }
         throw new Error('Failed to save to stash');
       }
 
@@ -54,12 +61,19 @@ export function useDeleteFromStash() {
 
   return useMutation({
     mutationFn: async (id: string) => {
+      const headers = await addCsrfHeaders();
+      
       const response = await fetch(`/api/stash/${id}`, {
         method: 'DELETE',
+        headers,
         credentials: 'include',
       });
 
       if (!response.ok) {
+        // Clear CSRF token on 403 to force refresh
+        if (response.status === 403) {
+          clearCsrfToken();
+        }
         throw new Error('Failed to delete from stash');
       }
     },

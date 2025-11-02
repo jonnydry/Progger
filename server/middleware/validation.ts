@@ -8,6 +8,21 @@ import { validateProgressionRequest, ValidationError } from '../utils/validation
 import { logger } from '../utils/logger';
 
 /**
+ * Sanitize user input to prevent XSS attacks
+ * Escapes HTML entities and trims whitespace
+ */
+function sanitizeString(input: string): string {
+  return input
+    .trim()
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;')
+    .replace(/\//g, '&#x2F;');
+}
+
+/**
  * Middleware to validate progression generation requests
  */
 export function validateProgressionRequestMiddleware(
@@ -48,16 +63,22 @@ export function validateStashRequestMiddleware(
   try {
     const { name, key, mode, progressionData } = req.body;
 
-    // Validate name
+    // Validate and sanitize name
     if (!name || typeof name !== 'string') {
       throw new ValidationError('name is required and must be a string');
     }
-    if (name.trim().length === 0) {
+    
+    const sanitizedName = sanitizeString(name);
+    
+    if (sanitizedName.length === 0) {
       throw new ValidationError('name cannot be empty');
     }
-    if (name.length > 200) {
+    if (sanitizedName.length > 200) {
       throw new ValidationError('name must be 200 characters or less');
     }
+    
+    // Replace with sanitized version
+    req.body.name = sanitizedName;
 
     // Validate key
     if (!key || typeof key !== 'string') {

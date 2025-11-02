@@ -14,6 +14,7 @@ import {
 } from '../utils/errors';
 import { getProcessingConfig } from '../utils/processingConfig';
 import { getProgressionCacheKey } from '@shared/cacheUtils';
+import { addCsrfHeaders, clearCsrfToken } from '../utils/csrf';
 
 interface SimpleChord {
     chordName: string;
@@ -196,12 +197,14 @@ export async function generateChordProgression(key: string, mode: string, includ
     // Race between the fetch and the timeout
     let response: Response;
     try {
+      const headers = await addCsrfHeaders({
+        'Content-Type': 'application/json',
+      });
+      
       response = await Promise.race([
         fetch('/api/generate-progression', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers,
           body: JSON.stringify({
             key,
             mode,
@@ -218,6 +221,10 @@ export async function generateChordProgression(key: string, mode: string, includ
     }
 
     if (!response.ok) {
+      // If CSRF token is invalid, clear it and let user retry
+      if (response.status === 403) {
+        clearCsrfToken();
+      }
       // API returned error status
       throw new APIUnavailableError('/api/generate-progression', response.status);
     }
@@ -383,12 +390,14 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
     // Race between the fetch and the timeout
     let response: Response;
     try {
+      const headers = await addCsrfHeaders({
+        'Content-Type': 'application/json',
+      });
+      
       response = await Promise.race([
         fetch('/api/analyze-custom-progression', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers,
           body: JSON.stringify({ chords }),
         }),
         timeoutPromise
@@ -399,6 +408,10 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
     }
 
     if (!response.ok) {
+      // If CSRF token is invalid, clear it and let user retry
+      if (response.status === 403) {
+        clearCsrfToken();
+      }
       // API returned error status
       throw new APIUnavailableError('/api/analyze-custom-progression', response.status);
     }

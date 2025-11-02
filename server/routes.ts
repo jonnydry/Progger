@@ -1,22 +1,52 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import rateLimit from "express-rate-limit";
+import { csrfSync } from "csrf-sync";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, type AuthenticatedUser } from "./replitAuth";
 import { generateChordProgression, analyzeCustomProgression } from "./xaiService";
 import { ValidationError } from "./utils/validation";
 import { validateProgressionRequestMiddleware, validateStashRequestMiddleware } from "./middleware/validation";
-import { progressionRateLimiter, analysisRateLimiter } from "./middleware/rateLimit";
-import { csrfProtection, getCsrfToken } from "./middleware/csrf";
 import { validateCustomProgressionRequest } from "./utils/validation";
 import { logger } from "./utils/logger";
 import { db } from "./db";
 import { redisCache } from "./cache";
 
+// Rate limiter for AI generation endpoints to prevent abuse
+const aiGenerationLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 50, // Limit each IP to 50 requests per windowMs
+  message: { error: 'Too many AI generation requests from this IP, please try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    logger.warn('Rate limit exceeded', { 
+      ip: req.ip, 
+      path: req.path,
+      userAgent: req.get('user-agent'),
+    });
+    res.status(429).json({ 
+      error: 'Too many AI generation requests from this IP, please try again later.' 
+    });
+  },
+});
+
+// CSRF protection for session-based endpoints
+const { csrfSynchronisedProtection, generateToken } = csrfSync({
+  getTokenFromRequest: (req) => {
+    // Check both header and body for CSRF token
+    return req.headers['x-csrf-token'] as string || req.body?._csrf;
+  },
+});
+
 export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
 
-  // CSRF token endpoint (for client to fetch token)
-  app.get('/api/csrf-token', getCsrfToken);
+  // CSRF token endpoint - provides token for client-side requests
+  app.get('/api/csrf-token', (req, res) => {
+    const token = generateToken(req);
+    res.json({ token });
+  });
 
   // Health check endpoint
   app.get('/api/health', async (req, res) => {
@@ -82,7 +112,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/generate-progression', progressionRateLimiter, validateProgressionRequestMiddleware, async (req, res) => {
+  app.post('/api/generate-progression', csrfSynchronisedProtection, aiGenerationLimiter, validateProgressionRequestMiddleware, async (req, res) => {
     try {
       // Request body is already validated by middleware
       const { key, mode, includeTensions, numChords, selectedProgression } = req.body;
@@ -113,7 +143,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/analyze-custom-progression', analysisRateLimiter, async (req, res) => {
+  app.post('/api/analyze-custom-progression', csrfSynchronisedProtection, aiGenerationLimiter, async (req, res) => {
     try {
       const { chords } = validateCustomProgressionRequest(req.body);
 
@@ -156,7 +186,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/stash', isAuthenticated, csrfProtection, validateStashRequestMiddleware, async (req, res) => {
+  app.post('/api/stash', csrfSynchronisedProtection, isAuthenticated, validateStashRequestMiddleware, async (req, res) => {
     try {
       const user = req.user as AuthenticatedUser;
       const userId = user.claims.sub;
@@ -182,7 +212,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/stash/:id', isAuthenticated, csrfProtection, async (req, res) => {
+  app.delete('/api/stash/:id', csrfSynchronisedProtection, isAuthenticated, async (req, res) => {
     try {
       const user = req.user as AuthenticatedUser;
       const userId = user.claims.sub;
@@ -198,6 +228,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       res.status(500).json({ message: "Failed to delete stash item" });
     }
+  });
+
+  // CSRF error handling middleware - must come after routes
+  app.use((err: any, req: any, res: any, next: any) => {
+    if (err && err.code === 'EBADCSRFTOKEN') {
+      logger.warn('CSRF token validation failed', {
+        ip: req.ip,
+        path: req.path,
+        userAgent: req.get('user-agent'),
+      });
+      return res.status(403).json({ 
+        error: 'Invalid CSRF token. Please refresh the page and try again.' 
+      });
+    }
+    next(err);
   });
 
   const httpServer = createServer(app);

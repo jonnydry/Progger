@@ -6,25 +6,25 @@ import { logger } from "./utils/logger";
 
 const app = express();
 
-// Security headers
+// Security headers via Helmet.js
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"], // Allow inline scripts for React in development
-      styleSrc: ["'self'", "'unsafe-inline'"], // Allow inline styles for Tailwind CSS
-      imgSrc: ["'self'", "data:", "https:"], // Allow images from same origin, data URIs, and HTTPS
-      connectSrc: ["'self'"], // API calls to same origin
-      fontSrc: ["'self'", "data:"], // Allow fonts from same origin and data URIs
-      objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
-      frameSrc: ["'none'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
     },
   },
-  crossOriginEmbedderPolicy: false, // Disable for Replit compatibility
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true,
+  },
 }));
 
-// Request size limits
+// Request body size limits to prevent memory exhaustion attacks
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
