@@ -43,8 +43,8 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({ label, value, onChan
     if (isOpen && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
       setDropdownPosition({
-        top: rect.bottom + window.scrollY + 4,
-        left: rect.left + window.scrollX,
+        top: rect.bottom + 4, // No scrollY needed for fixed positioning
+        left: rect.left,      // No scrollX needed for fixed positioning
         width: rect.width,
       });
     }
