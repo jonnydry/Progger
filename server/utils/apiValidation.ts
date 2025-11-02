@@ -34,9 +34,9 @@ const CHORD_NAME_PATTERN = /^[A-G][#b]?(maj|min|dim|aug)?\d*(sus\d+)?(add\d+)?(b
 
 /**
  * Pattern to match valid Roman numeral notation
- * Examples: I, Imaj7, ii, V7, ii°, V7/ii, bVII
+ * Examples: I, Imaj7, ii, V7, iim7, ii°7, V7/ii, bVII, Imaj9, V7b9, V7alt
  */
-const ROMAN_NUMERAL_PATTERN = /^[b#]?[ivxlcdmIVXLCDM]+[°°]?(\/[b#]?[ivxlcdmIVXLCDM]+)?$/;
+const ROMAN_NUMERAL_PATTERN = /^[b#]?[ivxlcdmIVXLCDM]+[°°]?(maj|min|m|dim|aug)?\d*(sus\d+)?(add\d+)?(b\d+|#\d+|alt)?(\/[b#]?[ivxlcdmIVXLCDM]+)?$/i;
 
 /**
  * Pattern to match valid scale names
