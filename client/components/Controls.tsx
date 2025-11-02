@@ -37,6 +37,7 @@ const ModeSelect: React.FC<{
   const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   const selectRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLUListElement>(null);
 
   const handleSelect = (optionValue: string) => {
     onChange(optionValue);
@@ -45,7 +46,12 @@ const ModeSelect: React.FC<{
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (selectRef.current && !selectRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      // Check if click is outside both the select button and the dropdown menu
+      if (
+        selectRef.current && !selectRef.current.contains(target) &&
+        dropdownRef.current && !dropdownRef.current.contains(target)
+      ) {
         setIsOpen(false);
       }
     };
@@ -137,6 +143,7 @@ const ModeSelect: React.FC<{
 
       {isOpen && createPortal(
         <ul
+          ref={dropdownRef}
           className="fixed z-50 bg-surface rounded-md shadow-lg border border-border max-h-80 overflow-y-auto"
           style={{
             top: `${dropdownPosition.top}px`,
