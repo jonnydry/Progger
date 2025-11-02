@@ -34,7 +34,7 @@ export function buildOptimizedPrompt(request: ProgressionRequest): PromptCompone
   ],
   "scales": [
     {
-      "name": "string (full scale name like 'G Major', 'A Dorian', 'C Minor Pentatonic', 'G Altered')",
+      "name": "string (EXACT FORMAT: root + mode name - e.g., 'G Major', 'A Dorian', 'C Minor Pentatonic', 'G Altered'. NO qualifiers like Natural/Harmonic/Melodic)",
       "rootNote": "string (e.g., 'G', 'A', 'C' - match the key signature accidental preference)"
     }
   ]
@@ -179,7 +179,10 @@ For EACH chord in the progression, provide:
 Additionally, suggest 2 to 3 suitable scales for improvisation over this progression:
 - Primary scale should be '${key} ${mode}' to match the modal character
 - Additional scales can include pentatonic variants, altered scales, or related modes
-- name: Full scale name (e.g., '${key} ${mode}', '${key} Major Pentatonic', '${key} Dorian', '${key} Altered Scale')
+- name: EXACT format - root note + mode name ONLY (e.g., '${key} ${mode}', '${key} Major Pentatonic', '${key} Dorian', '${key} Altered')
+  * DO NOT add words like "Natural", "Harmonic", "Melodic", or "Scale"
+  * CORRECT: "E Minor", "G Major Pentatonic", "A Dorian"
+  * WRONG: "E Natural Minor", "G Harmonic Minor", "A Dorian Scale"
 - rootNote: The root note matching key signature preference
 
 Return ONLY valid JSON matching this schema:

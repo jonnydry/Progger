@@ -227,7 +227,10 @@ CRITICAL REQUIREMENTS:
 3. Suggest 2 to 3 compatible scales:
    - Primary scale should match the detected key/mode
    - Additional scales can include pentatonic variants, altered scales, or related modes
-   - name: Full scale name (e.g., 'C Major', 'A Dorian', 'G Mixolydian', 'C Minor Pentatonic')
+   - name: EXACT format - root note + mode name ONLY (e.g., 'C Major', 'A Dorian', 'G Mixolydian', 'C Minor Pentatonic')
+     * DO NOT add words like "Natural", "Harmonic", "Melodic", or "Scale"
+     * CORRECT: "E Minor", "G Major Pentatonic", "A Dorian"
+     * WRONG: "E Natural Minor", "G Harmonic Minor", "A Dorian Scale"
    - rootNote: The root note matching key signature preference
 
 4. Ensure chord names match guitar voicing standards and respect key signature accidentals
@@ -243,7 +246,7 @@ Return ONLY valid JSON matching this schema:
   ],
   "scales": [
     {
-      "name": "string (full scale name like 'G Major', 'A Dorian', 'C Minor Pentatonic', 'G Altered')",
+      "name": "string (EXACT FORMAT: root + mode name - e.g., 'G Major', 'A Dorian', 'C Minor Pentatonic', 'G Altered'. NO qualifiers like Natural/Harmonic/Melodic)",
       "rootNote": "string (e.g., 'G', 'A', 'C' - match the key signature accidental preference)"
     }
   ]

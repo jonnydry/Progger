@@ -39,10 +39,11 @@ const CHORD_NAME_PATTERN = /^[A-G][#b]?(maj|min|dim|aug|M|m)?\d*(sus\d+)?(add\d+
 const ROMAN_NUMERAL_PATTERN = /^[b#]?[ivxlcdmIVXLCDM]+[°°]?(maj|min|m|dim|aug)?\d*(sus\d+)?(add\d+)?(b\d+|#\d+|alt)?(\/[b#]?[ivxlcdmIVXLCDM]+)?$/i;
 
 /**
- * Pattern to match valid scale names
- * Examples: "C major", "A minor", "E Natural Minor", "G Dorian", "F# Pentatonic", "Bb Altered Scale"
+ * Pattern to match valid scale names (strict internal format)
+ * Examples: "C Major", "A Minor", "G Dorian", "F# Phrygian", "Bb Major Pentatonic", "E Minor Pentatonic"
+ * NOTE: Does NOT accept qualifiers like "Natural", "Harmonic", "Melodic" - AI must use our exact format
  */
-const SCALE_NAME_PATTERN = /^[A-G][#b]?\s+(natural\s+)?(major|minor|dorian|phrygian|lydian|mixolydian|locrian|pentatonic|blues|altered|harmonic|melodic)(\s+pentatonic|\s+scale|\s+minor|\s+major)?$/i;
+const SCALE_NAME_PATTERN = /^[A-G][#b]?\s+(Major|Minor|Dorian|Phrygian|Lydian|Mixolydian|Locrian|Altered)(\s+Pentatonic)?$/;
 
 /**
  * Valid root notes
@@ -97,7 +98,8 @@ function validateScaleName(scaleName: string): void {
   if (!SCALE_NAME_PATTERN.test(scaleName.trim())) {
     throw new APIValidationError(
       `Invalid scale name format: "${scaleName}". ` +
-      'Expected format: root note followed by scale type (e.g., "C major", "A minor pentatonic")'
+      'Expected format: root note + mode name (e.g., "C Major", "A Minor", "G Dorian", "E Minor Pentatonic"). ' +
+      'Do NOT include qualifiers like "Natural", "Harmonic", or "Melodic".'
     );
   }
 }
