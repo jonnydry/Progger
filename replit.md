@@ -40,6 +40,36 @@ The application is a full-stack project with a React frontend (Vite dev server o
 
 ## Recent Changes
 
+### 2025-11-02: Security Hardening
+- 🔒 **Rate Limiting**: Added protection against API abuse and DoS attacks
+  - **Configuration**: 50 requests per 15 minutes per IP for AI generation endpoints
+  - **Endpoints Protected**: `/api/generate-progression`, `/api/analyze-custom-progression`
+  - **Logging**: Rate limit violations are logged with IP, path, and user agent
+- 🛡️ **Helmet.js Security Headers**: Comprehensive HTTP security headers
+  - **CSP**: Content Security Policy with strict directives
+  - **HSTS**: HTTP Strict Transport Security with 1-year max-age
+  - **XSS Protection**: XSS filter enabled, frame protection, MIME type sniffing prevention
+- 📏 **Request Size Limits**: Protection against memory exhaustion attacks
+  - **Limit**: 10MB for JSON and URL-encoded request bodies
+  - **Prevents**: Large payload attacks that could crash the server
+- 🎫 **CSRF Protection**: Session-based CSRF tokens using `csrf-sync`
+  - **Architecture**: Synchronizer Token Pattern with session storage
+  - **Endpoints Protected**: All POST and DELETE endpoints (progression generation, stash operations)
+  - **Frontend Integration**: Automatic token fetching, caching, and injection via `client/utils/csrf.ts`
+  - **Error Handling**: Automatic token refresh on 403 CSRF errors
+- 🧹 **Input Sanitization**: XSS protection on user-provided inputs
+  - **Method**: HTML entity escaping for dangerous characters (`<`, `>`, `"`, `'`, `/`, `&`)
+  - **Scope**: Stash item names and all user-provided text fields
+  - **Implementation**: Custom `sanitizeString()` function in validation middleware
+- 🔑 **SESSION_SECRET Validation**: Server startup protection
+  - **Check**: Validates SESSION_SECRET environment variable exists before starting
+  - **Error**: Throws clear error message if not set, preventing insecure defaults
+- 🔄 **Redis Error Handling**: Robust caching with graceful fallback
+  - **Logging**: Connection errors logged as warnings, not errors
+  - **Fallback**: Automatically falls back to in-memory caching when Redis unavailable
+  - **Non-Blocking**: Redis connection failures don't prevent server startup
+- 📝 **Security Documentation**: Environment variables and CSRF workflow documented
+
 ### 2025-11-01: BYO UI Enhancements & Control Reorganization
 - 🎸 **BYO Chord Selector Redesign**: Replaced vertical wheel picker with horizontal button array
   - **New Design**: Clean left-to-right array of numbered buttons (2-8 chords)
