@@ -5,11 +5,70 @@ import { setupAuth, isAuthenticated, type AuthenticatedUser } from "./replitAuth
 import { generateChordProgression, analyzeCustomProgression } from "./xaiService";
 import { ValidationError } from "./utils/validation";
 import { validateProgressionRequestMiddleware, validateStashRequestMiddleware } from "./middleware/validation";
+import { progressionRateLimiter, analysisRateLimiter } from "./middleware/rateLimit";
+import { csrfProtection, getCsrfToken } from "./middleware/csrf";
 import { validateCustomProgressionRequest } from "./utils/validation";
 import { logger } from "./utils/logger";
+import { db } from "./db";
+import { redisCache } from "./cache";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   await setupAuth(app);
+
+  // CSRF token endpoint (for client to fetch token)
+  app.get('/api/csrf-token', getCsrfToken);
+
+  // Health check endpoint
+  app.get('/api/health', async (req, res) => {
+    const health: {
+      status: 'healthy' | 'degraded' | 'unhealthy';
+      timestamp: string;
+      database: 'connected' | 'disconnected';
+      redis: 'connected' | 'disconnected' | 'unavailable';
+      uptime: number;
+    } = {
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      database: 'disconnected',
+      redis: 'unavailable',
+      uptime: process.uptime(),
+    };
+
+    // Check database connectivity
+    try {
+      await db.execute('SELECT 1');
+      health.database = 'connected';
+    } catch (error) {
+      logger.warn('Database health check failed', { error });
+      health.database = 'disconnected';
+      health.status = 'degraded';
+    }
+
+    // Check Redis connectivity (optional)
+    try {
+      const testKey = `health:check:${Date.now()}`;
+      await redisCache.set(testKey, 'ok', 1);
+      const result = await redisCache.get(testKey);
+      if (result === 'ok') {
+        await redisCache.delete(testKey);
+        health.redis = 'connected';
+      } else {
+        health.redis = 'disconnected';
+      }
+    } catch (error) {
+      logger.debug('Redis health check failed (Redis may not be configured)', { error });
+      health.redis = 'unavailable';
+      // Redis is optional, so don't degrade health status
+    }
+
+    // Determine overall status
+    if (health.database === 'disconnected') {
+      health.status = 'unhealthy';
+    }
+
+    const statusCode = health.status === 'healthy' ? 200 : health.status === 'degraded' ? 200 : 503;
+    res.status(statusCode).json(health);
+  });
 
   app.get('/api/auth/user', isAuthenticated, async (req, res) => {
     try {
@@ -23,7 +82,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/generate-progression', validateProgressionRequestMiddleware, async (req, res) => {
+  app.post('/api/generate-progression', progressionRateLimiter, validateProgressionRequestMiddleware, async (req, res) => {
     try {
       // Request body is already validated by middleware
       const { key, mode, includeTensions, numChords, selectedProgression } = req.body;
@@ -54,7 +113,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/analyze-custom-progression', async (req, res) => {
+  app.post('/api/analyze-custom-progression', analysisRateLimiter, async (req, res) => {
     try {
       const { chords } = validateCustomProgressionRequest(req.body);
 
@@ -97,7 +156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/stash', isAuthenticated, validateStashRequestMiddleware, async (req, res) => {
+  app.post('/api/stash', isAuthenticated, csrfProtection, validateStashRequestMiddleware, async (req, res) => {
     try {
       const user = req.user as AuthenticatedUser;
       const userId = user.claims.sub;
@@ -123,7 +182,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete('/api/stash/:id', isAuthenticated, async (req, res) => {
+  app.delete('/api/stash/:id', isAuthenticated, csrfProtection, async (req, res) => {
     try {
       const user = req.user as AuthenticatedUser;
       const userId = user.claims.sub;
