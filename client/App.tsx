@@ -237,7 +237,7 @@ const App: React.FC = () => {
           </p>
         </header>
 
-        <section className="max-w-3xl mx-auto bg-surface rounded-lg p-6 shadow-sm border-2 border-border" style={{ borderStyle: 'solid' }}>
+        <section className="max-w-3xl mx-auto bg-surface rounded-lg p-4 md:p-6 shadow-sm border-2 border-border" style={{ borderStyle: 'solid' }}>
           <Controls
             selectedKey={key}
             onKeyChange={setKey}

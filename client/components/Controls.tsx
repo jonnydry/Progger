@@ -288,20 +288,20 @@ const CustomProgressionInput: React.FC<{
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-6">
       <div className="space-y-3">
         <label className="block text-center text-sm font-semibold text-text/70">
           Number of Chords
         </label>
-        <div className="flex items-center justify-center gap-3 flex-wrap">
+        <div className="flex items-center justify-center gap-1.5 md:gap-3 flex-nowrap overflow-x-auto pb-2 md:pb-0">
           {CHORD_COUNTS.map((count) => (
             <button
               key={count}
               onClick={() => onNumChordsChange(count)}
               className={`
-                relative px-5 py-2.5 rounded-lg font-bold text-lg
+                relative px-2 py-1.5 md:px-5 md:py-2.5 rounded-lg font-bold text-base md:text-lg
                 transition-all duration-300 ease-out
-                border-2 shadow-md
+                border-2 shadow-md flex-shrink-0
                 ${count === numChords
                   ? 'bg-primary text-background border-primary scale-110 shadow-primary/50 shadow-lg'
                   : 'bg-background/30 text-text/80 border-border hover:border-primary/50 hover:scale-105 hover:shadow-lg hover:text-text'
@@ -316,11 +316,11 @@ const CustomProgressionInput: React.FC<{
 
       <div className="space-y-4">
         {customProgression.map((chord, index) => (
-          <div key={index} className="bg-background/50 rounded-lg p-4 border border-border">
+          <div key={index} className="bg-background/50 rounded-lg p-3 md:p-4 border border-border">
             <div className="text-sm font-semibold text-text/70 mb-3">
               Chord {index + 1}: <span className="text-primary font-bold">{getChordDisplayName(chord)}</span>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3 md:gap-4">
               <WheelPicker
                 label="Root"
                 options={ROOT_NOTES}
@@ -400,9 +400,9 @@ export const Controls: React.FC<ControlsProps> = ({
     <div className="relative overflow-hidden">
       {/* Standard Controls */}
       <div 
-        className={`space-y-6 transition-all duration-500 ease-in-out ${isBYOMode ? 'translate-x-[-100%] opacity-0 pointer-events-none absolute inset-0' : 'translate-x-0 opacity-100'}`}
+        className={`space-y-4 md:space-y-6 transition-all duration-500 ease-in-out ${isBYOMode ? 'translate-x-[-100%] opacity-0 pointer-events-none absolute inset-0' : 'translate-x-0 opacity-100'}`}
       >
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             <CustomSelect
               label="Key"
               value={selectedKey}
@@ -415,7 +415,7 @@ export const Controls: React.FC<ControlsProps> = ({
               onChange={onModeChange}
             />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
              <CustomSelect
               label="Progression"
               value={selectedProgression}
@@ -431,10 +431,10 @@ export const Controls: React.FC<ControlsProps> = ({
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 pt-2">
             <div className="flex items-center justify-center">
               <label htmlFor="tensions-toggle" className="flex items-center cursor-pointer select-none group">
-                <span className="mr-4 text-text/80 group-hover:text-text transition-colors font-semibold">Tension Chords</span>
+                <span className="mr-2 md:mr-4 text-text/80 group-hover:text-text transition-colors font-semibold">Tension Chords</span>
                 <div className="relative">
                    <input
                     id="tensions-toggle"
@@ -452,7 +452,7 @@ export const Controls: React.FC<ControlsProps> = ({
             <div className="flex items-center justify-center">
               {onBYOChange && (
                 <label htmlFor="byo-toggle" className="flex items-center cursor-pointer select-none group">
-                  <span className="mr-4 text-text/80 group-hover:text-text transition-colors font-semibold">BYO</span>
+                  <span className="mr-2 md:mr-4 text-text/80 group-hover:text-text transition-colors font-semibold">BYO</span>
                   <div className="relative">
                      <input
                       id="byo-toggle"
@@ -495,12 +495,12 @@ export const Controls: React.FC<ControlsProps> = ({
       {/* Custom Progression Input */}
       {onCustomProgressionChange && onNumCustomChordsChange && onAnalyzeCustom && (
         <div 
-          className={`space-y-6 transition-all duration-500 ease-in-out ${!isBYOMode ? 'translate-x-[100%] opacity-0 pointer-events-none absolute inset-0' : 'translate-x-0 opacity-100'}`}
+          className={`space-y-4 md:space-y-6 transition-all duration-500 ease-in-out ${!isBYOMode ? 'translate-x-[100%] opacity-0 pointer-events-none absolute inset-0' : 'translate-x-0 opacity-100'}`}
         >
-            <div className="flex items-center justify-center gap-6 pt-2">
+            <div className="flex items-center justify-center gap-4 md:gap-6 pt-2">
               {onBYOChange && (
                 <label htmlFor="byo-toggle-back" className="flex items-center cursor-pointer select-none group">
-                  <span className="mr-4 text-text/80 group-hover:text-text transition-colors font-semibold">BYO</span>
+                  <span className="mr-2 md:mr-4 text-text/80 group-hover:text-text transition-colors font-semibold">BYO</span>
                   <div className="relative">
                      <input
                       id="byo-toggle-back"
