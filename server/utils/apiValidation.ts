@@ -40,9 +40,9 @@ const ROMAN_NUMERAL_PATTERN = /^[b#]?[ivxlcdmIVXLCDM]+[°°]?(maj|min|m|dim|aug)
 
 /**
  * Pattern to match valid scale names
- * Examples: "C major", "A minor", "G Dorian", "F# Pentatonic", "Bb Altered Scale"
+ * Examples: "C major", "A minor", "E Natural Minor", "G Dorian", "F# Pentatonic", "Bb Altered Scale"
  */
-const SCALE_NAME_PATTERN = /^[A-G][#b]?\s+(major|minor|dorian|phrygian|lydian|mixolydian|locrian|pentatonic|blues|altered|harmonic|melodic)(\s+pentatonic|\s+scale)?$/i;
+const SCALE_NAME_PATTERN = /^[A-G][#b]?\s+(natural\s+)?(major|minor|dorian|phrygian|lydian|mixolydian|locrian|pentatonic|blues|altered|harmonic|melodic)(\s+pentatonic|\s+scale|\s+minor|\s+major)?$/i;
 
 /**
  * Valid root notes
