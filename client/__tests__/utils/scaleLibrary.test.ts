@@ -111,6 +111,12 @@ describe('scaleLibrary', () => {
       expect(normalizeScaleName('Lydian')).toBe('lydian');
     });
 
+    it('should normalize advanced mode descriptors', () => {
+      expect(normalizeScaleName('G Lydian Dominant')).toBe('lydian dominant');
+      expect(normalizeScaleName('C Super Locrian')).toBe('super locrian');
+      expect(normalizeScaleName('Bb Blues')).toBe('blues');
+    });
+
     it('should normalize blues scale', () => {
       expect(normalizeScaleName('Blues')).toBe('blues');
       expect(normalizeScaleName('blues scale')).toBe('blues');

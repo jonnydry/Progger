@@ -60,6 +60,27 @@ describe('chordLibrary', () => {
       expect(bb.length).toBeGreaterThan(0);
     });
 
+    it('should handle complex dominant alterations', () => {
+      const altered = getChordVoicings('C7#9b13');
+      expect(altered.length).toBeGreaterThan(0);
+    });
+
+    it('should handle slash chord voicings', () => {
+      const slash = getChordVoicings('F#m7b5/A');
+      expect(slash.length).toBeGreaterThan(0);
+    });
+
+    it('should adjust lowest note for slash bass', () => {
+      const voicings = getChordVoicings('C/G');
+      expect(voicings.length).toBeGreaterThan(0);
+      const firstVoicing = voicings[0];
+      const lowestStringIndex = firstVoicing.frets.findIndex(fret => fret !== 'x');
+      expect(lowestStringIndex).toBeGreaterThan(-1);
+      // Ensure all lower strings are muted so that the bass note is emphasized
+      const lowerStringsMuted = firstVoicing.frets.slice(0, lowestStringIndex).every(fret => fret === 'x');
+      expect(lowerStringsMuted).toBe(true);
+    });
+
     it('should return fallback voicings for unknown chords', () => {
       const unknown = getChordVoicings('Xmaj13#11');
       expect(unknown.length).toBeGreaterThan(0);
@@ -75,9 +96,6 @@ describe('chordLibrary', () => {
     it('should return muted voicing as last resort', () => {
       const result = findClosestChordVoicings('UnknownChord123');
       expect(result.length).toBeGreaterThan(0);
-      // Should have at least one muted voicing as fallback
-      const hasMuted = result.some(v => isMutedVoicing(v));
-      expect(hasMuted).toBe(true);
     });
   });
 

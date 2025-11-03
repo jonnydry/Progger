@@ -1,3 +1,5 @@
+import { resolveChordQuality } from '@shared/music/chordQualities';
+import { normalizeScaleDescriptor, FALLBACK_SCALE_LIBRARY_KEYS } from '@shared/music/scaleModes';
 /**
  * Enhanced API response validation
  * Validates structure and format of responses from external APIs (xAI Grok)
@@ -27,23 +29,9 @@ export class APIValidationError extends Error {
 }
 
 /**
- * Pattern to match valid chord names
- * Examples: C, Cmaj7, Am7, Dm7, G7b9, D7alt, Bm7b5, F#maj9, Ab7sus4, CM7, Cm7
+ * Pattern to validate individual Roman numeral components (including alterations)
  */
-const CHORD_NAME_PATTERN = /^[A-G][#b]?(maj|min|dim|aug|M|m)?\d*(sus\d+)?(add\d+)?(b\d+|#\d+|alt)?(\/[A-G][#b]?)?$/i;
-
-/**
- * Pattern to match valid Roman numeral notation
- * Examples: I, Imaj7, ii, V7, iim7, ii°7, V7/ii, bVII, Imaj9, V7b9, V7alt
- */
-const ROMAN_NUMERAL_PATTERN = /^[b#]?[ivxlcdmIVXLCDM]+[°°]?(maj|min|m|dim|aug)?\d*(sus\d+)?(add\d+)?(b\d+|#\d+|alt)?(\/[b#]?[ivxlcdmIVXLCDM]+)?$/i;
-
-/**
- * Pattern to match valid scale names (strict internal format)
- * Examples: "C Major", "A Minor", "G Dorian", "F# Phrygian", "Bb Major Pentatonic", "E Minor Pentatonic"
- * NOTE: Does NOT accept qualifiers like "Natural", "Harmonic", "Melodic" - AI must use our exact format
- */
-const SCALE_NAME_PATTERN = /^[A-G][#b]?\s+(Major|Minor|Dorian|Phrygian|Lydian|Mixolydian|Locrian|Altered)(\s+Pentatonic)?$/;
+const ROMAN_NUMERAL_COMPONENT_PATTERN = /^[b#]?[IVXLCDMivxlcdm]+[a-zA-Z0-9#b°øΔ]*$/;
 
 /**
  * Valid root notes
@@ -61,12 +49,35 @@ function validateChordName(chordName: string): void {
     throw new APIValidationError('Chord name is required and must be a string');
   }
 
-  if (!CHORD_NAME_PATTERN.test(chordName.trim())) {
+  const match = chordName.trim().match(/^([A-G][#b]?)(.*?)(?:\/([A-G][#b]?))?$/i);
+  if (!match) {
     throw new APIValidationError(
-      `Invalid chord name format: "${chordName}". ` +
-      'Expected format: root note (C-G) with optional accidentals (#/b), ' +
-      'chord quality (maj/min/dim/aug), extensions (7, 9, 11, 13), ' +
-      'and alterations (b9, #9, etc.)'
+      `Invalid chord format: "${chordName}". Expected root note with optional quality and bass (e.g., "Cmaj7", "F#m7b5/A").`
+    );
+  }
+
+  const [, rawRoot, rawQuality = '', rawBass] = match;
+  const root = normalizeRootToken(rawRoot);
+
+  if (!VALID_ROOT_NOTES.includes(root)) {
+    throw new APIValidationError(
+      `Invalid chord root: "${root}". Must be one of: ${VALID_ROOT_NOTES.join(', ')}`
+    );
+  }
+
+  if (rawBass) {
+    const bass = normalizeRootToken(rawBass);
+    if (!VALID_ROOT_NOTES.includes(bass)) {
+      throw new APIValidationError(
+        `Invalid chord bass note: "${bass}". Must be one of: ${VALID_ROOT_NOTES.join(', ')}`
+      );
+    }
+  }
+
+  const { recognized } = resolveChordQuality(rawQuality);
+  if (!recognized) {
+    throw new APIValidationError(
+      `Unsupported chord quality in "${chordName}". Received "${rawQuality || 'major'}" but it does not match known qualities.`
     );
   }
 }
@@ -79,11 +90,13 @@ function validateRomanNumeral(relationToKey: string): void {
     throw new APIValidationError('Relation to key is required and must be a string');
   }
 
-  if (!ROMAN_NUMERAL_PATTERN.test(relationToKey.trim())) {
-    throw new APIValidationError(
-      `Invalid Roman numeral format: "${relationToKey}". ` +
-      'Expected format: Roman numerals (I-VII) with optional quality indicators (maj7, min7, etc.)'
-    );
+  const parts = relationToKey.split('/');
+  for (const part of parts) {
+    if (!ROMAN_NUMERAL_COMPONENT_PATTERN.test(part)) {
+      throw new APIValidationError(
+        `Invalid Roman numeral component: "${part}" in "${relationToKey}".`
+      );
+    }
   }
 }
 
@@ -95,12 +108,25 @@ function validateScaleName(scaleName: string): void {
     throw new APIValidationError('Scale name is required and must be a string');
   }
 
-  if (!SCALE_NAME_PATTERN.test(scaleName.trim())) {
+  const trimmed = scaleName.trim();
+  const match = trimmed.match(/^([A-G][#b]?)(?:\s+)(.+)$/i);
+  if (!match) {
     throw new APIValidationError(
-      `Invalid scale name format: "${scaleName}". ` +
-      'Expected format: root note + mode name (e.g., "C Major", "A Minor", "G Dorian", "E Minor Pentatonic"). ' +
-      'Do NOT include qualifiers like "Natural", "Harmonic", or "Melodic".'
+      `Invalid scale name: "${scaleName}". Expected format: root + descriptor (e.g., "C Major").`
     );
+  }
+
+  const [, rootNote, descriptor] = match;
+  validateRootNote(normalizeRootToken(rootNote));
+
+  const normalized = normalizeScaleDescriptor(descriptor);
+  if (!normalized) {
+    const sanitized = descriptor.replace(/\s+|-/g, '').toLowerCase();
+    if (!FALLBACK_SCALE_LIBRARY_KEYS.has(sanitized)) {
+      throw new APIValidationError(
+        `Unsupported scale descriptor: "${descriptor}" in "${scaleName}".`
+      );
+    }
   }
 }
 
@@ -118,6 +144,26 @@ function validateRootNote(rootNote: string): void {
       `Must be one of: ${VALID_ROOT_NOTES.join(', ')}`
     );
   }
+}
+
+function normalizeRootToken(token: string): string {
+  const trimmed = token.trim();
+  if (trimmed.length <= 1) {
+    return trimmed.toUpperCase();
+  }
+
+  const first = trimmed.charAt(0).toUpperCase();
+  const second = trimmed.charAt(1);
+
+  if (second === '#' || second === '♯') {
+    return `${first}#`;
+  }
+
+  if (second === 'b' || second === '♭' || second === 'B') {
+    return `${first}b`;
+  }
+
+  return first + second.toLowerCase();
 }
 
 /**

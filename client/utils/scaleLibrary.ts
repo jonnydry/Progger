@@ -32,6 +32,7 @@
  */
 
 import { noteToValue, valueToNote, ALL_NOTES_SHARP, calculateSemitoneDistance } from './musicTheory';
+import { normalizeScaleDescriptor, FALLBACK_SCALE_LIBRARY_KEYS } from '@shared/music/scaleModes';
 
 export interface ScalePattern {
   intervals: number[];
@@ -430,44 +431,30 @@ export function getScaleIntervals(scaleName: string): number[] {
 
 
 
+function toScaleDescriptor(name: string): string {
+  const trimmed = name.trim();
+  const match = trimmed.match(/^([A-G][#b]?)(?:\s+)(.+)$/i);
+  const descriptor = match ? match[2] : trimmed;
+  return descriptor.replace(/\b(scale|mode)\b/gi, '').trim();
+}
+
 export function normalizeScaleName(name: string): string {
-  const lower = name.toLowerCase().trim();
-
-  if (lower.includes('pentatonic')) {
-    if (lower.includes('major')) return 'pentatonic major';
-    if (lower.includes('minor')) return 'pentatonic minor';
+  const descriptor = toScaleDescriptor(name);
+  const normalized = normalizeScaleDescriptor(descriptor);
+  if (normalized) {
+    return normalized.libraryKey;
   }
 
-  if (lower.includes('blues')) return 'blues';
-
-  if (lower.includes('harmonic') && lower.includes('minor')) return 'harmonic minor';
-  if (lower.includes('melodic') && lower.includes('minor')) return 'melodic minor';
-
-  if (lower.includes('whole tone')) return 'whole tone';
-  if (lower.includes('diminished')) return 'diminished';
-  if (lower.includes('altered')) return 'altered';
-
-  if (lower.includes('bebop')) {
-    if (lower.includes('dominant')) return 'bebop dominant';
-    if (lower.includes('major')) return 'bebop major';
+  const fallback = descriptor.toLowerCase().trim();
+  if (SCALE_LIBRARY[fallback]) {
+    return fallback;
   }
 
-  if (lower.includes('phrygian dominant')) return 'phrygian dominant';
-  if (lower.includes('hungarian')) return 'hungarian minor';
-  if (lower.includes('gypsy')) return 'gypsy';
-  if (lower.includes('lydian dominant')) return 'lydian dominant';
-  if (lower.includes('super locrian')) return 'super locrian';
-
-  if (lower.includes('ionian')) return 'ionian';
-  if (lower.includes('dorian')) return 'dorian';
-  if (lower.includes('phrygian')) return 'phrygian';
-  if (lower.includes('lydian')) return 'lydian';
-  if (lower.includes('mixolydian')) return 'mixolydian';
-  if (lower.includes('aeolian')) return 'aeolian';
-  if (lower.includes('locrian')) return 'locrian';
-
-  if (lower.includes('major')) return 'major';
-  if (lower.includes('minor')) return 'minor';
+  const sanitized = descriptor.replace(/\s+|-/g, '').toLowerCase();
+  const fallbackKey = FALLBACK_SCALE_LIBRARY_KEYS.get(sanitized);
+  if (fallbackKey && SCALE_LIBRARY[fallbackKey]) {
+    return fallbackKey;
+  }
 
   return 'major';
 }

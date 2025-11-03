@@ -124,21 +124,8 @@ export class APIUnavailableError extends MusicTheoryError {
       }
     }
 
-    // Return basic fallback progression
-    return {
-      progression: [{
-        chordName: 'Cmaj7',
-        musicalFunction: 'tonic',
-        relationToKey: 'I',
-        voicings: [{ frets: ['x', 3, 2, 0, 0, 0], position: 'Open' }]
-      }],
-      scales: [{
-        name: 'C major',
-        rootNote: 'C',
-        notes: ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
-        fingering: [[8, 10, 12]]
-      }]
-    };
+    const { key, mode, numChords } = deriveFallbackParameters(cacheKey);
+    return buildLocalFallbackProgression(key, numChords, mode);
   }
 }
 
@@ -155,31 +142,8 @@ export class InvalidAPIResponseError extends MusicTheoryError {
   }
 
   // Recovery strategy: Generate basic progression locally
-  async recover(key: string = 'C', numChords: number = 4) {
-    const basicProgressions: Record<string, string[]> = {
-      'C': ['Cmaj7', 'Dm7', 'G7', 'Cmaj7'],
-      'Dmaj7': ['Dmaj7', 'Em7', 'A7', 'Dmaj7'],
-      'Em': ['Em', 'F#dim', 'G', 'Am', 'Bm', 'C', 'D', 'Em'],
-    };
-
-    const chordNames = basicProgressions[key] || basicProgressions['C'];
-    const { getChordVoicings } = await import('./chordLibrary');
-    const { getScaleFingering, getScaleNotes } = await import('./scaleLibrary');
-
-    return {
-      progression: chordNames.slice(0, numChords).map(chordName => ({
-        chordName,
-        musicalFunction: 'progression',
-        relationToKey: 'chord',
-        voicings: getChordVoicings(chordName)
-      })),
-      scales: [{
-        name: `${key} major`,
-        rootNote: key,
-        notes: getScaleNotes(key, 'major'),
-        fingering: getScaleFingering('major', key)
-      }]
-    };
+  async recover(key: string = 'C', numChords: number = 4, mode: string = 'major') {
+    return buildLocalFallbackProgression(key, numChords, mode);
   }
 }
 
@@ -230,4 +194,131 @@ export function createErrorLog(error: Error, context?: Record<string, any>): str
   };
 
   return JSON.stringify(logData, null, 2);
+}
+
+function deriveFallbackParameters(cacheKey?: string): { key: string; mode: string; numChords: number } {
+  const defaults = { key: 'C', mode: 'major', numChords: 4 };
+  if (!cacheKey) {
+    return defaults;
+  }
+
+  const parts = cacheKey.split(':');
+  if (parts.length < 5) {
+    return defaults;
+  }
+
+  const rawKey = parts[1];
+  const rawMode = parts[2] || 'major';
+  const parsedNumChords = parseInt(parts[4], 10);
+
+  return {
+    key: formatKeyToken(rawKey),
+    mode: normalizeMode(rawMode),
+    numChords: Number.isFinite(parsedNumChords) ? parsedNumChords : defaults.numChords
+  };
+}
+
+function formatKeyToken(raw: string): string {
+  if (!raw) return 'C';
+  const upper = raw.toUpperCase();
+  if (upper.length === 1) {
+    return upper;
+  }
+
+  const first = upper.charAt(0);
+  const rest = upper.slice(1);
+
+  if (rest === '#') return `${first}#`;
+  if (rest === 'B') return `${first}b`;
+
+  return first + rest.toLowerCase();
+}
+
+async function buildLocalFallbackProgression(key: string, numChords: number, mode: string = 'major') {
+  const majorProgressions: Record<string, string[]> = {
+    'C': ['Cmaj7', 'Dm7', 'G7', 'Cmaj7'],
+    'Db': ['Dbmaj7', 'Ebm7', 'Ab7', 'Dbmaj7'],
+    'D': ['Dmaj7', 'Em7', 'A7', 'Dmaj7'],
+    'Eb': ['Ebmaj7', 'Fm7', 'Bb7', 'Ebmaj7'],
+    'E': ['Emaj7', 'F#m7', 'B7', 'Emaj7'],
+    'F': ['Fmaj7', 'Gm7', 'C7', 'Fmaj7'],
+    'Gb': ['Gbmaj7', 'Abm7', 'Db7', 'Gbmaj7'],
+    'G': ['Gmaj7', 'Am7', 'D7', 'Gmaj7'],
+    'Ab': ['Abmaj7', 'Bbm7', 'Eb7', 'Abmaj7'],
+    'A': ['Amaj7', 'Bm7', 'E7', 'Amaj7'],
+    'Bb': ['Bbmaj7', 'Cm7', 'F7', 'Bbmaj7'],
+    'B': ['Bmaj7', 'C#m7', 'F#7', 'Bmaj7']
+  };
+
+  const minorProgressions: Record<string, string[]> = {
+    'C': ['Cm7', 'Fm7', 'G7', 'Cm7'],
+    'C#': ['C#m7', 'F#m7', 'G#7', 'C#m7'],
+    'Db': ['Dbm7', 'Gbm7', 'Ab7', 'Dbm7'],
+    'D': ['Dm7', 'Gm7', 'A7', 'Dm7'],
+    'Eb': ['Ebm7', 'Abm7', 'Bb7', 'Ebm7'],
+    'E': ['Em7', 'Am7', 'B7', 'Em7'],
+    'F': ['Fm7', 'Bbm7', 'C7', 'Fm7'],
+    'F#': ['F#m7', 'Bm7', 'C#7', 'F#m7'],
+    'G': ['Gm7', 'Cm7', 'D7', 'Gm7'],
+    'Ab': ['Abm7', 'Dbm7', 'Eb7', 'Abm7'],
+    'A': ['Am7', 'Dm7', 'E7', 'Am7'],
+    'Bb': ['Bbm7', 'Ebm7', 'F7', 'Bbm7'],
+    'B': ['Bm7', 'Em7', 'F#7', 'Bm7']
+  };
+
+  const source = mode === 'minor' ? minorProgressions : majorProgressions;
+  const normalizedKey = resolveEnharmonicKey(key, source);
+  const chordNames = source[normalizedKey];
+  const { getChordVoicings } = await import('./chordLibrary');
+  const { getScaleFingering, getScaleNotes } = await import('./scaleLibrary');
+
+  const scaleMode = mode === 'minor' ? 'minor' : 'major';
+
+  return {
+    progression: chordNames.slice(0, numChords).map(chordName => ({
+      chordName,
+      musicalFunction: 'progression',
+      relationToKey: 'chord',
+      voicings: getChordVoicings(chordName)
+    })),
+    scales: [{
+      name: `${normalizedKey} ${scaleMode}`,
+      rootNote: normalizedKey,
+      notes: getScaleNotes(normalizedKey, scaleMode),
+      fingering: getScaleFingering(scaleMode, normalizedKey)
+    }]
+  };
+}
+
+function normalizeMode(mode: string): string {
+  const normalized = mode.toLowerCase();
+  if (normalized.includes('min')) {
+    return 'minor';
+  }
+  return 'major';
+}
+
+function resolveEnharmonicKey(key: string, source: Record<string, string[]>): string {
+  if (source[key]) {
+    return key;
+  }
+
+  const enharmonicMap: Record<string, string> = {
+    'C#': 'Db',
+    'D#': 'Eb',
+    'F#': 'Gb',
+    'G#': 'Ab',
+    'A#': 'Bb',
+    'Cb': 'B',
+    'B#': 'C',
+    'E#': 'F',
+    'Fb': 'E'
+  };
+
+  const mapped = enharmonicMap[key];
+  if (mapped && source[mapped]) {
+    return mapped;
+  }
+
+  return 'C';
 }

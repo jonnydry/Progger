@@ -23,6 +23,7 @@
  */
 
 import type { ChordVoicing } from '../types';
+import { normalizeChordQuality } from '@shared/music/chordQualities';
 
 export interface ChordData {
   name: string;
@@ -753,7 +754,7 @@ const ROOT_TO_FRET_FROM_E: Record<string, number> = {
   'B': 7
 };
 
-import { noteToValue } from './musicTheory';
+import { noteToValue, STANDARD_TUNING_VALUES } from './musicTheory';
 
 /**
  * Normalize root note to a consistent format for chord lookups
@@ -808,103 +809,14 @@ function normalizeRoot(root: string): string {
   return firstPossibility;
 }
 
-function normalizeQuality(quality: string): string {
-  const q = quality.toLowerCase().replace(/\s+/g, '').trim();
-
-  // Handle compound chord qualities by breaking them down
-  // Pattern: base_quality + extensions (e.g., maj7#11, 7b9b13, 9#11)
-
-  // Check for advanced jazz extensions first (compound qualities)
-  // These must be checked before simpler patterns to avoid partial matches
-
-  // Major 7th with extensions
-  if (q.includes('maj7')) {
-    if (q.includes('#11')) return 'maj7#11';
-    if (q.includes('b13')) return 'maj7b13';
-    if (q.includes('#9')) return 'maj7#9';
-    return 'maj7'; // fallback to maj7
-  }
-
-  // Minor/major 7th (special case - minor triad, major 7th)
-  if (q === 'm/maj7' || q === 'min/maj7' || q === 'm7+' || q === 'min7/maj7') return 'min/maj7';
-
-  // Dominant 7th extensions (most complex first)
-  if (q.startsWith('7')) {
-    if (q.includes('b9b13')) return '7b9b13';
-    if (q.includes('#9b13')) return '7#9b13';
-    if (q.includes('b9')) return '7b9';  // check before #9 to avoid conflicts
-    if (q.includes('#9')) return '7#9';
-    if (q.includes('#11')) return '7#11';
-    if (q.includes('b13')) return '7b13';
-    if (q.includes('b5')) return '7b5';
-    if (q.includes('#5') || q.includes('+5') || q.includes('+')) return '7#5';
-    if (q.includes('alt')) return '7alt';
-    if (q.includes('sus4') || q.includes('sus')) return '7sus4';
-    return '7'; // fallback to dominant 7th
-  }
-
-  // Extended chords (9ths, 11ths, 13ths) with additional tensions
-  if (q.startsWith('9')) {
-    if (q.includes('#11')) return '9#11';
-    return '9';
-  }
-
-  // Basic triads
-  if (!q || q === 'maj' || q === 'major' || q === 'M') return 'major';
-  if (q === 'm' || q === 'min' || q === 'minor' || q === '-') return 'minor';
-  if (q === 'dim' || q === 'o' || q === '°') return 'dim';
-  if (q === 'aug' || q === '+' || q === '#5') return 'aug';
-
-  // Suspended chords
-  if (q === 'sus2') return 'sus2';
-  if (q === 'sus4' || q === 'sus') return 'sus4';
-
-  // Seventh chords (basic forms)
-  if (q === 'dom7' || q === 'dominant7') return '7';
-  if (q === 'major7' || q === 'M7' || q === 'Δ7' || q === 'Δ') return 'maj7';
-  if (q === 'm7' || q === 'min7' || q === 'minor7' || q === '-7') return 'min7';
-  if (q === 'dim7' || q === 'o7' || q === '°7') return 'dim7';
-
-  // Diminished/min7b5 chords
-  if (q.startsWith('m7b5') || q === 'ø' || q === 'half-dim' || q === 'ø7') return 'min7b5';
-
-  // Extended chords (9ths, 11ths, 13ths) basic forms
-  if (q === 'dom9') return '9';
-  if (q === 'maj9' || q === 'M9' || q === 'Δ9') return 'maj9';
-  if (q === 'm9' || q === 'min9' || q === '-9') return 'min9';
-  if (q === '11' || q === 'dom11') return '11';
-  if (q === 'maj11' || q === 'M11' || q === 'Δ11') return 'maj11';
-  if (q === 'm11' || q === 'min11' || q === '-11') return 'min11';
-  if (q === '13' || q === 'dom13') return '13';
-  if (q === 'maj13' || q === 'M13' || q === 'Δ13') return 'maj13';
-  if (q === 'm13' || q === 'min13' || q === '-13') return 'min13';
-
-  // Sixth chords
-  if (q === '6') return '6';
-  if (q === 'm6' || q === 'min6' || q === '-6') return 'min6';
-  if (q === '6/9' || q === '69') return '6/9';
-
-  // Add chords
-  if (q === 'add9') return 'add9';
-  if (q === 'add11') return 'add11';
-  if (q === 'madd9' || q === 'm(add9)') return 'madd9';
-
-  // Suspended 9th chords
-  if (q === '9sus4' || q === '9sus') return '9sus4';
-
-  // If nothing matches, log warning and return major as fallback
-  if (q) {
-    console.warn(`Unknown chord quality: "${quality}" - defaulting to major (check for missing extensions)`);
-  }
-  return 'major';
-}
-
 function extractRootAndQuality(chordName: string): { root: string; quality: string } {
   const match = chordName.match(/^([A-G][#b]?)(.*)/i);
   if (!match) return { root: 'C', quality: 'major' };
+  const [, rawRoot, rawSuffix] = match;
+  const qualitySegment = (rawSuffix || '').split('/')[0] ?? '';
   return { 
-    root: normalizeRoot(match[1]), 
-    quality: normalizeQuality(match[2]) 
+    root: normalizeRoot(rawRoot), 
+    quality: normalizeChordQuality(qualitySegment) 
   };
 }
 
@@ -935,6 +847,9 @@ function getFretOffset(root: string): number {
  * Prioritizes chords with same root note, then similar chord qualities
  */
 export function findClosestChordVoicings(chordName: string): ChordVoicing[] {
+  const slashMatch = chordName.match(/^(.*?)(?:\/([A-G][#b]?))?$/i);
+  const slashBass = slashMatch?.[2] ? normalizeRoot(slashMatch[2]) : undefined;
+
   const { root, quality } = extractRootAndQuality(chordName);
   const targetKey: ChordKey = `${root}_${quality}`;
 
@@ -995,12 +910,12 @@ export function findClosestChordVoicings(chordName: string): ChordVoicing[] {
   if (candidates.length > 0) {
     const bestMatch = candidates[0];
     console.info(`🧠 Smart fallback: "${chordName}" (${targetKey}) → "${bestMatch.key}" (similarity: ${bestMatch.similarity})`);
-    return bestMatch.voicings;
+    return adjustVoicingsForSlashBass(bestMatch.voicings, slashBass);
   }
 
   // Ultimate fallback - use generic barre shape
   console.warn(`🤔 No good chord match found for "${chordName}", using generic barre shape`);
-  return getGenericBarreVoicings(chordName);
+  return adjustVoicingsForSlashBass(getGenericBarreVoicings(chordName), slashBass);
 }
 
 /**
@@ -1051,6 +966,11 @@ export function isMutedVoicing(voicing: ChordVoicing): boolean {
  * This function detects if a voicing is using absolute fret positions instead.
  */
 export function validateVoicingFormat(voicing: ChordVoicing, chordName: string): boolean {
+  if (!voicing.frets || voicing.frets.length !== 6) {
+    console.error(`❌ Invalid voicing format for "${chordName}": expected 6 frets, received ${voicing.frets?.length ?? 0}`);
+    return false;
+  }
+
   if (!voicing.firstFret || voicing.firstFret <= 1) {
     return true;
   }
@@ -1119,9 +1039,54 @@ export function getChordVoicings(chordName: string): ChordVoicing[] {
   // Try to find specific voicing in library
   const voicings = CHORD_VOICINGS[key];
   if (voicings && voicings.length > 0) {
-    return voicings;
+    const slashMatch = chordName.match(/^(.*?)(?:\/([A-G][#b]?))?$/i);
+    const slashBass = slashMatch?.[2] ? normalizeRoot(slashMatch[2]) : undefined;
+    return adjustVoicingsForSlashBass(voicings, slashBass);
   }
 
   // Smart fallback: find closest match instead of muted strings
   return findClosestChordVoicings(chordName);
+}
+
+function adjustVoicingsForSlashBass(voicings: ChordVoicing[], slashBass?: string): ChordVoicing[] {
+  if (!slashBass) {
+    return voicings;
+  }
+
+  const bassValue = noteToValue(slashBass);
+  return voicings.map((voicing) => {
+    const noteValues = voicing.frets.map((fret, index) => {
+      if (typeof fret !== 'number') {
+        return null;
+      }
+      const absoluteFret = voicing.firstFret && voicing.firstFret > 1
+        ? voicing.firstFret + fret - 1
+        : fret;
+      return (STANDARD_TUNING_VALUES[index] + absoluteFret) % 12;
+    });
+
+    const lowestSoundingIndex = noteValues.findIndex((value, idx) => value !== null && voicing.frets[idx] !== 'x');
+    if (lowestSoundingIndex === -1) {
+      return voicing;
+    }
+
+    if (noteValues[lowestSoundingIndex] === bassValue) {
+      return voicing;
+    }
+
+    const targetIndex = noteValues.findIndex((value) => value === bassValue);
+    if (targetIndex === -1) {
+      return voicing;
+    }
+
+    const updatedFrets = voicing.frets.map((fret, idx) =>
+      idx < targetIndex ? 'x' : fret
+    );
+
+    return {
+      ...voicing,
+      frets: updatedFrets,
+      position: `${voicing.position || 'Adjusted'} (/${slashBass})`
+    };
+  });
 }
