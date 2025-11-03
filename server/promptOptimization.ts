@@ -10,14 +10,14 @@ export interface ProgressionRequest {
 
 export interface PromptComponents {
   basePrompt: string;
-  tensionInstructions: string;
+  advancedChordInstructions: string;
   progressionInstructions: string;
   schemaDescription: string;
   fullPrompt: string;
 }
 
 /**
- * Optimizes prompt length by only including tension instructions when needed
+ * Optimizes prompt length by only including advanced chord instructions when needed
  */
 export function buildOptimizedPrompt(request: ProgressionRequest): PromptComponents {
   const { key, mode, includeTensions, numChords, selectedProgression } = request;
@@ -120,14 +120,14 @@ CRITICAL REQUIREMENTS:
 6. Use harmonies that highlight the characteristic notes of ${mode} mode`;
 
   // Advanced chord instructions - only included when advanced chords are requested
-  let tensionInstructions = '';
+  let advancedChordInstructions = '';
   if (includeTensions) {
-    // Calculate appropriate number of tension chords based on progression length
-    const minTensionChords = Math.max(1, Math.floor(numChords * 0.2)); // At least 20%
-    const maxTensionChords = Math.ceil(numChords * 0.4); // At most 40%
+    // Calculate appropriate number of advanced chords based on progression length
+    const minAdvancedChords = Math.max(1, Math.floor(numChords * 0.2)); // At least 20%
+    const maxAdvancedChords = Math.ceil(numChords * 0.4); // At most 40%
 
-    tensionInstructions = `
-Include ${minTensionChords} to ${maxTensionChords} chords with advanced harmonic qualities.
+    advancedChordInstructions = `
+Include ${minAdvancedChords} to ${maxAdvancedChords} chords with advanced harmonic qualities.
 
 ADVANCED CHORD GUIDELINES:
 - Secondary dominants (e.g., V7/V, V7/ii): Dominant chords that resolve to diatonic chords
@@ -175,7 +175,7 @@ The number of chords should exactly match the progression pattern.`;
   }
 
   // Final combined prompt
-  const fullPrompt = `${basePrompt}${tensionInstructions}${progressionInstructions}
+  const fullPrompt = `${basePrompt}${advancedChordInstructions}${progressionInstructions}
 
 For EACH chord in the progression, provide:
 - chordName: EXACT chord name with quality (e.g., 'Cmaj7', 'Am7', 'G7b9', 'D7alt', 'Bm7b5')
@@ -198,7 +198,7 @@ IMPORTANT: Return ONLY valid JSON, no additional text or markdown formatting.`;
 
   return {
     basePrompt,
-    tensionInstructions,
+    advancedChordInstructions,
     progressionInstructions,
     schemaDescription,
     fullPrompt
@@ -212,7 +212,7 @@ export function createPromptFingerprint(components: PromptComponents): string {
   // Create a hash-like fingerprint from the prompt components
   const content = [
     components.basePrompt,
-    components.tensionInstructions,
+    components.advancedChordInstructions,
     components.progressionInstructions
   ].join('|');
 
