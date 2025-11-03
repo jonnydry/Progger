@@ -3,7 +3,7 @@ import type { ChordInProgression, ChordVoicing } from '@/types';
 import { VoicingDiagram } from './VoicingDiagram';
 import { displayChordName } from '@/utils/musicTheory';
 import { analyzeChord, getChordFormula, getChordIntervals, getChordNotes, getScalesContainingChord } from '@/utils/chordAnalysis';
-import { getChordVoicings, isMutedVoicing } from '@/utils/chordLibrary';
+import { getChordVoicings, isMutedVoicing, normalizeRoot } from '@/utils/chordLibrary';
 import { normalizeChordQuality } from '@shared/music/chordQualities';
 
 interface ChordDetailViewProps {
@@ -44,17 +44,22 @@ export const ChordDetailView: React.FC<ChordDetailViewProps> = ({ chord, musical
   const chordAnalysis = analyzeChord(chord.chordName, musicalKey);
 
   // Extract root and quality for advanced variants
+  // Note: Slash bass notes (e.g., "Cmaj7/E") are stripped - variants don't preserve bass notes
   const { root, quality } = React.useMemo(() => {
     const match = chord.chordName.match(/^([A-G][#b]?)(.*)/i);
     if (!match) return { root: 'C', quality: 'major' };
     const [, rawRoot, rawSuffix] = match;
+    // Split on '/' to remove bass note before extracting quality
     const qualitySegment = (rawSuffix || '').split('/')[0] ?? '';
     
     // Use proper normalization from shared chord qualities
     const normalizedQuality = normalizeChordQuality(qualitySegment);
     
+    // Normalize root to handle enharmonic equivalents (B# -> C, E# -> F, etc.)
+    const normalizedRoot = normalizeRoot(rawRoot);
+    
     return { 
-      root: rawRoot.toUpperCase(), 
+      root: normalizedRoot, 
       quality: normalizedQuality 
     };
   }, [chord.chordName]);
@@ -72,13 +77,23 @@ export const ChordDetailView: React.FC<ChordDetailViewProps> = ({ chord, musical
     });
     
     // Generate and add advanced variant voicings
+    // Variant map defines which advanced qualities to show for each base quality
     const variantMap: Record<string, string[]> = {
       'major': ['maj7', 'maj9', '6/9', 'maj13', 'add9'],
       'maj7': ['maj9', '6/9', 'maj13'],
       'minor': ['min7', 'min9', 'min11', 'min13'],
       'min7': ['min9', 'min11', 'min13'],
       '7': ['9', '13', '7b9', '7#9', '7#11', '7b13', '7alt', '9#11', '9sus4'],
-      'min7b5': [] // Skip if no variants typically available
+      'min7b5': [], // Half-diminished - typically no common variants
+      'dim': [], // Diminished - typically no common variants
+      'aug': [], // Augmented - typically no common variants
+      'sus2': [], // Suspended 2nd - typically no common variants
+      'sus4': [], // Suspended 4th - typically no common variants
+      'dim7': [], // Diminished 7th - typically no common variants
+      '6': ['6/9', 'maj7'], // 6th chords can extend to 6/9 or maj7
+      'min6': ['min7'], // Minor 6th can extend to min7
+      'add9': ['maj9'], // add9 can extend to maj9
+      'add11': [] // add11 - typically no common variants
     };
     
     const candidateQualities = variantMap[quality] || [];

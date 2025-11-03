@@ -119,7 +119,7 @@ CRITICAL REQUIREMENTS:
 5. Provide accurate Roman numeral analysis for each chord
 6. Use harmonies that highlight the characteristic notes of ${mode} mode`;
 
-  // Progressive tension instructions - only included when tensions are requested
+  // Advanced chord instructions - only included when advanced chords are requested
   let tensionInstructions = '';
   if (includeTensions) {
     // Calculate appropriate number of tension chords based on progression length
