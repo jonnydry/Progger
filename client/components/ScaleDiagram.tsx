@@ -201,11 +201,11 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) =>
     return lowestMinFretIndex;
   }, [isMobile, name, rootNote, availablePositions]);
 
-  const [currentPosition, setCurrentPosition] = useState(bestMobilePosition);
+  const [currentPosition, setCurrentPosition] = useState(() => bestMobilePosition ?? 0);
 
   // Update position when mobile state changes or when best position changes
   React.useEffect(() => {
-    setCurrentPosition(bestMobilePosition);
+    setCurrentPosition(bestMobilePosition ?? 0);
   }, [bestMobilePosition]);
 
   // Generate position-aware fingering
@@ -401,3 +401,4 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) =>
 };
 
 export default React.memo(ScaleDiagram);
+export { ScaleDiagram };

@@ -58,6 +58,7 @@ describe('scaleLibrary', () => {
       const unknown = getScaleFingering('unknown scale', 'C');
       expect(unknown).toBeDefined();
       expect(unknown.length).toBe(6);
+      validateFingeringStructure(unknown);
     });
   });
 
@@ -97,6 +98,7 @@ describe('scaleLibrary', () => {
     it('should normalize minor scale names', () => {
       expect(normalizeScaleName('Minor')).toBe('minor');
       expect(normalizeScaleName('minor scale')).toBe('minor');
+      expect(normalizeScaleName('C Minor')).toBe('minor');
     });
 
     it('should normalize pentatonic scales', () => {
@@ -191,8 +193,25 @@ describe('scaleLibrary', () => {
         expect(scale.fingerings).toBeDefined();
         expect(Array.isArray(scale.fingerings)).toBe(true);
         expect(scale.fingerings.length).toBeGreaterThan(0);
+        scale.fingerings.forEach((pattern) => validateFingeringStructure(pattern));
       }
     });
   });
+
 });
+
+function validateFingeringStructure(fingering: number[][]): void {
+  expect(fingering.length).toBe(6);
+  fingering.forEach(stringPattern => {
+    stringPattern.forEach(fret => {
+      expect(typeof fret === 'number').toBe(true);
+      expect(fret).toBeGreaterThanOrEqual(0);
+      expect(fret).toBeLessThanOrEqual(24);
+    });
+  });
+}
+
+function collectNoteValues(fingering: number[][]): number[] {
+  return fingering.flat().map(fret => fret % 12);
+}
 

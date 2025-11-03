@@ -5,6 +5,7 @@ import {
   isMutedVoicing,
   validateVoicingFormat,
   validateChordLibrary,
+  normalizeRoot,
 } from '@/utils/chordLibrary';
 import type { ChordVoicing } from '@/types';
 
@@ -155,6 +156,14 @@ describe('chordLibrary', () => {
   describe('validateChordLibrary', () => {
     it('should validate the entire chord library without errors', () => {
       expect(() => validateChordLibrary()).not.toThrow();
+    });
+  });
+
+  describe('normalizeRoot', () => {
+    it('should map enharmonic equivalents consistently', () => {
+      expect(normalizeRoot('C#')).toBe('Db');
+      expect(normalizeRoot('Db')).toBe('Db');
+      expect(normalizeRoot('A#')).toBe('Bb');
     });
   });
 });

@@ -754,6 +754,18 @@ const ROOT_TO_FRET_FROM_E: Record<string, number> = {
   'B': 7
 };
 
+const ENHARMONIC_ROOTS: Record<string, string> = {
+  'A#': 'Bb',
+  'B#': 'C',
+  'C#': 'Db',
+  'D#': 'Eb',
+  'E#': 'F',
+  'F#': 'Gb',
+  'G#': 'Ab',
+  'Cb': 'B',
+  'Fb': 'E'
+};
+
 import { noteToValue, STANDARD_TUNING_VALUES } from './musicTheory';
 
 /**
@@ -761,7 +773,12 @@ import { noteToValue, STANDARD_TUNING_VALUES } from './musicTheory';
  * Chooses the enharmonic spelling that exists in the chord library
  * Preserves F#/Gb and C#/Db distinctions when both forms exist in library
  */
-function normalizeRoot(root: string): string {
+export function normalizeRoot(root: string): string {
+  const enharmonic = ENHARMONIC_ROOTS[root.toUpperCase()];
+  if (enharmonic) {
+    return enharmonic;
+  }
+
   const upper = root.toLowerCase(); // normalize case
 
   // Create a mapping that prioritizes the form that exists in our library
