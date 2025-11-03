@@ -37,7 +37,7 @@ const App: React.FC = () => {
   const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
   const [themeIndex, setThemeIndex] = useState<number>(getInitialThemeIndex);
   const [isStashOpen, setIsStashOpen] = useState(false);
-  const [isBYOMode, setIsBYOMode] = useState(false);
+  const [isCustomMode, setIsCustomMode] = useState(false);
   const [customProgression, setCustomProgression] = useState<Array<{ root: string; quality: string }>>([
     { root: 'C', quality: 'major' },
     { root: 'A', quality: 'minor' },
@@ -195,8 +195,8 @@ const App: React.FC = () => {
   }, [customProgression, formatChordName]);
 
   const skeletonCount = useMemo(() => {
-    return isBYOMode ? numCustomChords : progressionLength;
-  }, [isBYOMode, numCustomChords, progressionLength]);
+    return isCustomMode ? numCustomChords : progressionLength;
+  }, [isCustomMode, numCustomChords, progressionLength]);
 
   const isProggerTheme = THEMES[themeIndex].name === 'PROGGER';
 
@@ -251,8 +251,8 @@ const App: React.FC = () => {
             onTensionsChange={setIncludeTensions}
             onGenerate={handleGenerate}
             isLoading={isLoading}
-            isBYOMode={isBYOMode}
-            onBYOChange={setIsBYOMode}
+            isCustomMode={isCustomMode}
+            onCustomChange={setIsCustomMode}
             customProgression={customProgression}
             onCustomProgressionChange={setCustomProgression}
             numCustomChords={numCustomChords}

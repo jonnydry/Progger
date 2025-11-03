@@ -127,20 +127,26 @@ CRITICAL REQUIREMENTS:
     const maxTensionChords = Math.ceil(numChords * 0.4); // At most 40%
 
     tensionInstructions = `
-Include ${minTensionChords} to ${maxTensionChords} chords with harmonic tension.
+Include ${minTensionChords} to ${maxTensionChords} chords with advanced harmonic qualities.
 
-TENSION CHORD GUIDELINES:
+ADVANCED CHORD GUIDELINES:
 - Secondary dominants (e.g., V7/V, V7/ii): Dominant chords that resolve to diatonic chords
-- Tritone substitutions: bII7 chords resolving down a half-step
+- Tritone substitutions: bII7 chords resolving down a half-step (use sparingly, only with clear resolution)
 - Altered dominants: Use extensions like 7b9, 7#9, 7b5, 7#5, 7alt on dominant function chords
 - Extended chords: 9ths, 11ths, 13ths for smooth voice leading
 - Half-diminished (m7b5): Common in minor keys and as secondary ii chords
 - Suspended dominants: 7sus4 chords for delayed resolution
 
+HARMONIC PRIORITIZATION:
+- PREFER advanced chords on dominant and pre-dominant functions (V7, ii, IV, secondary dominants)
+- Keep tonic chords stable - use maj7, 6, or maj9 for color, avoid heavy alterations on I/i
+- Ensure clear voice leading and functional resolution (e.g., V7alt → Imaj7/6/9, not V7alt → i)
+- Advanced chords must make harmonic sense within the progression - prioritize musicality over complexity
+
 MUSIC THEORY RULES:
-- Tension chords should have clear voice leading and resolution
+- Advanced chords should have clear voice leading and resolution
 - Altered dominants (7b9, 7#9, 7alt) work best on V7 chords or secondary dominants
-- Don't use tensions on tonic chords unless it's a maj7 or maj9
+- Extended chords (9, 11, 13) work well on any function but prioritize dominants and pre-dominants
 - In ${modeInfo.isMajorMode ? 'major' : 'minor'} modes, respect the key signature
 - Use appropriate accidentals: ${key.includes('b') ? 'prefer flats' : key.includes('#') ? 'prefer sharps' : 'use standard spelling'}`;
   }

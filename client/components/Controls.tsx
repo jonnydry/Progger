@@ -17,9 +17,9 @@ interface ControlsProps {
   onTensionsChange: (checked: boolean) => void;
   onGenerate: () => void;
   isLoading: boolean;
-  // BYO mode props
-  isBYOMode?: boolean;
-  onBYOChange?: (enabled: boolean) => void;
+  // Custom mode props
+  isCustomMode?: boolean;
+  onCustomChange?: (enabled: boolean) => void;
   customProgression?: Array<{ root: string; quality: string }>;
   onCustomProgressionChange?: (progression: Array<{ root: string; quality: string }>) => void;
   numCustomChords?: number;
@@ -398,8 +398,8 @@ export const Controls: React.FC<ControlsProps> = ({
   onTensionsChange,
   onGenerate,
   isLoading,
-  isBYOMode = false,
-  onBYOChange,
+  isCustomMode = false,
+  onCustomChange,
   customProgression = [],
   onCustomProgressionChange,
   numCustomChords = 4,
@@ -408,11 +408,11 @@ export const Controls: React.FC<ControlsProps> = ({
 }) => {
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  const handleBYOToggle = (enabled: boolean) => {
-    if (onBYOChange) {
+  const handleCustomToggle = (enabled: boolean) => {
+    if (onCustomChange) {
       setIsTransitioning(true);
       setTimeout(() => {
-        onBYOChange(enabled);
+        onCustomChange(enabled);
         setTimeout(() => setIsTransitioning(false), 300);
       }, 50);
     }
@@ -422,7 +422,7 @@ export const Controls: React.FC<ControlsProps> = ({
     <div className="relative overflow-hidden">
       {/* Standard Controls */}
       <div 
-        className={`space-y-4 md:space-y-6 transition-all duration-500 ease-in-out ${isBYOMode ? 'translate-x-[-100%] opacity-0 pointer-events-none absolute inset-0' : 'translate-x-0 opacity-100'}`}
+        className={`space-y-4 md:space-y-6 transition-all duration-500 ease-in-out ${isCustomMode ? 'translate-x-[-100%] opacity-0 pointer-events-none absolute inset-0' : 'translate-x-0 opacity-100'}`}
       >
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             <CustomSelect
@@ -455,33 +455,42 @@ export const Controls: React.FC<ControlsProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 pt-2">
             <div className="flex items-center justify-center">
-              <label htmlFor="tensions-toggle" className="flex items-center cursor-pointer select-none group">
-                <span className="mr-2 md:mr-4 text-text/80 group-hover:text-text transition-colors font-semibold">Tension Chords</span>
-                <div className="relative">
-                   <input
-                    id="tensions-toggle"
+              <label htmlFor="advanced-chords-toggle" className="flex items-center cursor-pointer select-none group relative">
+                <span className="mr-2 md:mr-4 text-text/80 group-hover:text-text transition-colors font-semibold">Advanced Chords</span>
+                <div className="relative group/tooltip">
+                  <input
+                    id="advanced-chords-toggle"
                     type="checkbox"
                     className="sr-only peer"
                     checked={includeTensions}
                     onChange={(e) => onTensionsChange(e.target.checked)}
+                    aria-describedby="advanced-chords-tooltip"
                   />
                   <div className="w-12 h-6 bg-text/20 rounded-full shadow-inner peer-focus:ring-2 peer-focus:ring-primary peer-focus:ring-offset-2 peer-focus:ring-offset-surface transition-all"></div>
                   <div className="absolute left-1 top-1 w-4 h-4 bg-background rounded-full shadow-md transition-transform peer-checked:translate-x-6 peer-checked:bg-primary peer-checked:shadow-primary/50 peer-checked:shadow-lg"></div>
+                  {/* Tooltip */}
+                  <div
+                    id="advanced-chords-tooltip"
+                    className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-surface text-text text-xs rounded-lg shadow-lg border border-border opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible group-focus-within/tooltip:opacity-100 group-focus-within/tooltip:visible transition-all duration-200 pointer-events-none z-50 whitespace-nowrap"
+                  >
+                    Prioritize extended/altered chords in the generated progression (20-40%)
+                    <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-surface"></div>
+                  </div>
                 </div>
               </label>
             </div>
             
             <div className="flex items-center justify-center">
-              {onBYOChange && (
-                <label htmlFor="byo-toggle" className="flex items-center cursor-pointer select-none group">
-                  <span className="mr-2 md:mr-4 text-text/80 group-hover:text-text transition-colors font-semibold">BYO</span>
+              {onCustomChange && (
+                <label htmlFor="custom-toggle" className="flex items-center cursor-pointer select-none group">
+                  <span className="mr-2 md:mr-4 text-text/80 group-hover:text-text transition-colors font-semibold">Custom</span>
                   <div className="relative">
                      <input
-                      id="byo-toggle"
+                      id="custom-toggle"
                       type="checkbox"
                       className="sr-only peer"
-                      checked={isBYOMode}
-                      onChange={(e) => handleBYOToggle(e.target.checked)}
+                      checked={isCustomMode}
+                      onChange={(e) => handleCustomToggle(e.target.checked)}
                     />
                     <div className="w-12 h-6 bg-text/20 rounded-full shadow-inner peer-focus:ring-2 peer-focus:ring-primary peer-focus:ring-offset-2 peer-focus:ring-offset-surface transition-all"></div>
                     <div className="absolute left-1 top-1 w-4 h-4 bg-background rounded-full shadow-md transition-transform peer-checked:translate-x-6 peer-checked:bg-primary peer-checked:shadow-primary/50 peer-checked:shadow-lg"></div>
@@ -517,19 +526,19 @@ export const Controls: React.FC<ControlsProps> = ({
       {/* Custom Progression Input */}
       {onCustomProgressionChange && onNumCustomChordsChange && onAnalyzeCustom && (
         <div 
-          className={`space-y-4 md:space-y-6 transition-all duration-500 ease-in-out ${!isBYOMode ? 'translate-x-[100%] opacity-0 pointer-events-none absolute inset-0' : 'translate-x-0 opacity-100'}`}
+          className={`space-y-4 md:space-y-6 transition-all duration-500 ease-in-out ${!isCustomMode ? 'translate-x-[100%] opacity-0 pointer-events-none absolute inset-0' : 'translate-x-0 opacity-100'}`}
         >
             <div className="flex items-center justify-center gap-4 md:gap-6 pt-2">
-              {onBYOChange && (
-                <label htmlFor="byo-toggle-back" className="flex items-center cursor-pointer select-none group">
-                  <span className="mr-2 md:mr-4 text-text/80 group-hover:text-text transition-colors font-semibold">BYO</span>
+              {onCustomChange && (
+                <label htmlFor="custom-toggle-back" className="flex items-center cursor-pointer select-none group">
+                  <span className="mr-2 md:mr-4 text-text/80 group-hover:text-text transition-colors font-semibold">Custom</span>
                   <div className="relative">
                      <input
-                      id="byo-toggle-back"
+                      id="custom-toggle-back"
                       type="checkbox"
                       className="sr-only peer"
-                      checked={isBYOMode}
-                      onChange={(e) => handleBYOToggle(e.target.checked)}
+                      checked={isCustomMode}
+                      onChange={(e) => handleCustomToggle(e.target.checked)}
                     />
                     <div className="w-12 h-6 bg-text/20 rounded-full shadow-inner peer-focus:ring-2 peer-focus:ring-primary peer-focus:ring-offset-2 peer-focus:ring-offset-surface transition-all"></div>
                     <div className="absolute left-1 top-1 w-4 h-4 bg-background rounded-full shadow-md transition-transform peer-checked:translate-x-6 peer-checked:bg-primary peer-checked:shadow-primary/50 peer-checked:shadow-lg"></div>

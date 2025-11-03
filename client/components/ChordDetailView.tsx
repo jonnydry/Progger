@@ -3,7 +3,8 @@ import type { ChordInProgression, ChordVoicing } from '@/types';
 import { VoicingDiagram } from './VoicingDiagram';
 import { displayChordName } from '@/utils/musicTheory';
 import { analyzeChord, getChordFormula, getChordIntervals, getChordNotes, getScalesContainingChord } from '@/utils/chordAnalysis';
-import { getChordVoicings } from '@/utils/chordLibrary';
+import { getChordVoicings, isMutedVoicing } from '@/utils/chordLibrary';
+import { normalizeChordQuality } from '@shared/music/chordQualities';
 
 interface ChordDetailViewProps {
   chord: ChordInProgression;
@@ -14,10 +15,9 @@ interface ChordDetailViewProps {
 
 const VoicingGroup: React.FC<{
   title: string;
-  voicings: ChordVoicing[];
-  chordName: string;
-  displayedChordName: string;
-}> = ({ title, voicings, chordName, displayedChordName }) => {
+  voicings: Array<{ voicing: ChordVoicing; chordName: string }>;
+  musicalKey: string;
+}> = ({ title, voicings, musicalKey }) => {
   if (voicings.length === 0) return null;
 
   return (
@@ -27,9 +27,10 @@ const VoicingGroup: React.FC<{
         {title} ({voicings.length})
       </h4>
       <div className="flex flex-row flex-wrap gap-4">
-        {voicings.map((voicing, index) => {
+        {voicings.map(({ voicing, chordName }, index) => {
+          const displayedVariantName = displayChordName(chordName, musicalKey);
           const voicingKey = `${chordName}-${title}-${index}-${voicing.position || 'std'}-${voicing.frets.join('-')}`;
-          return <VoicingDiagram key={voicingKey} chordName={displayedChordName} voicing={voicing} />;
+          return <VoicingDiagram key={voicingKey} chordName={displayedVariantName} voicing={voicing} />;
         })}
       </div>
     </div>
@@ -42,15 +43,79 @@ export const ChordDetailView: React.FC<ChordDetailViewProps> = ({ chord, musical
   // Analyze chord using our new utility
   const chordAnalysis = analyzeChord(chord.chordName, musicalKey);
 
-  // Fetch ALL available voicings directly from the chord library
-  // This ensures we get the complete set, not just what was in the progression
-  const allVoicings = React.useMemo(() => {
-    return getChordVoicings(chord.chordName);
+  // Extract root and quality for advanced variants
+  const { root, quality } = React.useMemo(() => {
+    const match = chord.chordName.match(/^([A-G][#b]?)(.*)/i);
+    if (!match) return { root: 'C', quality: 'major' };
+    const [, rawRoot, rawSuffix] = match;
+    const qualitySegment = (rawSuffix || '').split('/')[0] ?? '';
+    
+    // Use proper normalization from shared chord qualities
+    const normalizedQuality = normalizeChordQuality(qualitySegment);
+    
+    return { 
+      root: rawRoot.toUpperCase(), 
+      quality: normalizedQuality 
+    };
   }, [chord.chordName]);
 
-  // Organize voicings by type
+  // Collect ALL voicings including advanced variants, with their chord names
+  // This includes base chord voicings and all variant voicings merged together
+  const allVoicingsWithNames = React.useMemo(() => {
+    type VoicingWithName = { voicing: ChordVoicing; chordName: string };
+    const voicings: VoicingWithName[] = [];
+    
+    // Add base chord voicings
+    const baseVoicings = getChordVoicings(chord.chordName);
+    baseVoicings.forEach(voicing => {
+      voicings.push({ voicing, chordName: chord.chordName });
+    });
+    
+    // Generate and add advanced variant voicings
+    const variantMap: Record<string, string[]> = {
+      'major': ['maj7', 'maj9', '6/9', 'maj13', 'add9'],
+      'maj7': ['maj9', '6/9', 'maj13'],
+      'minor': ['min7', 'min9', 'min11', 'min13'],
+      'min7': ['min9', 'min11', 'min13'],
+      '7': ['9', '13', '7b9', '7#9', '7#11', '7b13', '7alt', '9#11', '9sus4'],
+      'min7b5': [] // Skip if no variants typically available
+    };
+    
+    const candidateQualities = variantMap[quality] || [];
+    
+    candidateQualities.forEach(variantQuality => {
+      // Construct chord name
+      let variantChordName = root;
+      if (variantQuality === 'maj7' || variantQuality === 'maj9' || variantQuality === 'maj13') {
+        variantChordName += variantQuality;
+      } else if (variantQuality === 'min7' || variantQuality === 'min9' || variantQuality === 'min11' || variantQuality === 'min13') {
+        variantChordName += variantQuality.replace('min', 'm');
+      } else if (variantQuality === '6/9') {
+        variantChordName += '6/9';
+      } else if (variantQuality === 'add9') {
+        variantChordName += 'add9';
+      } else {
+        variantChordName += variantQuality;
+      }
+      
+      // Check if voicings exist for this variant
+      const variantVoicings = getChordVoicings(variantChordName);
+      
+      // Only include if we have real voicings (not all muted)
+      if (variantVoicings.length > 0 && !variantVoicings.every(v => isMutedVoicing(v))) {
+        variantVoicings.forEach(voicing => {
+          voicings.push({ voicing, chordName: variantChordName });
+        });
+      }
+    });
+    
+    return voicings;
+  }, [chord.chordName, root, quality]);
+
+  // Organize voicings by type (includes base chord + all variants)
   const voicingGroups = React.useMemo(() => {
-    const groups: Record<string, ChordVoicing[]> = {
+    type VoicingWithName = { voicing: ChordVoicing; chordName: string };
+    const groups: Record<string, VoicingWithName[]> = {
       'Open': [],
       'Barre': [],
       'Partial': [],
@@ -60,33 +125,33 @@ export const ChordDetailView: React.FC<ChordDetailViewProps> = ({ chord, musical
       'Other': []
     };
 
-    allVoicings.forEach(voicing => {
+    allVoicingsWithNames.forEach(({ voicing, chordName }) => {
       const position = voicing.position || '';
       const positionLower = position.toLowerCase();
       
       if (positionLower.includes('open')) {
-        groups['Open'].push(voicing);
+        groups['Open'].push({ voicing, chordName });
       } else if (positionLower.includes('barre') || position.includes('Barre')) {
-        groups['Barre'].push(voicing);
+        groups['Barre'].push({ voicing, chordName });
       } else if (positionLower.includes('partial')) {
-        groups['Partial'].push(voicing);
+        groups['Partial'].push({ voicing, chordName });
       } else if (positionLower.includes('a-string root') || positionLower.includes('a-string')) {
-        groups['A-string Root'].push(voicing);
+        groups['A-string Root'].push({ voicing, chordName });
       } else if (positionLower.includes('quartal')) {
-        groups['Quartal'].push(voicing);
+        groups['Quartal'].push({ voicing, chordName });
       } else if (positionLower.includes('interior')) {
-        groups['Interior'].push(voicing);
+        groups['Interior'].push({ voicing, chordName });
       } else if (position === '') {
         // Default to Open if no position specified
-        groups['Open'].push(voicing);
+        groups['Open'].push({ voicing, chordName });
       } else {
         // Unknown position types go to "Other"
-        groups['Other'].push(voicing);
+        groups['Other'].push({ voicing, chordName });
       }
     });
 
     return groups;
-  }, [allVoicings]);
+  }, [allVoicingsWithNames]);
 
   return (
     <div className="mt-8 max-w-6xl mx-auto w-full animate-slide-in">
@@ -175,9 +240,10 @@ export const ChordDetailView: React.FC<ChordDetailViewProps> = ({ chord, musical
               // Fallback: show all voicings ungrouped
               return (
                 <div className="flex flex-row flex-wrap gap-4 justify-start">
-                  {allVoicings.map((voicing, index) => {
-                    const voicingKey = `${chord.chordName}-${index}-${voicing.position || 'std'}-${voicing.frets.join('-')}`;
-                    return <VoicingDiagram key={voicingKey} chordName={displayedChordName} voicing={voicing} />;
+                  {allVoicingsWithNames.map(({ voicing, chordName }, index) => {
+                    const displayedVariantName = displayChordName(chordName, musicalKey);
+                    const voicingKey = `${chordName}-${index}-${voicing.position || 'std'}-${voicing.frets.join('-')}`;
+                    return <VoicingDiagram key={voicingKey} chordName={displayedVariantName} voicing={voicing} />;
                   })}
                 </div>
               );
@@ -206,8 +272,7 @@ export const ChordDetailView: React.FC<ChordDetailViewProps> = ({ chord, musical
                       key={groupKey}
                       title={groupTitles[groupKey]}
                       voicings={voicings}
-                      chordName={chord.chordName}
-                      displayedChordName={displayedChordName}
+                      musicalKey={musicalKey}
                     />
                   );
                 })}
