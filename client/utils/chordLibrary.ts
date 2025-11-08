@@ -4047,7 +4047,8 @@ const ENHARMONIC_ROOTS: Record<string, string> = {
   'Fb': 'E'
 };
 
-import { noteToValue, STANDARD_TUNING_VALUES } from './musicTheory';
+import { noteToValue, STANDARD_TUNING_VALUES, valueToNote } from './musicTheory';
+import { getChordNotes } from './chordAnalysis';
 
 /**
  * Normalize root note to a consistent format for chord lookups
@@ -4141,8 +4142,167 @@ function getFretOffset(root: string): number {
  * @returns Array of chord voicings
  */
 /**
+ * Extract the note values (0-11) produced by a chord voicing
+ * @param voicing - The chord voicing to analyze
+ * @returns Set of note values (0-11) that the voicing produces
+ */
+function extractVoicingNotes(voicing: ChordVoicing): Set<number> {
+  const noteValues = new Set<number>();
+  const usesRelativeFormat = voicing.firstFret !== undefined && voicing.firstFret > 1;
+
+  voicing.frets.forEach((fret, stringIndex) => {
+    if (typeof fret === 'number' && fret !== 'x') {
+      const absoluteFret = usesRelativeFormat 
+        ? voicing.firstFret! + fret - 1 
+        : fret;
+      const noteValue = (STANDARD_TUNING_VALUES[stringIndex] + absoluteFret) % 12;
+      noteValues.add(noteValue);
+    }
+  });
+
+  return noteValues;
+}
+
+/**
+ * Convert normalized quality back to chord name suffix format
+ * that parseChordName in chordAnalysis.ts can correctly parse
+ */
+function qualityToChordSuffix(quality: string): string {
+  // Map normalized qualities to formats that parseChordName will extract correctly
+  // and that match CHORD_FORMULAS keys in chordAnalysis.ts
+  const qualityMap: Record<string, string> = {
+    'major': '',
+    'minor': 'm',
+    'min7': 'min7',
+    'maj7': 'maj7',
+    '7': '7',
+    'dim': 'dim',
+    'aug': 'aug',
+    'sus2': 'sus2',
+    'sus4': 'sus4',
+    'dim7': 'dim7',
+    'min7b5': 'min7b5',
+    '9': '9',
+    'maj9': 'maj9',
+    'min9': 'min9',
+    '11': '11',
+    'maj11': 'maj11',
+    'min11': 'min11',
+    '13': '13',
+    'maj13': 'maj13',
+    'min13': 'min13',
+    '6': '6',
+    'min6': 'min6',
+    '6/9': '6/9',
+    'add9': 'add9',
+    'add11': 'add11',
+    'madd9': 'madd9',
+    '7b9': '7b9',
+    '7#9': '7#9',
+    '7b5': '7b5',
+    '7#5': '7#5',
+    '7alt': '7alt',
+    '7sus4': '7sus4',
+    '9sus4': '9sus4',
+    '9#11': '9#11',
+    'maj7#11': 'maj7#11',
+    'maj7b13': 'maj7b13',
+    'maj7#9': 'maj7#9',
+    '7b9b13': '7b9b13',
+    '7#9b13': '7#9b13',
+    '5': '5',
+  };
+  
+  return qualityMap[quality] || quality;
+}
+
+/**
+ * Validate that a voicing produces the notes expected for a chord
+ * @param voicing - The voicing to validate
+ * @param chordName - The chord name to validate against
+ * @returns True if the voicing matches the chord, false otherwise
+ */
+function validateVoicingMatchesChord(voicing: ChordVoicing, chordName: string): boolean {
+  const voicingNotes = extractVoicingNotes(voicing);
+  
+  // Normalize the chord name to ensure quality matches CHORD_FORMULAS keys
+  const { root, quality } = extractRootAndQuality(chordName);
+  const suffix = qualityToChordSuffix(quality);
+  const normalizedChordName = suffix ? `${root}${suffix}` : root;
+  
+  // Get chord notes using normalized chord name
+  const expectedNotes = getChordNotes(normalizedChordName);
+  const expectedNotesSet = new Set(expectedNotes.map(note => noteToValue(note)));
+
+  // Check if all voicing notes are in the expected chord notes
+  // Allow for voicings that may omit some notes (e.g., rootless voicings)
+  for (const noteValue of voicingNotes) {
+    if (!expectedNotesSet.has(noteValue)) {
+      return false; // Voicing contains a note not in the chord
+    }
+  }
+
+  // Require at least one note from the chord to be present
+  let hasChordNote = false;
+  for (const noteValue of voicingNotes) {
+    if (expectedNotesSet.has(noteValue)) {
+      hasChordNote = true;
+      break;
+    }
+  }
+
+  return hasChordNote;
+}
+
+/**
+ * Transpose voicings from one root to another
+ * @param voicings - Voicings to transpose
+ * @param fromRoot - Original root note
+ * @param toRoot - Target root note
+ * @returns Transposed voicings
+ */
+function transposeVoicings(voicings: ChordVoicing[], fromRoot: string, toRoot: string): ChordVoicing[] {
+  const fromValue = noteToValue(fromRoot);
+  const toValue = noteToValue(toRoot);
+  const semitoneOffset = ((toValue - fromValue) + 12) % 12;
+
+  if (semitoneOffset === 0) {
+    return voicings; // No transposition needed
+  }
+
+  return voicings.map(voicing => {
+    const usesRelativeFormat = voicing.firstFret !== undefined && voicing.firstFret > 1;
+    
+    if (usesRelativeFormat) {
+      // For relative format, adjust firstFret
+      const newFirstFret = voicing.firstFret! + semitoneOffset;
+      return {
+        ...voicing,
+        firstFret: newFirstFret > 12 ? newFirstFret : newFirstFret,
+        position: voicing.position ? `${voicing.position} (transposed)` : undefined
+      };
+    } else {
+      // For absolute format, adjust each fret
+      const newFrets = voicing.frets.map(fret => {
+        if (typeof fret === 'number') {
+          const newFret = fret + semitoneOffset;
+          return newFret >= 0 ? newFret : 'x';
+        }
+        return fret;
+      });
+      return {
+        ...voicing,
+        frets: newFrets,
+        position: voicing.position ? `${voicing.position} (transposed)` : undefined
+      };
+    }
+  });
+}
+
+/**
  * Find the closest matching chord when exact chord is not found
  * Prioritizes chords with same root note, then similar chord qualities
+ * Now includes validation to ensure returned voicings match the requested chord
  */
 export function findClosestChordVoicings(chordName: string): ChordVoicing[] {
   const slashMatch = chordName.match(/^(.*?)(?:\/([A-G][#b]?))?$/i);
@@ -4202,18 +4362,64 @@ export function findClosestChordVoicings(chordName: string): ChordVoicing[] {
     }
   }
 
-  // Sort by similarity (highest first) and return the best match
+  // Sort by similarity (highest first) and validate/transpose candidates
   candidates.sort((a, b) => b.similarity - a.similarity);
 
-  if (candidates.length > 0) {
-    const bestMatch = candidates[0];
-    console.info(`🧠 Smart fallback: "${chordName}" (${targetKey}) → "${bestMatch.key}" (similarity: ${bestMatch.similarity})`);
-    return adjustVoicingsForSlashBass(bestMatch.voicings, slashBass);
+  // Try candidates in order of similarity
+  for (const candidate of candidates) {
+    const [chordRoot, chordQuality] = candidate.key.split('_') as [string, string];
+    
+    // If same root and quality, validate voicings match
+    if (chordRoot === root && chordQuality === quality) {
+      const validatedVoicings = candidate.voicings.filter(v => 
+        validateVoicingMatchesChord(v, chordName)
+      );
+      
+      if (validatedVoicings.length > 0) {
+        console.info(`✅ Validated fallback: "${chordName}" (${targetKey}) → "${candidate.key}" (${validatedVoicings.length} valid voicings)`);
+        return adjustVoicingsForSlashBass(validatedVoicings, slashBass);
+      }
+    }
+    
+    // If same quality but different root, try transposing
+    if (chordQuality === quality && chordRoot !== root) {
+      const transposedVoicings = transposeVoicings(candidate.voicings, chordRoot, root);
+      const validatedVoicings = transposedVoicings.filter(v => 
+        validateVoicingMatchesChord(v, chordName)
+      );
+      
+      if (validatedVoicings.length > 0) {
+        console.info(`✅ Transposed fallback: "${chordName}" (${targetKey}) → "${candidate.key}" transposed from ${chordRoot} to ${root}`);
+        return adjustVoicingsForSlashBass(validatedVoicings, slashBass);
+      }
+    }
+    
+    // If same root but different quality, validate voicings match (might be close enough)
+    if (chordRoot === root && chordQuality !== quality) {
+      const validatedVoicings = candidate.voicings.filter(v => 
+        validateVoicingMatchesChord(v, chordName)
+      );
+      
+      if (validatedVoicings.length > 0) {
+        console.info(`✅ Validated fallback (different quality): "${chordName}" (${targetKey}) → "${candidate.key}"`);
+        return adjustVoicingsForSlashBass(validatedVoicings, slashBass);
+      }
+    }
   }
 
-  // Ultimate fallback - use generic barre shape
-  console.warn(`🤔 No good chord match found for "${chordName}", using generic barre shape`);
-  return adjustVoicingsForSlashBass(getGenericBarreVoicings(chordName), slashBass);
+  // If no validated match found, try generic barre shape
+  console.warn(`⚠️ No validated chord match found for "${chordName}", using generic barre shape`);
+  const genericVoicings = getGenericBarreVoicings(chordName);
+  const validatedGeneric = genericVoicings.filter(v => 
+    validateVoicingMatchesChord(v, chordName)
+  );
+  
+  if (validatedGeneric.length > 0) {
+    return adjustVoicingsForSlashBass(validatedGeneric, slashBass);
+  }
+  
+  // Last resort: return generic voicings even if not validated
+  return adjustVoicingsForSlashBass(genericVoicings, slashBass);
 }
 
 /**

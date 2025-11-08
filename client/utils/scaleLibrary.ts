@@ -163,11 +163,16 @@ export const SCALE_LIBRARY: ScaleLibrary = {
   'pentatonic major': {
     intervals: [0, 2, 4, 7, 9],
     fingerings: [
-      [[5, 7, 9], [5, 7, 9], [5, 7, 9], [5, 7, 9], [5, 7, 10], [5, 7, 9]],
-      [[2, 4, 7], [2, 5, 7], [2, 4, 7], [2, 4, 7], [2, 5, 7], [2, 4, 7]],
-      [[9, 12, 14], [10, 12, 14], [9, 12, 14], [9, 12, 14], [10, 12, 15], [9, 12, 14]],
-      [[14, 17, 19], [15, 17, 19], [14, 17, 19], [14, 17, 19], [15, 17, 20], [14, 17, 19]],
-      [[19, 21, 24], [19, 22, 24], [19, 21, 24], [19, 21, 24], [20, 22, 24], [19, 21, 24]],
+      // Position 1: Starting at A (5th fret on low E) - A C D E G
+      [[5, 7], [5, 7], [5, 7], [5, 7], [5, 7], [5, 7]],
+      // Position 2: Starting at C (8th fret on low E) - C D E G A
+      [[8, 10], [8, 10], [9, 10], [9, 10], [10, 12], [8, 10]],
+      // Position 3: Starting at D (10th fret on low E) - D E G A C
+      [[10, 12], [10, 12], [10, 12], [10, 12], [10, 12], [10, 12]],
+      // Position 4: Starting at E (12th fret on low E) - E G A C D
+      [[12, 14], [12, 14], [12, 14], [12, 14], [12, 14], [12, 14]],
+      // Position 5: Starting at G (15th fret on low E) - G A C D E
+      [[15, 17], [15, 17], [15, 17], [15, 17], [15, 17], [15, 17]],
     ],
     positions: ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'],
   },
@@ -175,11 +180,21 @@ export const SCALE_LIBRARY: ScaleLibrary = {
   'pentatonic minor': {
     intervals: [0, 3, 5, 7, 10],
     fingerings: [
-      [[5, 8, 10], [5, 8, 10], [5, 7, 10], [5, 7, 10], [5, 8, 10], [5, 8, 10]],
-      [[0, 3, 5], [0, 3, 5], [0, 2, 5], [0, 2, 5], [0, 3, 5], [0, 3, 5]],
-      [[10, 12, 15], [10, 12, 15], [8, 12, 15], [8, 12, 15], [10, 12, 15], [10, 12, 15]],
-      [[15, 17, 19], [15, 17, 20], [15, 17, 20], [15, 17, 20], [15, 17, 19], [15, 17, 19]],
-      [[20, 22, 24], [20, 22, 24], [20, 22, 24], [20, 22, 24], [20, 22, 24], [20, 22, 24]],
+      // Position 1: Starting at A (5th fret on low E) - A C D E G
+      // Low E: A(5), C(8); A: D(5), E(7); D: G(5), A(7); G: C(5), D(7); B: E(5), G(8); High E: A(5), C(8)
+      [[5, 8], [5, 7], [5, 7], [5, 7], [5, 8], [5, 8]],
+      // Position 2: Starting at C (8th fret on low E) - C D E G A
+      // Low E: C(8), D(10); A: E(8), G(10); D: A(8), C(10); G: D(8), E(10); B: G(8), A(10); High E: C(8), D(10)
+      [[8, 10], [8, 10], [8, 10], [8, 10], [8, 10], [8, 10]],
+      // Position 3: Starting at D (10th fret on low E) - D E G A C
+      // Low E: D(10), E(12); A: G(10), A(12); D: C(10), D(12); G: E(10), G(12); B: A(10), C(13); High E: D(10), E(12)
+      [[10, 12], [10, 12], [10, 12], [10, 12], [10, 13], [10, 12]],
+      // Position 4: Starting at E (12th fret on low E) - E G A C D
+      // Low E: E(12), G(15); A: A(12), C(15); D: D(12), E(14); G: G(12), A(14); B: C(12), D(15); High E: E(12), G(15)
+      [[12, 15], [12, 15], [12, 14], [12, 14], [12, 15], [12, 15]],
+      // Position 5: Starting at G (15th fret on low E) - G A C D E
+      // Low E: G(15), A(17); A: C(15), D(17); D: E(15), G(17); G: A(15), C(17); B: D(15), E(17); High E: G(15), A(17)
+      [[15, 17], [15, 17], [15, 17], [15, 17], [15, 17], [15, 17]],
     ],
     positions: ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'],
   },
