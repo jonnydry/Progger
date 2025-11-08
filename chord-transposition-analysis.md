@@ -49,9 +49,9 @@ getChordVoicings("Cmaj7")
 
 **Interpretation:**
 - String 6 (Low E): fret 0 (open)
-- String 5 (A): fret 2
-- String 4 (D): fret 2
-- String 3 (G): fret 1
+- String 5 (A): fret 0
+- String 4 (D): fret 0
+- String 3 (G): fret 0
 - String 2 (B): fret 0 (open)
 - String 1 (High E): fret 0 (open)
 
