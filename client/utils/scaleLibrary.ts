@@ -414,17 +414,32 @@ export function getScaleFingering(scaleName: string, rootNote?: string, position
  * @returns Transposed fingering pattern
  */
 function transposeFingering(fingering: number[][], semitones: number): number[][] {
-  if (semitones === 0) return fingering;
+  // Always return a copy to prevent mutation of SCALE_LIBRARY data
+  if (semitones === 0) return fingering.map(stringFrets => [...stringFrets]);
 
-  return fingering.map(stringFrets =>
+  let hasClampedFrets = false;
+
+  const result = fingering.map(stringFrets =>
     stringFrets.map(fret => {
       const newFret = fret + semitones;
       // Clamp to valid guitar fret range
-      if (newFret < 0) return 0;
-      if (newFret > 24) return 24;
+      if (newFret < 0) {
+        hasClampedFrets = true;
+        return 0;
+      }
+      if (newFret > 24) {
+        hasClampedFrets = true;
+        return 24;
+      }
       return newFret;
     })
   );
+
+  if (hasClampedFrets) {
+    console.warn(`Scale transposition by ${semitones} semitones exceeded playable range (0-24 frets). Some notes were clamped and may be incorrect.`);
+  }
+
+  return result;
 }
 
 export function getScaleIntervals(scaleName: string): number[] {

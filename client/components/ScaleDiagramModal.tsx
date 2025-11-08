@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import type { ScaleInfo } from '../types';
 import { noteToValue as noteToValueBase, valueToNote, displayNote, STANDARD_TUNING_NAMES } from '../utils/musicTheory';
-import { getScaleIntervals, getScaleFingering, SCALE_LIBRARY } from '../utils/scaleLibrary';
+import { getScaleIntervals, getScaleFingering, SCALE_LIBRARY, normalizeScaleName } from '../utils/scaleLibrary';
 
 interface ScaleDiagramModalProps {
   scaleInfo: ScaleInfo;
@@ -143,24 +143,9 @@ const ScaleDiagramModal: React.FC<ScaleDiagramModalProps> = ({ scaleInfo, musica
 
   // Get available positions
   const availablePositions = useMemo(() => {
-    const normalized = name.toLowerCase().trim();
-    let scaleKey = '';
-
-    if (normalized.includes('pentatonic')) {
-      scaleKey = normalized.includes('major') ? 'pentatonic major' : 'pentatonic minor';
-    } else if (normalized.includes('major')) {
-      scaleKey = 'major';
-    } else if (normalized.includes('minor')) {
-      scaleKey = 'minor';
-    } else {
-      for (const [key] of Object.entries(SCALE_LIBRARY)) {
-        if (normalized.includes(key) || key.includes(normalized)) {
-          scaleKey = key;
-          break;
-        }
-      }
-    }
-
+    // Use centralized normalization to avoid mismatching composite scales
+    // (e.g., "Harmonic Minor" should not match "Minor")
+    const scaleKey = normalizeScaleName(name);
     const scaleData = SCALE_LIBRARY[scaleKey];
     return scaleData?.positions || ['Position 1'];
   }, [name]);
