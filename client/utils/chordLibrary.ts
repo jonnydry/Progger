@@ -4036,6 +4036,7 @@ const ROOT_TO_FRET_FROM_E: Record<string, number> = {
 };
 
 const ENHARMONIC_ROOTS: Record<string, string> = {
+  // Sharp to flat
   'A#': 'Bb',
   'B#': 'C',
   'C#': 'Db',
@@ -4043,6 +4044,13 @@ const ENHARMONIC_ROOTS: Record<string, string> = {
   'E#': 'F',
   'F#': 'Gb',
   'G#': 'Ab',
+  // Flat to sharp (bidirectional)
+  'Bb': 'A#',
+  'Db': 'C#',
+  'Eb': 'D#',
+  'Gb': 'F#',
+  'Ab': 'G#',
+  // Uncommon enharmonics
   'Cb': 'B',
   'Fb': 'E'
 };
@@ -4061,7 +4069,7 @@ export function normalizeRoot(root: string): string {
     return enharmonic;
   }
 
-  const upper = root.toLowerCase(); // normalize case
+  const lower = root.toLowerCase(); // normalize case
 
   // Create a mapping that prioritizes the form that exists in our library
   // Check if both sharp and flat forms exist, and choose the primary one
@@ -4086,7 +4094,7 @@ export function normalizeRoot(root: string): string {
   };
 
   // Get possible enharmonic spellings
-  const possibilities = enharmonicMap[upper] || [upper.charAt(0).toUpperCase() + upper.slice(1)];
+  const possibilities = enharmonicMap[lower] || [lower.charAt(0).toUpperCase() + lower.slice(1)];
 
   // For each possibility, check if it exists in our chord library
   for (const possibility of possibilities) {
@@ -4151,9 +4159,9 @@ function extractVoicingNotes(voicing: ChordVoicing): Set<number> {
   const usesRelativeFormat = voicing.firstFret !== undefined && voicing.firstFret > 1;
 
   voicing.frets.forEach((fret, stringIndex) => {
-    if (typeof fret === 'number' && fret !== 'x') {
-      const absoluteFret = usesRelativeFormat 
-        ? voicing.firstFret! + fret - 1 
+    if (typeof fret === 'number') {
+      const absoluteFret = usesRelativeFormat
+        ? voicing.firstFret! + fret - 1
         : fret;
       const noteValue = (STANDARD_TUNING_VALUES[stringIndex] + absoluteFret) % 12;
       noteValues.add(noteValue);
@@ -4211,8 +4219,12 @@ function qualityToChordSuffix(quality: string): string {
     '7b9b13': '7b9b13',
     '7#9b13': '7#9b13',
     '5': '5',
+    'min/maj7': 'min/maj7',
+    '7b13': '7b13',
+    '7#11': '7#11',
+    'quartal': 'quartal',
   };
-  
+
   return qualityMap[quality] || quality;
 }
 
@@ -4276,9 +4288,11 @@ function transposeVoicings(voicings: ChordVoicing[], fromRoot: string, toRoot: s
     if (usesRelativeFormat) {
       // For relative format, adjust firstFret
       const newFirstFret = voicing.firstFret! + semitoneOffset;
+      // Cap at fret 17 to ensure playability (most guitars have 20-24 frets)
+      const clampedFirstFret = Math.min(newFirstFret, 17);
       return {
         ...voicing,
-        firstFret: newFirstFret > 12 ? newFirstFret : newFirstFret,
+        firstFret: clampedFirstFret,
         position: voicing.position ? `${voicing.position} (transposed)` : undefined
       };
     } else {
