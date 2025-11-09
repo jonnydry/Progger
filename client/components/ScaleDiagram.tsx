@@ -236,43 +236,49 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) =>
                 setCurrentPosition={setCurrentPosition}
               />
               <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="p-2 rounded-md bg-text/10 hover:bg-text/20 text-text/70 hover:text-text transition-all duration-200 hover:scale-105"
-                aria-label="Expand to full view"
-                title="View full fretboard"
-              >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-                </svg>
-              </button>
+              {isMobile && (
+                <button
+                  onClick={() => setIsModalOpen(true)}
+                  className="p-2 rounded-md bg-text/10 hover:bg-text/20 text-text/70 hover:text-text transition-all duration-200 hover:scale-105"
+                  aria-label="Expand to full view"
+                  title="View full fretboard"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                  </svg>
+                </button>
+              )}
             </div>
         </div>
 
-      <div 
-        className="w-full bg-surface rounded-lg shadow-lg border border-border overflow-x-auto overflow-y-hidden cursor-pointer hover:shadow-xl hover:border-primary/50 transition-all duration-300 group relative"
-        onClick={() => setIsModalOpen(true)}
-        role="button"
-        tabIndex={0}
-        onKeyDown={(e) => {
+      <div
+        className={`w-full bg-surface rounded-lg shadow-lg border border-border overflow-x-auto overflow-y-hidden transition-all duration-300 group relative ${
+          isMobile ? 'cursor-pointer hover:shadow-xl hover:border-primary/50' : ''
+        }`}
+        onClick={isMobile ? () => setIsModalOpen(true) : undefined}
+        role={isMobile ? "button" : undefined}
+        tabIndex={isMobile ? 0 : undefined}
+        onKeyDown={isMobile ? (e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
             setIsModalOpen(true);
           }
-        }}
-        aria-label="Click to expand scale diagram"
+        } : undefined}
+        aria-label={isMobile ? "Click to expand scale diagram" : undefined}
       >
-        {/* Expand hint overlay */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10">
-          <div className="bg-background/90 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg border border-primary/50">
-            <p className="text-sm font-medium text-text/90 flex items-center gap-2">
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
-              </svg>
-              Click to view full fretboard
-            </p>
+        {/* Expand hint overlay - only shown on mobile */}
+        {isMobile && (
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10">
+            <div className="bg-background/90 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg border border-primary/50">
+              <p className="text-sm font-medium text-text/90 flex items-center gap-2">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
+                Click to view full fretboard
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className={`${isMobile ? 'min-w-[600px]' : 'w-full'} px-3 md:px-4 py-3 md:py-4 text-[10px] md:text-xs`}>
             {/* Main Fretboard Area with Fade Effect */}
