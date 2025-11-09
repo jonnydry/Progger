@@ -175,8 +175,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const user = req.user as AuthenticatedUser;
       const userId = user.claims.sub;
-      const items = await storage.getUserStashItems(userId);
-      logger.debug("Fetched stash items", { userId, itemCount: items.length });
+
+      // Parse pagination query parameters (optional for backward compatibility)
+      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
+      const offset = req.query.offset ? parseInt(req.query.offset as string, 10) : undefined;
+
+      // Validate pagination parameters
+      if (limit !== undefined && (isNaN(limit) || limit < 1 || limit > 100)) {
+        return res.status(400).json({ message: "Invalid limit parameter. Must be between 1 and 100." });
+      }
+      if (offset !== undefined && (isNaN(offset) || offset < 0)) {
+        return res.status(400).json({ message: "Invalid offset parameter. Must be 0 or greater." });
+      }
+
+      const items = await storage.getUserStashItems(userId, limit, offset);
+      logger.debug("Fetched stash items", { userId, itemCount: items.length, limit, offset });
       res.json(items);
     } catch (error) {
       logger.error("Error fetching stash items", error, {

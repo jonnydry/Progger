@@ -13,7 +13,7 @@ import { logger } from "./utils/logger";
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
-  getUserStashItems(userId: string): Promise<StashItem[]>;
+  getUserStashItems(userId: string, limit?: number, offset?: number): Promise<StashItem[]>;
   createStashItem(item: InsertStashItem): Promise<StashItem>;
   deleteStashItem(id: string, userId: string): Promise<void>;
 }
@@ -49,16 +49,27 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getUserStashItems(userId: string): Promise<StashItem[]> {
+  async getUserStashItems(userId: string, limit?: number, offset?: number): Promise<StashItem[]> {
     try {
-      const items = await db
+      let query = db
         .select()
         .from(stash)
         .where(eq(stash.userId, userId))
         .orderBy(desc(stash.createdAt));
+
+      // Apply pagination if limit is provided
+      if (limit !== undefined && limit > 0) {
+        query = query.limit(limit) as any;
+
+        if (offset !== undefined && offset > 0) {
+          query = query.offset(offset) as any;
+        }
+      }
+
+      const items = await query;
       return items;
     } catch (error) {
-      logger.error("Error fetching stash items from database", error, { userId });
+      logger.error("Error fetching stash items from database", error, { userId, limit, offset });
       throw new Error('Failed to fetch stash items from database');
     }
   }
@@ -78,12 +89,21 @@ export class DatabaseStorage implements IStorage {
 
   async deleteStashItem(id: string, userId: string): Promise<void> {
     try {
-      await db
+      const result = await db
         .delete(stash)
-        .where(and(eq(stash.id, id), eq(stash.userId, userId)));
+        .where(and(eq(stash.id, id), eq(stash.userId, userId)))
+        .returning({ id: stash.id });
+
+      // Check if any rows were deleted
+      if (result.length === 0) {
+        logger.warn("Attempted to delete non-existent or unauthorized stash item", { itemId: id, userId });
+        throw new Error('Stash item not found or unauthorized');
+      }
+
+      logger.debug("Stash item deleted successfully", { itemId: id, userId });
     } catch (error) {
       logger.error("Error deleting stash item from database", error, { itemId: id, userId });
-      throw new Error('Failed to delete stash item from database');
+      throw error instanceof Error ? error : new Error('Failed to delete stash item from database');
     }
   }
 }

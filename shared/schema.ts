@@ -35,7 +35,9 @@ export const stash = pgTable("stash", {
   mode: varchar("mode").notNull(),
   progressionData: jsonb("progression_data").notNull(), // Stores the full ProgressionResult
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("stash_user_id_idx").on(table.userId),
+]);
 
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
