@@ -1,6 +1,5 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import rateLimit from "express-rate-limit";
 import { csrfSync } from "csrf-sync";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, type AuthenticatedUser } from "./replitAuth";
@@ -11,25 +10,11 @@ import { validateCustomProgressionRequest } from "./utils/validation";
 import { logger } from "./utils/logger";
 import { db } from "./db";
 import { redisCache } from "./cache";
+import { createAIGenerationLimiter, getRateLimitStatus } from "./rateLimit";
 
-// Rate limiter for AI generation endpoints to prevent abuse
-const aiGenerationLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 50, // Limit each IP to 50 requests per windowMs
-  message: { error: 'Too many AI generation requests from this IP, please try again later.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-  handler: (req, res) => {
-    logger.warn('Rate limit exceeded', { 
-      ip: req.ip, 
-      path: req.path,
-      userAgent: req.get('user-agent'),
-    });
-    res.status(429).json({ 
-      error: 'Too many AI generation requests from this IP, please try again later.' 
-    });
-  },
-});
+// Redis-backed rate limiter for AI generation endpoints
+// Falls back to in-memory if Redis is unavailable
+const aiGenerationLimiter = createAIGenerationLimiter();
 
 // CSRF protection for session-based endpoints
 const { csrfSynchronisedProtection, generateToken } = csrfSync({
@@ -50,17 +35,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Health check endpoint
   app.get('/api/health', async (req, res) => {
+    const rateLimitStatus = getRateLimitStatus();
     const health: {
       status: 'healthy' | 'degraded' | 'unhealthy';
       timestamp: string;
       database: 'connected' | 'disconnected';
       redis: 'connected' | 'disconnected' | 'unavailable';
+      rateLimit: {
+        redisAvailable: boolean;
+        storeType: 'redis' | 'memory';
+      };
       uptime: number;
     } = {
       status: 'healthy',
       timestamp: new Date().toISOString(),
       database: 'disconnected',
       redis: 'unavailable',
+      rateLimit: rateLimitStatus,
       uptime: process.uptime(),
     };
 

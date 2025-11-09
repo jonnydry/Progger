@@ -37,6 +37,7 @@
     "openid-client": "^6.8.1",
     "passport": "^0.7.0",
     "postgres": "^3.4.7",
+    "rate-limit-redis": "^4.2.3",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "redis": "^5.9.0",
