@@ -334,7 +334,23 @@ export const ROOT_NOTES = [
 ];
 
 // Chord qualities for wheel picker (based on chordLibrary.ts normalization)
-// These are the qualities that get normalized and used in the system
+//
+// NOTE: This is a CURATED SUBSET of CANONICAL_CHORD_QUALITIES (shared/music/chordQualities.ts)
+//
+// Intentionally EXCLUDED from UI picker for UX simplification (but fully supported):
+//   - 7b13 (Dominant 7♭13) - Use 7alt or 7b9b13 instead, or let AI suggest
+//   - 7#11 (Lydian Dominant) - Use 9#11 instead, or let AI suggest
+//   - quartal (Quartal Harmony) - Advanced modern jazz voicing, AI can suggest
+//
+// These qualities ARE implemented with full voicing libraries (126+ voicings total)
+// and CAN be used via:
+//   - AI-generated progressions (Grok may suggest them)
+//   - Manual chord name input (if feature exists)
+//   - BYO mode for advanced users
+//
+// Design Philosophy: Keep UI picker simple (41 qualities) while maintaining
+// full system capability (44 qualities) for advanced features.
+//
 export const CHORD_QUALITIES = [
   // Basic triads
   'major',
