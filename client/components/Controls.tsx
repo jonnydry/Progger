@@ -1,8 +1,9 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { createPortal } from 'react-dom';
-import { KEYS, MODES, CHORD_COUNTS, COMMON_PROGRESSIONS, ROOT_NOTES, CHORD_QUALITIES, type ModeOption } from '@/constants';
+import React, { useState } from 'react';
+import { KEYS, CHORD_COUNTS, COMMON_PROGRESSIONS } from '@/constants';
 import { CustomSelect } from './CustomSelect';
-import { WheelPicker } from './WheelPicker';
+import { ModeSelect } from './ModeSelect';
+import { CustomProgressionInput } from './CustomProgressionInput';
+import { ToggleSwitch } from './ToggleSwitch';
 
 interface ControlsProps {
   selectedKey: string;
@@ -26,364 +27,6 @@ interface ControlsProps {
   onNumCustomChordsChange?: (count: number) => void;
   onAnalyzeCustom?: () => void;
 }
-
-const ModeSelect: React.FC<{
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-}> = ({ label, value, onChange }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
-  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
-  const selectRef = useRef<HTMLDivElement>(null);
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const dropdownRef = useRef<HTMLUListElement>(null);
-
-  const handleSelect = (optionValue: string) => {
-    onChange(optionValue);
-    setIsOpen(false);
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node;
-      // Check if click is outside both the select button and the dropdown menu
-      if (
-        selectRef.current && !selectRef.current.contains(target) &&
-        dropdownRef.current && !dropdownRef.current.contains(target)
-      ) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  const selectedMode = useMemo(() =>
-    MODES.find(m => m.value === value),
-    [value]
-  );
-
-  const displayValue = useMemo(() =>
-    selectedMode ? selectedMode.name : value,
-    [selectedMode, value]
-  );
-
-  // Separate basic and advanced modes
-  const basicModes = useMemo(() => 
-    MODES.filter(m => m.value === 'Major' || m.value === 'Minor'),
-    []
-  );
-
-  const advancedModes = useMemo(() => {
-    const groups: Record<string, ModeOption[]> = {
-      major: [],
-      minor: [],
-      diminished: [],
-    };
-    MODES.forEach(mode => {
-      if (mode.value !== 'Major' && mode.value !== 'Minor') {
-        groups[mode.group].push(mode);
-      }
-    });
-    return groups;
-  }, []);
-
-  const groupLabels: Record<string, string> = {
-    major: 'Major Modes',
-    minor: 'Minor Modes',
-    diminished: 'Diminished',
-  };
-
-  // Check if current selection is an advanced mode
-  const isAdvancedMode = useMemo(() => 
-    value !== 'Major' && value !== 'Minor',
-    [value]
-  );
-
-  // Auto-expand advanced when an advanced mode is selected
-  useEffect(() => {
-    if (isAdvancedMode && isOpen) {
-      setShowAdvanced(true);
-    }
-  }, [isAdvancedMode, isOpen]);
-
-  // Update dropdown position when opening or scrolling
-  useEffect(() => {
-    const updatePosition = () => {
-      if (buttonRef.current) {
-        const rect = buttonRef.current.getBoundingClientRect();
-        setDropdownPosition({
-          top: rect.bottom + 4,
-          left: rect.left,
-          width: rect.width,
-        });
-      }
-    };
-
-    if (isOpen) {
-      updatePosition();
-      // Update position on scroll
-      window.addEventListener('scroll', updatePosition, true);
-      window.addEventListener('resize', updatePosition);
-      
-      return () => {
-        window.removeEventListener('scroll', updatePosition, true);
-        window.removeEventListener('resize', updatePosition);
-      };
-    }
-  }, [isOpen]);
-
-  return (
-    <div className="flex flex-col" ref={selectRef}>
-      <label htmlFor={label} className="mb-2 text-sm font-semibold text-text/70">
-        {label}
-      </label>
-      <button
-        ref={buttonRef}
-        id={label}
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="relative text-left bg-background border-2 border-border rounded-md px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary transition w-full flex justify-between items-center shadow-inner hover:border-primary/50"
-        aria-haspopup="listbox"
-        aria-expanded={isOpen}
-      >
-        {displayValue}
-        <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 text-text/50 transition-transform duration-200 ${isOpen ? 'transform rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-
-      {isOpen && createPortal(
-        <ul
-          ref={dropdownRef}
-          className="fixed z-50 bg-surface rounded-md shadow-lg border border-border max-h-80 overflow-y-auto"
-          style={{
-            top: `${dropdownPosition.top}px`,
-            left: `${dropdownPosition.left}px`,
-            width: `${dropdownPosition.width}px`,
-          }}
-          role="listbox"
-        >
-          {/* Basic Modes - Always shown */}
-          {basicModes.map((mode) => {
-            const isSelected = value === mode.value;
-            return (
-              <li
-                key={mode.value}
-                onClick={() => handleSelect(mode.value)}
-                className={`px-3 py-2.5 cursor-pointer text-text hover:bg-primary/80 hover:text-background transition-colors ${isSelected ? 'bg-primary text-background font-semibold' : ''}`}
-                role="option"
-                aria-selected={isSelected}
-                title={mode.description}
-              >
-                <div className="flex flex-col">
-                  <span className="font-medium">{mode.name}</span>
-                  <span className={`text-xs mt-0.5 ${isSelected ? 'text-background/80' : 'text-text/60'}`}>
-                    {mode.description}
-                  </span>
-                </div>
-              </li>
-            );
-          })}
-
-          {/* Advanced Toggle */}
-          <li className="border-t border-border/50">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowAdvanced(!showAdvanced);
-              }}
-              className="w-full px-3 py-2.5 text-left text-sm font-semibold text-text/70 hover:text-text hover:bg-primary/80 hover:text-background transition-colors duration-200 flex items-center justify-between"
-            >
-              <span>Advanced Modes</span>
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                className={`h-4 w-4 text-text/50 transition-transform duration-200 ${showAdvanced ? 'transform rotate-180' : ''}`} 
-                fill="none" 
-                viewBox="0 0 24 24" 
-                stroke="currentColor"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-          </li>
-
-          {/* Advanced Modes - Shown when toggled or if current selection is advanced */}
-          {(showAdvanced || isAdvancedMode) && (['major', 'minor', 'diminished'] as const).map((groupKey) => {
-            const groupModes = advancedModes[groupKey];
-            if (groupModes.length === 0) return null;
-
-            return (
-              <React.Fragment key={groupKey}>
-                <li className="px-3 py-2 text-xs font-bold text-text/50 uppercase tracking-wider bg-background/50 sticky top-0 z-10 border-b border-border/50">
-                  {groupLabels[groupKey]}
-                </li>
-                {groupModes.map((mode) => {
-                  const isSelected = value === mode.value;
-                  return (
-                    <li
-                      key={mode.value}
-                      onClick={() => handleSelect(mode.value)}
-                      className={`px-3 py-2.5 cursor-pointer text-text hover:bg-primary/80 hover:text-background transition-colors ${isSelected ? 'bg-primary text-background font-semibold' : ''}`}
-                      role="option"
-                      aria-selected={isSelected}
-                      title={mode.description}
-                    >
-                      <div className="flex flex-col">
-                        <span className="font-medium">{mode.name}</span>
-                        <span className={`text-xs mt-0.5 ${isSelected ? 'text-background/80' : 'text-text/60'}`}>
-                          {mode.description}
-                        </span>
-                      </div>
-                    </li>
-                  );
-                })}
-              </React.Fragment>
-            );
-          })}
-        </ul>,
-        document.body
-      )}
-    </div>
-  );
-};
-
-const CustomProgressionInput: React.FC<{
-  numChords: number;
-  onNumChordsChange: (count: number) => void;
-  customProgression: Array<{ root: string; quality: string }>;
-  onCustomProgressionChange: (progression: Array<{ root: string; quality: string }>) => void;
-  onAnalyze: () => void;
-  isLoading: boolean;
-}> = ({ numChords, onNumChordsChange, customProgression, onCustomProgressionChange, onAnalyze, isLoading }) => {
-  useEffect(() => {
-    // Initialize or resize progression array when numChords changes
-    const newProgression = [...customProgression];
-    while (newProgression.length < numChords) {
-      newProgression.push({ root: 'C', quality: 'major' });
-    }
-    while (newProgression.length > numChords) {
-      newProgression.pop();
-    }
-    if (newProgression.length !== customProgression.length) {
-      onCustomProgressionChange(newProgression);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [numChords]);
-
-  const handleChordChange = (index: number, field: 'root' | 'quality', value: string) => {
-    const newProgression = [...customProgression];
-    newProgression[index] = { ...newProgression[index], [field]: value };
-    onCustomProgressionChange(newProgression);
-  };
-
-  const getChordDisplayName = (chord: { root: string; quality: string }) => {
-    if (chord.quality === 'major') {
-      return chord.root;
-    }
-    if (chord.quality === 'minor') {
-      return `${chord.root}m`;
-    }
-    if (chord.quality === 'min7') {
-      return `${chord.root}m7`;
-    }
-    if (chord.quality === 'maj7') {
-      return `${chord.root}maj7`;
-    }
-    if (chord.quality === 'dim') {
-      return `${chord.root}dim`;
-    }
-    if (chord.quality === 'aug') {
-      return `${chord.root}aug`;
-    }
-    if (chord.quality === 'sus2') {
-      return `${chord.root}sus2`;
-    }
-    if (chord.quality === 'sus4') {
-      return `${chord.root}sus4`;
-    }
-    return `${chord.root}${chord.quality}`;
-  };
-
-  return (
-    <div className="space-y-4 md:space-y-6">
-      <div className="space-y-3">
-        <label className="block text-center text-sm font-semibold text-text/70">
-          Number of Chords
-        </label>
-        <div className="flex items-center justify-center gap-1.5 md:gap-3 flex-nowrap overflow-x-auto pb-2 md:pb-0">
-          {CHORD_COUNTS.map((count) => (
-            <button
-              key={count}
-              onClick={() => onNumChordsChange(count)}
-              className={`
-                relative px-2 py-1.5 md:px-5 md:py-2.5 rounded-lg font-bold text-base md:text-lg
-                transition-all duration-300 ease-out
-                border-2 shadow-md flex-shrink-0
-                ${count === numChords
-                  ? 'bg-primary text-background border-primary scale-110 shadow-primary/50 shadow-lg'
-                  : 'bg-background/30 text-text/80 border-border hover:border-primary/50 hover:scale-105 hover:shadow-lg hover:text-text'
-                }
-              `}
-            >
-              {count}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        {customProgression.map((chord, index) => (
-          <div key={index} className="bg-background/50 rounded-lg p-3 md:p-4 border border-border">
-            <div className="text-sm font-semibold text-text/70 mb-3">
-              Chord {index + 1}: <span className="text-primary font-bold">{getChordDisplayName(chord)}</span>
-            </div>
-            <div className="grid grid-cols-2 gap-3 md:gap-4">
-              <WheelPicker
-                label="Root"
-                options={ROOT_NOTES}
-                value={chord.root}
-                onChange={(val) => handleChordChange(index, 'root', val)}
-              />
-              <WheelPicker
-                label="Quality"
-                options={CHORD_QUALITIES}
-                value={chord.quality}
-                onChange={(val) => handleChordChange(index, 'quality', val)}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="pt-2">
-        <button
-          onClick={onAnalyze}
-          disabled={isLoading}
-          className="w-full relative bg-primary text-background font-bold py-3 px-4 rounded-md hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 ease-in-out flex items-center justify-center border-b-4 border-primary/50 active:border-b-0 active:translate-y-1 shadow-lg hover:shadow-accent/40"
-        >
-          <span className="relative">
-            {isLoading ? (
-              <span className="flex items-center">
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-background" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Analyzing...
-              </span>
-            ) : (
-              'Analyze Progression'
-            )}
-          </span>
-        </button>
-      </div>
-    </div>
-  );
-};
 
 export const Controls: React.FC<ControlsProps> = ({
   selectedKey,
@@ -455,47 +98,23 @@ export const Controls: React.FC<ControlsProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 pt-2">
             <div className="flex items-center justify-center">
-              <label htmlFor="advanced-chords-toggle" className="flex items-center cursor-pointer select-none group relative">
-                <span className="mr-2 md:mr-4 text-text/80 group-hover:text-text transition-colors font-semibold">Advanced Chords</span>
-                <div className="relative group/tooltip">
-                  <input
-                    id="advanced-chords-toggle"
-                    type="checkbox"
-                    className="sr-only peer"
-                    checked={includeTensions}
-                    onChange={(e) => onTensionsChange(e.target.checked)}
-                    aria-describedby="advanced-chords-tooltip"
-                  />
-                  <div className="w-12 h-6 bg-text/20 rounded-full shadow-inner peer-focus:ring-2 peer-focus:ring-primary peer-focus:ring-offset-2 peer-focus:ring-offset-surface transition-all"></div>
-                  <div className="absolute left-1 top-1 w-4 h-4 bg-background rounded-full shadow-md transition-transform peer-checked:translate-x-6 peer-checked:bg-primary peer-checked:shadow-primary/50 peer-checked:shadow-lg"></div>
-                  {/* Tooltip */}
-                  <div
-                    id="advanced-chords-tooltip"
-                    className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-surface text-text text-xs rounded-lg shadow-lg border border-border opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible group-focus-within/tooltip:opacity-100 group-focus-within/tooltip:visible transition-all duration-200 pointer-events-none z-50 max-w-xs text-center"
-                  >
-                    Prioritize extended/altered chords in the generated progression (20-40%)
-                    <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-surface"></div>
-                  </div>
-                </div>
-              </label>
+              <ToggleSwitch
+                id="advanced-chords-toggle"
+                label="Advanced Chords"
+                checked={includeTensions}
+                onChange={onTensionsChange}
+                tooltip="Prioritize extended/altered chords in the generated progression (20-40%)"
+              />
             </div>
-            
+
             <div className="flex items-center justify-center">
               {onCustomChange && (
-                <label htmlFor="custom-toggle" className="flex items-center cursor-pointer select-none group">
-                  <span className="mr-2 md:mr-4 text-text/80 group-hover:text-text transition-colors font-semibold">Custom</span>
-                  <div className="relative">
-                     <input
-                      id="custom-toggle"
-                      type="checkbox"
-                      className="sr-only peer"
-                      checked={isCustomMode}
-                      onChange={(e) => handleCustomToggle(e.target.checked)}
-                    />
-                    <div className="w-12 h-6 bg-text/20 rounded-full shadow-inner peer-focus:ring-2 peer-focus:ring-primary peer-focus:ring-offset-2 peer-focus:ring-offset-surface transition-all"></div>
-                    <div className="absolute left-1 top-1 w-4 h-4 bg-background rounded-full shadow-md transition-transform peer-checked:translate-x-6 peer-checked:bg-primary peer-checked:shadow-primary/50 peer-checked:shadow-lg"></div>
-                  </div>
-                </label>
+                <ToggleSwitch
+                  id="custom-toggle"
+                  label="Custom"
+                  checked={isCustomMode}
+                  onChange={handleCustomToggle}
+                />
               )}
             </div>
           </div>
@@ -530,20 +149,12 @@ export const Controls: React.FC<ControlsProps> = ({
         >
             <div className="flex items-center justify-center gap-4 md:gap-6 pt-2">
               {onCustomChange && (
-                <label htmlFor="custom-toggle-back" className="flex items-center cursor-pointer select-none group">
-                  <span className="mr-2 md:mr-4 text-text/80 group-hover:text-text transition-colors font-semibold">Custom</span>
-                  <div className="relative">
-                     <input
-                      id="custom-toggle-back"
-                      type="checkbox"
-                      className="sr-only peer"
-                      checked={isCustomMode}
-                      onChange={(e) => handleCustomToggle(e.target.checked)}
-                    />
-                    <div className="w-12 h-6 bg-text/20 rounded-full shadow-inner peer-focus:ring-2 peer-focus:ring-primary peer-focus:ring-offset-2 peer-focus:ring-offset-surface transition-all"></div>
-                    <div className="absolute left-1 top-1 w-4 h-4 bg-background rounded-full shadow-md transition-transform peer-checked:translate-x-6 peer-checked:bg-primary peer-checked:shadow-primary/50 peer-checked:shadow-lg"></div>
-                  </div>
-                </label>
+                <ToggleSwitch
+                  id="custom-toggle-back"
+                  label="Custom"
+                  checked={isCustomMode}
+                  onChange={handleCustomToggle}
+                />
               )}
             </div>
             
