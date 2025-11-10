@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { CHORD_COUNTS, ROOT_NOTES, CHORD_QUALITIES } from '@/constants';
 import { WheelPicker } from './WheelPicker';
 import { formatChordDisplayName } from '@/utils/chordFormatting';
+import { getSmartDefaultChord } from '@/utils/smartChordSuggestions';
 
 interface CustomProgressionInputProps {
   numChords: number;
@@ -19,6 +20,10 @@ interface CustomProgressionInputProps {
  * - Dynamic number of chords selector
  * - Wheel picker for root note and chord quality
  * - Real-time chord display name preview
+ * - Smart default chord selection based on musical context:
+ *   • Key detection from existing chords
+ *   • Common progression pattern recognition
+ *   • Last chord quality memory
  * - Auto-resize progression array when chord count changes
  * - Loading state for analyze button
  */
@@ -38,9 +43,14 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
     }
 
     const newProgression = [...customProgression];
+
+    // When adding chords, use smart defaults based on existing progression
     while (newProgression.length < numChords) {
-      newProgression.push({ root: 'C', quality: 'major' });
+      const smartDefault = getSmartDefaultChord(newProgression);
+      newProgression.push(smartDefault);
     }
+
+    // When removing chords, remove from the end
     while (newProgression.length > numChords) {
       newProgression.pop();
     }
