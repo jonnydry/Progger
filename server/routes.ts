@@ -11,6 +11,7 @@ import { logger } from "./utils/logger";
 import { db } from "./db";
 import { redisCache } from "./cache";
 import { createAIGenerationLimiter, getRateLimitStatus } from "./rateLimit";
+import { requestIdMiddleware } from "./middleware/requestId";
 
 // Redis-backed rate limiter for AI generation endpoints
 // Falls back to in-memory if Redis is unavailable
@@ -25,6 +26,9 @@ const { csrfSynchronisedProtection, generateToken } = csrfSync({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Request ID middleware - must be first to ensure all requests have IDs
+  app.use(requestIdMiddleware);
+
   await setupAuth(app);
 
   // CSRF token endpoint - provides token for client-side requests
@@ -98,7 +102,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const dbUser = await storage.getUser(userId);
       res.json(dbUser);
     } catch (error) {
-      logger.error("Error fetching user", error, { userId: (req.user as AuthenticatedUser)?.claims?.sub });
+      logger.error("Error fetching user", error, { requestId: req.id, userId: (req.user as AuthenticatedUser)?.claims?.sub });
       res.status(500).json({ message: "Failed to fetch user" });
     }
   });
@@ -117,6 +121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
 
       logger.info("Chord progression generated successfully", {
+        requestId: req.id,
         key,
         mode,
         numChords,
@@ -126,9 +131,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(result);
     } catch (error) {
       logger.error("Error in /api/generate-progression", error, {
+        requestId: req.id,
         body: req.body,
       });
-      
+
       const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
       res.status(500).json({ error: errorMessage });
     }
@@ -141,6 +147,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await analyzeCustomProgression(chords);
 
       logger.info("Custom progression analyzed successfully", {
+        requestId: req.id,
         chordCount: chords.length,
         resultChordCount: result.progression.length,
         scaleCount: result.scales.length,
@@ -149,6 +156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(result);
     } catch (error) {
       logger.error("Error in /api/analyze-custom-progression", error, {
+        requestId: req.id,
         body: req.body,
       });
       
@@ -180,10 +188,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const items = await storage.getUserStashItems(userId, limit, offset);
-      logger.debug("Fetched stash items", { userId, itemCount: items.length, limit, offset });
+      logger.debug("Fetched stash items", { requestId: req.id, userId, itemCount: items.length, limit, offset });
       res.json(items);
     } catch (error) {
       logger.error("Error fetching stash items", error, {
+        requestId: req.id,
         userId: (req.user as AuthenticatedUser)?.claims?.sub,
       });
       res.status(500).json({ message: "Failed to fetch stash items" });
@@ -205,10 +214,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         progressionData,
       });
 
-      logger.info("Stash item created", { userId, itemId: newItem.id, name });
+      logger.info("Stash item created", { requestId: req.id, userId, itemId: newItem.id, name });
       res.status(201).json(newItem);
     } catch (error) {
       logger.error("Error creating stash item", error, {
+        requestId: req.id,
         userId: (req.user as AuthenticatedUser)?.claims?.sub,
         body: req.body,
       });
@@ -223,10 +233,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
 
       await storage.deleteStashItem(id, userId);
-      logger.info("Stash item deleted", { userId, itemId: id });
+      logger.info("Stash item deleted", { requestId: req.id, userId, itemId: id });
       res.status(204).send();
     } catch (error) {
       logger.error("Error deleting stash item", error, {
+        requestId: req.id,
         userId: (req.user as AuthenticatedUser)?.claims?.sub,
         itemId: req.params.id,
       });
@@ -238,12 +249,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use((err: any, req: any, res: any, next: any) => {
     if (err && err.code === 'EBADCSRFTOKEN') {
       logger.warn('CSRF token validation failed', {
+        requestId: req.id,
         ip: req.ip,
         path: req.path,
         userAgent: req.get('user-agent'),
       });
-      return res.status(403).json({ 
-        error: 'Invalid CSRF token. Please refresh the page and try again.' 
+      return res.status(403).json({
+        error: 'Invalid CSRF token. Please refresh the page and try again.'
       });
     }
     next(err);

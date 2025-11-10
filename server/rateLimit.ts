@@ -62,6 +62,7 @@ export function createAIGenerationLimiter() {
     legacyHeaders: false,
     handler: (req: any, res: any) => {
       logger.warn('Rate limit exceeded', {
+        requestId: req.id,
         ip: req.ip,
         path: req.path,
         userAgent: req.get('user-agent'),

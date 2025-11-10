@@ -13,8 +13,17 @@ class Logger {
   private formatMessage(level: LogLevel, message: string, context?: LogContext): string {
     const timestamp = new Date().toISOString();
     const levelUpper = level.toUpperCase().padEnd(5);
-    const contextStr = context ? ` ${JSON.stringify(context)}` : '';
-    return `[${levelUpper}] ${timestamp} ${message}${contextStr}`;
+
+    // Extract requestId for prominent display
+    const requestId = context?.requestId ? `[${context.requestId}]` : '';
+    const contextWithoutRequestId = context ? { ...context } : {};
+    delete contextWithoutRequestId.requestId;
+
+    const contextStr = Object.keys(contextWithoutRequestId).length > 0
+      ? ` ${JSON.stringify(contextWithoutRequestId)}`
+      : '';
+
+    return `[${levelUpper}] ${timestamp} ${requestId} ${message}${contextStr}`;
   }
 
   error(message: string, error?: Error | unknown, context?: LogContext): void {
