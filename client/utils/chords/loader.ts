@@ -72,13 +72,13 @@ async function importChordData(fileName: string): Promise<ChordVoicingsMap> {
           chordData = (await import('./data/C')).C_CHORDS;
           break;
         case 'C_sharp':
-          chordData = (await import('./data/C_sharp')).C_sharp_CHORDS;
+          chordData = (await import('./data/C_sharp')).C_SHARP_CHORDS;
           break;
         case 'D':
           chordData = (await import('./data/D')).D_CHORDS;
           break;
         case 'D_sharp':
-          chordData = (await import('./data/D_sharp')).D_sharp_CHORDS;
+          chordData = (await import('./data/D_sharp')).D_SHARP_CHORDS;
           break;
         case 'E':
           chordData = (await import('./data/E')).E_CHORDS;
@@ -87,19 +87,19 @@ async function importChordData(fileName: string): Promise<ChordVoicingsMap> {
           chordData = (await import('./data/F')).F_CHORDS;
           break;
         case 'F_sharp':
-          chordData = (await import('./data/F_sharp')).F_sharp_CHORDS;
+          chordData = (await import('./data/F_sharp')).F_SHARP_CHORDS;
           break;
         case 'G':
           chordData = (await import('./data/G')).G_CHORDS;
           break;
         case 'G_sharp':
-          chordData = (await import('./data/G_sharp')).G_sharp_CHORDS;
+          chordData = (await import('./data/G_sharp')).G_SHARP_CHORDS;
           break;
         case 'A':
           chordData = (await import('./data/A')).A_CHORDS;
           break;
         case 'A_sharp':
-          chordData = (await import('./data/A_sharp')).A_sharp_CHORDS;
+          chordData = (await import('./data/A_sharp')).A_SHARP_CHORDS;
           break;
         case 'B':
           chordData = (await import('./data/B')).B_CHORDS;
