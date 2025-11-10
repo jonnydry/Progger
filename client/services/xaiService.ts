@@ -370,6 +370,40 @@ export async function generateChordProgression(key: string, mode: string, includ
   }
 }
 
+/**
+ * Retry a fetch request with exponential backoff
+ */
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+  maxRetries: number = 3,
+  initialDelay: number = 1000
+): Promise<Response> {
+  let lastError: Error | undefined;
+
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fetch(url, options);
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+
+      // Only retry on network errors (TypeError), not on other errors
+      if (!(error instanceof TypeError)) {
+        throw error;
+      }
+
+      // Don't retry after the last attempt
+      if (attempt < maxRetries) {
+        const delay = initialDelay * Math.pow(2, attempt);
+        console.log(`Network error, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }
+
+  throw lastError || new Error('Max retries exceeded');
+}
+
 export async function analyzeCustomProgression(chords: string[]): Promise<ProgressionResult> {
   const cacheKey = `custom:${chords.join('-')}`;
 
@@ -378,7 +412,7 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
   if (cachedResult) {
     return cachedResult;
   }
-  
+
   try {
     console.log("Analyzing custom progression:", chords);
 
@@ -387,23 +421,23 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
       setTimeout(() => reject(new Error('Request timed out after 30 seconds')), 30000);
     });
 
-    // Race between the fetch and the timeout
+    // Race between the fetch (with retries) and the timeout
     let response: Response;
     try {
       const headers = await addCsrfHeaders({
         'Content-Type': 'application/json',
       });
-      
+
       response = await Promise.race([
-        fetch('/api/analyze-custom-progression', {
+        fetchWithRetry('/api/analyze-custom-progression', {
           method: 'POST',
           headers,
           body: JSON.stringify({ chords }),
-        }),
+        }, 3, 1000), // 3 retries with 1s initial delay
         timeoutPromise
       ]) as Response;
     } catch (error) {
-      // Network-level failure
+      // Network-level failure after retries
       throw new APIUnavailableError('/api/analyze-custom-progression', undefined);
     }
 

@@ -44,17 +44,33 @@ export function normalizeRoot(root: string): string {
 
 /**
  * Extract root and quality from chord name
+ *
+ * NOTE: Slash chords (e.g., "Cmaj7/E") are parsed by extracting the root chord ("Cmaj7")
+ * and ignoring the bass note ("/E"). The system returns standard voicings for the root chord
+ * without adjusting for the specified bass note. This is acceptable for most use cases as
+ * guitarists typically choose voicings based on the full chord rather than forcing a specific
+ * bass note. Future enhancement: filter or rank voicings by bass note proximity.
  */
-function extractRootAndQuality(chordName: string): { root: string; quality: string } {
+function extractRootAndQuality(chordName: string): { root: string; quality: string; bassNote?: string } {
   const match = chordName.match(/^([A-G][#b]?)(.*)/i);
   if (!match) return { root: 'C', quality: 'major' };
 
   const [, rawRoot, rawSuffix] = match;
-  const qualitySegment = (rawSuffix || '').split('/')[0] ?? '';
+
+  // Check for slash chord (e.g., "maj7/E")
+  const slashIndex = rawSuffix.indexOf('/');
+  const qualitySegment = slashIndex >= 0 ? rawSuffix.substring(0, slashIndex) : rawSuffix;
+  const bassNote = slashIndex >= 0 ? rawSuffix.substring(slashIndex + 1) : undefined;
+
+  // Log warning if bass note is present (currently not used in voicing selection)
+  if (bassNote) {
+    console.info(`Slash chord detected: "${chordName}". Showing voicings for ${rawRoot}${qualitySegment} (bass note /${bassNote} not enforced)`);
+  }
 
   return {
     root: normalizeRoot(rawRoot),
-    quality: normalizeChordQuality(qualitySegment)
+    quality: normalizeChordQuality(qualitySegment),
+    bassNote
   };
 }
 
@@ -79,7 +95,8 @@ export async function getChordVoicingsAsync(chordName: string): Promise<ChordVoi
   const voicings = chordData[key];
 
   if (voicings && voicings.length > 0) {
-    // TODO: Handle slash bass chords if needed
+    // Slash chord bass notes are logged but not enforced in voicing selection
+    // (see extractRootAndQuality for details)
     return voicings;
   }
 

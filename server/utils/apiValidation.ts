@@ -1,4 +1,4 @@
-import { resolveChordQuality } from '@shared/music/chordQualities';
+import { resolveChordQuality, splitChordName, isSupportedChordQuality } from '@shared/music/chordQualities';
 import { normalizeScaleDescriptor, FALLBACK_SCALE_LIBRARY_KEYS } from '@shared/music/scaleModes';
 /**
  * Enhanced API response validation
@@ -43,41 +43,48 @@ const VALID_ROOT_NOTES = [
 
 /**
  * Validates a chord name format
+ * Uses shared splitChordName function to avoid regex duplication
  */
 function validateChordName(chordName: string): void {
   if (!chordName || typeof chordName !== 'string') {
     throw new APIValidationError('Chord name is required and must be a string');
   }
 
-  const match = chordName.trim().match(/^([A-G][#b]?)(.*?)(?:\/([A-G][#b]?))?$/i);
-  if (!match) {
+  // Use shared parsing logic instead of duplicating regex
+  const parsed = splitChordName(chordName.trim());
+
+  // splitChordName returns fallback {root: 'C', quality: 'major'} for invalid formats
+  // If we get the fallback but input wasn't 'C' or 'Cmajor', it means parsing failed
+  const isFallback = parsed.root === 'C' && parsed.quality === 'major' &&
+    chordName.trim() !== 'C' && chordName.trim().toLowerCase() !== 'cmajor';
+
+  if (isFallback) {
     throw new APIValidationError(
       `Invalid chord format: "${chordName}". Expected root note with optional quality and bass (e.g., "Cmaj7", "F#m7b5/A").`
     );
   }
 
-  const [, rawRoot, rawQuality = '', rawBass] = match;
-  const root = normalizeRootToken(rawRoot);
-
-  if (!VALID_ROOT_NOTES.includes(root)) {
+  // Validate root note
+  if (!VALID_ROOT_NOTES.includes(parsed.root)) {
     throw new APIValidationError(
-      `Invalid chord root: "${root}". Must be one of: ${VALID_ROOT_NOTES.join(', ')}`
+      `Invalid chord root: "${parsed.root}". Must be one of: ${VALID_ROOT_NOTES.join(', ')}`
     );
   }
 
-  if (rawBass) {
-    const bass = normalizeRootToken(rawBass);
-    if (!VALID_ROOT_NOTES.includes(bass)) {
+  // Validate bass note if present
+  if (parsed.bass) {
+    const normalizedBass = normalizeRootToken(parsed.bass);
+    if (!VALID_ROOT_NOTES.includes(normalizedBass)) {
       throw new APIValidationError(
-        `Invalid chord bass note: "${bass}". Must be one of: ${VALID_ROOT_NOTES.join(', ')}`
+        `Invalid chord bass note: "${parsed.bass}". Must be one of: ${VALID_ROOT_NOTES.join(', ')}`
       );
     }
   }
 
-  const { recognized } = resolveChordQuality(rawQuality);
-  if (!recognized) {
+  // Validate chord quality
+  if (!isSupportedChordQuality(parsed.quality)) {
     throw new APIValidationError(
-      `Unsupported chord quality in "${chordName}". Received "${rawQuality || 'major'}" but it does not match known qualities.`
+      `Unsupported chord quality in "${chordName}". Received "${parsed.quality}" but it does not match known qualities.`
     );
   }
 }

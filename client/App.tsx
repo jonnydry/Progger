@@ -8,6 +8,7 @@ import { useAuth } from './hooks/useAuth';
 import { generateChordProgression, analyzeCustomProgression, clearAllProgressionCache } from './services/xaiService';
 import { validateChordLibrary, preloadAllChords } from './utils/chordLibrary';
 import { formatChordDisplayName } from './utils/chordFormatting';
+import { splitChordName, isSupportedChordQuality } from '@shared/music/chordQualities';
 import type { ProgressionResult } from './types';
 import { KEYS, MODES, THEMES, COMMON_PROGRESSIONS } from './constants';
 import proggerMascot from '../attached_assets/ProggerLogoMono2Lily_1761527600239.png';
@@ -157,9 +158,22 @@ const App: React.FC = () => {
       // Format chord names from root + quality
       const formattedChords = customProgression.map(chord => formatChordDisplayName(chord.root, chord.quality));
 
+      // Pre-validate chords before sending to API
+      const invalidChords: string[] = [];
+      for (const chordName of formattedChords) {
+        const parsed = splitChordName(chordName);
+        if (!isSupportedChordQuality(parsed.quality)) {
+          invalidChords.push(chordName);
+        }
+      }
+
+      if (invalidChords.length > 0) {
+        throw new Error(`Invalid chord${invalidChords.length > 1 ? 's' : ''}: ${invalidChords.join(', ')}. Please check your chord selections.`);
+      }
+
       const result = await analyzeCustomProgression(formattedChords);
       setProgressionResult(result);
-      
+
       // Update key and mode based on AI-detected values (from progression result if available)
       // For now, we'll let the AI handle this in the response
     } catch (err) {

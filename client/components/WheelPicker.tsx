@@ -21,7 +21,22 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
   const lastWheelTimeRef = useRef(0);
   const optionHeight = 40; // Height of each option in pixels
   const visibleOptions = 5; // Number of visible options (odd number for center selection)
-  const wheelThrottleMs = 100; // Throttle wheel events to max once per 100ms
+
+  // Adaptive throttling based on device capabilities
+  const wheelThrottleMs = useMemo(() => {
+    // Check for low-end devices (limited memory)
+    const isLowEndDevice = typeof navigator !== 'undefined' &&
+      'deviceMemory' in navigator &&
+      (navigator.deviceMemory as number) < 4;
+
+    // Check for high refresh rate displays
+    const prefersReducedMotion = typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    if (prefersReducedMotion) return 150; // Respect accessibility preference
+    if (isLowEndDevice) return 150; // More aggressive throttling for low-end devices
+    return 50; // Responsive for modern devices (20fps)
+  }, []);
 
   const currentIndex = useMemo(() => {
     const index = options.indexOf(value);
@@ -147,6 +162,35 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    const currentIdx = options.indexOf(value);
+
+    switch (e.key) {
+      case 'ArrowUp':
+      case 'ArrowLeft':
+        e.preventDefault();
+        if (currentIdx > 0) {
+          onChange(options[currentIdx - 1]);
+        }
+        break;
+      case 'ArrowDown':
+      case 'ArrowRight':
+        e.preventDefault();
+        if (currentIdx < options.length - 1) {
+          onChange(options[currentIdx + 1]);
+        }
+        break;
+      case 'Home':
+        e.preventDefault();
+        onChange(options[0]);
+        break;
+      case 'End':
+        e.preventDefault();
+        onChange(options[options.length - 1]);
+        break;
+    }
+  };
+
   const centerOffset = (visibleOptions - 1) / 2 * optionHeight;
 
   return (
@@ -169,7 +213,12 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
         {/* Scrollable container */}
         <div
           ref={containerRef}
-          className="relative overflow-hidden bg-background border-2 border-border rounded-md shadow-inner"
+          role="listbox"
+          aria-label={label || "Select option"}
+          aria-activedescendant={`${label}-option-${currentIndex}`}
+          tabIndex={0}
+          onKeyDown={handleKeyDown}
+          className="relative overflow-hidden bg-background border-2 border-border rounded-md shadow-inner focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
           style={{
             height: visibleOptions * optionHeight,
             touchAction: 'none',
@@ -202,6 +251,9 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
               return (
                 <div
                   key={option}
+                  id={`${label}-option-${index}`}
+                  role="option"
+                  aria-selected={isSelected}
                   className={`flex items-center justify-center cursor-pointer transition-all duration-150 ${
                     isSelected ? 'font-semibold text-primary' : 'text-text/80'
                   }`}
