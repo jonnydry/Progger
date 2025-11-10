@@ -44,16 +44,16 @@ async function initializeRedisClient() {
   }
 }
 
-// Initialize on module load (non-blocking)
-initializeRedisClient().catch(err => {
-  logger.debug('Redis rate limit initialization skipped', { error: err.message });
-});
-
 /**
  * Create rate limiter for AI generation endpoints
  * Uses Redis if available, otherwise falls back to in-memory
+ *
+ * IMPORTANT: This is async to properly await Redis initialization
  */
-export function createAIGenerationLimiter() {
+export async function createAIGenerationLimiter() {
+  // Try to initialize Redis connection (waits for connection to complete)
+  await initializeRedisClient();
+
   const config = {
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 50, // Limit each IP to 50 requests per windowMs
@@ -73,7 +73,7 @@ export function createAIGenerationLimiter() {
     },
   };
 
-  // Use Redis store if available
+  // Use Redis store if available (flag is now set after await above)
   if (isRedisAvailable && redisClient) {
     logger.info('Using Redis-backed rate limiting for AI generation endpoints');
     return rateLimit({

@@ -13,10 +13,6 @@ import { redisCache } from "./cache";
 import { createAIGenerationLimiter, getRateLimitStatus } from "./rateLimit";
 import { requestIdMiddleware } from "./middleware/requestId";
 
-// Redis-backed rate limiter for AI generation endpoints
-// Falls back to in-memory if Redis is unavailable
-const aiGenerationLimiter = createAIGenerationLimiter();
-
 // CSRF protection for session-based endpoints
 const { csrfSynchronisedProtection, generateToken } = csrfSync({
   getTokenFromRequest: (req) => {
@@ -26,6 +22,10 @@ const { csrfSynchronisedProtection, generateToken } = csrfSync({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize Redis-backed rate limiter (async to properly connect)
+  // Falls back to in-memory if Redis is unavailable
+  const aiGenerationLimiter = await createAIGenerationLimiter();
+
   // Request ID middleware - must be first to ensure all requests have IDs
   app.use(requestIdMiddleware);
 
