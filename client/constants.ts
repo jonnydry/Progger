@@ -327,10 +327,10 @@ export const COMMON_PROGRESSIONS = [
   { name: 'I-III-IV-iv (Chromatic Pop)', value: 'I-III-IV-iv' },
 ];
 
-// Root notes for wheel picker (matching system format)
+// Root notes for wheel picker - 12 chromatic notes with sharp notation
+// Backend normalization handles enharmonic equivalents (C#/Db, etc.)
 export const ROOT_NOTES = [
-  'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B',
-  'Db', 'Eb', 'Gb', 'Ab', 'Bb'
+  'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'
 ];
 
 // Chord qualities for wheel picker (based on chordLibrary.ts normalization)

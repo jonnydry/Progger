@@ -7,6 +7,7 @@ import { StashSidebar } from './components/StashSidebar';
 import { useAuth } from './hooks/useAuth';
 import { generateChordProgression, analyzeCustomProgression, clearAllProgressionCache } from './services/xaiService';
 import { validateChordLibrary, preloadAllChords } from './utils/chordLibrary';
+import { formatChordDisplayName } from './utils/chordFormatting';
 import type { ProgressionResult } from './types';
 import { KEYS, MODES, THEMES, COMMON_PROGRESSIONS } from './constants';
 import proggerMascot from '../attached_assets/ProggerLogoMono2Lily_1761527600239.png';
@@ -147,37 +148,6 @@ const App: React.FC = () => {
     }
   }, [key, mode, includeTensions, progressionLength, selectedProgression]);
 
-  const formatChordName = useCallback((root: string, quality: string): string => {
-    // Format chord names to match system expectations
-    // Based on chordLibrary.ts normalization patterns
-    if (quality === 'major') {
-      return root;
-    }
-    if (quality === 'minor') {
-      return `${root}m`;
-    }
-    if (quality === 'min7') {
-      return `${root}m7`;
-    }
-    if (quality === 'maj7') {
-      return `${root}maj7`;
-    }
-    if (quality === 'dim') {
-      return `${root}dim`;
-    }
-    if (quality === 'aug') {
-      return `${root}aug`;
-    }
-    if (quality === 'sus2') {
-      return `${root}sus2`;
-    }
-    if (quality === 'sus4') {
-      return `${root}sus4`;
-    }
-    // For other qualities, append directly
-    return `${root}${quality}`;
-  }, []);
-
   const handleAnalyzeCustom = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -185,7 +155,7 @@ const App: React.FC = () => {
 
     try {
       // Format chord names from root + quality
-      const formattedChords = customProgression.map(chord => formatChordName(chord.root, chord.quality));
+      const formattedChords = customProgression.map(chord => formatChordDisplayName(chord.root, chord.quality));
 
       const result = await analyzeCustomProgression(formattedChords);
       setProgressionResult(result);
@@ -198,7 +168,7 @@ const App: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [customProgression, formatChordName]);
+  }, [customProgression]);
 
   const skeletonCount = useMemo(() => {
     return isCustomMode ? numCustomChords : progressionLength;

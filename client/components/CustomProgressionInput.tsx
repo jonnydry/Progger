@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { CHORD_COUNTS, ROOT_NOTES, CHORD_QUALITIES } from '@/constants';
 import { WheelPicker } from './WheelPicker';
+import { formatChordDisplayName } from '@/utils/chordFormatting';
 
 interface CustomProgressionInputProps {
   numChords: number;
@@ -31,6 +32,11 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
 }) => {
   useEffect(() => {
     // Initialize or resize progression array when numChords changes
+    // Only run if the current length doesn't match the desired length
+    if (customProgression.length === numChords) {
+      return;
+    }
+
     const newProgression = [...customProgression];
     while (newProgression.length < numChords) {
       newProgression.push({ root: 'C', quality: 'major' });
@@ -38,44 +44,24 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
     while (newProgression.length > numChords) {
       newProgression.pop();
     }
-    if (newProgression.length !== customProgression.length) {
-      onCustomProgressionChange(newProgression);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [numChords]);
+
+    onCustomProgressionChange(newProgression);
+  }, [numChords, customProgression, onCustomProgressionChange]);
 
   const handleChordChange = (index: number, field: 'root' | 'quality', value: string) => {
+    // Validate input before updating state
+    if (field === 'quality' && !CHORD_QUALITIES.includes(value)) {
+      console.error(`Invalid chord quality: ${value}`);
+      return;
+    }
+    if (field === 'root' && !ROOT_NOTES.includes(value)) {
+      console.error(`Invalid root note: ${value}`);
+      return;
+    }
+
     const newProgression = [...customProgression];
     newProgression[index] = { ...newProgression[index], [field]: value };
     onCustomProgressionChange(newProgression);
-  };
-
-  const getChordDisplayName = (chord: { root: string; quality: string }) => {
-    if (chord.quality === 'major') {
-      return chord.root;
-    }
-    if (chord.quality === 'minor') {
-      return `${chord.root}m`;
-    }
-    if (chord.quality === 'min7') {
-      return `${chord.root}m7`;
-    }
-    if (chord.quality === 'maj7') {
-      return `${chord.root}maj7`;
-    }
-    if (chord.quality === 'dim') {
-      return `${chord.root}dim`;
-    }
-    if (chord.quality === 'aug') {
-      return `${chord.root}aug`;
-    }
-    if (chord.quality === 'sus2') {
-      return `${chord.root}sus2`;
-    }
-    if (chord.quality === 'sus4') {
-      return `${chord.root}sus4`;
-    }
-    return `${chord.root}${chord.quality}`;
   };
 
   return (
@@ -109,7 +95,7 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
         {customProgression.map((chord, index) => (
           <div key={index} className="bg-background/50 rounded-lg p-3 md:p-4 border border-border">
             <div className="text-sm font-semibold text-text/70 mb-3">
-              Chord {index + 1}: <span className="text-primary font-bold">{getChordDisplayName(chord)}</span>
+              Chord {index + 1}: <span className="text-primary font-bold">{formatChordDisplayName(chord.root, chord.quality)}</span>
             </div>
             <div className="grid grid-cols-2 gap-3 md:gap-4">
               <WheelPicker
@@ -133,16 +119,25 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
         <button
           onClick={onAnalyze}
           disabled={isLoading}
+          aria-label={isLoading ? "Analyzing chord progression, please wait" : "Analyze chord progression"}
+          aria-busy={isLoading}
+          aria-live="polite"
           className="w-full relative bg-primary text-background font-bold py-3 px-4 rounded-md hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 ease-in-out flex items-center justify-center border-b-4 border-primary/50 active:border-b-0 active:translate-y-1 shadow-lg hover:shadow-accent/40"
         >
           <span className="relative">
             {isLoading ? (
-              <span className="flex items-center">
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-background" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <span className="flex items-center" role="status">
+                <svg
+                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-background"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                Analyzing...
+                <span aria-live="assertive">Analyzing...</span>
               </span>
             ) : (
               'Analyze Progression'
