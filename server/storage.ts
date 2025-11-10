@@ -51,6 +51,11 @@ export class DatabaseStorage implements IStorage {
 
   async getUserStashItems(userId: string, limit?: number, offset?: number): Promise<StashItem[]> {
     try {
+      // Validate pagination parameters: offset requires limit
+      if (offset !== undefined && offset > 0 && (limit === undefined || limit <= 0)) {
+        throw new Error('Offset requires a valid limit to be specified');
+      }
+
       let query = db
         .select()
         .from(stash)
@@ -70,7 +75,7 @@ export class DatabaseStorage implements IStorage {
       return items;
     } catch (error) {
       logger.error("Error fetching stash items from database", error, { userId, limit, offset });
-      throw new Error('Failed to fetch stash items from database');
+      throw error instanceof Error ? error : new Error('Failed to fetch stash items from database');
     }
   }
 

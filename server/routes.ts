@@ -186,6 +186,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (offset !== undefined && (isNaN(offset) || offset < 0)) {
         return res.status(400).json({ message: "Invalid offset parameter. Must be 0 or greater." });
       }
+      // Offset requires limit to be specified
+      if (offset !== undefined && offset > 0 && (limit === undefined || limit <= 0)) {
+        return res.status(400).json({ message: "Offset requires a valid limit parameter to be specified." });
+      }
 
       const items = await storage.getUserStashItems(userId, limit, offset);
       logger.debug("Fetched stash items", { requestId: req.id, userId, itemCount: items.length, limit, offset });
