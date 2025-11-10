@@ -31,10 +31,15 @@ async function initializeRedisClient() {
 
     redisClient.on('connect', () => {
       logger.info('Redis rate limit client connected');
-      isRedisAvailable = true;
     });
 
     await redisClient.connect();
+
+    // Set flag synchronously after connection completes
+    // Don't rely on 'connect' event which may fire asynchronously
+    isRedisAvailable = true;
+    logger.info('Redis rate limit client initialized successfully');
+
     return redisClient;
   } catch (error) {
     logger.warn('Failed to connect Redis for rate limiting, falling back to in-memory', { error });
