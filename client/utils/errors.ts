@@ -132,7 +132,7 @@ export class APIUnavailableError extends MusicTheoryError {
 export class InvalidAPIResponseError extends MusicTheoryError {
   constructor(
     public readonly expectedFormat: string,
-    public readonly receivedData: any
+    public readonly receivedData: unknown
   ) {
     super(
       `Invalid API response format. Expected: ${expectedFormat}`,
@@ -162,15 +162,15 @@ export class ProcessingPipelineError extends MusicTheoryError {
   }
 
   // Recovery strategy: Return partial results
-  async recover(successfulResults: any[]) {
+  async recover(successfulResults: unknown[]) {
     console.warn(`🔄 Processing pipeline error - returning ${successfulResults.length} successful results`);
     return successfulResults;
   }
 }
 
 // Utility functions for error handling
-export function isRecoverableError(error: Error): error is MusicTheoryError & { recover: () => Promise<any> } {
-  return error instanceof MusicTheoryError && 'recover' in error && typeof (error as any).recover === 'function';
+export function isRecoverableError(error: Error): error is MusicTheoryError & { recover: () => Promise<unknown> } {
+  return error instanceof MusicTheoryError && 'recover' in error && typeof error.recover === 'function';
 }
 
 export function getErrorSeverity(error: Error): 'low' | 'medium' | 'high' {
