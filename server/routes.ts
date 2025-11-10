@@ -1,6 +1,5 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import rateLimit from "express-rate-limit";
 import { csrfSync } from "csrf-sync";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, type AuthenticatedUser } from "./replitAuth";
@@ -11,25 +10,8 @@ import { validateCustomProgressionRequest } from "./utils/validation";
 import { logger } from "./utils/logger";
 import { db } from "./db";
 import { redisCache } from "./cache";
-
-// Rate limiter for AI generation endpoints to prevent abuse
-const aiGenerationLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 50, // Limit each IP to 50 requests per windowMs
-  message: { error: 'Too many AI generation requests from this IP, please try again later.' },
-  standardHeaders: true,
-  legacyHeaders: false,
-  handler: (req, res) => {
-    logger.warn('Rate limit exceeded', { 
-      ip: req.ip, 
-      path: req.path,
-      userAgent: req.get('user-agent'),
-    });
-    res.status(429).json({ 
-      error: 'Too many AI generation requests from this IP, please try again later.' 
-    });
-  },
-});
+import { createAIGenerationLimiter, getRateLimitStatus } from "./rateLimit";
+import { requestIdMiddleware } from "./middleware/requestId";
 
 // CSRF protection for session-based endpoints
 const { csrfSynchronisedProtection, generateToken } = csrfSync({
@@ -40,6 +22,13 @@ const { csrfSynchronisedProtection, generateToken } = csrfSync({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize Redis-backed rate limiter (async to properly connect)
+  // Falls back to in-memory if Redis is unavailable
+  const aiGenerationLimiter = await createAIGenerationLimiter();
+
+  // Request ID middleware - must be first to ensure all requests have IDs
+  app.use(requestIdMiddleware);
+
   await setupAuth(app);
 
   // CSRF token endpoint - provides token for client-side requests
@@ -50,17 +39,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Health check endpoint
   app.get('/api/health', async (req, res) => {
+    const rateLimitStatus = getRateLimitStatus();
     const health: {
       status: 'healthy' | 'degraded' | 'unhealthy';
       timestamp: string;
       database: 'connected' | 'disconnected';
       redis: 'connected' | 'disconnected' | 'unavailable';
+      rateLimit: {
+        redisAvailable: boolean;
+        storeType: 'redis' | 'memory';
+      };
       uptime: number;
     } = {
       status: 'healthy',
       timestamp: new Date().toISOString(),
       database: 'disconnected',
       redis: 'unavailable',
+      rateLimit: rateLimitStatus,
       uptime: process.uptime(),
     };
 
@@ -107,7 +102,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const dbUser = await storage.getUser(userId);
       res.json(dbUser);
     } catch (error) {
-      logger.error("Error fetching user", error, { userId: (req.user as AuthenticatedUser)?.claims?.sub });
+      logger.error("Error fetching user", error, { requestId: req.id, userId: (req.user as AuthenticatedUser)?.claims?.sub });
       res.status(500).json({ message: "Failed to fetch user" });
     }
   });
@@ -126,6 +121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       );
 
       logger.info("Chord progression generated successfully", {
+        requestId: req.id,
         key,
         mode,
         numChords,
@@ -135,9 +131,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(result);
     } catch (error) {
       logger.error("Error in /api/generate-progression", error, {
+        requestId: req.id,
         body: req.body,
       });
-      
+
       const errorMessage = error instanceof Error ? error.message : "An unexpected error occurred";
       res.status(500).json({ error: errorMessage });
     }
@@ -150,6 +147,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await analyzeCustomProgression(chords);
 
       logger.info("Custom progression analyzed successfully", {
+        requestId: req.id,
         chordCount: chords.length,
         resultChordCount: result.progression.length,
         scaleCount: result.scales.length,
@@ -158,6 +156,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(result);
     } catch (error) {
       logger.error("Error in /api/analyze-custom-progression", error, {
+        requestId: req.id,
         body: req.body,
       });
       
@@ -175,11 +174,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const user = req.user as AuthenticatedUser;
       const userId = user.claims.sub;
-      const items = await storage.getUserStashItems(userId);
-      logger.debug("Fetched stash items", { userId, itemCount: items.length });
+
+      // Parse pagination query parameters (optional for backward compatibility)
+      const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : undefined;
+      const offset = req.query.offset ? parseInt(req.query.offset as string, 10) : undefined;
+
+      // Validate pagination parameters
+      if (limit !== undefined && (isNaN(limit) || limit < 1 || limit > 100)) {
+        return res.status(400).json({ message: "Invalid limit parameter. Must be between 1 and 100." });
+      }
+      if (offset !== undefined && (isNaN(offset) || offset < 0)) {
+        return res.status(400).json({ message: "Invalid offset parameter. Must be 0 or greater." });
+      }
+      // Offset requires limit to be specified
+      if (offset !== undefined && offset > 0 && (limit === undefined || limit <= 0)) {
+        return res.status(400).json({ message: "Offset requires a valid limit parameter to be specified." });
+      }
+
+      const items = await storage.getUserStashItems(userId, limit, offset);
+      logger.debug("Fetched stash items", { requestId: req.id, userId, itemCount: items.length, limit, offset });
       res.json(items);
     } catch (error) {
       logger.error("Error fetching stash items", error, {
+        requestId: req.id,
         userId: (req.user as AuthenticatedUser)?.claims?.sub,
       });
       res.status(500).json({ message: "Failed to fetch stash items" });
@@ -201,10 +218,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         progressionData,
       });
 
-      logger.info("Stash item created", { userId, itemId: newItem.id, name });
+      logger.info("Stash item created", { requestId: req.id, userId, itemId: newItem.id, name });
       res.status(201).json(newItem);
     } catch (error) {
       logger.error("Error creating stash item", error, {
+        requestId: req.id,
         userId: (req.user as AuthenticatedUser)?.claims?.sub,
         body: req.body,
       });
@@ -219,10 +237,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
 
       await storage.deleteStashItem(id, userId);
-      logger.info("Stash item deleted", { userId, itemId: id });
+      logger.info("Stash item deleted", { requestId: req.id, userId, itemId: id });
       res.status(204).send();
     } catch (error) {
       logger.error("Error deleting stash item", error, {
+        requestId: req.id,
         userId: (req.user as AuthenticatedUser)?.claims?.sub,
         itemId: req.params.id,
       });
@@ -234,12 +253,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use((err: any, req: any, res: any, next: any) => {
     if (err && err.code === 'EBADCSRFTOKEN') {
       logger.warn('CSRF token validation failed', {
+        requestId: req.id,
         ip: req.ip,
         path: req.path,
         userAgent: req.get('user-agent'),
       });
-      return res.status(403).json({ 
-        error: 'Invalid CSRF token. Please refresh the page and try again.' 
+      return res.status(403).json({
+        error: 'Invalid CSRF token. Please refresh the page and try again.'
       });
     }
     next(err);

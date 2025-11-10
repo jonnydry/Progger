@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useStash, useSaveToStash, useDeleteFromStash } from '../hooks/useStash';
-import type { ProgressionResult } from '../types';
+import type { ProgressionResult, StashItemData } from '../types';
 
 interface StashSidebarProps {
   isOpen: boolean;
@@ -81,7 +81,7 @@ export const StashSidebar: React.FC<StashSidebarProps> = ({
     }
   };
 
-  const handleLoad = (item: any) => {
+  const handleLoad = (item: StashItemData) => {
     if (onLoadProgression) {
       onLoadProgression(item.key, item.mode, item.progressionData);
       onClose();
