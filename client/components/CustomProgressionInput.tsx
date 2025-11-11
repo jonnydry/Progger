@@ -1,8 +1,7 @@
 import React, { useEffect } from 'react';
-import { CHORD_COUNTS, ROOT_NOTES, CHORD_QUALITIES } from '@/constants';
-import { WheelPicker } from './WheelPicker';
-import { formatChordDisplayName } from '@/utils/chordFormatting';
+import { CHORD_COUNTS } from '@/constants';
 import { getSmartDefaultChord } from '@/utils/smartChordSuggestions';
+import { ChordInputCard } from './ChordInputCard';
 
 interface CustomProgressionInputProps {
   numChords: number;
@@ -19,7 +18,10 @@ interface CustomProgressionInputProps {
  * Features:
  * - Dynamic number of chords selector
  * - Wheel picker for root note and chord quality
- * - Real-time chord display name preview
+ * - Live fretboard preview that updates in real-time as users scroll
+ *   • Shows instant visual feedback of chord voicings
+ *   • Displays lowest/most common fingering position
+ *   • Debounced loading (150ms) for smooth performance
  * - Smart default chord selection based on musical context:
  *   • Key detection from existing chords
  *   • Common progression pattern recognition
@@ -58,19 +60,15 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
     onCustomProgressionChange(newProgression);
   }, [numChords, customProgression, onCustomProgressionChange]);
 
-  const handleChordChange = (index: number, field: 'root' | 'quality', value: string) => {
-    // Validate input before updating state
-    if (field === 'quality' && !CHORD_QUALITIES.includes(value)) {
-      console.error(`Invalid chord quality: ${value}`);
-      return;
-    }
-    if (field === 'root' && !ROOT_NOTES.includes(value)) {
-      console.error(`Invalid root note: ${value}`);
-      return;
-    }
-
+  const handleRootChange = (index: number, value: string) => {
     const newProgression = [...customProgression];
-    newProgression[index] = { ...newProgression[index], [field]: value };
+    newProgression[index] = { ...newProgression[index], root: value };
+    onCustomProgressionChange(newProgression);
+  };
+
+  const handleQualityChange = (index: number, value: string) => {
+    const newProgression = [...customProgression];
+    newProgression[index] = { ...newProgression[index], quality: value };
     onCustomProgressionChange(newProgression);
   };
 
@@ -103,25 +101,14 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
 
       <div className="space-y-4">
         {customProgression.map((chord, index) => (
-          <div key={index} className="bg-background/50 rounded-lg p-3 md:p-4 border border-border">
-            <div className="text-sm font-semibold text-text/70 mb-3">
-              Chord {index + 1}: <span className="text-primary font-bold">{formatChordDisplayName(chord.root, chord.quality)}</span>
-            </div>
-            <div className="grid grid-cols-2 gap-3 md:gap-4">
-              <WheelPicker
-                label="Root"
-                options={ROOT_NOTES}
-                value={chord.root}
-                onChange={(val) => handleChordChange(index, 'root', val)}
-              />
-              <WheelPicker
-                label="Quality"
-                options={CHORD_QUALITIES}
-                value={chord.quality}
-                onChange={(val) => handleChordChange(index, 'quality', val)}
-              />
-            </div>
-          </div>
+          <ChordInputCard
+            key={index}
+            index={index}
+            root={chord.root}
+            quality={chord.quality}
+            onRootChange={(val) => handleRootChange(index, val)}
+            onQualityChange={(val) => handleQualityChange(index, val)}
+          />
         ))}
       </div>
 
