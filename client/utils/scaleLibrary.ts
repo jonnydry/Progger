@@ -378,11 +378,12 @@ function detectFingeringBaseRoot(fingering: number[][], scaleName?: string): str
   // Standard guitar tuning - Low E = 4 (E in chromatic scale where C=0)
   const STANDARD_TUNING_LOW_E = 4;
 
+  // For 3-note-per-string patterns (most common), the first note is typically the root
   // Get the minimum fret to determine the starting point
-  const minFret = Math.min(...lowEString);
+  const minFret = Math.min(...lowEString.filter(f => f >= 0));
 
   // The pattern should contain the root note somewhere on the low E string
-  // Look for the fret that's most likely the root (usually the starting fret)
+  // For most scale patterns, the lowest note on the low E string represents the root
   const rootFret = minFret >= 0 ? minFret : lowEString.find(fret => fret >= 0) ?? 0;
 
   const rootValue = (STANDARD_TUNING_LOW_E + rootFret) % 12;
@@ -458,22 +459,42 @@ export function getScaleFingering(scaleName: string, rootNote?: string, position
 
 /**
  * Transpose a fingering pattern by a number of semitones
- * Clamps frets to the valid range [0, 24]
+ * Handles octave shifting to keep patterns playable instead of clamping
  *
  * @param fingering - Original fingering pattern
  * @param semitones - Number of semitones to transpose (can be negative)
- * @returns Transposed fingering pattern
+ * @returns Transposed fingering pattern, with octave adjustment if needed
  */
 function transposeFingering(fingering: number[][], semitones: number): number[][] {
   // Always return a copy to prevent mutation of SCALE_LIBRARY data
   if (semitones === 0) return fingering.map(stringFrets => [...stringFrets]);
 
+  // First, try the direct transposition
+  let octaveAdjustment = 0;
+  let needsAdjustment = false;
+
+  // Check if transposition would go out of bounds
+  const minFret = Math.min(...fingering.flat());
+  const maxFret = Math.max(...fingering.flat());
+
+  if (minFret + semitones < 0) {
+    // Would go below fret 0 - shift up by octave (12 frets)
+    octaveAdjustment = 12;
+    needsAdjustment = true;
+  } else if (maxFret + semitones > 24) {
+    // Would go above fret 24 - shift down by octave (12 frets)
+    octaveAdjustment = -12;
+    needsAdjustment = true;
+  }
+
+  // Apply transposition with octave adjustment
+  const adjustedSemitones = semitones + octaveAdjustment;
   let hasClampedFrets = false;
 
   const result = fingering.map(stringFrets =>
     stringFrets.map(fret => {
-      const newFret = fret + semitones;
-      // Clamp to valid guitar fret range
+      const newFret = fret + adjustedSemitones;
+      // Final safety check - clamp only if still out of range after octave adjustment
       if (newFret < 0) {
         hasClampedFrets = true;
         return 0;
@@ -486,8 +507,12 @@ function transposeFingering(fingering: number[][], semitones: number): number[][
     })
   );
 
+  if (needsAdjustment) {
+    console.info(`Scale transposition adjusted by ${octaveAdjustment > 0 ? '+' : ''}${octaveAdjustment} frets (${Math.abs(octaveAdjustment / 12)} octave${Math.abs(octaveAdjustment) !== 12 ? 's' : ''}) to keep pattern playable`);
+  }
+
   if (hasClampedFrets) {
-    console.warn(`Scale transposition by ${semitones} semitones exceeded playable range (0-24 frets). Some notes were clamped and may be incorrect.`);
+    console.warn(`Scale transposition by ${adjustedSemitones} semitones still exceeded playable range (0-24 frets) after octave adjustment. Some notes were clamped and may be incorrect.`);
   }
 
   return result;

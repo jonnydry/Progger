@@ -179,7 +179,7 @@ function normalizeRootToken(token: string): string {
  * Enhanced validation for API responses
  * Validates structure, format, and data quality
  */
-export function validateAPIResponse(result: unknown): ProgressionResultFromAPI {
+export function validateAPIResponse(result: unknown, expectedChordCount?: number): ProgressionResultFromAPI {
   // Basic structure validation
   if (!result || typeof result !== 'object') {
     throw new APIValidationError('API response must be an object');
@@ -203,6 +203,14 @@ export function validateAPIResponse(result: unknown): ProgressionResultFromAPI {
   // Validate progression is not empty
   if (progression.length === 0) {
     throw new APIValidationError('Progression array cannot be empty');
+  }
+
+  // Validate progression length matches expected count
+  if (expectedChordCount !== undefined && progression.length !== expectedChordCount) {
+    throw new APIValidationError(
+      `Expected ${expectedChordCount} chords but received ${progression.length}. ` +
+      `The AI must generate exactly ${expectedChordCount} chords.`
+    );
   }
 
   // Validate scales is not empty
