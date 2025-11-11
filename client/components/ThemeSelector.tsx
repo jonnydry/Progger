@@ -54,7 +54,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
   return (
     <div className="relative flex items-center" ref={selectRef}>
       {/* Theme dots grid - responsive wrapping for mobile */}
-      <div className="flex flex-row-reverse flex-wrap items-center gap-1.5 sm:gap-2 overflow-visible max-w-[280px] sm:max-w-none">
+      <div className="flex flex-row-reverse flex-wrap items-center gap-1.5 sm:gap-2 overflow-visible max-w-[320px] sm:max-w-none">
         {(isOpen || isClosing) && themes.map((theme, index) => {
           // Opening: cascade right to left (index 0, 1, 2...)
           // Closing: cascade left to right (reverse order for mirror effect)
