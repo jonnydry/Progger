@@ -40,8 +40,8 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
             key={theme.name}
             className="relative"
             style={{
-              animation: `slideInFromRight 0.3s ease-out forwards`,
-              animationDelay: `${index * 0.05}s`,
+              animation: `slideInFromRight 0.18s ease-out forwards`,
+              animationDelay: `${index * 0.03}s`,
               opacity: 0,
             }}
             onMouseEnter={() => setHoveredIndex(index)}
@@ -52,7 +52,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
               <div
                 className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-surface text-text text-xs rounded shadow-lg border border-border whitespace-nowrap z-20 pointer-events-none"
                 style={{
-                  animation: 'fadeIn 0.15s ease-out',
+                  animation: 'fadeIn 0.1s ease-out',
                 }}
               >
                 {theme.name}
