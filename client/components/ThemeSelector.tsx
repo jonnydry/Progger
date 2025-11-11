@@ -84,11 +84,11 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
               </div>
             )}
             
-            {/* Color dot - responsive sizing */}
+            {/* Color dot - 40px mobile (acceptable for constrained space), 44px desktop */}
             <button
               onClick={() => handleSelect(index)}
               disabled={isClosing}
-              className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-background ${
+              className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full border-2 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-background ${
                 selectedIndex === index 
                   ? 'border-primary shadow-lg scale-110 ring-2 ring-primary ring-offset-2 ring-offset-background' 
                   : 'border-border hover:border-primary'
