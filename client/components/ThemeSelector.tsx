@@ -55,13 +55,18 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
     <div className="relative flex items-center" ref={selectRef}>
       {/* Horizontal theme dots - expand from right to left, collapse left to right */}
       <div className="flex flex-row-reverse items-center gap-2 overflow-visible">
-        {(isOpen || isClosing) && themes.map((theme, index) => (
+        {(isOpen || isClosing) && themes.map((theme, index) => {
+          // Opening: cascade right to left (index 0, 1, 2...)
+          // Closing: cascade left to right (reverse order for mirror effect)
+          const delay = isClosing ? (themes.length - 1 - index) * 0.02 : index * 0.02;
+          
+          return (
           <div
             key={theme.name}
             className="relative"
             style={{
               animation: `${isClosing ? 'slideOutToLeft' : 'slideInFromRight'} 0.12s ease-out forwards`,
-              animationDelay: `${index * 0.02}s`,
+              animationDelay: `${delay}s`,
               opacity: isClosing ? 1 : 0,
             }}
             onMouseEnter={() => !isClosing && setHoveredIndex(index)}
@@ -94,7 +99,8 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
               aria-label={`Select ${theme.name} theme`}
             />
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Theme picker icon button */}
