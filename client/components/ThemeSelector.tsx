@@ -53,8 +53,8 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
 
   return (
     <div className="relative flex items-center" ref={selectRef}>
-      {/* Horizontal theme dots - expand from right to left, collapse left to right */}
-      <div className="flex flex-row-reverse items-center gap-2 overflow-visible">
+      {/* Theme dots grid - responsive wrapping for mobile */}
+      <div className="flex flex-row-reverse flex-wrap items-center gap-1.5 sm:gap-2 overflow-visible max-w-[280px] sm:max-w-none">
         {(isOpen || isClosing) && themes.map((theme, index) => {
           // Opening: cascade right to left (index 0, 1, 2...)
           // Closing: cascade left to right (reverse order for mirror effect)
@@ -72,10 +72,10 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
             onMouseEnter={() => !isClosing && setHoveredIndex(index)}
             onMouseLeave={() => setHoveredIndex(null)}
           >
-            {/* Tooltip with theme name */}
+            {/* Tooltip with theme name - positioned above on mobile, below on desktop */}
             {hoveredIndex === index && !isClosing && (
               <div
-                className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-surface text-text text-xs rounded shadow-lg border border-border whitespace-nowrap z-20 pointer-events-none"
+                className="absolute bottom-full mb-2 sm:bottom-auto sm:top-full sm:mb-0 sm:mt-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-surface text-text text-xs rounded shadow-lg border border-border whitespace-nowrap z-20 pointer-events-none"
                 style={{
                   animation: 'fadeIn 0.08s ease-out',
                 }}
@@ -84,11 +84,11 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
               </div>
             )}
             
-            {/* Color dot */}
+            {/* Color dot - responsive sizing */}
             <button
               onClick={() => handleSelect(index)}
               disabled={isClosing}
-              className={`w-8 h-8 rounded-full border-2 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-background ${
+              className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full border-2 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-background ${
                 selectedIndex === index 
                   ? 'border-primary shadow-lg scale-110 ring-2 ring-primary ring-offset-2 ring-offset-background' 
                   : 'border-border hover:border-primary'
@@ -106,7 +106,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
       {/* Theme picker icon button */}
       <button
         onClick={handleToggle}
-        className="flex items-center space-x-2 p-2 rounded-full text-text/70 hover:bg-surface hover:text-text focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-background transition-all duration-300 ml-2"
+        className="flex items-center space-x-2 p-2 rounded-full text-text/70 hover:bg-surface hover:text-text focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-background transition-all duration-300 ml-1.5 sm:ml-2"
         aria-label={`Change theme color. Current is ${currentTheme.name}`}
         aria-haspopup="menu"
         aria-expanded={isOpen}
