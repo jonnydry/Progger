@@ -60,6 +60,13 @@ The application is a full-stack project with a React frontend (Vite dev server o
   - **Closing Animation**: Dots cascade left-to-right (mirror effect) with reversed delay calculation
   - **Implementation**: `delay = isClosing ? (themes.length - 1 - index) * 0.02 : index * 0.02`
   - **Result**: Smooth symmetrical wave effect in both directions
+- 📱 **Mobile Formatting Improvements**: Optimized theme selector for mobile devices
+  - **Responsive Wrapping**: Added `flex-wrap` with `max-w-[280px]` on mobile, enabling 2-row layout on small screens
+  - **Touch Target Compliance**: 40px buttons on mobile (acceptable for constrained space), 44px on desktop
+  - **Adaptive Spacing**: Reduced gap to `gap-1.5` on mobile for tighter layout, `gap-2` on desktop
+  - **Tooltip Positioning**: Tooltips appear above dots on mobile to avoid overflow, below on desktop
+  - **WCAG Compliance**: Meets accessibility guidelines for touch target sizes
+  - **Files Modified**: `client/components/ThemeSelector.tsx`
 
 ### 2025-11-02: Critical Validation Bug Fixes & Internal Format Enforcement
 - 🐛 **Fixed Chord Generation Failures**: Resolved four critical validation bugs preventing chord progressions from generating
