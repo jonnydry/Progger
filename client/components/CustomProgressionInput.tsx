@@ -10,6 +10,8 @@ interface CustomProgressionInputProps {
   onCustomProgressionChange: (progression: Array<{ root: string; quality: string }>) => void;
   onAnalyze: () => void;
   isLoading: boolean;
+  detectedKey?: string;
+  detectedMode?: string;
 }
 
 /**
@@ -35,7 +37,9 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
   customProgression,
   onCustomProgressionChange,
   onAnalyze,
-  isLoading
+  isLoading,
+  detectedKey,
+  detectedMode,
 }) => {
   useEffect(() => {
     // Initialize or resize progression array when numChords changes
@@ -98,6 +102,18 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
           ))}
         </div>
       </div>
+
+      {/* Detected Key Display */}
+      {detectedKey && detectedMode && (
+        <div className="text-center py-2 px-4 rounded-md bg-background/40 border border-border/30">
+          <div className="text-xs text-text/60 mb-1">Detected Key</div>
+          <div className="text-sm font-semibold">
+            <span className="text-primary">{detectedKey}</span>
+            <span className="text-text/70 mx-1">•</span>
+            <span className="text-text/80">{detectedMode}</span>
+          </div>
+        </div>
+      )}
 
       <div className="space-y-4">
         {customProgression.map((chord, index) => (
