@@ -106,8 +106,8 @@ export async function generateChordProgression(
 
       const parsedResult = JSON.parse(jsonText);
 
-      // Enhanced validation with format checking
-      const resultFromApi = validateAPIResponse(parsedResult);
+      // Enhanced validation with format checking and chord count verification
+      const resultFromApi = validateAPIResponse(parsedResult, numChords);
 
       logger.debug("API response validated successfully", {
         chordCount: resultFromApi.progression.length,
@@ -227,11 +227,15 @@ CRITICAL REQUIREMENTS:
    - relationToKey: Roman numeral relative to detected key (e.g., 'Imaj7', 'V7', 'iim7', 'V7/ii')
 
 3. Suggest 2 to 3 compatible scales:
-   - Primary scale should match the detected key/mode
-   - Additional scales can include pentatonic variants, altered scales, or related modes
-   - name: EXACT format - root note + mode name ONLY (e.g., 'C Major', 'A Dorian', 'G Mixolydian', 'C Minor Pentatonic')
+   - Primary scale MUST match the detected key/mode
+   - For modal progressions (Lydian, Dorian, Phrygian, Mixolydian, Locrian):
+     * Include the detected mode at different root positions that appear in the progression
+     * Example: For a Lydian progression, suggest Lydian scales at different chord roots
+     * Prioritize modal scales at different roots over generic major/minor scales
+   - Additional scales can include pentatonic variants or related modes
+   - name: EXACT format - root note + mode name ONLY (e.g., 'C Major', 'A Dorian', 'G Mixolydian', 'C Minor Pentatonic', 'C Lydian')
      * DO NOT add words like "Natural", "Harmonic", "Melodic", or "Scale"
-     * CORRECT: "E Minor", "G Major Pentatonic", "A Dorian"
+     * CORRECT: "E Minor", "G Major Pentatonic", "A Dorian", "C Lydian"
      * WRONG: "E Natural Minor", "G Harmonic Minor", "A Dorian Scale"
    - rootNote: The root note matching key signature preference
 

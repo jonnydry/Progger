@@ -108,6 +108,12 @@ export function buildOptimizedPrompt(request: ProgressionRequest): PromptCompone
 TASK:
 Generate a creative ${numChords}-chord progression in the key of ${key} ${mode}.
 
+⚠️ CRITICAL: You MUST generate EXACTLY ${numChords} chords. No more, no less.
+- If numChords is 5, generate exactly 5 chords
+- If numChords is 6, generate exactly 6 chords
+- If numChords is 7, generate exactly 7 chords
+- The progression array must contain precisely ${numChords} chord objects
+
 MODE CHARACTERISTICS:
 ${modeInfo.modeCharacteristics}
 
@@ -183,16 +189,22 @@ For EACH chord in the progression, provide:
 - relationToKey: Roman numeral (e.g., 'Imaj7', 'V7', 'iim7', 'V7/ii')
 
 Additionally, suggest 2 to 3 suitable scales for improvisation over this progression:
-- Primary scale should be '${key} ${mode}' to match the modal character
-- Additional scales can include pentatonic variants, altered scales, or related modes
-- name: EXACT format - root note + mode name ONLY (e.g., '${key} ${mode}', '${key} Major Pentatonic', '${key} Dorian', '${key} Altered')
+- Primary scale MUST be '${key} ${mode}' to match the modal character
+- For modal progressions (Lydian, Dorian, Phrygian, Mixolydian, Locrian):
+  * Include the mode (${mode}) at different root positions that appear in the progression
+  * Example: For a Lydian progression with chords on C, D, and E, suggest "C Lydian", "D Lydian", or "E Lydian"
+  * For modes, prioritize ${mode} scales at different roots over generic major/minor scales
+- Additional scales can include pentatonic variants or related modes
+- name: EXACT format - root note + mode name ONLY (e.g., '${key} ${mode}', '${key} Major Pentatonic', '${key} Dorian', '${key} Lydian')
   * DO NOT add words like "Natural", "Harmonic", "Melodic", or "Scale"
-  * CORRECT: "E Minor", "G Major Pentatonic", "A Dorian"
+  * CORRECT: "E Minor", "G Major Pentatonic", "A Dorian", "C Lydian"
   * WRONG: "E Natural Minor", "G Harmonic Minor", "A Dorian Scale"
 - rootNote: The root note matching key signature preference
 
 Return ONLY valid JSON matching this schema:
 ${schemaDescription}
+
+⚠️ FINAL REMINDER: The "progression" array MUST contain EXACTLY ${numChords} chord objects. Count them before returning.
 
 IMPORTANT: Return ONLY valid JSON, no additional text or markdown formatting.`;
 

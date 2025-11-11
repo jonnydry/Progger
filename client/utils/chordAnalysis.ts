@@ -5,6 +5,7 @@
 
 import { getScaleIntervals, getScaleNotes } from './scaleLibrary';
 import { noteToValue, valueToNote, displayNote, transposeNote } from './musicTheory';
+import { normalizeChordQuality } from '@shared/music/chordQualities';
 
 export interface ChordAnalysis {
   formula: string;
@@ -147,14 +148,18 @@ const COMMON_SCALES: Record<string, number[]> = {
 /**
  * Extract root note and quality from chord name
  * @param chordName - Full chord name (e.g., "Cmaj7", "F#m7b5")
- * @returns Object with root and quality
+ * @returns Object with root and normalized quality
  */
 function parseChordName(chordName: string): { root: string; quality: string } {
   const match = chordName.match(/^([A-G][#b]?)(.*)/i);
   if (!match) return { root: 'C', quality: 'major' };
+
+  const rawQuality = match[2] || '';
+  const normalizedQuality = normalizeChordQuality(rawQuality);
+
   return {
     root: match[1],
-    quality: match[2].toLowerCase() || 'major'
+    quality: normalizedQuality
   };
 }
 
