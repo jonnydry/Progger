@@ -53,8 +53,8 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
 
   return (
     <div className="relative flex items-center" ref={selectRef}>
-      {/* Theme dots grid - responsive wrapping for mobile */}
-      <div className="flex flex-row-reverse flex-wrap items-center gap-1.5 sm:gap-2 overflow-visible max-w-[320px] sm:max-w-none">
+      {/* Theme dots - single horizontal row with scroll on mobile */}
+      <div className="flex flex-row-reverse items-center gap-1.5 sm:gap-2 overflow-x-auto overflow-y-visible scrollbar-hide max-w-[240px] sm:max-w-none">
         {(isOpen || isClosing) && themes.map((theme, index) => {
           // Opening: cascade right to left (index 0, 1, 2...)
           // Closing: cascade left to right (reverse order for mirror effect)
@@ -116,7 +116,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
         </svg>
       </button>
 
-      {/* CSS animations */}
+      {/* CSS animations and scrollbar styles */}
       <style>{`
         @keyframes slideInFromRight {
           from {
@@ -149,6 +149,15 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
             opacity: 1;
             transform: translateX(-50%) translateY(0);
           }
+        }
+        
+        /* Hide scrollbar but keep functionality */
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
         }
       `}</style>
     </div>
