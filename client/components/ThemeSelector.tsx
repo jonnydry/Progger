@@ -50,7 +50,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
             {/* Tooltip with theme name */}
             {hoveredIndex === index && (
               <div
-                className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-surface text-text text-xs rounded shadow-lg border border-border whitespace-nowrap z-20 pointer-events-none"
+                className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-surface text-text text-xs rounded shadow-lg border border-border whitespace-nowrap z-20 pointer-events-none"
                 style={{
                   animation: 'fadeIn 0.15s ease-out',
                 }}
@@ -105,7 +105,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
         @keyframes fadeIn {
           from {
             opacity: 0;
-            transform: translateX(-50%) translateY(4px);
+            transform: translateX(-50%) translateY(-4px);
           }
           to {
             opacity: 1;
