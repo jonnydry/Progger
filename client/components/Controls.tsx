@@ -26,6 +26,8 @@ interface ControlsProps {
   numCustomChords?: number;
   onNumCustomChordsChange?: (count: number) => void;
   onAnalyzeCustom?: () => void;
+  detectedKey?: string;
+  detectedMode?: string;
 }
 
 export const Controls: React.FC<ControlsProps> = ({
@@ -48,6 +50,8 @@ export const Controls: React.FC<ControlsProps> = ({
   numCustomChords = 4,
   onNumCustomChordsChange,
   onAnalyzeCustom,
+  detectedKey,
+  detectedMode,
 }) => {
   const [isTransitioning, setIsTransitioning] = useState(false);
 
@@ -165,6 +169,8 @@ export const Controls: React.FC<ControlsProps> = ({
               onCustomProgressionChange={onCustomProgressionChange}
               onAnalyze={onAnalyzeCustom}
               isLoading={isLoading}
+              detectedKey={detectedKey}
+              detectedMode={detectedMode}
             />
         </div>
       )}

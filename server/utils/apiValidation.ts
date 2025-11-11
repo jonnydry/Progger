@@ -19,6 +19,8 @@ interface SimpleScale {
 interface ProgressionResultFromAPI {
   progression: SimpleChord[];
   scales: SimpleScale[];
+  detectedKey?: string;
+  detectedMode?: string;
 }
 
 export class APIValidationError extends Error {
@@ -270,6 +272,48 @@ export function validateAPIResponse(result: unknown): ProgressionResultFromAPI {
     }
   }
 
-  return { progression, scales };
+  // Validate detectedKey and detectedMode (optional fields)
+  let detectedKey: string | undefined;
+  let detectedMode: string | undefined;
+
+  if (apiResult.detectedKey !== undefined) {
+    if (typeof apiResult.detectedKey !== 'string') {
+      throw new APIValidationError('detectedKey must be a string if provided');
+    }
+    detectedKey = apiResult.detectedKey.trim();
+
+    // Validate key format (e.g., 'C', 'F#', 'Bb', 'Am')
+    const keyMatch = detectedKey.match(/^([A-G][#b]?)(m?)$/i);
+    if (!keyMatch) {
+      throw new APIValidationError(
+        `Invalid detectedKey format: "${detectedKey}". Expected format: root note with optional 'm' suffix (e.g., 'C', 'F#', 'Am')`
+      );
+    }
+
+    const [, rootNote, minorSuffix] = keyMatch;
+    const normalizedRoot = normalizeRootToken(rootNote);
+    if (!VALID_ROOT_NOTES.includes(normalizedRoot)) {
+      throw new APIValidationError(
+        `Invalid root note in detectedKey: "${rootNote}". Must be one of: ${VALID_ROOT_NOTES.join(', ')}`
+      );
+    }
+  }
+
+  if (apiResult.detectedMode !== undefined) {
+    if (typeof apiResult.detectedMode !== 'string') {
+      throw new APIValidationError('detectedMode must be a string if provided');
+    }
+    detectedMode = apiResult.detectedMode.trim();
+
+    // Validate mode is one of the standard modes
+    const validModes = ['Major', 'Minor', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian', 'Aeolian', 'Locrian'];
+    if (!validModes.includes(detectedMode)) {
+      throw new APIValidationError(
+        `Invalid detectedMode: "${detectedMode}". Must be one of: ${validModes.join(', ')}`
+      );
+    }
+  }
+
+  return { progression, scales, detectedKey, detectedMode };
 }
 

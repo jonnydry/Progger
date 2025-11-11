@@ -90,6 +90,8 @@ export interface ScaleInfo {
 export interface ProgressionResult {
   progression: ChordInProgression[];
   scales: ScaleInfo[];
+  detectedKey?: string;
+  detectedMode?: string;
 }
 
 // Stash-related types

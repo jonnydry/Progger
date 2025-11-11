@@ -9,6 +9,7 @@ import { generateChordProgression, analyzeCustomProgression, clearAllProgression
 import { validateChordLibrary, preloadAllChords } from './utils/chordLibrary';
 import { formatChordDisplayName } from './utils/chordFormatting';
 import { splitChordName, isSupportedChordQuality } from '@shared/music/chordQualities';
+import { detectKey } from './utils/smartChordSuggestions';
 import type { ProgressionResult } from './types';
 import { KEYS, MODES, THEMES, COMMON_PROGRESSIONS } from './constants';
 import proggerMascot from '../attached_assets/ProggerLogoMono2Lily_1761527600239.png';
@@ -47,6 +48,9 @@ const App: React.FC = () => {
     { root: 'G', quality: 'major' },
   ]);
   const [numCustomChords, setNumCustomChords] = useState<number>(4);
+  // Custom mode key/mode detection (for accurate stash metadata)
+  const [customKey, setCustomKey] = useState<string>('C');
+  const [customMode, setCustomMode] = useState<string>('Major');
   const resultsRef = useRef<HTMLElement>(null);
 
   const handleLogin = () => {
@@ -111,6 +115,17 @@ const App: React.FC = () => {
     console.log('💡 Debug: Call window.clearProgCache() to clear all progression cache');
   }, []);
 
+  // Auto-detect key/mode for custom progressions (for accurate stash metadata)
+  useEffect(() => {
+    if (isCustomMode && customProgression.length > 0) {
+      const detected = detectKey(customProgression);
+      if (detected) {
+        setCustomKey(detected.key);
+        setCustomMode(detected.mode === 'major' ? 'Major' : 'Minor');
+      }
+    }
+  }, [customProgression, isCustomMode]);
+
   const toggleTheme = () => {
     setTheme(prevTheme => prevTheme === 'dark' ? 'light' : 'dark');
   };
@@ -174,8 +189,20 @@ const App: React.FC = () => {
       const result = await analyzeCustomProgression(formattedChords);
       setProgressionResult(result);
 
-      // Update key and mode based on AI-detected values (from progression result if available)
-      // For now, we'll let the AI handle this in the response
+      // Hybrid approach: Use server-detected key/mode if available (most accurate)
+      // Otherwise, client-side detection provides immediate feedback
+      if (result.detectedKey && result.detectedMode) {
+        // Normalize detectedKey: strip 'm' suffix if present
+        const normalizedKey = result.detectedKey.replace(/m$/i, '');
+        setCustomKey(normalizedKey);
+        setCustomMode(result.detectedMode);
+
+        console.debug('Using server-detected key/mode', {
+          detectedKey: result.detectedKey,
+          detectedMode: result.detectedMode,
+          normalizedKey,
+        });
+      }
     } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
@@ -207,8 +234,8 @@ const App: React.FC = () => {
         isOpen={isStashOpen}
         onClose={() => setIsStashOpen(false)}
         theme={theme}
-        currentKey={key}
-        currentMode={mode}
+        currentKey={isCustomMode ? customKey : key}
+        currentMode={isCustomMode ? customMode : mode}
         currentProgression={progressionResult}
         onLoadProgression={handleLoadProgression}
       />
@@ -248,6 +275,8 @@ const App: React.FC = () => {
             numCustomChords={numCustomChords}
             onNumCustomChordsChange={setNumCustomChords}
             onAnalyzeCustom={handleAnalyzeCustom}
+            detectedKey={customKey}
+            detectedMode={customMode}
           />
         </section>
 
