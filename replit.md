@@ -62,7 +62,7 @@ The application is a full-stack project with a React frontend (Vite dev server o
   - **Result**: Smooth symmetrical wave effect in both directions
 - 📱 **Mobile Formatting Improvements**: Optimized theme selector for mobile devices
   - **Horizontal Scroll Layout**: Single-row horizontal scrollable layout on mobile (max-width 240px)
-  - **Compact Size**: 32px buttons on mobile for space efficiency, 44px on desktop
+  - **Compact Size**: 24px buttons on mobile for space efficiency, 44px on desktop
   - **Hidden Scrollbar**: Clean appearance with hidden scrollbar while maintaining scroll functionality
   - **Adaptive Spacing**: Reduced gap to `gap-1.5` on mobile for tighter layout, `gap-2` on desktop
   - **Tooltip Positioning**: Tooltips appear above dots on mobile to avoid overflow, below on desktop
