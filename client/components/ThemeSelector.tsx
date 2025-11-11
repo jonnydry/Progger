@@ -10,49 +10,69 @@ interface ThemeSelectorProps {
 
 export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIndex, onSelect }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const selectRef = useRef<HTMLDivElement>(null);
   const currentTheme = themes[selectedIndex];
 
+  const handleClose = () => {
+    setIsClosing(true);
+    // Wait for animation to complete before hiding
+    setTimeout(() => {
+      setIsOpen(false);
+      setIsClosing(false);
+    }, 300); // Total animation time: 0.12s base + (11 themes * 0.02s) = ~0.34s, using 300ms to be safe
+  };
+
   const handleSelect = (index: number) => {
     onSelect(index);
-    setIsOpen(false);
+    handleClose();
+  };
+
+  const handleToggle = () => {
+    if (isOpen && !isClosing) {
+      handleClose();
+    } else if (!isOpen) {
+      setIsOpen(true);
+    }
   };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (selectRef.current && !selectRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
+        if (isOpen && !isClosing) {
+          handleClose();
+        }
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [isOpen, isClosing]);
 
   return (
     <div className="relative flex items-center" ref={selectRef}>
-      {/* Horizontal theme dots - expand from right to left */}
+      {/* Horizontal theme dots - expand from right to left, collapse left to right */}
       <div className="flex flex-row-reverse items-center gap-2 overflow-visible">
-        {isOpen && themes.map((theme, index) => (
+        {(isOpen || isClosing) && themes.map((theme, index) => (
           <div
             key={theme.name}
             className="relative"
             style={{
-              animation: `slideInFromRight 0.18s ease-out forwards`,
-              animationDelay: `${index * 0.03}s`,
-              opacity: 0,
+              animation: `${isClosing ? 'slideOutToLeft' : 'slideInFromRight'} 0.12s ease-out forwards`,
+              animationDelay: `${index * 0.02}s`,
+              opacity: isClosing ? 1 : 0,
             }}
-            onMouseEnter={() => setHoveredIndex(index)}
+            onMouseEnter={() => !isClosing && setHoveredIndex(index)}
             onMouseLeave={() => setHoveredIndex(null)}
           >
             {/* Tooltip with theme name */}
-            {hoveredIndex === index && (
+            {hoveredIndex === index && !isClosing && (
               <div
                 className="absolute top-full mt-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-surface text-text text-xs rounded shadow-lg border border-border whitespace-nowrap z-20 pointer-events-none"
                 style={{
-                  animation: 'fadeIn 0.1s ease-out',
+                  animation: 'fadeIn 0.08s ease-out',
                 }}
               >
                 {theme.name}
@@ -62,11 +82,12 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
             {/* Color dot */}
             <button
               onClick={() => handleSelect(index)}
+              disabled={isClosing}
               className={`w-8 h-8 rounded-full border-2 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-background ${
                 selectedIndex === index 
                   ? 'border-primary shadow-lg scale-110 ring-2 ring-primary ring-offset-2 ring-offset-background' 
                   : 'border-border hover:border-primary'
-              }`}
+              } ${isClosing ? 'cursor-default' : ''}`}
               style={{ 
                 backgroundColor: `hsl(${theme.light.primary})`,
               }}
@@ -78,7 +99,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
 
       {/* Theme picker icon button */}
       <button
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggle}
         className="flex items-center space-x-2 p-2 rounded-full text-text/70 hover:bg-surface hover:text-text focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-background transition-all duration-300 ml-2"
         aria-label={`Change theme color. Current is ${currentTheme.name}`}
         aria-haspopup="menu"
@@ -99,6 +120,17 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
           to {
             opacity: 1;
             transform: translateX(0);
+          }
+        }
+        
+        @keyframes slideOutToLeft {
+          from {
+            opacity: 1;
+            transform: translateX(0);
+          }
+          to {
+            opacity: 0;
+            transform: translateX(-20px);
           }
         }
         
