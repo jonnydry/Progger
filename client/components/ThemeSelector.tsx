@@ -54,7 +54,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
   return (
     <div className="relative flex items-center" ref={selectRef}>
       {/* Theme dots - single horizontal row with scroll on mobile */}
-      <div className="flex flex-row-reverse items-center gap-1.5 sm:gap-2 overflow-x-auto overflow-y-visible scrollbar-hide max-w-[240px] sm:max-w-none">
+      <div className="flex flex-row-reverse items-center gap-1 sm:gap-2 overflow-x-auto overflow-y-visible scrollbar-hide max-w-[180px] sm:max-w-none">
         {(isOpen || isClosing) && themes.map((theme, index) => {
           // Opening: cascade right to left (index 0, 1, 2...)
           // Closing: cascade left to right (reverse order for mirror effect)
@@ -84,11 +84,11 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
               </div>
             )}
             
-            {/* Color dot - compact 24px on mobile, standard 44px on desktop */}
+            {/* Color dot - compact 20px on mobile, standard 44px on desktop */}
             <button
               onClick={() => handleSelect(index)}
               disabled={isClosing}
-              className={`w-6 h-6 sm:w-11 sm:h-11 rounded-full border-2 transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-background ${
+              className={`w-5 h-5 sm:w-11 sm:h-11 rounded-full border transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-background ${
                 selectedIndex === index 
                   ? 'border-primary shadow-lg scale-110 ring-2 ring-primary ring-offset-2 ring-offset-background' 
                   : 'border-border hover:border-primary'
