@@ -15,6 +15,16 @@ import { logger } from './utils/logger';
 let redisClient: ReturnType<typeof createClient> | null = null;
 let isRedisAvailable = false;
 
+// Timeout helper for network calls
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`Operation timed out after ${timeoutMs}ms`)), timeoutMs)
+    ),
+  ]);
+}
+
 // Initialize Redis client for rate limiting
 async function initializeRedisClient() {
   if (redisClient) return redisClient;
@@ -22,6 +32,9 @@ async function initializeRedisClient() {
   try {
     redisClient = createClient({
       url: process.env.REDIS_URL || 'redis://localhost:6379',
+      socket: {
+        connectTimeout: 5000, // 5 second connection timeout
+      },
     });
 
     redisClient.on('error', (err) => {
@@ -33,7 +46,8 @@ async function initializeRedisClient() {
       logger.info('Redis rate limit client connected');
     });
 
-    await redisClient.connect();
+    // Add timeout wrapper to prevent hanging indefinitely
+    await withTimeout(redisClient.connect(), 5000);
 
     // Set flag synchronously after connection completes
     // Don't rely on 'connect' event which may fire asynchronously

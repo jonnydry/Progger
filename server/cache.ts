@@ -2,6 +2,16 @@ import { createClient, RedisClientType } from 'redis';
 import { getProgressionCacheKey as getSharedCacheKey } from '../shared/cacheUtils';
 import { logger } from './utils/logger';
 
+// Timeout helper for network calls
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`Operation timed out after ${timeoutMs}ms`)), timeoutMs)
+    ),
+  ]);
+}
+
 class RedisCache {
   private client: RedisClientType;
   private isConnected = false;
@@ -9,6 +19,9 @@ class RedisCache {
   constructor() {
     this.client = createClient({
       url: process.env.REDIS_URL || 'redis://localhost:6379',
+      socket: {
+        connectTimeout: 5000, // 5 second connection timeout
+      },
     });
 
     this.client.on('connect', () => {
@@ -27,7 +40,7 @@ class RedisCache {
 
   private async connect() {
     try {
-      await this.client.connect();
+      await withTimeout(this.client.connect(), 5000);
     } catch (error) {
       logger.warn('Failed to connect to Redis cache, falling back to in-memory caching', { error });
     }
@@ -38,7 +51,7 @@ class RedisCache {
 
     try {
       const value = await this.client.get(key);
-      if (!value || value === '{}') return null;
+      if (typeof value !== 'string' || value === '{}' || value === '') return null;
 
       return JSON.parse(value) as T;
     } catch (error) {

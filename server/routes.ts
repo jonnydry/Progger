@@ -40,21 +40,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Health check endpoint
   app.get('/api/health', async (req, res) => {
     const rateLimitStatus = getRateLimitStatus();
-    const health: {
-      status: 'healthy' | 'degraded' | 'unhealthy';
-      timestamp: string;
-      database: 'connected' | 'disconnected';
-      redis: 'connected' | 'disconnected' | 'unavailable';
-      rateLimit: {
-        redisAvailable: boolean;
-        storeType: 'redis' | 'memory';
-      };
-      uptime: number;
-    } = {
-      status: 'healthy',
+    const health = {
+      status: 'healthy' as 'healthy' | 'degraded' | 'unhealthy',
       timestamp: new Date().toISOString(),
-      database: 'disconnected',
-      redis: 'unavailable',
+      database: 'disconnected' as 'connected' | 'disconnected',
+      redis: 'unavailable' as 'connected' | 'disconnected' | 'unavailable',
       rateLimit: rateLimitStatus,
       uptime: process.uptime(),
     };

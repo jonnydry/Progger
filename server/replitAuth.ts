@@ -29,12 +29,34 @@ if (!process.env.REPLIT_DOMAINS) {
   throw new Error("Environment variable REPLIT_DOMAINS not provided");
 }
 
+// Timeout helper for network calls
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, errorMessage: string): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(errorMessage)), timeoutMs)
+    ),
+  ]);
+}
+
 const getOidcConfig = memoize(
   async () => {
-    return await client.discovery(
-      new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
-      process.env.REPL_ID!
-    );
+    logger.info('Fetching OIDC configuration from Replit');
+    try {
+      const config = await withTimeout(
+        client.discovery(
+          new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
+          process.env.REPL_ID!
+        ),
+        10000, // 10 second timeout
+        'OIDC discovery timed out after 10 seconds'
+      );
+      logger.info('OIDC configuration fetched successfully');
+      return config;
+    } catch (error) {
+      logger.error('Failed to fetch OIDC configuration', { error });
+      throw error;
+    }
   },
   { maxAge: 3600 * 1000 }
 );
@@ -87,23 +109,42 @@ async function upsertUser(claims: any) {
 
 const registeredDomains = new Set<string>();
 
+let authEnabled = false;
+
 export async function setupAuth(app: Express) {
   app.set("trust proxy", 1);
   app.use(getSession());
   app.use(passport.initialize());
   app.use(passport.session());
 
-  const config = await getOidcConfig();
+  let config;
+  try {
+    config = await getOidcConfig();
+    authEnabled = true;
+  } catch (error) {
+    logger.error('Auth setup failed - authentication will be disabled', { error });
+    authEnabled = false;
+    // Continue server startup without auth - allows basic functionality
+    return;
+  }
 
   const verify: VerifyFunction = async (
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
   ) => {
+    const claims = tokens.claims();
     const user: AuthenticatedUser = {
-      claims: {},
+      claims: {
+        sub: claims.sub as string,
+        email: claims.email as string | undefined,
+        first_name: claims.first_name as string | undefined,
+        last_name: claims.last_name as string | undefined,
+        profile_image_url: claims.profile_image_url as string | undefined,
+        exp: claims.exp as number | undefined,
+      },
     };
     updateUserSession(user, tokens);
-    await upsertUser(tokens.claims());
+    await upsertUser(claims);
     verified(null, user);
   };
 
@@ -182,6 +223,12 @@ export async function setupAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
+  if (!authEnabled) {
+    return res.status(503).json({ 
+      message: "Authentication is temporarily unavailable. Please try again later." 
+    });
+  }
+  
   const user = req.user as AuthenticatedUser | undefined;
 
   if (!req.isAuthenticated() || !user || !user.expires_at) {
