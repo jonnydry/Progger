@@ -189,8 +189,20 @@ const App: React.FC = () => {
       const result = await analyzeCustomProgression(formattedChords);
       setProgressionResult(result);
 
-      // Update key and mode based on AI-detected values (from progression result if available)
-      // For now, we'll let the AI handle this in the response
+      // Hybrid approach: Use server-detected key/mode if available (most accurate)
+      // Otherwise, client-side detection provides immediate feedback
+      if (result.detectedKey && result.detectedMode) {
+        // Normalize detectedKey: strip 'm' suffix if present
+        const normalizedKey = result.detectedKey.replace(/m$/i, '');
+        setCustomKey(normalizedKey);
+        setCustomMode(result.detectedMode);
+
+        console.debug('Using server-detected key/mode', {
+          detectedKey: result.detectedKey,
+          detectedMode: result.detectedMode,
+          normalizedKey,
+        });
+      }
     } catch (err) {
       console.error(err);
       setError(err instanceof Error ? err.message : 'An unexpected error occurred.');

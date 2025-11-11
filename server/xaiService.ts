@@ -31,6 +31,8 @@ interface SimpleScale {
 interface ProgressionResultFromAPI {
   progression: SimpleChord[];
   scales: SimpleScale[];
+  detectedKey?: string;
+  detectedMode?: string;
 }
 
 export async function generateChordProgression(
@@ -237,6 +239,8 @@ CRITICAL REQUIREMENTS:
 
 Return ONLY valid JSON matching this schema:
 {
+  "detectedKey": "string (REQUIRED: The detected key center - e.g., 'C', 'G', 'Am', 'F#'. Include 'm' suffix for minor keys)",
+  "detectedMode": "string (REQUIRED: The detected mode - must be exactly one of: 'Major', 'Minor', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian', 'Aeolian', 'Locrian')",
   "progression": [
     {
       "chordName": "string (IMPORTANT: Use exact chord notation - e.g., 'Cmaj7', 'Am7', 'G7b9', 'D7alt', 'F#maj9')",
