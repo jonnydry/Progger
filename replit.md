@@ -40,6 +40,27 @@ The application is a full-stack project with a React frontend (Vite dev server o
 
 ## Recent Changes
 
+### 2025-11-11: Authentication System Fixes & Server Startup Resilience
+- 🔧 **Fixed Server Hanging on Startup**: Resolved critical issue where backend server failed to start
+  - **Root Cause**: OIDC discovery call to Replit Auth was hanging indefinitely without timeout
+  - **Solution**: Added 10-second timeout wrapper using `Promise.race` pattern
+  - **Impact**: Server now starts reliably even when external services are slow or unreachable
+  - **Graceful Degradation**: Auth setup fails non-fatally; server continues in degraded mode returning 503 for protected endpoints
+- ⏱️ **Network Call Timeouts**: Added timeout protection for all external network operations
+  - **OIDC Discovery**: 10-second timeout prevents indefinite hanging during auth setup
+  - **Redis Connections**: 5-second timeout with `connectTimeout` socket option for both cache and rate limiting
+  - **Fallback Behavior**: Redis failures fall back to in-memory storage automatically
+  - **Files Modified**: `server/replitAuth.ts`, `server/cache.ts`, `server/rateLimit.ts`
+- 🐛 **TypeScript Error Fixes**: Resolved type errors preventing compilation
+  - **cache.ts**: Added `typeof value !== 'string'` type guard for Redis responses
+  - **routes.ts**: Fixed type assertion for health check response
+  - **replitAuth.ts**: Properly initialized AuthenticatedUser claims object with required fields
+- 🎨 **Theme Selector Enhancement**: Perfected bidirectional animation system
+  - **Opening Animation**: Dots cascade right-to-left with staggered delays
+  - **Closing Animation**: Dots cascade left-to-right (mirror effect) with reversed delay calculation
+  - **Implementation**: `delay = isClosing ? (themes.length - 1 - index) * 0.02 : index * 0.02`
+  - **Result**: Smooth symmetrical wave effect in both directions
+
 ### 2025-11-02: Critical Validation Bug Fixes & Internal Format Enforcement
 - 🐛 **Fixed Chord Generation Failures**: Resolved four critical validation bugs preventing chord progressions from generating
   - **Roman Numeral Validation**: Updated regex pattern to accept quality indicators (Imaj7, iim7, V7, V7b9, V7alt, etc.)
