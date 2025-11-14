@@ -53,8 +53,8 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
 
   return (
     <div className="relative flex items-center" ref={selectRef}>
-      {/* Theme dots - single horizontal row with scroll on mobile */}
-      <div className="flex flex-row-reverse items-center gap-0.5 sm:gap-2 overflow-x-auto overflow-y-visible scrollbar-hide max-w-[140px] sm:max-w-none">
+      {/* Theme dots - single horizontal row with scroll */}
+      <div className="flex flex-row-reverse items-center gap-1.5 overflow-x-auto overflow-y-visible scrollbar-hide max-w-[280px]">
         {(isOpen || isClosing) && themes.map((theme, index) => {
           // Opening: cascade right to left (index 0, 1, 2...)
           // Closing: cascade left to right (reverse order for mirror effect)
@@ -84,11 +84,11 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
               </div>
             )}
             
-            {/* Color dot - compact 16px on mobile, standard 44px on desktop */}
+            {/* Color dot - compact size across all screens */}
             <button
               onClick={() => handleSelect(index)}
               disabled={isClosing}
-              className={`w-4 h-4 sm:w-11 sm:h-11 rounded-full border transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-primary focus:ring-offset-background ${
+              className={`w-6 h-6 rounded-full border transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-primary focus:ring-offset-background ${
                 selectedIndex === index 
                   ? 'border-primary shadow-md scale-110 ring-1 ring-primary ring-offset-1 ring-offset-background' 
                   : 'border-border hover:border-primary'
@@ -106,12 +106,12 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
       {/* Theme picker icon button */}
       <button
         onClick={handleToggle}
-        className="flex items-center space-x-2 p-1.5 sm:p-2 rounded-full text-text/70 hover:bg-surface hover:text-text focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-background transition-all duration-300 ml-1 sm:ml-2"
+        className="flex items-center space-x-2 p-2 rounded-full text-text/70 hover:bg-surface hover:text-text focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-background transition-all duration-300 ml-2"
         aria-label={`Change theme color. Current is ${currentTheme.name}`}
         aria-haspopup="menu"
         aria-expanded={isOpen}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 sm:h-6 sm:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
           <path strokeLinecap="round" strokeLinejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
         </svg>
       </button>
