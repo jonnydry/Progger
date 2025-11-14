@@ -105,14 +105,20 @@ export function buildOptimizedPrompt(request: ProgressionRequest): PromptCompone
   // Base prompt - always included
   const basePrompt = `You are a music theory expert specializing in jazz and contemporary guitar harmony.
 
+🎵 MANDATORY CHORD COUNT: ${numChords} chords 🎵
+═══════════════════════════════════════
+You MUST return EXACTLY ${numChords} chord objects in the progression array.
+This is NON-NEGOTIABLE and will be strictly validated.
+
 TASK:
 Generate a creative ${numChords}-chord progression in the key of ${key} ${mode}.
 
-⚠️ CRITICAL: You MUST generate EXACTLY ${numChords} chords. No more, no less.
-- If numChords is 5, generate exactly 5 chords
-- If numChords is 6, generate exactly 6 chords
-- If numChords is 7, generate exactly 7 chords
-- The progression array must contain precisely ${numChords} chord objects
+⚠️ CRITICAL CHORD COUNT REQUIREMENTS:
+- REQUIRED: Exactly ${numChords} chord objects
+- NOT ${numChords - 1}, NOT ${numChords + 1}, EXACTLY ${numChords}
+- Count your chords before responding: 1, 2, 3... up to ${numChords}
+- If you generate ${numChords - 1} or fewer chords, your response will be REJECTED
+- If you generate ${numChords + 1} or more chords, your response will be REJECTED
 
 MODE CHARACTERISTICS:
 ${modeInfo.modeCharacteristics}
@@ -204,7 +210,17 @@ Additionally, suggest 2 to 3 suitable scales for improvisation over this progres
 Return ONLY valid JSON matching this schema:
 ${schemaDescription}
 
-⚠️ FINAL REMINDER: The "progression" array MUST contain EXACTLY ${numChords} chord objects. Count them before returning.
+════════════════════════════════════════════════════════
+⚠️ ⚠️ ⚠️  FINAL MANDATORY VERIFICATION  ⚠️ ⚠️ ⚠️
+════════════════════════════════════════════════════════
+Before you return your response:
+1. COUNT the chord objects in your progression array
+2. Verify the count equals EXACTLY ${numChords}
+3. If count ≠ ${numChords}, ADD or REMOVE chords until count = ${numChords}
+
+REQUIRED: progression.length === ${numChords}
+Your response will be REJECTED if this requirement is not met.
+════════════════════════════════════════════════════════
 
 IMPORTANT: Return ONLY valid JSON, no additional text or markdown formatting.`;
 
