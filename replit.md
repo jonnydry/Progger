@@ -61,12 +61,13 @@ The application is a full-stack project with a React frontend (Vite dev server o
   - **Implementation**: `delay = isClosing ? (themes.length - 1 - index) * 0.02 : index * 0.02`
   - **Result**: Smooth symmetrical wave effect in both directions
 - 📱 **Mobile Formatting Improvements**: Optimized theme selector for all devices
-  - **Horizontal Scroll Layout**: Single-row horizontal scrollable layout (max-width 280px)
+  - **Responsive Layout**: Horizontal scrollable on mobile (max-width 280px), all visible on desktop
   - **Uniform Size**: 24px buttons across all screen sizes to fit in header toolbar without expanding height
-  - **Hidden Scrollbar**: Clean appearance with hidden scrollbar while maintaining scroll functionality
+  - **Hidden Scrollbar**: Clean appearance with hidden scrollbar on mobile
   - **Consistent Spacing**: `gap-1.5` across all screens for balanced layout
   - **Standard Icon**: 24px icon for proportional sizing
   - **Reduced Ring Offsets**: Thinner focus rings (1px offset) to prevent height expansion
+  - **Vertical Padding**: `py-2` prevents ring clipping on selected theme
   - **Tooltip Positioning**: Tooltips appear above dots on mobile to avoid overflow, below on desktop
   - **Files Modified**: `client/components/ThemeSelector.tsx`
 

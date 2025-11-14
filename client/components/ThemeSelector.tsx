@@ -53,8 +53,8 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
 
   return (
     <div className="relative flex items-center" ref={selectRef}>
-      {/* Theme dots - single horizontal row with scroll */}
-      <div className="flex flex-row-reverse items-center gap-1.5 overflow-x-auto overflow-y-visible scrollbar-hide max-w-[280px]">
+      {/* Theme dots - single horizontal row with scroll on mobile only */}
+      <div className="flex flex-row-reverse items-center gap-1.5 overflow-x-auto sm:overflow-x-visible overflow-y-visible scrollbar-hide max-w-[280px] sm:max-w-none py-2">
         {(isOpen || isClosing) && themes.map((theme, index) => {
           // Opening: cascade right to left (index 0, 1, 2...)
           // Closing: cascade left to right (reverse order for mirror effect)
