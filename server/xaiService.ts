@@ -96,7 +96,7 @@ export async function generateChordProgression(
         ],
         response_format: { type: "json_object" },
         temperature: 0.7,
-        max_tokens: 1000,
+        max_tokens: 1500, // Increased to accommodate 7+ chords with detailed descriptions
       });
 
       const jsonText = response.choices[0].message.content?.trim();
