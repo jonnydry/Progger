@@ -62,17 +62,52 @@ function verifySingleScalePattern(scaleName: string, root: string, position: num
 
 // Run verifications if this script is executed directly
 if (import.meta.url === `file://${process.argv[1]}`) {
-  console.log('Starting scale pattern verification...\n');
+  console.log('=== PROGGER SCALE VERIFICATION AGAINST GUITAR EDUCATION STANDARDS ===\n');
 
-  verifyCMajorPositions();
-  verifyMinorPentatonicBoxes();
+  console.log('**GUITAR SCALE ACADEMY STANDARDS:**\n');
+  console.log('• C Major follows CAGED: E(8),A(3),G(0),E(5),D(10) frets on low E string');
+  console.log('• Minor Pentatonic boxes: A=12th,10th,8th,5th,3rd fret origins');
+  console.log('• Modal scales positioned relative to diatonic roots\n');
 
-  // Additional individual checks
+  console.log('**Verification Results:**\n');
+
+  // Modal Scales First (as requested)
+  console.log('🎭 MODAL SCALE VERIFICATION 🎭\n');
+  console.log('--- D DORIAN (Modal Scale #2) ---');
+  verifySingleScalePattern('dorian', 'D', 0); // Should start with root at ~10th fret
+  verifySingleScalePattern('dorian', 'D', 1); // Second position
+
+  console.log('--- E PHRYGIAN (Modal Scale #3) ---');
+  verifySingleScalePattern('phrygian', 'E', 0); // Should start with root at ~12th fret
+
+  console.log('--- F LYDIAN (Modal Scale #4) ---');
+  verifySingleScalePattern('lydian', 'F', 0); // Should start with root at ~1st fret
+
+  console.log('--- G MIXOLYDIAN (Modal Scale #5) ---');
+  verifySingleScalePattern('mixolydian', 'G', 0); // Should start with root at ~3rd fret
+
+  console.log('--- B LOCRIAN (Modal Scale #7) ---');
+  verifySingleScalePattern('locrian', 'B', 0); // Should start with root at ~7th fret
+
+  console.log('\n🎵 DIATONIC SCALE VERIFICATION 🎵\n');
+  verifyCMajorPositions(); // C Major/Ionian
+
+  console.log('\n🎸 PENTATONIC SCALE VERIFICATION 🎸\n');
+  verifyMinorPentatonicBoxes(); // A Minor Pentatonic boxes
+
+  console.log('\n🎺 BLUES SCALE VERIFICATION 🎺\n');
+  console.log('A Blues (hexatonic scale with flat-5th):');
   verifySingleScalePattern('blues', 'A', 0);
   verifySingleScalePattern('blues', 'A', 1);
   verifySingleScalePattern('blues', 'A', 2);
 
-  console.log('Verification complete.');
+  console.log('\n📊 VERIFICATION COMPLETE 📊\n');
+  console.log('**Expected Results:**');
+  console.log('• Modal scales should start at characteristic fret positions (10th for D, 12th for E, etc.)');
+  console.log('• C Major positions should cover full neck in CAGED order (8,3,0,5,10)');
+  console.log('• Pentatonic boxes should align with 5-box system (12,10,8,5,3 frets)');
+  console.log('• All positions should show different fret ranges (no identical patterns)');
+  console.log('\nIf any positions are identical or at wrong frets, the POSITION_OFFSETS need adjustment.');
 }
 
 export {

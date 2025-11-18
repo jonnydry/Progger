@@ -45,6 +45,9 @@ const FRET_COUNT_MOBILE = 15;
 const INLAY_FRETS = [3, 5, 7, 9, 15, 17, 19, 21] as const;
 const DOUBLE_INLAY_FRETS = [12, 24] as const;
 
+// String line heights (in pixels) - thicker strings are visually thicker
+const STRING_HEIGHTS = [1, 1.4, 1.8, 2.2, 2.6, 3.0] as const;
+
 export const SkeletonScaleDiagram: React.FC = () => (
     <div className="flex flex-col items-center animate-pulse w-full max-w-4xl mx-auto">
         <div className="h-6 w-1/3 bg-surface/80 rounded-md mb-3 self-start"></div>
@@ -69,12 +72,16 @@ const NoteDot: React.FC<{ noteName: string, fret: number, isRoot: boolean }> = R
     const noteClasses = "bg-primary text-background";
 
     return (
-        <button type="button" className="relative w-5 h-5 md:w-6 md:h-6 flex items-center justify-center transition-transform duration-150 ease-in-out group focus:outline-none focus:z-10">
-            <div className={`relative w-full h-full rounded-full flex items-center justify-center text-[8px] md:text-[10px] font-bold border-2 border-surface ${isRoot ? rootClasses : noteClasses}`}>
+        <button 
+            type="button" 
+            className="relative w-11 h-11 md:w-6 md:h-6 flex items-center justify-center transition-transform duration-150 ease-in-out group focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface focus:z-10 rounded-full"
+            aria-label={`${noteName} note${fret > 0 ? ` at fret ${fret}` : ' open string'}${isRoot ? ' (root note)' : ''}`}
+        >
+            <div className={`relative w-5 h-5 md:w-full md:h-full rounded-full flex items-center justify-center text-[8px] md:text-[10px] font-bold border-2 border-surface ${isRoot ? rootClasses : noteClasses}`}>
                 {noteName}
             </div>
-            {/* Tooltip */}
-            <div className="absolute bottom-full mb-2 w-max px-2 py-1 bg-surface text-text text-[10px] md:text-xs rounded-md shadow-lg border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus:opacity-100 group-focus:visible transition-all duration-200 pointer-events-none z-20">
+            {/* Tooltip - positioned dynamically to avoid overflow */}
+            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 w-max max-w-[120px] px-2 py-1 bg-surface text-text text-[10px] md:text-xs rounded-md shadow-lg border border-border opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus:opacity-100 group-focus:visible transition-all duration-200 pointer-events-none z-20">
                 {noteName} {fret > 0 && `(${fret})`}
                 <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-surface"></div>
             </div>
@@ -90,13 +97,21 @@ const ViewToggle: React.FC<{
       <div className="flex items-center space-x-2 bg-text/10 p-1 rounded-md">
         <button
             onClick={() => setViewMode('pattern')}
-            className={`px-3 py-1 text-sm font-semibold rounded transition-colors duration-200 ${viewMode === 'pattern' ? 'bg-surface shadow' : 'text-text/60 hover:text-text'}`}
+            className={`px-3 py-1 text-sm font-semibold rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background ${
+              viewMode === 'pattern' ? 'bg-surface shadow' : 'text-text/60 hover:text-text'
+            }`}
+            aria-label="Pattern view"
+            aria-pressed={viewMode === 'pattern'}
         >
             Pattern
         </button>
         <button
             onClick={() => setViewMode('map')}
-            className={`px-3 py-1 text-sm font-semibold rounded transition-colors duration-200 ${viewMode === 'map' ? 'bg-surface shadow' : 'text-text/60 hover:text-text'}`}
+            className={`px-3 py-1 text-sm font-semibold rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background ${
+              viewMode === 'map' ? 'bg-surface shadow' : 'text-text/60 hover:text-text'
+            }`}
+            aria-label="Map view"
+            aria-pressed={viewMode === 'map'}
         >
             Map
         </button>
@@ -111,6 +126,22 @@ const PositionSelector: React.FC<{
 }> = React.memo(({ positions, currentPosition, setCurrentPosition }) => {
   if (positions.length <= 1) return null;
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      setCurrentPosition(Math.max(0, currentPosition - 1));
+    } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      setCurrentPosition(Math.min(positions.length - 1, currentPosition + 1));
+    } else if (e.key === 'Home') {
+      e.preventDefault();
+      setCurrentPosition(0);
+    } else if (e.key === 'End') {
+      e.preventDefault();
+      setCurrentPosition(positions.length - 1);
+    }
+  };
+
   return (
     <div className="flex items-center space-x-1 bg-text/10 p-1 rounded-md">
       <span className="text-sm text-text/70 px-2">Pos:</span>
@@ -118,11 +149,16 @@ const PositionSelector: React.FC<{
         <button
           key={index}
           onClick={() => setCurrentPosition(index)}
-          className={`px-2 py-1 text-sm font-semibold rounded transition-colors duration-200 ${
+          onKeyDown={handleKeyDown}
+          className={`px-2 py-1 text-sm font-semibold rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background ${
             currentPosition === index
               ? 'bg-secondary text-background shadow'
               : 'text-text/60 hover:text-text hover:bg-surface/50'
           }`}
+          aria-label={`Position ${index + 1}`}
+          aria-pressed={currentPosition === index}
+          role="tab"
+          tabIndex={currentPosition === index ? 0 : -1}
         >
           {index + 1}
         </button>
@@ -160,6 +196,12 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) =>
   const visibleInlays = useMemo(() =>
     [...INLAY_FRETS, ...DOUBLE_INLAY_FRETS].filter(f => f <= fretCount),
     [fretCount]
+  );
+
+  // Memoize grid template columns to avoid string interpolation on every render
+  const gridTemplateColumns = useMemo(() => 
+    `${isMobile ? '1.5rem' : '1.75rem'} repeat(${fretCount}, minmax(0, 1fr))`,
+    [isMobile, fretCount]
   );
 
   // Get available positions for the current scale
@@ -239,7 +281,7 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) =>
               {isMobile && (
                 <button
                   onClick={() => setIsModalOpen(true)}
-                  className="p-2 rounded-md bg-text/10 hover:bg-text/20 text-text/70 hover:text-text transition-all duration-200 hover:scale-105"
+                  className="p-2 rounded-md bg-text/10 hover:bg-text/20 text-text/70 hover:text-text transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
                   aria-label="Expand to full view"
                   title="View full fretboard"
                 >
@@ -280,24 +322,26 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) =>
           </div>
         )}
 
-        <div className={`${isMobile ? 'min-w-[600px]' : 'w-full'} px-3 md:px-4 py-3 md:py-4 text-[10px] md:text-xs`}>
+        <div className={`${isMobile ? 'min-w-[600px]' : 'w-full'} px-3 md:px-4 py-3 md:py-4 text-[10px] md:text-xs transition-all duration-300`}>
             {/* Main Fretboard Area with Fade Effect */}
             <div
                 className="relative md:-mx-4 md:-my-4 md:px-4 md:py-4"
                 style={{
                     background: 'linear-gradient(to bottom, hsl(var(--color-primary) / 0.03), hsl(var(--color-secondary) / 0.04), hsl(var(--color-primary) / 0.05))',
                     ...(isMobile ? {} : {
-                        maskImage: 'linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 4%, black 96%, transparent 100%)',
-                        maskComposite: 'intersect',
+                        // Use WebKit prefixes for better browser support
+                        // Standard mask-composite has limited support, so we rely on WebKit version
                         WebkitMaskImage: 'linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 4%, black 96%, transparent 100%)',
-                        WebkitMaskComposite: 'source-in'
+                        WebkitMaskComposite: 'source-in',
+                        // Fallback for browsers that support standard syntax
+                        maskImage: 'linear-gradient(to right, transparent 0%, black 3%, black 97%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 4%, black 96%, transparent 100%)',
                     })
                 }}
             >
                 {/* Fret numbers row */}
                 <div
                     className="grid relative z-20"
-                    style={{ gridTemplateColumns: `${isMobile ? '1.5rem' : '1.75rem'} repeat(${fretCount}, minmax(0, 1fr))` }}
+                    style={{ gridTemplateColumns }}
                 >
                     <div />
                     {Array.from({ length: fretCount }, (_, idx) => idx + 1).map((fret) => (
@@ -318,15 +362,15 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) =>
                     {STANDARD_TUNING.map((_, i) => (
                         <div key={`string-line-${i}`} className="absolute left-0 right-0 bg-gradient-to-r from-text/10 via-text/40 to-text/10" style={{ 
                             top: `${(i + 0.5) * (100 / 6)}%`, 
-                            height: `${1 + (i * 0.4)}px`,
+                            height: `${STRING_HEIGHTS[i]}px`,
                             transform: 'translateY(-50%)',
                         }} />
                     ))}
                     
                     {/* Note Grid */}
                     <div
-                        className="relative grid z-10"
-                        style={{ gridTemplateColumns: `${isMobile ? '1.5rem' : '1.75rem'} repeat(${fretCount}, minmax(0, 1fr))` }}
+                        className="relative grid z-10 transition-opacity duration-200"
+                        style={{ gridTemplateColumns }}
                     >
                         {/* String rows */}
                         {STANDARD_TUNING.map((stringName, stringIndex) => {

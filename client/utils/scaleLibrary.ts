@@ -31,7 +31,7 @@
  * ...
  */
 
-import { noteToValue, valueToNote, ALL_NOTES_SHARP, calculateSemitoneDistance } from './musicTheory';
+import { noteToValue, valueToNote } from './musicTheory';
 import { normalizeScaleDescriptor, FALLBACK_SCALE_LIBRARY_KEYS } from '@shared/music/scaleModes';
 
 export interface ScalePattern {
@@ -357,39 +357,43 @@ function extractRootFromScaleName(scaleName: string): string {
 }
 
 /**
- * Detect the base root note of a fingering pattern
- * Analyzes the scale intervals applied to the low E string to find the true root
- *
- * @param fingering - 2D array representing frets for each string [lowE, A, D, G, B, highE]
- * @param scaleName - Scale name to get proper intervals
- * @returns Root note name in sharp notation
+ * Get the root note that a stored pattern represents based on scale type
+ * Stored patterns are typically for a canonical key (C for major, D for Dorian, etc.)
+ * 
+ * @param scaleKey - Normalized scale key (e.g., 'major', 'dorian', 'pentatonic minor')
+ * @returns Root note that stored patterns for this scale represent
  */
-function detectFingeringBaseRoot(fingering: number[][], scaleName?: string): string {
-  // Validate fingering structure
-  if (!fingering || fingering.length < 6 || !fingering[0] || fingering[0].length === 0) {
-    console.warn('Invalid fingering pattern provided to detectFingeringBaseRoot - defaulting to C');
-    return 'C';
-  }
+function getStoredPatternRoot(scaleKey: string): string {
+  // Mapping of scale types to the root note their stored patterns represent
+  // Based on the comments in SCALE_LIBRARY
+  const STORED_PATTERN_ROOTS: Record<string, string> = {
+    'major': 'C',           // Ionian patterns are for C major
+    'ionian': 'C',         // Same as major
+    'dorian': 'D',         // Dorian patterns are for D Dorian
+    'phrygian': 'E',       // Phrygian patterns are for E Phrygian
+    'lydian': 'F',         // Lydian patterns are for F Lydian
+    'mixolydian': 'G',     // Mixolydian patterns are for G Mixolydian
+    'aeolian': 'A',        // Aeolian patterns are for A minor (natural minor)
+    'minor': 'A',          // Minor patterns are for A minor
+    'locrian': 'B',        // Locrian patterns are for B Locrian
+    'harmonic minor': 'A', // Harmonic minor patterns are for A harmonic minor
+    'melodic minor': 'A',  // Melodic minor patterns are for A melodic minor
+    'pentatonic major': 'C', // Pentatonic major patterns are for C
+    'pentatonic minor': 'A', // Pentatonic minor patterns are for A minor pentatonic
+    'blues': 'A',          // Blues patterns are for A blues
+    'whole tone': 'C',     // Whole tone patterns are for C whole tone
+    'diminished': 'C',     // Diminished patterns are for C diminished
+    'altered': 'C',        // Altered patterns (default to C)
+    'bebop dominant': 'C', // Bebop patterns (default to C)
+    'bebop major': 'C',
+    'phrygian dominant': 'E',
+    'hungarian minor': 'A',
+    'gypsy': 'A',
+    'lydian dominant': 'C',
+    'super locrian': 'B',
+  };
 
-  // For scales, we need to look at the pattern's structure more carefully
-  // The low E string usually contains the root note at some position
-  const lowEString = fingering[0]; // Low E string
-
-  // Standard guitar tuning - Low E = 4 (E in chromatic scale where C=0)
-  const STANDARD_TUNING_LOW_E = 4;
-
-  // For 3-note-per-string patterns (most common), the first note is typically the root
-  // Get the minimum fret to determine the starting point
-  const minFret = Math.min(...lowEString.filter(f => f >= 0));
-
-  // The pattern should contain the root note somewhere on the low E string
-  // For most scale patterns, the lowest note on the low E string represents the root
-  const rootFret = minFret >= 0 ? minFret : lowEString.find(fret => fret >= 0) ?? 0;
-
-  const rootValue = (STANDARD_TUNING_LOW_E + rootFret) % 12;
-
-  // Use valueToNote from musicTheory for consistency
-  return valueToNote(rootValue);
+  return STORED_PATTERN_ROOTS[scaleKey] || 'C';
 }
 
 /**
@@ -397,13 +401,14 @@ function detectFingeringBaseRoot(fingering: number[][], scaleName?: string): str
  *
  * Guitar scale positions are shapes that get moved up/down the neck to play different keys.
  * Each scale has multiple positions corresponding to different starting points on the neck.
- * The patterns are NOT transposed per note - they're fixed shapes positioned by key.
+ * The patterns are stored in SCALE_LIBRARY and transposed to the requested root note.
  *
  * Process:
  * 1. Extracts or uses provided root note
  * 2. Normalizes scale name to match library keys
- * 3. Calculates where the root note falls on each string for the requested position
- * 4. Applies the scale shape (relative intervals) from that root position
+ * 3. Gets the stored pattern for the requested position (sorted by minimum fret so position 0 is lowest)
+ * 4. Gets the root note that stored patterns for this scale represent (from static mapping)
+ * 5. Transposes the pattern to the requested root note
  *
  * @param scaleName - Scale name (e.g., "C major", "D minor pentatonic")
  * @param rootNote - Optional explicit root note (extracted from name if not provided)
@@ -415,41 +420,94 @@ export function getScaleFingering(scaleName: string, rootNote?: string, position
   const normalized = normalizeScaleName(scaleName);
   const scaleData = SCALE_LIBRARY[normalized];
 
-  // Position configurations - absolute starting frets where roots appear on low E string
-  // CAGED system: Position 1 (C shape), Position 2 (A shape), Position 3 (G shape), Position 4 (E shape), Position 5 (D shape)
+  // If no stored patterns exist, fall back to algorithmic generation
+  if (!scaleData || !scaleData.fingerings || scaleData.fingerings.length === 0) {
+    console.warn(`No stored patterns found for scale "${normalized}", falling back to algorithmic generation`);
+    return generateFingeringAlgorithmically(scaleName, root, positionIndex);
+  }
+
+  // Map position index to stored pattern index
+  // Position 0 should be the lowest position on the neck
+  // We sort stored patterns by their minimum fret to ensure position 0 is lowest
+  const availablePositions = scaleData.fingerings.length;
+  const safePositionIndex = Math.max(0, Math.min(positionIndex, availablePositions - 1));
+  
+  // Find the minimum fret for each stored pattern to determine ordering
+  const patternsWithMinFrets = scaleData.fingerings.map((pattern, index) => {
+    const allFrets = pattern.flat().filter(f => f >= 0);
+    const minFret = allFrets.length > 0 ? Math.min(...allFrets) : 999;
+    return { pattern, minFret, originalIndex: index };
+  });
+  
+  // Sort by minimum fret (lowest first) to ensure position 0 is the lowest position
+  patternsWithMinFrets.sort((a, b) => a.minFret - b.minFret);
+  
+  // Get the stored pattern index for the requested position
+  const storedPatternIndex = patternsWithMinFrets[safePositionIndex]?.originalIndex ?? safePositionIndex;
+
+  // Get the stored pattern for this position
+  const storedPattern = scaleData.fingerings[storedPatternIndex];
+  if (!storedPattern || storedPattern.length !== 6) {
+    console.warn(`Invalid stored pattern at position ${safePositionIndex} for scale "${normalized}"`);
+    return generateFingeringAlgorithmically(scaleName, root, positionIndex);
+  }
+
+  // Get the root note that stored patterns for this scale represent
+  // Stored patterns are for canonical keys (C for major, D for Dorian, etc.)
+  const storedRoot = getStoredPatternRoot(normalized);
+
+  // Calculate semitone offset to transpose from stored root to requested root
+  const storedRootValue = noteToValue(storedRoot);
+  const requestedRootValue = noteToValue(root);
+  const semitoneOffset = ((requestedRootValue - storedRootValue) + 12) % 12;
+
+  // Transpose the stored pattern to the requested root
+  // If no transposition needed, return a copy of the stored pattern
+  if (semitoneOffset === 0) {
+    return storedPattern.map(stringFrets => [...stringFrets]);
+  }
+
+  // Transpose using the existing transposeFingering function
+  return transposeFingering(storedPattern, semitoneOffset);
+}
+
+/**
+ * Fallback function to generate fingering algorithmically when stored patterns aren't available
+ * This maintains backward compatibility for scales without stored patterns
+ */
+function generateFingeringAlgorithmically(scaleName: string, rootNote: string, positionIndex: number): number[][] {
+  const normalized = normalizeScaleName(scaleName);
+  const intervals = getScaleIntervals(scaleName);
+  const rootValue = noteToValue(rootNote);
+
+  // Position configurations - relative start positions for different scale patterns
   const POSITION_OFFSETS = {
-    major: [8, 3, 0, 5, 10],  // C Major: C(8), A(3), G(0/open), E(5), D(10)
-    minor: [0, 8, 3, 5, 9],   // A Minor: positions vary by mode
-    dorian: [10, 5, 0, 7, 3], // D Dorian: D(10), G(5), open, C(7), A(3)
-    phrygian: [1, 8, 3, 0, 6], // E Phrygian: positions adjusted
-    lydian: [7, 2, 9, 4, 0],   // F Lydian: F(7), B(2), E(9), A(4), open
-    mixolydian: [3, 10, 5, 0, 7], // G Mixolydian: G(3), C(10), D(5), open, F(7)
-    aeolian: [0, 8, 3, 5, 9], // Same as natural minor
-    locrian: [7, 2, 9, 4, 11], // B Locrian: positions adjusted
-    // Limited-position scales below (use appropriate starting positions)
-    'harmonic minor': [0, 7, 2],  // A harmonic minor simplified
-    'melodic minor': [0, 7, 2],   // A melodic minor simplified
-    'pentatonic major': [0, 7, 2, 9, 5], // C pentatonic major (alternative box system)
-    'pentatonic minor': [5, 0, 7, 12, 10], // A minor pentatonic boxes at standard frets
-    blues: [0, 7, 2],             // A blues simplified
-    'whole tone': [0, 1],         // C whole tone
-    diminished: [0, 3]            // C diminished
+    major: [8, 4, 0, 5, 9],
+    dorian: [10, 7, 3, 0, 4],
+    phrygian: [12, 8, 4, 1, 5],
+    lydian: [7, 11, 2, 6, 9],
+    mixolydian: [3, 10, 6, 0, 7],
+    aeolian: [5, 9, 2, 6, 10],
+    locrian: [7, 11, 3, 8, 0],
+    minor: [5, 9, 2, 6, 10],
+    'harmonic minor': [0, 7, 2],
+    'melodic minor': [0, 7, 2],
+    'pentatonic major': [0, 7, 5, 9, 2],
+    'pentatonic minor': [5, 0, 7, 3, 10],
+    blues: [0, 7, 2],
+    'whole tone': [0, 6],
+    diminished: [0, 3]
   };
 
   const offsets = POSITION_OFFSETS[normalized as keyof typeof POSITION_OFFSETS] || POSITION_OFFSETS.major;
   const safePositionIndex = Math.max(0, Math.min(positionIndex, offsets.length - 1));
-  const targetNoteValue = noteToValue(root);
   const rootOffset = offsets[safePositionIndex] || 0;
-
-  // Calculate the specific note for this position
-  const positionRootValue = (targetNoteValue + rootOffset) % 12;
-  const positionRootNote = valueToNote(positionRootValue);
+  const positionRootValue = (rootValue + rootOffset) % 12;
 
   // Standard guitar tuning values (chromatic scale where C=0)
   const tuning = [4, 9, 2, 7, 11, 4]; // Low E, A, D, G, B, High E
 
   // Generate scale shape from root on each string
-  const intervals = getScaleIntervals(scaleName);
   const fingerings = tuning.map(stringTuning => {
     const rootFret = (positionRootValue - stringTuning + 12) % 12;
     return intervals.map(interval => (rootFret + interval) % 12).sort((a, b) => a - b);
