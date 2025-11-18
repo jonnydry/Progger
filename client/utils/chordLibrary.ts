@@ -4337,11 +4337,21 @@ function transposeVoicings(voicings: ChordVoicing[], fromRoot: string, toRoot: s
 }
 
 /**
+ * @deprecated This function is deprecated. The async API (getChordVoicingsAsync) provides
+ * mathematical transposition fallback which is simpler and more reliable.
+ * This function will be removed in a future version.
+ * 
  * Find the closest matching chord when exact chord is not found
  * Prioritizes chords with same root note, then similar chord qualities
  * Now includes validation to ensure returned voicings match the requested chord
  */
 export function findClosestChordVoicings(chordName: string): ChordVoicing[] {
+  if (import.meta.env.DEV) {
+    console.warn(
+      `⚠️ DEPRECATED: findClosestChordVoicings("${chordName}") is deprecated. ` +
+      `Use getChordVoicingsAsync("${chordName}") instead for better transposition fallback.`
+    );
+  }
   const slashMatch = chordName.match(/^(.*?)(?:\/([A-G][#b]?))?$/i);
   const slashBass = slashMatch?.[2] ? normalizeRoot(slashMatch[2]) : undefined;
 
@@ -4573,7 +4583,26 @@ export function validateChordLibrary(): void {
   }
 }
 
+/**
+ * @deprecated This synchronous API is deprecated. Use getChordVoicingsAsync() instead.
+ * This function will be removed in a future version. Migration guide:
+ * - Old: getChordVoicings(name)
+ * - New: await getChordVoicingsAsync(name)
+ * 
+ * The async API provides:
+ * - Code splitting (90% smaller initial bundle)
+ * - Mathematical transposition fallback
+ * - Better performance through lazy loading
+ */
 export function getChordVoicings(chordName: string): ChordVoicing[] {
+  if (import.meta.env.DEV) {
+    console.warn(
+      `⚠️ DEPRECATED: getChordVoicings("${chordName}") is deprecated. ` +
+      `Use getChordVoicingsAsync("${chordName}") instead. ` +
+      `See client/utils/chords/index.ts for the new async API.`
+    );
+  }
+
   const { root, quality } = extractRootAndQuality(chordName);
   const key: ChordKey = `${root}_${quality}`;
 
@@ -4585,8 +4614,16 @@ export function getChordVoicings(chordName: string): ChordVoicing[] {
     return adjustVoicingsForSlashBass(voicings, slashBass);
   }
 
-  // Smart fallback: find closest match instead of muted strings
-  return findClosestChordVoicings(chordName);
+  // Simplified fallback: try major chord of same root, or return empty array
+  const majorKey: ChordKey = `${root}_major`;
+  if (CHORD_VOICINGS[majorKey] && CHORD_VOICINGS[majorKey].length > 0) {
+    console.warn(`Chord "${chordName}" not found, falling back to ${root} major`);
+    return CHORD_VOICINGS[majorKey];
+  }
+
+  // Last resort: return empty array (callers should migrate to async API for better fallback)
+  console.warn(`No voicings found for "${chordName}". Please migrate to getChordVoicingsAsync() for transposition fallback.`);
+  return [];
 }
 
 function adjustVoicingsForSlashBass(voicings: ChordVoicing[], slashBass?: string): ChordVoicing[] {

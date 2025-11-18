@@ -105,15 +105,15 @@ export const F_SHARP_CHORDS: ChordVoicingsMap = {
     { frets: ['x', 'x', 2, 1, 1, 4], firstFret: 10, position: 'Partial 12th' },
   ],
   'F#_dim': [
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 7, position: 'Dim7 7th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 1, position: 'Dim7 1st' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 4, position: 'Dim7 4th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 10, position: 'Dim7 10th' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 1, position: 'Dim 1st' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 4, position: 'Dim 4th' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 7, position: 'Dim 7th' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 10, position: 'Dim 10th' },
   ],
   'F#_dim7': [
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 7, position: 'Dim7 7th' },
     { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 1, position: 'Dim7 1st' },
     { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 4, position: 'Dim7 4th' },
+    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 7, position: 'Dim7 7th' },
     { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 10, position: 'Dim7 10th' },
   ],
   'F#_madd9': [
@@ -189,9 +189,7 @@ export const F_SHARP_CHORDS: ChordVoicingsMap = {
   ],
   'F#_min7b5': [
     { frets: ['x', 'x', 1, 2, 2, 2], firstFret: 5, position: 'Partial 5th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 2, position: 'Half-dim 2nd' },
-    { frets: ['x', 1, 2, 1, 2, 'x'], firstFret: 2, position: 'Barre 2nd' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 8, position: 'Half-dim 8th' },
+    { frets: ['x', 1, 2, 1, 2, 'x'], firstFret: 9, position: 'Barre 9th' },
   ],
   'F#_min9': [
     { frets: ['x', 'x', 2, 2, 2, 2], position: 'Open Partial' },
@@ -329,16 +327,17 @@ export const F_SHARP_CHORDS: ChordVoicingsMap = {
     { frets: ['x', 'x', 2, 1, 1, 4], firstFret: 6, position: 'Partial 8th' },
     { frets: ['x', 'x', 2, 1, 1, 4], firstFret: 10, position: 'Partial 12th' },
   ],
+  // Gb is enharmonic to F# - same fret positions (1, 4, 7, 10)
   'Gb_dim': [
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 7, position: 'Dim7 7th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 1, position: 'Dim7 1st' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 4, position: 'Dim7 4th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 10, position: 'Dim7 10th' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 1, position: 'Dim 1st' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 4, position: 'Dim 4th' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 7, position: 'Dim 7th' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 10, position: 'Dim 10th' },
   ],
   'Gb_dim7': [
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 7, position: 'Dim7 7th' },
     { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 1, position: 'Dim7 1st' },
     { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 4, position: 'Dim7 4th' },
+    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 7, position: 'Dim7 7th' },
     { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 10, position: 'Dim7 10th' },
   ],
   'Gb_madd9': [
@@ -411,9 +410,7 @@ export const F_SHARP_CHORDS: ChordVoicingsMap = {
   ],
   'Gb_min7b5': [
     { frets: ['x', 'x', 1, 2, 2, 2], firstFret: 5, position: 'Partial 5th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 2, position: 'Half-dim 2nd' },
-    { frets: ['x', 1, 2, 1, 2, 'x'], firstFret: 2, position: 'Barre 2nd' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 8, position: 'Half-dim 8th' },
+    { frets: ['x', 1, 2, 1, 2, 'x'], firstFret: 9, position: 'Barre 9th' },
   ],
   'Gb_min9': [
     { frets: ['x', 'x', 2, 2, 2, 2], position: 'Open Partial' },

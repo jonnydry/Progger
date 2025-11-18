@@ -2,10 +2,9 @@ import type { ChordVoicingsMap } from '../types';
 
 export const D_CHORDS: ChordVoicingsMap = {
   'D_11': [
-    { frets: ['x', 'x', 0, 2, 1, 1], position: 'Open' },
-    { frets: ['x', 'x', 4, 2, 3, 3], firstFret: 5, position: 'Partial 5th' },
+    { frets: ['x', 'x', 0, 2, 1, 2], position: 'Open' },  // Fixed: F# instead of F
     { frets: [1, 3, 1, 3, 1, 3], firstFret: 10, position: 'Barre 10th' },
-    { frets: ['x', 1, 3, 3, 4, 3], firstFret: 5, position: 'Barre 5th' },
+    { frets: ['x', 1, 3, 3, 4, 4], firstFret: 5, position: 'Barre 5th' },  // Fixed: C instead of B
   ],
   'D_13': [
     { frets: ['x', 'x', 0, 2, 1, 2], position: 'Open' },
@@ -110,15 +109,15 @@ export const D_CHORDS: ChordVoicingsMap = {
   ],
   'D_dim': [
     { frets: ['x', 'x', 0, 1, 0, 1], position: 'Open' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 5, position: 'Dim7 5th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 11, position: 'Dim7 11th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 2, position: 'Dim7 2nd' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 3, position: 'Dim 3rd' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 6, position: 'Dim 6th' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 9, position: 'Dim 9th' },
   ],
   'D_dim7': [
     { frets: ['x', 'x', 0, 1, 0, 1], position: 'Open' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 5, position: 'Dim7 5th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 11, position: 'Dim7 11th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 2, position: 'Dim7 2nd' },
+    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 3, position: 'Dim7 3rd' },
+    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 6, position: 'Dim7 6th' },
+    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 9, position: 'Dim7 9th' },
   ],
   'D_madd9': [
     { frets: ['x', 'x', 0, 2, 3, 1], position: 'Open' },
@@ -191,9 +190,7 @@ export const D_CHORDS: ChordVoicingsMap = {
   ],
   'D_min7b5': [
     { frets: ['x', 'x', 0, 1, 1, 1], position: 'Open' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 5, position: 'Half-dim 5th' },
     { frets: ['x', 1, 2, 1, 2, 'x'], firstFret: 5, position: 'Barre 5th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 11, position: 'Half-dim 11th' },
   ],
   'D_min9': [
     { frets: ['x', 'x', 0, 2, 1, 0], position: 'Open' },

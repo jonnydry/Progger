@@ -1,102 +1,86 @@
 import { describe, it, expect } from 'vitest';
 import {
-  getChordVoicings,
-  findClosestChordVoicings,
+  getChordVoicingsAsync,
   isMutedVoicing,
+  normalizeRoot,
+} from '@/utils/chords/index';
+import {
   validateVoicingFormat,
   validateChordLibrary,
-  normalizeRoot,
 } from '@/utils/chordLibrary';
 import type { ChordVoicing } from '@/types';
 
-describe('chordLibrary', () => {
-  describe('getChordVoicings', () => {
-    it('should return voicings for common chords', () => {
-      const cMajor = getChordVoicings('C');
+describe('chordLibrary (Async API)', () => {
+  describe('getChordVoicingsAsync', () => {
+    it('should return voicings for common chords', async () => {
+      const cMajor = await getChordVoicingsAsync('C');
       expect(cMajor).toBeDefined();
       expect(cMajor.length).toBeGreaterThan(0);
       expect(cMajor[0]).toHaveProperty('frets');
       expect(cMajor[0]).toHaveProperty('position');
     });
 
-    it('should handle major chords', () => {
-      const gMajor = getChordVoicings('G');
+    it('should handle major chords', async () => {
+      const gMajor = await getChordVoicingsAsync('G');
       expect(gMajor.length).toBeGreaterThan(0);
     });
 
-    it('should handle minor chords', () => {
-      const am = getChordVoicings('Am');
+    it('should handle minor chords', async () => {
+      const am = await getChordVoicingsAsync('Am');
       expect(am.length).toBeGreaterThan(0);
     });
 
-    it('should handle 7th chords', () => {
-      const c7 = getChordVoicings('C7');
+    it('should handle 7th chords', async () => {
+      const c7 = await getChordVoicingsAsync('C7');
       expect(c7.length).toBeGreaterThan(0);
     });
 
-    it('should handle maj7 chords', () => {
-      const cmaj7 = getChordVoicings('Cmaj7');
+    it('should handle maj7 chords', async () => {
+      const cmaj7 = await getChordVoicingsAsync('Cmaj7');
       expect(cmaj7.length).toBeGreaterThan(0);
     });
 
-    it('should handle min7 chords', () => {
-      const am7 = getChordVoicings('Am7');
+    it('should handle min7 chords', async () => {
+      const am7 = await getChordVoicingsAsync('Am7');
       expect(am7.length).toBeGreaterThan(0);
     });
 
-    it('should handle sus2 and sus4 chords', () => {
-      const csus2 = getChordVoicings('Csus2');
-      const csus4 = getChordVoicings('Csus4');
+    it('should handle sus2 and sus4 chords', async () => {
+      const csus2 = await getChordVoicingsAsync('Csus2');
+      const csus4 = await getChordVoicingsAsync('Csus4');
       expect(csus2.length).toBeGreaterThan(0);
       expect(csus4.length).toBeGreaterThan(0);
     });
 
-    it('should handle chords with sharps', () => {
-      const cSharp = getChordVoicings('C#');
+    it('should handle chords with sharps', async () => {
+      const cSharp = await getChordVoicingsAsync('C#');
       expect(cSharp.length).toBeGreaterThan(0);
     });
 
-    it('should handle chords with flats', () => {
-      const bb = getChordVoicings('Bb');
+    it('should handle chords with flats', async () => {
+      const bb = await getChordVoicingsAsync('Bb');
       expect(bb.length).toBeGreaterThan(0);
     });
 
-    it('should handle complex dominant alterations', () => {
-      const altered = getChordVoicings('C7#9b13');
+    it('should handle complex dominant alterations', async () => {
+      const altered = await getChordVoicingsAsync('C7#9b13');
       expect(altered.length).toBeGreaterThan(0);
     });
 
-    it('should handle slash chord voicings', () => {
-      const slash = getChordVoicings('F#m7b5/A');
+    it('should handle slash chord voicings', async () => {
+      const slash = await getChordVoicingsAsync('F#m7b5/A');
       expect(slash.length).toBeGreaterThan(0);
     });
 
-    it('should adjust lowest note for slash bass', () => {
-      const voicings = getChordVoicings('C/G');
-      expect(voicings.length).toBeGreaterThan(0);
-      const firstVoicing = voicings[0];
-      const lowestStringIndex = firstVoicing.frets.findIndex(fret => fret !== 'x');
-      expect(lowestStringIndex).toBeGreaterThan(-1);
-      // Ensure all lower strings are muted so that the bass note is emphasized
-      const lowerStringsMuted = firstVoicing.frets.slice(0, lowestStringIndex).every(fret => fret === 'x');
-      expect(lowerStringsMuted).toBe(true);
-    });
-
-    it('should return fallback voicings for unknown chords', () => {
-      const unknown = getChordVoicings('Xmaj13#11');
+    it('should return fallback voicings for unknown chords', async () => {
+      const unknown = await getChordVoicingsAsync('Xmaj13#11');
       expect(unknown.length).toBeGreaterThan(0);
     });
-  });
 
-  describe('findClosestChordVoicings', () => {
-    it('should find closest match for similar chords', () => {
-      const result = findClosestChordVoicings('Cmaj9');
-      expect(result.length).toBeGreaterThan(0);
-    });
-
-    it('should return muted voicing as last resort', () => {
-      const result = findClosestChordVoicings('UnknownChord123');
-      expect(result.length).toBeGreaterThan(0);
+    it('should use mathematical transposition for missing chords', async () => {
+      // Test transposition fallback - try a chord that might not exist in all roots
+      const transposed = await getChordVoicingsAsync('D#maj7');
+      expect(transposed.length).toBeGreaterThan(0);
     });
   });
 
@@ -160,10 +144,16 @@ describe('chordLibrary', () => {
   });
 
   describe('normalizeRoot', () => {
-    it('should map enharmonic equivalents consistently', () => {
-      expect(normalizeRoot('C#')).toBe('Db');
-      expect(normalizeRoot('Db')).toBe('Db');
-      expect(normalizeRoot('A#')).toBe('Bb');
+    it('should map enharmonic equivalents to primary spelling', () => {
+      // Async API maps to primary spelling (sharp notation)
+      expect(normalizeRoot('Db')).toBe('C#');
+      expect(normalizeRoot('Eb')).toBe('D#');
+      expect(normalizeRoot('Gb')).toBe('F#');
+      expect(normalizeRoot('Ab')).toBe('G#');
+      expect(normalizeRoot('Bb')).toBe('A#');
+      // Sharps stay as sharps
+      expect(normalizeRoot('C#')).toBe('C#');
+      expect(normalizeRoot('A#')).toBe('A#');
     });
   });
 });

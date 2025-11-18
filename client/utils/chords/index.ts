@@ -13,6 +13,8 @@ import type { ChordVoicing } from '../../types';
 import type { ChordKey } from './types';
 import { loadChordsByRoot } from './loader';
 import { normalizeChordQuality } from '@shared/music/chordQualities';
+import { STANDARD_TUNING_VALUES, noteToValue, valueToNote } from '../musicTheory';
+import { getChordNotes } from '../chordAnalysis';
 
 // Re-export loader utilities
 export { preloadCommonKeys, getCacheStats, clearChordCache } from './loader';
@@ -95,19 +97,34 @@ export async function getChordVoicingsAsync(chordName: string): Promise<ChordVoi
   const voicings = chordData[key];
 
   if (voicings && voicings.length > 0) {
+    // Validate voicings in development mode
+    if (import.meta.env.DEV) {
+      voicings.forEach(voicing => {
+        validateVoicingNotes(voicing, chordName);
+      });
+    }
     // Slash chord bass notes are logged but not enforced in voicing selection
     // (see extractRootAndQuality for details)
     return voicings;
   }
 
-  // Fallback: try to find similar chord in the same key
+  // Fallback 1: Try mathematical transposition from other roots
+  const transposedVoicings = await findVoicingsByTransposition(root, quality);
+  if (transposedVoicings && transposedVoicings.length > 0) {
+    if (import.meta.env.DEV) {
+      console.log(`✓ Found voicings for "${chordName}" via transposition`);
+    }
+    return transposedVoicings;
+  }
+
+  // Fallback 2: Try to find similar chord in the same key
   const similarChord = findSimilarChord(chordData, quality);
   if (similarChord) {
     console.warn(`Chord "${chordName}" not found, using similar chord:`, similarChord);
     return chordData[similarChord];
   }
 
-  // Last resort: return basic major triad
+  // Fallback 3: Return basic major triad
   const majorKey: ChordKey = `${root}_major`;
   if (chordData[majorKey]) {
     console.warn(`Chord "${chordName}" not found, falling back to ${root} major`);
@@ -117,6 +134,85 @@ export async function getChordVoicingsAsync(chordName: string): Promise<ChordVoi
   // If even major doesn't exist, return empty (shouldn't happen)
   console.error(`No chords found for root "${root}"`);
   return [];
+}
+
+/**
+ * Extract the note values (0-11) produced by a chord voicing
+ * Uses mathematical formula: noteValue = (STANDARD_TUNING_VALUES[stringIndex] + absoluteFret) % 12
+ * @public - Exported for validation scripts
+ */
+export function extractVoicingNotes(voicing: ChordVoicing): Set<number> {
+  const noteValues = new Set<number>();
+  const usesRelativeFormat = voicing.firstFret !== undefined && voicing.firstFret > 1;
+
+  voicing.frets.forEach((fret, stringIndex) => {
+    if (typeof fret === 'number') {
+      const absoluteFret = usesRelativeFormat
+        ? voicing.firstFret! + fret - 1
+        : fret;
+      const noteValue = (STANDARD_TUNING_VALUES[stringIndex] + absoluteFret) % 12;
+      noteValues.add(noteValue);
+    }
+  });
+
+  return noteValues;
+}
+
+/**
+ * Validate that a voicing produces notes that match the expected chord
+ * @param voicing - The voicing to validate
+ * @param chordName - The chord name (e.g., "Cmaj7")
+ * @returns True if voicing matches chord, false otherwise
+ * @public - Exported for validation scripts
+ */
+export function validateVoicingNotes(voicing: ChordVoicing, chordName: string): boolean {
+  const voicingNotes = extractVoicingNotes(voicing);
+  const expectedNotes = new Set(getChordNotes(chordName).map(note => noteToValue(note)));
+
+  // Check if at least one voicing note matches an expected chord note
+  // (allows for partial voicings and rootless voicings)
+  for (const noteValue of voicingNotes) {
+    if (expectedNotes.has(noteValue)) {
+      return true;
+    }
+  }
+
+  // Development mode warning
+  if (import.meta.env.DEV) {
+    const voicingNoteNames = Array.from(voicingNotes).map(v => valueToNote(v));
+    const expectedNoteNames = Array.from(expectedNotes).map(v => valueToNote(v));
+    console.warn(
+      `⚠️ Voicing validation failed for "${chordName}":\n` +
+      `   Expected notes: ${expectedNoteNames.join(', ')}\n` +
+      `   Voicing notes: ${voicingNoteNames.join(', ')}\n` +
+      `   Position: ${voicing.position || 'Unknown'}`
+    );
+  }
+
+  return false;
+}
+
+/**
+ * Transpose a barre chord voicing by adjusting firstFret mathematically
+ * Only transposes barre chords (firstFret > 1), leaves open chords unchanged
+ * @param voicing - The voicing to transpose
+ * @param semitoneOffset - Number of semitones to transpose (can be negative)
+ * @returns Transposed voicing
+ */
+function transposeBarreVoicing(voicing: ChordVoicing, semitoneOffset: number): ChordVoicing {
+  if (!voicing.firstFret || voicing.firstFret <= 1) {
+    return voicing; // Open chords don't transpose
+  }
+
+  const newFirstFret = voicing.firstFret + semitoneOffset;
+  // Cap at fret 17 to ensure playability (most guitars have 20-24 frets)
+  const clampedFirstFret = Math.max(1, Math.min(newFirstFret, 17));
+
+  return {
+    ...voicing,
+    firstFret: clampedFirstFret,
+    position: voicing.position ? `${voicing.position} (transposed)` : undefined
+  };
 }
 
 /**
@@ -146,6 +242,62 @@ function findSimilarChord(chordData: Record<string, ChordVoicing[]>, targetQuali
   }
 
   // No similar chord found
+  return null;
+}
+
+/**
+ * Try to find voicings by transposing from another root
+ * Uses mathematical transposition to generate voicings for missing chords
+ * @param targetRoot - The root note we need voicings for
+ * @param targetQuality - The chord quality we need
+ * @returns Transposed voicings or null if not found
+ */
+async function findVoicingsByTransposition(
+  targetRoot: string,
+  targetQuality: string
+): Promise<ChordVoicing[] | null> {
+  // Try transposing from other roots (prioritize common roots)
+  const sourceRoots = ['C', 'G', 'D', 'A', 'E', 'F', 'B', 'C#', 'D#', 'F#', 'G#', 'A#'];
+  
+  for (const sourceRoot of sourceRoots) {
+    try {
+      const sourceChordData = await loadChordsByRoot(sourceRoot);
+      const sourceKey: ChordKey = `${sourceRoot}_${targetQuality}`;
+      const sourceVoicings = sourceChordData[sourceKey];
+
+      if (sourceVoicings && sourceVoicings.length > 0) {
+        // Calculate semitone offset
+        const sourceValue = noteToValue(sourceRoot);
+        const targetValue = noteToValue(targetRoot);
+        const semitoneOffset = ((targetValue - sourceValue) + 12) % 12;
+
+        if (semitoneOffset === 0) {
+          continue; // Same root, skip
+        }
+
+        // Construct target chord name for validation
+        const targetChordName = targetQuality === 'major' 
+          ? targetRoot 
+          : `${targetRoot}${targetQuality}`;
+
+        // Transpose voicings
+        const transposedVoicings = sourceVoicings
+          .map(voicing => transposeBarreVoicing(voicing, semitoneOffset))
+          .filter(voicing => validateVoicingNotes(voicing, targetChordName));
+
+        if (transposedVoicings.length > 0) {
+          if (import.meta.env.DEV) {
+            console.log(`✓ Transposed ${sourceRoot}${targetQuality === 'major' ? '' : targetQuality} → ${targetChordName} (${semitoneOffset} semitones)`);
+          }
+          return transposedVoicings;
+        }
+      }
+    } catch (error) {
+      // Continue to next root if loading fails
+      continue;
+    }
+  }
+
   return null;
 }
 

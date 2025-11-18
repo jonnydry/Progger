@@ -26,10 +26,10 @@ export class ChordNotFoundError extends MusicTheoryError {
     this.name = 'ChordNotFoundError';
   }
 
-  // Recovery strategy: Try similar chords
+  // Recovery strategy: Try similar chords via async API
   async recover(): Promise<ChordVoicing[]> {
-    const { findClosestChordVoicings } = await import('./chordLibrary');
-    return findClosestChordVoicings(this.chordName);
+    const { getChordVoicingsAsync } = await import('./chords/index');
+    return getChordVoicingsAsync(this.chordName);
   }
 }
 
@@ -47,8 +47,8 @@ export class ChordParseError extends MusicTheoryError {
     // Extract root note from malformed chord
     const rootMatch = this.chordString.match(/^([A-G][#b]?)/i);
     const root = rootMatch ? rootMatch[1] : 'C';
-    const { getChordVoicings } = await import('./chordLibrary');
-    return getChordVoicings(`${root}major`);
+    const { getChordVoicingsAsync } = await import('./chords/index');
+    return getChordVoicingsAsync(`${root}major`);
   }
 }
 
@@ -269,17 +269,23 @@ async function buildLocalFallbackProgression(key: string, numChords: number, mod
   const source = mode === 'minor' ? minorProgressions : majorProgressions;
   const normalizedKey = resolveEnharmonicKey(key, source);
   const chordNames = source[normalizedKey];
-  const { getChordVoicings } = await import('./chordLibrary');
+  const { getChordVoicingsAsync } = await import('./chords/index');
   const { getScaleFingering, getScaleNotes } = await import('./scaleLibrary');
 
   const scaleMode = mode === 'minor' ? 'minor' : 'major';
 
+  // Load voicings for all chords in parallel
+  const voicingsPromises = chordNames.slice(0, numChords).map(chordName => 
+    getChordVoicingsAsync(chordName)
+  );
+  const voicingsArrays = await Promise.all(voicingsPromises);
+
   return {
-    progression: chordNames.slice(0, numChords).map(chordName => ({
+    progression: chordNames.slice(0, numChords).map((chordName, index) => ({
       chordName,
       musicalFunction: 'progression',
       relationToKey: 'chord',
-      voicings: getChordVoicings(chordName)
+      voicings: voicingsArrays[index]
     })),
     scales: [{
       name: `${normalizedKey} ${scaleMode}`,

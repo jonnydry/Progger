@@ -110,15 +110,15 @@ export const A_CHORDS: ChordVoicingsMap = {
   ],
   'A_dim': [
     { frets: ['x', 0, 1, 2, 1, 'x'], position: 'Open' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 7, position: 'Dim7 7th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 1, position: 'Dim7 1st' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 10, position: 'Dim7 10th' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 1, position: 'Dim 1st' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 4, position: 'Dim 4th' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 7, position: 'Dim 7th' },
   ],
   'A_dim7': [
     { frets: ['x', 0, 1, 2, 1, 'x'], position: 'Open' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 7, position: 'Dim7 7th' },
     { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 1, position: 'Dim7 1st' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 10, position: 'Dim7 10th' },
+    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 4, position: 'Dim7 4th' },
+    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 7, position: 'Dim7 7th' },
   ],
   'A_madd9': [
     { frets: ['x', 0, 2, 4, 1, 0], position: 'Open' },
@@ -191,9 +191,7 @@ export const A_CHORDS: ChordVoicingsMap = {
   ],
   'A_min7b5': [
     { frets: ['x', 0, 1, 0, 1, 0], position: 'Open' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 5, position: 'Half-dim 5th' },
-    { frets: ['x', 1, 2, 1, 2, 'x'], firstFret: 5, position: 'Barre 5th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 11, position: 'Half-dim 11th' },
+    { frets: ['x', 1, 2, 1, 2, 'x'], firstFret: 12, position: 'Barre 12th' },
   ],
   'A_min9': [
     { frets: ['x', 0, 2, 0, 0, 0], position: 'Open' },

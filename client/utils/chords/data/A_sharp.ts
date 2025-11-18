@@ -2,7 +2,7 @@ import type { ChordVoicingsMap } from '../types';
 
 export const A_SHARP_CHORDS: ChordVoicingsMap = {
   'A#_11': [
-    { frets: ['x', 1, 3, 3, 4, 3], firstFret: 1, position: 'Barre 1st' },
+    { frets: ['x', 1, 3, 3, 4, 4], firstFret: 1, position: 'Barre 1st' },  // Fixed: G# instead of G
     { frets: [1, 3, 1, 3, 1, 3], firstFret: 6, position: 'Barre 6th' },
     { frets: ['x', 'x', 3, 3, 3, 4], firstFret: 1, position: 'Partial 3rd' },
     { frets: ['x', 'x', 1, 1, 2, 1], firstFret: 8, position: 'Rootless 8th' },
@@ -105,15 +105,15 @@ export const A_SHARP_CHORDS: ChordVoicingsMap = {
     { frets: ['x', 'x', 2, 1, 1, 4], firstFret: 2, position: 'Partial 4th' },
   ],
   'A#_dim': [
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 8, position: 'Dim7 8th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 2, position: 'Dim7 2nd' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 5, position: 'Dim7 5th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 11, position: 'Dim7 11th' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 2, position: 'Dim 2nd' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 5, position: 'Dim 5th' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 8, position: 'Dim 8th' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 11, position: 'Dim 11th' },
   ],
   'A#_dim7': [
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 8, position: 'Dim7 8th' },
     { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 2, position: 'Dim7 2nd' },
     { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 5, position: 'Dim7 5th' },
+    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 8, position: 'Dim7 8th' },
     { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 11, position: 'Dim7 11th' },
   ],
   'A#_madd9': [
@@ -189,9 +189,7 @@ export const A_SHARP_CHORDS: ChordVoicingsMap = {
   ],
   'A#_min7b5': [
     { frets: ['x', 'x', 1, 2, 2, 2], firstFret: 5, position: 'Partial 5th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 6, position: 'Half-dim 6th' },
-    { frets: ['x', 1, 2, 1, 2, 'x'], firstFret: 6, position: 'Barre 6th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 12, position: 'Half-dim 12th' },
+    { frets: ['x', 1, 2, 1, 2, 'x'], firstFret: 1, position: 'Barre 1st' },
   ],
   'A#_min9': [
     { frets: ['x', 1, 3, 1, 2, 3], firstFret: 1, position: 'Barre 1st' },
@@ -411,9 +409,7 @@ export const A_SHARP_CHORDS: ChordVoicingsMap = {
   ],
   'Bb_min7b5': [
     { frets: ['x', 'x', 1, 2, 2, 2], firstFret: 5, position: 'Partial 5th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 6, position: 'Half-dim 6th' },
-    { frets: ['x', 1, 2, 1, 2, 'x'], firstFret: 6, position: 'Barre 6th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 12, position: 'Half-dim 12th' },
+    { frets: ['x', 1, 2, 1, 2, 'x'], firstFret: 1, position: 'Barre 1st' },
   ],
   'Bb_min9': [
     { frets: ['x', 1, 3, 1, 2, 3], firstFret: 1, position: 'Barre 1st' },

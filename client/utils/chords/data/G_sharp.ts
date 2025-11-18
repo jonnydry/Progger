@@ -105,15 +105,15 @@ export const G_SHARP_CHORDS: ChordVoicingsMap = {
     { frets: ['x', 'x', 2, 1, 1, 4], firstFret: 12, position: 'Partial 14th' },
   ],
   'Ab_dim': [
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 9, position: 'Dim7 9th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 3, position: 'Dim7 3rd' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 6, position: 'Dim7 6th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 12, position: 'Dim7 12th' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 3, position: 'Dim 3rd' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 6, position: 'Dim 6th' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 9, position: 'Dim 9th' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 12, position: 'Dim 12th' },
   ],
   'Ab_dim7': [
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 9, position: 'Dim7 9th' },
     { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 3, position: 'Dim7 3rd' },
     { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 6, position: 'Dim7 6th' },
+    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 9, position: 'Dim7 9th' },
     { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 12, position: 'Dim7 12th' },
   ],
   'Ab_madd9': [
@@ -186,9 +186,7 @@ export const G_SHARP_CHORDS: ChordVoicingsMap = {
   ],
   'Ab_min7b5': [
     { frets: ['x', 'x', 4, 5, 5, 5], position: 'Open Partial' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 4, position: 'Half-dim 4th' },
-    { frets: ['x', 1, 2, 1, 2, 'x'], firstFret: 4, position: 'Barre 4th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 10, position: 'Half-dim 10th' },
+    { frets: ['x', 1, 2, 1, 2, 'x'], firstFret: 11, position: 'Barre 11th' },
   ],
   'Ab_min9': [
     { frets: ['x', 'x', 4, 4, 4, 4], position: 'Open Partial' },
@@ -405,9 +403,7 @@ export const G_SHARP_CHORDS: ChordVoicingsMap = {
   ],
   'G#_min7b5': [
     { frets: ['x', 'x', 4, 5, 5, 5], position: 'Open Partial' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 4, position: 'Half-dim 4th' },
-    { frets: ['x', 1, 2, 1, 2, 'x'], firstFret: 4, position: 'Barre 4th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 10, position: 'Half-dim 10th' },
+    { frets: ['x', 1, 2, 1, 2, 'x'], firstFret: 11, position: 'Barre 11th' },
   ],
   'G#_min9': [
     { frets: ['x', 'x', 4, 4, 4, 4], position: 'Open Partial' },

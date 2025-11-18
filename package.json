@@ -13,7 +13,10 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "validate-chords": "tsx scripts/validate-chord-voicings.ts",
+    "compare-web": "tsx scripts/compare-with-web-sources.ts",
+    "analyze-errors": "tsx scripts/analyze-validation-errors.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.5",

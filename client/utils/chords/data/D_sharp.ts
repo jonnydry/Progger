@@ -105,16 +105,16 @@ export const D_SHARP_CHORDS: ChordVoicingsMap = {
     { frets: ['x', 'x', 2, 1, 1, 4], firstFret: 2, position: 'Partial 4th' },
   ],
   'D#_dim': [
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 4, position: 'Dim7 4th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 10, position: 'Dim7 10th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 1, position: 'Dim7 1st' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 7, position: 'Dim7 7th' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 1, position: 'Dim 1st' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 4, position: 'Dim 4th' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 7, position: 'Dim 7th' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 10, position: 'Dim 10th' },
   ],
   'D#_dim7': [
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 4, position: 'Dim7 4th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 10, position: 'Dim7 10th' },
     { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 1, position: 'Dim7 1st' },
+    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 4, position: 'Dim7 4th' },
     { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 7, position: 'Dim7 7th' },
+    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 10, position: 'Dim7 10th' },
   ],
   'D#_madd9': [
     { frets: ['x', 'x', 1, 3, 4, 2], position: 'Open Partial' },
@@ -189,9 +189,7 @@ export const D_SHARP_CHORDS: ChordVoicingsMap = {
   ],
   'D#_min7b5': [
     { frets: ['x', 'x', 1, 2, 2, 2], position: 'Open Partial' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 6, position: 'Half-dim 6th' },
     { frets: ['x', 1, 2, 1, 2, 'x'], firstFret: 6, position: 'Barre 6th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 12, position: 'Half-dim 12th' },
   ],
   'D#_min9': [
     { frets: ['x', 'x', 1, 3, 2, 2], position: 'Open Partial' },
@@ -329,11 +327,12 @@ export const D_SHARP_CHORDS: ChordVoicingsMap = {
     { frets: ['x', 'x', 2, 1, 1, 4], firstFret: 10, position: 'Partial 12th' },
     { frets: ['x', 'x', 2, 1, 1, 4], firstFret: 2, position: 'Partial 4th' },
   ],
+  // Eb is enharmonic to D# - same fret positions (1, 4, 7, 10)
   'Eb_dim': [
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 4, position: 'Dim7 4th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 10, position: 'Dim7 10th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 1, position: 'Dim7 1st' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 7, position: 'Dim7 7th' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 1, position: 'Dim 1st' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 4, position: 'Dim 4th' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 7, position: 'Dim 7th' },
+    { frets: ['x', 'x', 1, 2, 1, 'x'], firstFret: 10, position: 'Dim 10th' },
   ],
   'Eb_dim7': [
     { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 4, position: 'Dim7 4th' },
@@ -411,9 +410,7 @@ export const D_SHARP_CHORDS: ChordVoicingsMap = {
   ],
   'Eb_min7b5': [
     { frets: ['x', 'x', 1, 2, 2, 2], position: 'Open Partial' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 6, position: 'Half-dim 6th' },
     { frets: ['x', 1, 2, 1, 2, 'x'], firstFret: 6, position: 'Barre 6th' },
-    { frets: ['x', 'x', 1, 2, 1, 2], firstFret: 12, position: 'Half-dim 12th' },
   ],
   'Eb_min9': [
     { frets: ['x', 'x', 1, 3, 2, 2], position: 'Open Partial' },

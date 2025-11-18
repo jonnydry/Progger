@@ -1,5 +1,5 @@
 import type { ChordInProgression, ProgressionResult, ScaleInfo } from '../types';
-import { getChordVoicings, isMutedVoicing } from '../utils/chordLibrary';
+import { getChordVoicingsAsync, isMutedVoicing } from '../utils/chords/index';
 import { getScaleFingering, getScaleNotes } from '../utils/scaleLibrary';
 import {
   MusicTheoryError,
@@ -254,7 +254,7 @@ export async function generateChordProgression(key: string, mode: string, includ
       // Parallel chord processing with enhanced error handling
       Promise.allSettled(
         resultFromApi.progression.map(async (chord) => {
-          const voicings = getChordVoicings(chord.chordName);
+          const voicings = await getChordVoicingsAsync(chord.chordName);
 
           // Enhanced validation with smart fallback detection
           if (voicings.length === 1 && isMutedVoicing(voicings[0])) {
@@ -475,7 +475,7 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
       // Parallel chord processing with enhanced error handling
       Promise.allSettled(
         resultFromApi.progression.map(async (chord) => {
-          const voicings = getChordVoicings(chord.chordName);
+          const voicings = await getChordVoicingsAsync(chord.chordName);
 
           // Enhanced validation with smart fallback detection
           if (voicings.length === 1 && isMutedVoicing(voicings[0])) {
