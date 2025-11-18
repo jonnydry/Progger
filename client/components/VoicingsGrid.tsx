@@ -22,20 +22,40 @@ const SkeletonDiagram: React.FC = () => (
     </div>
 );
 
-const ArrowButton: React.FC<{ direction: 'left' | 'right'; onClick: () => void }> = React.memo(({ direction, onClick }) => (
-  <button
-    onClick={onClick}
-    className="p-1.5 rounded-full bg-surface hover:bg-background text-text/80 hover:text-text transition-all duration-200 shadow-sm hover:scale-110 border border-border active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface"
-  >
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-      {direction === 'left' ? (
-        <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
-      ) : (
-        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-      )}
-    </svg>
-  </button>
-));
+const ArrowButton: React.FC<{ 
+  direction: 'left' | 'right'; 
+  onClick: () => void;
+  onKeyDown?: (e: React.KeyboardEvent) => void;
+  ariaLabel?: string;
+}> = React.memo(({ direction, onClick, onKeyDown, ariaLabel }) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (onKeyDown) {
+      onKeyDown(e);
+    }
+    // Also handle Enter/Space for accessibility
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onClick();
+    }
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      onKeyDown={handleKeyDown}
+      aria-label={ariaLabel || `Navigate to ${direction === 'left' ? 'previous' : 'next'} voicing`}
+      className="p-2 md:p-1.5 rounded-full bg-surface hover:bg-background text-text/80 hover:text-text transition-all duration-200 shadow-sm hover:scale-110 border border-border active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+        {direction === 'left' ? (
+          <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+        ) : (
+          <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+        )}
+      </svg>
+    </button>
+  );
+});
 
 
 const generateAutoName = (key: string, mode: string, progression: ChordInProgression[]): string => {
@@ -233,12 +253,36 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
                   <VoicingDiagram chordName={displayedChordName} voicing={currentVoicing} />
                 </div>
               </div>
-              <div className="flex items-center justify-center gap-4 w-full">
-                <ArrowButton direction="left" onClick={() => handleVoicingChange(index, 'prev')} />
+              <div 
+                className="flex items-center justify-center gap-4 w-full"
+                role="group"
+                aria-label={`Voicing navigation for ${displayedChordName}`}
+              >
+                <ArrowButton 
+                  direction="left" 
+                  onClick={() => handleVoicingChange(index, 'prev')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowLeft') {
+                      e.preventDefault();
+                      handleVoicingChange(index, 'prev');
+                    }
+                  }}
+                  ariaLabel={`Previous voicing for ${displayedChordName}`}
+                />
                 <span className="text-sm text-text/80 w-12 text-center font-semibold tabular-nums">
                   {currentVoicingIndex + 1} / {chord.voicings.length}
                 </span>
-                <ArrowButton direction="right" onClick={() => handleVoicingChange(index, 'next')} />
+                <ArrowButton 
+                  direction="right" 
+                  onClick={() => handleVoicingChange(index, 'next')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowRight') {
+                      e.preventDefault();
+                      handleVoicingChange(index, 'next');
+                    }
+                  }}
+                  ariaLabel={`Next voicing for ${displayedChordName}`}
+                />
               </div>
             </div>
           );

@@ -16,6 +16,9 @@ export const VoicingDiagram: React.FC<VoicingDiagramProps> = ({ chordName, voici
   const DOT_RADIUS = 7;
   const PADDING = 20;
   const LEFT_MARGIN = 18;
+  
+  // String stroke widths - thicker strings (lower index) are visually thicker
+  const STRING_STROKE_WIDTHS = [1.5, 1.4, 1.3, 1.2, 1.1, 1.0] as const;
 
   const width = LEFT_MARGIN + (STRING_COUNT - 1) * STRING_WIDTH + PADDING * 2;
   const height = FRET_COUNT * FRET_HEIGHT + PADDING * 2.5;
@@ -46,6 +49,8 @@ export const VoicingDiagram: React.FC<VoicingDiagramProps> = ({ chordName, voici
         viewBox={`0 0 ${width} ${height}`}
         xmlns="http://www.w3.org/2000/svg"
         className="bg-transparent"
+        role="img"
+        aria-label={`Guitar chord diagram for ${chordName}`}
       >
         {/* Fretboard number */}
         {effectiveFirstFret > 1 && (
@@ -83,7 +88,7 @@ export const VoicingDiagram: React.FC<VoicingDiagramProps> = ({ chordName, voici
             x2={LEFT_MARGIN + PADDING + i * STRING_WIDTH}
             y2={PADDING + FRET_COUNT * FRET_HEIGHT}
             className="stroke-text/30"
-            strokeWidth={1.5 - (i * 0.1)}
+            strokeWidth={STRING_STROKE_WIDTHS[i]}
           />
         ))}
 
