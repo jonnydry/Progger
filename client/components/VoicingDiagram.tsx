@@ -4,9 +4,10 @@ import type { ChordVoicing } from '@/types';
 interface VoicingDiagramProps {
   chordName: string;
   voicing: ChordVoicing;
+  className?: string;
 }
 
-export const VoicingDiagram: React.FC<VoicingDiagramProps> = ({ chordName, voicing }) => {
+export const VoicingDiagram: React.FC<VoicingDiagramProps> = ({ chordName, voicing, className }) => {
   const { frets, firstFret = 1 } = voicing;
 
   const FRET_COUNT = 5;
@@ -40,15 +41,17 @@ export const VoicingDiagram: React.FC<VoicingDiagramProps> = ({ chordName, voici
     [firstFret, highestFret]
   );
 
+  const containerClass = className !== undefined
+    ? `flex flex-col items-center ${className}`
+    : "flex flex-col items-center p-3 rounded-lg bg-surface border border-border shadow-md w-full max-w-[180px]";
+
   return (
-    <div className="flex flex-col items-center p-3 rounded-lg bg-surface border border-border shadow-md w-full max-w-[180px]">
+    <div className={containerClass}>
       <h3 className="text-lg font-bold mb-3 text-text/90">{chordName}</h3>
       <svg
-        width={width}
-        height={height}
         viewBox={`0 0 ${width} ${height}`}
         xmlns="http://www.w3.org/2000/svg"
-        className="bg-transparent"
+        className="bg-transparent w-full h-auto"
         role="img"
         aria-label={`Guitar chord diagram for ${chordName}`}
       >

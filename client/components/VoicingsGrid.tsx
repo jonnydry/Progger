@@ -133,7 +133,7 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
 
   if (isLoading) {
       return (
-          <div className="grid grid-cols-2 gap-x-4 gap-y-8 justify-items-center mt-8">
+          <div className="flex flex-wrap justify-center gap-6 mt-8 w-full max-w-6xl">
             {Array.from({ length: skeletonCount }).map((_, i) => <SkeletonDiagram key={i} />)}
           </div>
       );
@@ -157,6 +157,8 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
     progression.map(p => displayChordName(p.chordName, musicalKey)).join(' - '),
     [progression, musicalKey]
   );
+
+  const isCompact = progression.length > 4;
 
   return (
     <div className="flex flex-col items-center gap-10">
@@ -229,7 +231,7 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
           </div>
         )}
       </div>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-8 justify-items-center w-full max-w-5xl">
+      <div className="flex flex-wrap justify-center gap-4 w-full max-w-7xl px-4">
         {progression.map((chord, index) => {
           const currentVoicingIndex = voicingIndices[index] ?? 0;
           const currentVoicing = chord.voicings[currentVoicingIndex];
@@ -237,24 +239,40 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
           if (!currentVoicing) return null;
 
           const displayedChordName = displayChordName(chord.chordName, musicalKey);
+          const isExpanded = expandedChordIndex === index;
           
           return (
-            <div key={`${chord.chordName}-${index}`} className="flex flex-col items-center gap-4">
+            <div 
+                key={`${chord.chordName}-${index}`} 
+                className={`
+                    flex flex-col items-center bg-surface border border-border rounded-xl transition-all duration-300 relative
+                    ${isCompact ? 'w-[145px] p-2' : 'w-[200px] p-4'}
+                    ${isExpanded 
+                        ? 'shadow-primary/40 shadow-2xl ring-2 ring-primary ring-offset-4 ring-offset-background scale-105 z-10' 
+                        : 'shadow-md hover:shadow-xl hover:scale-105'
+                    }
+                `}
+            >
               <div
                 onClick={() => handleChordClick(index)}
                 onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleChordClick(index); } }}
                 tabIndex={0}
                 role="button"
-                className={`cursor-pointer rounded-xl transition-all duration-300 ${expandedChordIndex === index ? 'scale-105 shadow-primary/40 shadow-2xl ring-2 ring-primary ring-offset-4 ring-offset-background' : 'hover:scale-105 hover:shadow-xl'} focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-4 focus:ring-offset-background`}
+                className="cursor-pointer w-full focus:outline-none"
                 aria-label={`View details for ${displayedChordName}`}
-                aria-expanded={expandedChordIndex === index}
+                aria-expanded={isExpanded}
               >
-                <div key={currentVoicingIndex} className="animate-cross-fade-in">
-                  <VoicingDiagram chordName={displayedChordName} voicing={currentVoicing} />
+                <div key={currentVoicingIndex} className="animate-cross-fade-in w-full">
+                  <VoicingDiagram 
+                    chordName={displayedChordName} 
+                    voicing={currentVoicing} 
+                    className="w-full border-none shadow-none bg-transparent p-0"
+                  />
                 </div>
               </div>
+              
               <div 
-                className="flex items-center justify-center gap-4 w-full"
+                className={`flex items-center justify-between w-full ${isCompact ? 'mt-1' : 'mt-3'}`}
                 role="group"
                 aria-label={`Voicing navigation for ${displayedChordName}`}
               >
@@ -269,8 +287,8 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
                   }}
                   ariaLabel={`Previous voicing for ${displayedChordName}`}
                 />
-                <span className="text-sm text-text/80 w-12 text-center font-semibold tabular-nums">
-                  {currentVoicingIndex + 1} / {chord.voicings.length}
+                <span className="text-xs text-text/60 font-medium tabular-nums">
+                  {currentVoicingIndex + 1}/{chord.voicings.length}
                 </span>
                 <ArrowButton 
                   direction="right" 
