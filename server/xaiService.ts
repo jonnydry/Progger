@@ -17,6 +17,21 @@ const getOpenAI = () => {
   });
 };
 
+// Helper to strip markdown code blocks from API response
+function cleanJsonResponse(text: string): string {
+  let cleaned = text.trim();
+  // Remove markdown code block wrapper if present
+  if (cleaned.startsWith('```json')) {
+    cleaned = cleaned.slice(7);
+  } else if (cleaned.startsWith('```')) {
+    cleaned = cleaned.slice(3);
+  }
+  if (cleaned.endsWith('```')) {
+    cleaned = cleaned.slice(0, -3);
+  }
+  return cleaned.trim();
+}
+
 interface SimpleChord {
   chordName: string;
   musicalFunction: string;
@@ -99,11 +114,13 @@ export async function generateChordProgression(
         max_tokens: 1500, // Increased to accommodate 7+ chords with detailed descriptions
       });
 
-      const jsonText = response.choices[0].message.content?.trim();
-      if (!jsonText) {
+      const rawText = response.choices[0].message.content?.trim();
+      if (!rawText) {
         throw new Error("Empty response from API");
       }
 
+      // Clean markdown code blocks if present
+      const jsonText = cleanJsonResponse(rawText);
       const parsedResult = JSON.parse(jsonText);
 
       // Enhanced validation with format checking and chord count verification
@@ -286,11 +303,13 @@ IMPORTANT: Return ONLY valid JSON, no additional text or markdown formatting.`;
         max_tokens: 1500, // Increased for more detailed analysis
       });
 
-      const jsonText = response.choices[0].message.content?.trim();
-      if (!jsonText) {
+      const rawText = response.choices[0].message.content?.trim();
+      if (!rawText) {
         throw new Error("Empty response from API");
       }
 
+      // Clean markdown code blocks if present
+      const jsonText = cleanJsonResponse(rawText);
       const parsedResult = JSON.parse(jsonText);
 
       // Enhanced validation with format checking
