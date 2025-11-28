@@ -18,7 +18,7 @@ The application is a full-stack project with a React frontend (Vite dev server o
 - A Progger frog mascot is integrated into the header and hero section.
 
 **Technical Implementations & Feature Specifications:**
-- **AI Chord Generation**: Utilizes xAI's Grok API (`grok-4-fast-reasoning` model) to generate chord progressions and scale name suggestions.
+- **AI Chord Generation**: Utilizes xAI's Grok API (`grok-4-1-fast-non-reasoning` model) to generate chord progressions and scale name suggestions.
 - **Hybrid AI + Client-Side Approach**: AI provides creative input, while extensive client-side libraries (`chordLibrary.ts`, `scaleLibrary.ts`) provide detailed guitar voicings and scale fingerings, reducing reliance on AI for granular musical details.
 - **Chord Voicings**: A comprehensive library of 200+ pre-defined guitar chord voicings with automatic transposition and a fallback system using generic E-form barre chord templates. Chord data is normalized to a relative format for consistency and validated at runtime.
 - **Scale Suggestions**: AI-suggested scales are enriched with multiple fingering patterns from the client-side library, featuring intelligent transposition that prioritizes ergonomic, playable positions (typically frets 0-12).

@@ -396,7 +396,7 @@ npm run db:push --force
 - **Database:** PostgreSQL (Replit-hosted)
 - **ORM:** Drizzle ORM
 - **Package Manager:** npm
-- **AI Service:** xAI Grok API (grok-4-fast-reasoning model)
+- **AI Service:** xAI Grok API (grok-4-1-fast-non-reasoning model)
 - **Authentication:** Replit Auth (Google, X, GitHub, Apple, email/password)
 - **Key Dependencies:** TanStack React Query, OpenAI SDK (for xAI), Passport, Drizzle ORM
 - **Styling:** Tailwind CSS (inline styles with CSS variables)

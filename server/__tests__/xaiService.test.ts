@@ -156,7 +156,7 @@ describe('xaiService', () => {
 
       expect(mockOpenAI.chat.completions.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          model: 'grok-4-fast-reasoning',
+          model: 'grok-4-1-fast-non-reasoning',
           response_format: { type: 'json_object' },
           temperature: 0.7,
           max_tokens: 1000,
@@ -385,7 +385,7 @@ describe('xaiService', () => {
 
       expect(mockOpenAI.chat.completions.create).toHaveBeenCalledWith(
         expect.objectContaining({
-          model: 'grok-4-fast-reasoning',
+          model: 'grok-4-1-fast-non-reasoning',
           response_format: { type: 'json_object' },
           temperature: 0.7,
           max_tokens: 1500, // Higher for custom analysis

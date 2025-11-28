@@ -734,7 +734,7 @@ npm run db:push --force
 - **Database:** PostgreSQL (Replit-hosted)
 - **ORM/Database Tool:** Drizzle
 - **Package Manager:** npm
-- **AI Service:** xAI Grok API (grok-4-fast-reasoning model)
+- **AI Service:** xAI Grok API (grok-4-1-fast-non-reasoning model)
 - **Authentication:** Replit Auth (Google, X/Twitter, GitHub, Apple, email/password)
 - **State Management:** TanStack React Query
 - **Other Tools:** OpenAI SDK (for xAI), Passport, connect-pg-simple

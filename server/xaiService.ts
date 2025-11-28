@@ -83,7 +83,7 @@ export async function generateChordProgression(
 
     return await xaiCircuitBreaker.execute(async () => {
       const response = await openai.chat.completions.create({
-        model: "grok-4-fast-reasoning",
+        model: "grok-4-1-fast-non-reasoning",
         messages: [
           {
             role: "system",
@@ -270,7 +270,7 @@ IMPORTANT: Return ONLY valid JSON, no additional text or markdown formatting.`;
 
     return await xaiCircuitBreaker.execute(async () => {
       const response = await openai.chat.completions.create({
-        model: "grok-4-fast-reasoning",
+        model: "grok-4-1-fast-non-reasoning",
         messages: [
           {
             role: "system",
