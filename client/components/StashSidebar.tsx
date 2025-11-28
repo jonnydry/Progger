@@ -26,6 +26,7 @@ export const StashSidebar: React.FC<StashSidebarProps> = ({
   const deleteFromStash = useDeleteFromStash();
   const [saveName, setSaveName] = useState('');
   const [showSaveForm, setShowSaveForm] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const sidebarStyle = useMemo(() => ({
     backdropFilter: 'blur(16px)',
@@ -57,6 +58,9 @@ export const StashSidebar: React.FC<StashSidebarProps> = ({
       return;
     }
 
+    // Clear any previous errors
+    setSaveError(null);
+
     try {
       await saveToStash.mutateAsync({
         name: saveName.trim(),
@@ -66,8 +70,12 @@ export const StashSidebar: React.FC<StashSidebarProps> = ({
       });
       setSaveName('');
       setShowSaveForm(false);
+      setSaveError(null);
     } catch (error) {
       console.error('Failed to save to stash:', error);
+      // Extract error message from the error object
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save to stash. Please try again.';
+      setSaveError(errorMessage);
     }
   };
 
@@ -162,15 +170,30 @@ export const StashSidebar: React.FC<StashSidebarProps> = ({
                   <input
                     type="text"
                     value={saveName}
-                    onChange={(e) => setSaveName(e.target.value)}
+                    onChange={(e) => {
+                      setSaveName(e.target.value);
+                      // Clear error when user starts typing
+                      if (saveError) {
+                        setSaveError(null);
+                      }
+                    }}
                     placeholder="Enter a name..."
-                    className="w-full px-4 py-2 rounded-lg bg-surface/50 border border-border/30 text-text placeholder-text/50 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    className={`w-full px-4 py-2 rounded-lg bg-surface/50 border text-text placeholder-text/50 focus:outline-none focus:ring-2 ${
+                      saveError
+                        ? 'border-red-500/50 focus:ring-red-500/50'
+                        : 'border-border/30 focus:ring-primary/50'
+                    }`}
                     onKeyPress={(e) => {
                       if (e.key === 'Enter') {
                         handleSave();
                       }
                     }}
                   />
+                  {saveError && (
+                    <div className="px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/30">
+                      <p className="text-sm text-red-500/90">{saveError}</p>
+                    </div>
+                  )}
                   <div className="flex space-x-2">
                     <button
                       onClick={handleSave}
@@ -183,6 +206,7 @@ export const StashSidebar: React.FC<StashSidebarProps> = ({
                       onClick={() => {
                         setShowSaveForm(false);
                         setSaveName('');
+                        setSaveError(null);
                       }}
                       className="flex-1 py-2 px-4 rounded-lg bg-surface/50 hover:bg-surface text-text font-medium transition-all duration-300"
                     >

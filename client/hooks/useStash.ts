@@ -44,7 +44,32 @@ export function useSaveToStash() {
         if (response.status === 403) {
           clearCsrfToken();
         }
-        throw new Error('Failed to save to stash');
+
+        // Try to extract error message from response body
+        let errorMessage = 'Failed to save to stash';
+        try {
+          const errorData = await response.json();
+          if (errorData.error) {
+            errorMessage = errorData.error;
+          } else if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+        } catch {
+          // If response body can't be parsed, use status-based messages
+          if (response.status === 401) {
+            errorMessage = 'You must be logged in to save progressions';
+          } else if (response.status === 403) {
+            errorMessage = 'Invalid CSRF token. Please refresh the page and try again.';
+          } else if (response.status === 400) {
+            errorMessage = 'Invalid request. Please check your input and try again.';
+          } else if (response.status === 500) {
+            errorMessage = 'Server error. Please try again later.';
+          }
+        }
+
+        const error = new Error(errorMessage);
+        (error as any).status = response.status;
+        throw error;
       }
 
       return response.json() as Promise<StashItemData>;
