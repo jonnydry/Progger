@@ -57,7 +57,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({ label, value, onChan
       // Update position on scroll
       window.addEventListener('scroll', updatePosition, true);
       window.addEventListener('resize', updatePosition);
-      
+
       return () => {
         window.removeEventListener('scroll', updatePosition, true);
         window.removeEventListener('resize', updatePosition);
@@ -85,7 +85,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({ label, value, onChan
         id={label}
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
-        className={`relative text-left bg-background border-2 border-border rounded-md px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary transition w-full flex justify-between items-center shadow-inner ${disabled ? 'bg-text/5 text-text/50 cursor-not-allowed' : 'hover:border-primary/50'}`}
+        className={`relative text-left bg-background border-2 border-border px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary transition w-full flex justify-between items-center shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] ${disabled ? 'bg-text/5 text-text/50 cursor-not-allowed' : 'hover:border-primary/50'}`}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         disabled={disabled}
@@ -99,7 +99,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({ label, value, onChan
       {isOpen && !disabled && createPortal(
         <ul
           ref={dropdownRef}
-          className="fixed z-50 bg-surface rounded-md shadow-lg border border-border max-h-60 overflow-y-auto"
+          className="fixed z-50 bg-surface shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] border-2 border-border max-h-60 overflow-y-auto"
           style={{
             top: `${dropdownPosition.top}px`,
             left: `${dropdownPosition.left}px`,
