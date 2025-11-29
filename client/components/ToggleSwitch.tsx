@@ -38,8 +38,8 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
           onChange={(e) => onChange(e.target.checked)}
           aria-describedby={tooltip ? `${id}-tooltip` : undefined}
         />
-        <div className="w-12 h-6 bg-text/20 border-2 border-text/40 shadow-inner peer-focus:ring-2 peer-focus:ring-primary peer-focus:ring-offset-2 peer-focus:ring-offset-surface transition-all"></div>
-        <div className="absolute left-1 top-1 w-4 h-4 bg-background border-2 border-text/80 shadow-md transition-transform steps(4) peer-checked:translate-x-6 peer-checked:bg-primary peer-checked:shadow-primary/50 peer-checked:shadow-lg"></div>
+        <div className="w-12 h-6 bg-text/20 rounded-full shadow-inner peer-focus:ring-2 peer-focus:ring-primary peer-focus:ring-offset-2 peer-focus:ring-offset-surface transition-all"></div>
+        <div className="absolute left-1 top-1 w-4 h-4 bg-background rounded-full shadow-md transition-transform peer-checked:translate-x-6 peer-checked:bg-primary peer-checked:shadow-primary/50 peer-checked:shadow-lg"></div>
 
         {/* Optional Tooltip */}
         {tooltip && (

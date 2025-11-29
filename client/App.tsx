@@ -2,7 +2,7 @@ import React, { useState, useCallback, useEffect, useMemo, lazy, Suspense, useRe
 import { Controls } from './components/Controls';
 import { VoicingsGrid } from './components/VoicingsGrid';
 import { SkeletonScaleDiagram } from './components/ScaleDiagram';
-import { PixelHeader } from './components/PixelHeader';
+import { GlassmorphicHeader } from './components/GlassmorphicHeader';
 import { StashSidebar } from './components/StashSidebar';
 import { useAuth } from './hooks/useAuth';
 import { generateChordProgression, analyzeCustomProgression, clearAllProgressionCache } from './services/xaiService';
@@ -13,7 +13,6 @@ import { detectKey } from './utils/smartChordSuggestions';
 import type { ProgressionResult } from './types';
 import { KEYS, MODES, THEMES, COMMON_PROGRESSIONS } from './constants';
 import proggerMascot from '../attached_assets/ProggerLogoMono2Lily_1761527600239.png';
-import { PixelLoader } from './components/PixelLoader';
 
 const LazyScaleDiagram = lazy(() => import('./components/ScaleDiagram'));
 
@@ -97,13 +96,13 @@ const App: React.FC = () => {
     localStorage.setItem('themeColorIndex', String(themeIndex));
 
     const colors = theme === 'dark' ? currentTheme.dark : currentTheme.light;
-
+    
     Object.entries(colors).forEach(([key, value]) => {
-      root.style.setProperty(`--color-${key}`, value);
+        root.style.setProperty(`--color-${key}`, value);
     });
 
   }, [themeIndex, theme]);
-
+  
   useEffect(() => {
     if (!isLoading && progressionResult && resultsRef.current) {
       resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -220,7 +219,7 @@ const App: React.FC = () => {
 
   return (
     <div className={`min-h-screen bg-background ${isProggerTheme ? 'progger-theme' : ''}`}>
-      <PixelHeader
+      <GlassmorphicHeader
         theme={theme}
         toggleTheme={toggleTheme}
         themes={THEMES}
@@ -242,10 +241,10 @@ const App: React.FC = () => {
       />
       <main className="container mx-auto px-4 pt-6 pb-10 md:pt-8 md:pb-16">
         <header className="text-center mb-16">
-          <img
-            src={proggerMascot}
-            alt="Progger - the guitar-playing frog mascot"
-            className="w-32 sm:w-40 md:w-52 mx-auto mb-3 animate-slide-in image-pixelated"
+          <img 
+            src={proggerMascot} 
+            alt="Progger - the guitar-playing frog mascot" 
+            className="w-32 sm:w-40 md:w-52 mx-auto mb-3 animate-slide-in"
           />
           <h1 className="font-grotesk text-4xl sm:text-5xl md:text-6xl font-bold text-text/90 tracking-wider">
             PROGGER
@@ -255,7 +254,7 @@ const App: React.FC = () => {
           </p>
         </header>
 
-        <section className="max-w-3xl mx-auto bg-surface rounded-lg p-4 md:p-6 shadow-sm border-2 border-border">
+        <section className="max-w-3xl mx-auto bg-surface rounded-lg p-4 md:p-6 shadow-sm border-2 border-border" style={{ borderStyle: 'solid' }}>
           <Controls
             selectedKey={key}
             onKeyChange={setKey}
@@ -292,9 +291,6 @@ const App: React.FC = () => {
           {/* Loading State */}
           {isLoading && (
             <div className="space-y-16">
-              <div className="flex justify-center py-12">
-                <PixelLoader size="lg" />
-              </div>
               <VoicingsGrid progression={[]} isLoading={true} skeletonCount={skeletonCount} musicalKey={key} currentMode={mode} progressionResult={progressionResult} />
               <SkeletonScaleDiagram />
             </div>
@@ -304,7 +300,7 @@ const App: React.FC = () => {
           {!isLoading && progressionResult && (
             <div className="space-y-16">
               <VoicingsGrid progression={progressionResult.progression} isLoading={false} musicalKey={key} currentMode={mode} progressionResult={progressionResult} />
-
+              
               <div className="text-center border-t border-border pt-12">
                 <h2 className="font-bebas text-4xl font-semibold text-text/80 tracking-wide">
                   Suggested Scales
@@ -313,8 +309,8 @@ const App: React.FC = () => {
               <div className="space-y-12">
                 <Suspense fallback={<SkeletonScaleDiagram />}>
                   {progressionResult.scales.map((scale, index) => (
-                    <div
-                      key={index}
+                    <div 
+                      key={index} 
                       className="animate-fade-scale-in"
                       style={{ animationDelay: `${index * 150}ms`, animationFillMode: 'backwards' }}
                     >
