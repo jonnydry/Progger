@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { ThemeSelector } from './ThemeSelector';
 import type { ThemeOption } from '@/constants';
-import proggerLogo from '../../attached_assets/ProggerLogoMono2Lily_1761527600239.png';
+import proggerLogo from '../../../attached_assets/ProggerLogoMono2Lily_1761527600239.png';
 
 interface GlassmorphicHeaderProps {
   theme: string;
@@ -53,9 +53,9 @@ export const GlassmorphicHeader: React.FC<GlassmorphicHeaderProps> = ({
         <div className="flex items-center justify-between">
           {/* Logo / Brand */}
           <div className="flex items-center space-x-2">
-            <img 
-              src={proggerLogo} 
-              alt="Progger mascot" 
+            <img
+              src={proggerLogo}
+              alt="Progger mascot"
               className="h-12 w-12"
             />
             <h1 className="font-grotesk text-2xl font-bold text-text/90 tracking-tight hidden sm:block">
@@ -154,14 +154,14 @@ export const GlassmorphicHeader: React.FC<GlassmorphicHeaderProps> = ({
                     </div>
                   )}
                 </button>
-                
+
                 {/* Dropdown Menu */}
                 <div className="absolute right-0 mt-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200"
                   style={{
                     backdropFilter: 'blur(12px)',
                     WebkitBackdropFilter: 'blur(12px)',
-                    background: theme === 'dark' 
-                      ? 'rgba(20, 20, 20, 0.9)' 
+                    background: theme === 'dark'
+                      ? 'rgba(20, 20, 20, 0.9)'
                       : 'rgba(255, 255, 255, 0.9)',
                     border: theme === 'dark'
                       ? '1px solid rgba(255, 255, 255, 0.1)'
