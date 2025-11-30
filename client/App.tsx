@@ -219,7 +219,7 @@ const App: React.FC = () => {
   const isProggerTheme = THEMES[themeIndex].name === 'PROGGER';
 
   return (
-    <div className={`min-h-screen bg-background ${isProggerTheme ? 'progger-theme' : ''}`}>
+    <div className={`min-h-screen bg-background flex flex-col ${isProggerTheme ? 'progger-theme' : ''}`}>
       <GlassmorphicHeader
         theme={theme}
         toggleTheme={toggleTheme}
@@ -240,7 +240,7 @@ const App: React.FC = () => {
         currentProgression={progressionResult}
         onLoadProgression={handleLoadProgression}
       />
-      <main className="container mx-auto px-4 pt-6 pb-10 md:pt-8 md:pb-16">
+      <main className="container mx-auto px-4 pt-6 pb-10 md:pt-8 md:pb-16 flex-grow">
         <header className="text-center mb-16">
           <img
             src={proggerMascot}
