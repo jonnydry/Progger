@@ -41,28 +41,9 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
   detectedKey,
   detectedMode,
 }) => {
-  useEffect(() => {
-    // Initialize or resize progression array when numChords changes
-    // Only run if the current length doesn't match the desired length
-    if (customProgression.length === numChords) {
-      return;
-    }
-
-    const newProgression = [...customProgression];
-
-    // When adding chords, use smart defaults based on existing progression
-    while (newProgression.length < numChords) {
-      const smartDefault = getSmartDefaultChord(newProgression);
-      newProgression.push(smartDefault);
-    }
-
-    // When removing chords, remove from the end
-    while (newProgression.length > numChords) {
-      newProgression.pop();
-    }
-
-    onCustomProgressionChange(newProgression);
-  }, [numChords, customProgression, onCustomProgressionChange]);
+  // We no longer use numChords/onNumChordsChange directly for UI, 
+  // but we keep the props to avoid breaking the interface if it's used elsewhere.
+  // The progression length is now the source of truth.
 
   const handleRootChange = (index: number, value: string) => {
     const newProgression = [...customProgression];
@@ -76,33 +57,38 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
     onCustomProgressionChange(newProgression);
   };
 
+  const handleAddChord = () => {
+    const newProgression = [...customProgression];
+    // Add a smart default based on the current progression
+    const smartDefault = getSmartDefaultChord(newProgression);
+    newProgression.push(smartDefault);
+    onCustomProgressionChange(newProgression);
+    // Also update parent's count if needed (though we rely on array length now)
+    onNumChordsChange(newProgression.length);
+  };
+
+  const handleRemoveChord = (index: number) => {
+    if (customProgression.length <= 1) return; // Prevent removing the last chord
+    const newProgression = customProgression.filter((_, i) => i !== index);
+    onCustomProgressionChange(newProgression);
+    onNumChordsChange(newProgression.length);
+  };
+
+  const handleMoveChord = (index: number, direction: 'up' | 'down') => {
+    if (direction === 'up' && index === 0) return;
+    if (direction === 'down' && index === customProgression.length - 1) return;
+
+    const newProgression = [...customProgression];
+    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+
+    // Swap
+    [newProgression[index], newProgression[targetIndex]] = [newProgression[targetIndex], newProgression[index]];
+
+    onCustomProgressionChange(newProgression);
+  };
+
   return (
     <div className="space-y-4 md:space-y-6">
-      <div className="space-y-3">
-        <label className="block text-center text-sm font-semibold text-text/70">
-          Number of Chords
-        </label>
-        <div className="flex items-center justify-center gap-1.5 md:gap-3 flex-nowrap overflow-x-auto pb-2 md:pb-0">
-          {CHORD_COUNTS.map((count) => (
-            <button
-              key={count}
-              onClick={() => onNumChordsChange(count)}
-              className={`
-                relative px-2 py-1.5 md:px-5 md:py-2.5 rounded-lg font-bold text-base md:text-lg
-                transition-all duration-300 ease-out
-                border-2 shadow-md flex-shrink-0
-                ${count === numChords
-                  ? 'bg-primary text-background border-primary scale-110 shadow-primary/50 shadow-lg'
-                  : 'bg-background/30 text-text/80 border-border hover:border-primary/50 hover:scale-105 hover:shadow-lg hover:text-text'
-                }
-              `}
-            >
-              {count}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Detected Key Display */}
       {detectedKey && detectedMode && (
         <div className="text-center py-2 px-4 rounded-md bg-background/40 border border-border/30">
@@ -118,14 +104,35 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
       <div className="space-y-4">
         {customProgression.map((chord, index) => (
           <ChordInputCard
-            key={index}
+            key={`${index}-${chord.root}-${chord.quality}`} // Use index in key to ensure stable rendering during reorders, but adding data helps uniqueness
             index={index}
             root={chord.root}
             quality={chord.quality}
             onRootChange={(val) => handleRootChange(index, val)}
             onQualityChange={(val) => handleQualityChange(index, val)}
+            onRemove={() => handleRemoveChord(index)}
+            onMoveUp={() => handleMoveChord(index, 'up')}
+            onMoveDown={() => handleMoveChord(index, 'down')}
+            isFirst={index === 0}
+            isLast={index === customProgression.length - 1}
           />
         ))}
+      </div>
+
+      {/* Add Chord Button */}
+      <div className="flex justify-center pt-2 pb-2">
+        <button
+          onClick={handleAddChord}
+          className="flex items-center gap-2 px-4 py-2 rounded-full bg-background/50 border border-primary/30 text-primary hover:bg-primary/10 hover:border-primary/60 transition-all duration-300 group"
+        >
+          <div className="bg-primary/10 rounded-full p-1 group-hover:bg-primary/20 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+          </div>
+          <span className="font-semibold">Add Chord</span>
+        </button>
       </div>
 
       <div className="pt-2">

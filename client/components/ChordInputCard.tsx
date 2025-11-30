@@ -7,6 +7,7 @@ import { formatChordDisplayName } from '@/utils/chordFormatting';
 import { useChordVoicingPreview } from '@/hooks/useChordVoicingPreview';
 import type { ChordQualityCategory } from '@/constants/chordQualityCategories';
 import { getCategoryForQuality, getQualitiesForCategory } from '@/constants/chordQualityCategories';
+import { playChord } from '@/utils/audioEngine';
 
 interface ChordInputCardProps {
   index: number;
@@ -14,6 +15,11 @@ interface ChordInputCardProps {
   quality: string;
   onRootChange: (value: string) => void;
   onQualityChange: (value: string) => void;
+  onRemove: () => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  isFirst: boolean;
+  isLast: boolean;
 }
 
 /**
@@ -25,6 +31,7 @@ interface ChordInputCardProps {
  * - Real-time fretboard diagram preview
  * - Debounced voicing loading for performance
  * - Shows lowest/most common voicing position
+ * - Playback, reordering, and removal controls
  */
 export const ChordInputCard: React.FC<ChordInputCardProps> = ({
   index,
@@ -32,6 +39,11 @@ export const ChordInputCard: React.FC<ChordInputCardProps> = ({
   quality,
   onRootChange,
   onQualityChange,
+  onRemove,
+  onMoveUp,
+  onMoveDown,
+  isFirst,
+  isLast,
 }) => {
   // Track the selected chord quality category
   const [selectedCategory, setSelectedCategory] = useState<ChordQualityCategory>('Basic');
@@ -50,11 +62,71 @@ export const ChordInputCard: React.FC<ChordInputCardProps> = ({
   // Get filtered chord qualities for the selected category
   const filteredQualities = getQualitiesForCategory(selectedCategory);
 
+  const handlePlay = () => {
+    playChord(root, quality);
+  };
+
   return (
-    <div className="bg-background/50 rounded-lg p-3 md:p-4 border border-border space-y-3">
-      {/* Chord header */}
-      <div className="text-sm font-semibold text-text/70">
-        Chord {index + 1}: <span className="text-primary font-bold">{formatChordDisplayName(root, quality)}</span>
+    <div className="bg-background/50 rounded-lg p-3 md:p-4 border border-border space-y-3 relative group transition-all duration-200 hover:border-primary/30 hover:shadow-sm">
+      {/* Chord header & Controls */}
+      <div className="flex items-center justify-between mb-1">
+        <div className="text-sm font-semibold text-text/70 flex items-center gap-2">
+          <span className="bg-background/80 px-2 py-0.5 rounded text-xs border border-border/50">#{index + 1}</span>
+          <span className="text-primary font-bold text-base">{formatChordDisplayName(root, quality)}</span>
+        </div>
+
+        <div className="flex items-center gap-1">
+          <button
+            onClick={handlePlay}
+            className="p-1.5 text-primary hover:bg-primary/10 rounded-md transition-colors"
+            title="Play Chord"
+            aria-label="Play chord"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+          </button>
+
+          <div className="h-4 w-px bg-border/50 mx-1"></div>
+
+          <button
+            onClick={onMoveUp}
+            disabled={isFirst}
+            className="p-1.5 text-text/50 hover:text-text hover:bg-background/80 rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            title="Move Up"
+            aria-label="Move chord up"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="18 15 12 9 6 15"></polyline>
+            </svg>
+          </button>
+
+          <button
+            onClick={onMoveDown}
+            disabled={isLast}
+            className="p-1.5 text-text/50 hover:text-text hover:bg-background/80 rounded-md transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+            title="Move Down"
+            aria-label="Move chord down"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+
+          <div className="h-4 w-px bg-border/50 mx-1"></div>
+
+          <button
+            onClick={onRemove}
+            className="p-1.5 text-red-400 hover:text-red-500 hover:bg-red-500/10 rounded-md transition-colors"
+            title="Remove Chord"
+            aria-label="Remove chord"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Category tabs for chord quality selection */}
