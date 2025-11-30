@@ -5,7 +5,7 @@ export const Footer: React.FC = () => {
   return (
     <footer className="relative w-full mt-16">
       <div
-        className="w-full h-[200px] md:h-[350px] bg-cover bg-center md:bg-fixed md:bg-center"
+        className="w-full h-[200px] md:h-[300px] bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${footerBg})` }}
         role="img"
         aria-label="Pixel art pond landscape with Progger logo"

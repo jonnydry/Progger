@@ -16,11 +16,16 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [startY, setStartY] = useState(0);
   const [scrollTop, setScrollTop] = useState(0);
-  const [isHovering, setIsHovering] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const lastWheelTimeRef = useRef(0);
   const optionHeight = 40; // Height of each option in pixels
   const visibleOptions = 5; // Number of visible options (odd number for center selection)
+
+  // Keep latest props in a ref to access them in the event listener without re-binding
+  const propsRef = useRef({ options, value, onChange });
+  useEffect(() => {
+    propsRef.current = { options, value, onChange };
+  }, [options, value, onChange]);
 
   // Adaptive throttling based on device capabilities
   const wheelThrottleMs = useMemo(() => {
@@ -43,6 +48,7 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
     return index >= 0 ? index : 0;
   }, [options, value]);
 
+  // Sync scroll position with value
   useEffect(() => {
     if (containerRef.current) {
       const scrollPosition = currentIndex * optionHeight;
@@ -50,23 +56,41 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
     }
   }, [currentIndex, optionHeight]);
 
-  // Prevent page scrolling when hovering over wheel picker
+  // Attach non-passive wheel listener to prevent page scrolling
   useEffect(() => {
-    const preventDefault = (e: WheelEvent) => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const handleWheel = (e: WheelEvent) => {
       e.preventDefault();
+      e.stopPropagation();
+
+      const { options, value, onChange } = propsRef.current;
+
+      // Throttle wheel events
+      const now = Date.now();
+      if (now - lastWheelTimeRef.current < wheelThrottleMs) {
+        return;
+      }
+      lastWheelTimeRef.current = now;
+
+      // Determine direction and move by 1 item
+      const direction = e.deltaY > 0 ? 1 : -1;
+      const currentIdx = options.indexOf(value);
+      const newIndex = Math.max(0, Math.min(currentIdx + direction, options.length - 1));
+
+      if (newIndex !== currentIdx) {
+        onChange(options[newIndex]);
+      }
     };
 
-    if (isHovering && containerRef.current) {
-      // Add non-passive wheel listener to aggressively prevent scrolling
-      containerRef.current.addEventListener('wheel', preventDefault, { passive: false });
-      
-      return () => {
-        if (containerRef.current) {
-          containerRef.current.removeEventListener('wheel', preventDefault);
-        }
-      };
-    }
-  }, [isHovering]);
+    // { passive: false } is crucial to allow preventDefault()
+    container.addEventListener('wheel', handleWheel, { passive: false });
+
+    return () => {
+      container.removeEventListener('wheel', handleWheel);
+    };
+  }, [wheelThrottleMs]);
 
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -79,7 +103,7 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging || !containerRef.current) return;
-    
+
     const deltaY = e.clientY - startY;
     const newScrollTop = scrollTop - deltaY;
     containerRef.current.scrollTop = newScrollTop;
@@ -101,7 +125,7 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isDragging || !containerRef.current) return;
-    
+
     const deltaY = e.touches[0].clientY - startY;
     const newScrollTop = scrollTop - deltaY;
     containerRef.current.scrollTop = newScrollTop;
@@ -115,40 +139,18 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
 
   const snapToNearest = () => {
     if (!containerRef.current) return;
-    
+
     const scrollPosition = containerRef.current.scrollTop;
     const nearestIndex = Math.round(scrollPosition / optionHeight);
     const clampedIndex = Math.max(0, Math.min(nearestIndex, options.length - 1));
-    
+
     containerRef.current.scrollTo({
       top: clampedIndex * optionHeight,
       behavior: 'smooth',
     });
-    
+
     if (options[clampedIndex] !== value) {
       onChange(options[clampedIndex]);
-    }
-  };
-
-  const handleWheel = (e: React.WheelEvent) => {
-    if (!containerRef.current) return;
-    e.preventDefault();
-    e.stopPropagation(); // Prevent event from bubbling to page scroll
-    
-    // Throttle wheel events - only process once per wheelThrottleMs
-    const now = Date.now();
-    if (now - lastWheelTimeRef.current < wheelThrottleMs) {
-      return; // Ignore this event, too soon after last one
-    }
-    lastWheelTimeRef.current = now;
-    
-    // Determine direction and move by 1 item
-    const direction = e.deltaY > 0 ? 1 : -1;
-    const currentIndex = options.indexOf(value);
-    const newIndex = Math.max(0, Math.min(currentIndex + direction, options.length - 1));
-    
-    if (newIndex !== currentIndex) {
-      onChange(options[newIndex]);
     }
   };
 
@@ -209,7 +211,7 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
             height: optionHeight,
           }}
         />
-        
+
         {/* Scrollable container */}
         <div
           ref={containerRef}
@@ -224,9 +226,7 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
             touchAction: 'none',
             overscrollBehavior: 'contain',
           }}
-          onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => {
-            setIsHovering(false);
             handleMouseUp();
           }}
           onMouseDown={handleMouseDown}
@@ -235,11 +235,10 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
-          onWheel={handleWheel}
         >
           {/* Padding top to center first option */}
           <div style={{ height: centerOffset }} />
-          
+
           {/* Options list */}
           <div className="relative">
             {options.map((option, index) => {
@@ -247,16 +246,15 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
               const distanceFromCenter = Math.abs(index - currentIndex);
               const opacity = Math.max(0.3, 1 - distanceFromCenter * 0.2);
               const scale = Math.max(0.9, 1 - distanceFromCenter * 0.05);
-              
+
               return (
                 <div
                   key={option}
                   id={`${label}-option-${index}`}
                   role="option"
                   aria-selected={isSelected}
-                  className={`flex items-center justify-center cursor-pointer transition-all duration-150 ${
-                    isSelected ? 'font-semibold text-primary' : 'text-text/80'
-                  }`}
+                  className={`flex items-center justify-center cursor-pointer transition-all duration-150 ${isSelected ? 'font-semibold text-primary' : 'text-text/80'
+                    }`}
                   style={{
                     height: optionHeight,
                     opacity,
@@ -269,7 +267,7 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
               );
             })}
           </div>
-          
+
           {/* Padding bottom to center last option */}
           <div style={{ height: centerOffset }} />
         </div>
