@@ -11,7 +11,7 @@ export const Footer: React.FC<FooterProps> = ({ onAboutClick }) => {
       <img
         src={footerBg}
         alt="Pixel art pond landscape with Progger logo"
-        className="w-full h-auto grayscale block"
+        className="w-full h-auto max-h-[250px] md:max-h-[350px] object-cover object-center grayscale block"
       />
       <div className="absolute bottom-0 w-full text-center py-2 bg-black/30 backdrop-blur-[2px] text-white/80 text-sm font-medium flex justify-between items-center px-4">
         <span className="flex-grow text-center ml-20">Powered by xAI Grok</span>
