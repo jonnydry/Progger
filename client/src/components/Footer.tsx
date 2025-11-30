@@ -1,5 +1,5 @@
 import React from 'react';
-import footerBg from '../assets/footer_bg.png';
+import footerBg from '../assets/footer_bg_wide.png';
 
 interface FooterProps {
   onAboutClick?: () => void;
@@ -11,7 +11,7 @@ export const Footer: React.FC<FooterProps> = ({ onAboutClick }) => {
       <img
         src={footerBg}
         alt="Pixel art pond landscape with Progger logo"
-        className="h-[200px] w-auto grayscale block"
+        className="w-full h-auto min-h-[200px] object-cover block"
       />
       <div className="absolute bottom-0 w-full text-center py-2 bg-black/30 backdrop-blur-[2px] text-white/80 text-sm font-medium flex justify-between items-center px-4">
         <span className="flex-grow text-center ml-20">Powered by xAI Grok</span>
