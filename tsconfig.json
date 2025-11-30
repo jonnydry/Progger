@@ -29,5 +29,12 @@
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  "include": [
+    "client/src",
+    "shared",
+    "server",
+    "vite.config.ts",
+    "scripts"
+  ]
 }
