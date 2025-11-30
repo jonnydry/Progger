@@ -48,20 +48,29 @@ function getFrequency(noteValue: number, octaveOffset: number = 0): number {
  * @param frequency - Frequency in Hz
  * @param duration - Duration in seconds
  * @param startTime - When to start playing (context time)
+ * @param context - AudioContext instance
  */
 function playTone(context: AudioContext, frequency: number, duration: number, startTime: number) {
     const oscillator = context.createOscillator();
     const gainNode = context.createGain();
+    const filterNode = context.createBiquadFilter();
 
-    oscillator.type = 'triangle'; // Triangle wave sounds a bit more like an instrument than sine
+    // Use sawtooth for a richer sound, but filtered
+    oscillator.type = 'sawtooth';
     oscillator.frequency.value = frequency;
 
-    // Envelope to avoid clicking
+    // Low-pass filter to soften the sound (like a felt piano or rhodes)
+    filterNode.type = 'lowpass';
+    filterNode.frequency.value = 800; // Cutoff frequency
+    filterNode.Q.value = 0.5;
+
+    // Envelope to avoid clicking and give shape
     gainNode.gain.setValueAtTime(0, startTime);
-    gainNode.gain.linearRampToValueAtTime(0.1, startTime + 0.05); // Attack
+    gainNode.gain.linearRampToValueAtTime(0.15, startTime + 0.02); // Fast attack
     gainNode.gain.exponentialRampToValueAtTime(0.001, startTime + duration); // Decay
 
-    oscillator.connect(gainNode);
+    oscillator.connect(filterNode);
+    filterNode.connect(gainNode);
     gainNode.connect(context.destination);
 
     oscillator.start(startTime);
@@ -73,46 +82,23 @@ function playTone(context: AudioContext, frequency: number, duration: number, st
  * @param root - Root note (e.g., "C", "F#")
  * @param quality - Chord quality (e.g., "major", "min7")
  * @param duration - Duration in seconds (default: 1.5s)
+ * @param startTime - Optional start time (for scheduling)
+ * @returns The duration of the chord in seconds
  */
-export function playChord(root: string, quality: string, duration: number = 1.5): void {
+export function playChord(root: string, quality: string, duration: number = 1.5, startTime?: number): number {
     try {
         const context = getAudioContext();
         const chordName = root + quality;
+        const start = startTime !== undefined ? startTime : context.currentTime;
 
         // Get chord intervals using existing analysis
-        // We use 'C' as key context just to get the intervals, the root note handles the pitch
         const analysis = analyzeChord(chordName);
 
-        // Calculate root note value (0-11)
-        const rootValue = noteToValue(root);
-
         // Base octave for the chord (3rd octave for guitar-like range)
-        // Adjust based on root note to keep it in a reasonable range
-        // If root is high (e.g. A, B), maybe drop an octave, or keep it.
-        // Let's stick to a base octave of 3 (C3-B3 range) for the root
         const baseOctave = -1; // Relative to C4 (so C3)
 
-        // Play root note
-        const now = context.currentTime;
-
-        // Stagger notes slightly for a strumming effect (20ms delay between strings)
+        // Stagger notes slightly for a strumming effect (30ms delay between strings)
         const strumDelay = 0.03;
-
-        // Parse intervals from the analysis formula or calculate from notes
-        // The analysis.intervals gives us semitone offsets from root: [0, 4, 7] etc.
-        // But analyzeChord returns names like "Major 3rd".
-        // Let's look at how analyzeChord works. It uses CHORD_FORMULAS which has intervals: [0, 4, 7]
-
-        // We need to access the raw intervals. 
-        // Since analyzeChord returns processed strings, we might want to import CHORD_FORMULAS directly 
-        // or just re-implement the lookup since it's not exported.
-        // However, analyzeChord returns `notes` which are the actual note names.
-        // We can use the notes to calculate frequencies, but we need to know the octave.
-
-        // Better approach: Re-import the logic or just use the notes and guess octaves?
-        // "Smart" voicing: 
-        // Root is at base octave.
-        // Subsequent notes: if value < previous value, bump octave.
 
         const notes = analysis.notes; // e.g. ['C', 'E', 'G']
         let currentOctaveOffset = baseOctave;
@@ -122,7 +108,6 @@ export function playChord(root: string, quality: string, duration: number = 1.5)
             const noteValue = noteToValue(note);
 
             // If this note is lower than the previous one, it must be in the next octave
-            // (Simple voicing logic, not perfect but works for basic chords)
             if (noteValue <= previousNoteValue) {
                 currentOctaveOffset++;
             }
@@ -135,10 +120,59 @@ export function playChord(root: string, quality: string, duration: number = 1.5)
             previousNoteValue = noteValue;
 
             const freq = getFrequency(noteValue, currentOctaveOffset);
-            playTone(context, freq, duration, now + (index * strumDelay));
+            playTone(context, freq, duration, start + (index * strumDelay));
         });
+
+        return duration;
 
     } catch (error) {
         console.error("Failed to play chord:", error);
+        return 0;
+    }
+}
+
+/**
+ * Play a sequence of chords
+ * @param progression - Array of chords to play
+ * @param onChordStart - Callback called when each chord starts playing (with index)
+ * @param onComplete - Callback called when the entire progression finishes
+ */
+export function playProgression(
+    progression: Array<{ root: string; quality: string }>,
+    onChordStart?: (index: number) => void,
+    onComplete?: () => void
+) {
+    try {
+        const context = getAudioContext();
+        const now = context.currentTime;
+        const chordDuration = 1.2; // Slightly faster for progressions
+        const gap = 0.1; // Gap between chords
+
+        progression.forEach((chord, index) => {
+            const startTime = now + (index * (chordDuration + gap));
+
+            // Schedule the audio
+            playChord(chord.root, chord.quality, chordDuration, startTime);
+
+            // Schedule the callback
+            // setTimeout uses wall clock time (ms), AudioContext uses seconds
+            // We need to account for the difference, but usually they are close enough for UI sync
+            // if we calculate the delay from now.
+            const delayMs = (startTime - now) * 1000;
+
+            setTimeout(() => {
+                if (onChordStart) onChordStart(index);
+            }, delayMs);
+        });
+
+        // Schedule completion callback
+        const totalDurationMs = (progression.length * (chordDuration + gap)) * 1000;
+        setTimeout(() => {
+            if (onComplete) onComplete();
+        }, totalDurationMs);
+
+    } catch (error) {
+        console.error("Failed to play progression:", error);
+        if (onComplete) onComplete();
     }
 }

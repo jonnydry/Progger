@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { CHORD_COUNTS } from '@/constants';
 import { getSmartDefaultChord } from '@/utils/smartChordSuggestions';
 import { ChordInputCard } from './ChordInputCard';
+import { playProgression } from '@/utils/audioEngine';
 
 interface CustomProgressionInputProps {
   numChords: number;
@@ -45,6 +46,9 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
   // but we keep the props to avoid breaking the interface if it's used elsewhere.
   // The progression length is now the source of truth.
 
+  const [playingIndex, setPlayingIndex] = React.useState<number | null>(null);
+  const [isPlaying, setIsPlaying] = React.useState(false);
+
   const handleRootChange = (index: number, value: string) => {
     const newProgression = [...customProgression];
     newProgression[index] = { ...newProgression[index], root: value };
@@ -87,19 +91,66 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
     onCustomProgressionChange(newProgression);
   };
 
+  const handlePlayProgression = () => {
+    if (isPlaying) return;
+
+    setIsPlaying(true);
+    setPlayingIndex(null);
+
+    playProgression(
+      customProgression,
+      (index) => setPlayingIndex(index),
+      () => {
+        setIsPlaying(false);
+        setPlayingIndex(null);
+      }
+    );
+  };
+
   return (
     <div className="space-y-4 md:space-y-6">
-      {/* Detected Key Display */}
-      {detectedKey && detectedMode && (
-        <div className="text-center py-2 px-4 rounded-md bg-background/40 border border-border/30">
-          <div className="text-xs text-text/60 mb-1">Detected Key</div>
-          <div className="text-sm font-semibold">
-            <span className="text-primary">{detectedKey}</span>
-            <span className="text-text/70 mx-1">•</span>
-            <span className="text-text/80">{detectedMode}</span>
+      {/* Top Controls: Key Display & Play All */}
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+        {detectedKey && detectedMode ? (
+          <div className="text-center py-2 px-4 rounded-md bg-background/40 border border-border/30 flex-1 w-full md:w-auto">
+            <div className="text-xs text-text/60 mb-1">Detected Key</div>
+            <div className="text-sm font-semibold">
+              <span className="text-primary">{detectedKey}</span>
+              <span className="text-text/70 mx-1">•</span>
+              <span className="text-text/80">{detectedMode}</span>
+            </div>
           </div>
-        </div>
-      )}
+        ) : <div className="flex-1"></div>}
+
+        <button
+          onClick={handlePlayProgression}
+          disabled={isPlaying}
+          className={`
+            flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold transition-all duration-300 shadow-md
+            ${isPlaying
+              ? 'bg-accent/20 text-accent border border-accent/50 cursor-default'
+              : 'bg-accent text-background hover:bg-accent/90 hover:scale-105 hover:shadow-lg'
+            }
+          `}
+        >
+          {isPlaying ? (
+            <>
+              <span className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-accent"></span>
+              </span>
+              <span>Playing...</span>
+            </>
+          ) : (
+            <>
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <span>Play Progression</span>
+            </>
+          )}
+        </button>
+      </div>
 
       <div className="space-y-4">
         {customProgression.map((chord, index) => (
@@ -115,6 +166,7 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
             onMoveDown={() => handleMoveChord(index, 'down')}
             isFirst={index === 0}
             isLast={index === customProgression.length - 1}
+            isPlaying={playingIndex === index}
           />
         ))}
       </div>

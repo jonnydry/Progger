@@ -20,6 +20,7 @@ interface ChordInputCardProps {
   onMoveDown: () => void;
   isFirst: boolean;
   isLast: boolean;
+  isPlaying?: boolean;
 }
 
 /**
@@ -44,6 +45,7 @@ export const ChordInputCard: React.FC<ChordInputCardProps> = ({
   onMoveDown,
   isFirst,
   isLast,
+  isPlaying = false,
 }) => {
   // Track the selected chord quality category
   const [selectedCategory, setSelectedCategory] = useState<ChordQualityCategory>('Basic');
@@ -67,18 +69,45 @@ export const ChordInputCard: React.FC<ChordInputCardProps> = ({
   };
 
   return (
-    <div className="bg-background/50 rounded-lg p-3 md:p-4 border border-border space-y-3 relative group transition-all duration-200 hover:border-primary/30 hover:shadow-sm">
+    <div
+      className={`
+        bg-background/50 rounded-lg p-3 md:p-4 border space-y-3 relative group transition-all duration-300
+        ${isPlaying
+          ? 'border-accent shadow-[0_0_15px_rgba(var(--accent),0.3)] scale-[1.02] z-10'
+          : 'border-border hover:border-primary/30 hover:shadow-sm'
+        }
+      `}
+    >
       {/* Chord header & Controls */}
       <div className="flex items-center justify-between mb-1">
         <div className="text-sm font-semibold text-text/70 flex items-center gap-2">
-          <span className="bg-background/80 px-2 py-0.5 rounded text-xs border border-border/50">#{index + 1}</span>
-          <span className="text-primary font-bold text-base">{formatChordDisplayName(root, quality)}</span>
+          <span className={`
+            px-2 py-0.5 rounded text-xs border transition-colors duration-300
+            ${isPlaying
+              ? 'bg-accent text-background border-accent font-bold'
+              : 'bg-background/80 border-border/50'
+            }
+          `}>
+            #{index + 1}
+          </span>
+          <span className={`
+            font-bold text-base transition-colors duration-300
+            ${isPlaying ? 'text-accent' : 'text-primary'}
+          `}>
+            {formatChordDisplayName(root, quality)}
+          </span>
         </div>
 
         <div className="flex items-center gap-1">
           <button
             onClick={handlePlay}
-            className="p-1.5 text-primary hover:bg-primary/10 rounded-md transition-colors"
+            className={`
+              p-1.5 rounded-md transition-colors
+              ${isPlaying
+                ? 'text-accent hover:bg-accent/10'
+                : 'text-primary hover:bg-primary/10'
+              }
+            `}
             title="Play Chord"
             aria-label="Play chord"
           >
