@@ -5,6 +5,7 @@ import { SkeletonScaleDiagram } from './components/ScaleDiagram';
 import { GlassmorphicHeader } from './components/GlassmorphicHeader';
 import { Footer } from './components/Footer';
 import { StashSidebar } from './components/StashSidebar';
+import { About } from './components/About';
 import { useAuth } from './hooks/useAuth';
 import { generateChordProgression, analyzeCustomProgression, clearAllProgressionCache } from './services/xaiService';
 import { validateChordLibrary, preloadAllChords } from './utils/chordLibrary';
@@ -52,6 +53,7 @@ const App: React.FC = () => {
   // Custom mode key/mode detection (for accurate stash metadata)
   const [customKey, setCustomKey] = useState<string>('C');
   const [customMode, setCustomMode] = useState<string>('Major');
+  const [currentView, setCurrentView] = useState<'home' | 'about'>('home');
   const resultsRef = useRef<HTMLElement>(null);
 
   const handleLogin = () => {
@@ -230,6 +232,7 @@ const App: React.FC = () => {
         onLogin={handleLogin}
         onLogout={handleLogout}
         onStashClick={() => setIsStashOpen(true)}
+        onAboutClick={() => setCurrentView('about')}
       />
       <StashSidebar
         isOpen={isStashOpen}
@@ -241,95 +244,101 @@ const App: React.FC = () => {
         onLoadProgression={handleLoadProgression}
       />
       <main className="container mx-auto px-4 pt-6 pb-10 md:pt-8 md:pb-16 flex-grow">
-        <header className="text-center mb-16">
-          <img
-            src={proggerMascot}
-            alt="Progger - the guitar-playing frog mascot"
-            className="w-32 sm:w-40 md:w-52 mx-auto mb-3 animate-slide-in"
-          />
-          <h1 className="font-grotesk text-4xl sm:text-5xl md:text-6xl font-bold text-text/90 tracking-wider">
-            PROGGER
-          </h1>
-          <p className="text-lg text-text/60 mt-2 max-w-2xl mx-auto">
-            Discover unique progressions and voicings with AI
-          </p>
-        </header>
+        {currentView === 'home' ? (
+          <>
+            <header className="text-center mb-16">
+              <img
+                src={proggerMascot}
+                alt="Progger - the guitar-playing frog mascot"
+                className="w-32 sm:w-40 md:w-52 mx-auto mb-3 animate-slide-in"
+              />
+              <h1 className="font-grotesk text-4xl sm:text-5xl md:text-6xl font-bold text-text/90 tracking-wider">
+                PROGGER
+              </h1>
+              <p className="text-lg text-text/60 mt-2 max-w-2xl mx-auto">
+                Discover unique progressions and voicings with AI
+              </p>
+            </header>
 
-        <section className="max-w-3xl mx-auto bg-surface rounded-lg p-4 md:p-6 shadow-sm border-2 border-border" style={{ borderStyle: 'solid' }}>
-          <Controls
-            selectedKey={key}
-            onKeyChange={setKey}
-            selectedMode={mode}
-            onModeChange={setMode}
-            selectedProgression={selectedProgression}
-            onProgressionChange={setSelectedProgression}
-            numChords={numChords}
-            onNumChordsChange={setNumChords}
-            includeTensions={includeTensions}
-            onTensionsChange={setIncludeTensions}
-            onGenerate={handleGenerate}
-            isLoading={isLoading}
-            isCustomMode={isCustomMode}
-            onCustomChange={setIsCustomMode}
-            customProgression={customProgression}
-            onCustomProgressionChange={setCustomProgression}
-            numCustomChords={numCustomChords}
-            onNumCustomChordsChange={setNumCustomChords}
-            onAnalyzeCustom={handleAnalyzeCustom}
-            detectedKey={customKey}
-            detectedMode={customMode}
-          />
-        </section>
+            <section className="max-w-3xl mx-auto bg-surface rounded-lg p-4 md:p-6 shadow-sm border-2 border-border" style={{ borderStyle: 'solid' }}>
+              <Controls
+                selectedKey={key}
+                onKeyChange={setKey}
+                selectedMode={mode}
+                onModeChange={setMode}
+                selectedProgression={selectedProgression}
+                onProgressionChange={setSelectedProgression}
+                numChords={numChords}
+                onNumChordsChange={setNumChords}
+                includeTensions={includeTensions}
+                onTensionsChange={setIncludeTensions}
+                onGenerate={handleGenerate}
+                isLoading={isLoading}
+                isCustomMode={isCustomMode}
+                onCustomChange={setIsCustomMode}
+                customProgression={customProgression}
+                onCustomProgressionChange={setCustomProgression}
+                numCustomChords={numCustomChords}
+                onNumCustomChordsChange={setNumCustomChords}
+                onAnalyzeCustom={handleAnalyzeCustom}
+                detectedKey={customKey}
+                detectedMode={customMode}
+              />
+            </section>
 
-        <section ref={resultsRef} className="mt-16">
-          {error && (
-            <div className="text-center bg-red-400/20 border border-red-500/30 text-red-800 dark:bg-red-900/30 dark:border-red-700/50 dark:text-red-300 p-4 rounded-lg max-w-2xl mx-auto mb-8">
-              <p className="font-semibold">Error</p>
-              <p>{error}</p>
-            </div>
-          )}
+            <section ref={resultsRef} className="mt-16">
+              {error && (
+                <div className="text-center bg-red-400/20 border border-red-500/30 text-red-800 dark:bg-red-900/30 dark:border-red-700/50 dark:text-red-300 p-4 rounded-lg max-w-2xl mx-auto mb-8">
+                  <p className="font-semibold">Error</p>
+                  <p>{error}</p>
+                </div>
+              )}
 
-          {/* Loading State */}
-          {isLoading && (
-            <div className="space-y-16">
-              <VoicingsGrid progression={[]} isLoading={true} skeletonCount={skeletonCount} musicalKey={key} currentMode={mode} progressionResult={progressionResult} />
-              <SkeletonScaleDiagram />
-            </div>
-          )}
+              {/* Loading State */}
+              {isLoading && (
+                <div className="space-y-16">
+                  <VoicingsGrid progression={[]} isLoading={true} skeletonCount={skeletonCount} musicalKey={key} currentMode={mode} progressionResult={progressionResult} />
+                  <SkeletonScaleDiagram />
+                </div>
+              )}
 
-          {/* Result State */}
-          {!isLoading && progressionResult && (
-            <div className="space-y-16">
-              <VoicingsGrid progression={progressionResult.progression} isLoading={false} musicalKey={key} currentMode={mode} progressionResult={progressionResult} />
+              {/* Result State */}
+              {!isLoading && progressionResult && (
+                <div className="space-y-16">
+                  <VoicingsGrid progression={progressionResult.progression} isLoading={false} musicalKey={key} currentMode={mode} progressionResult={progressionResult} />
 
-              <div className="text-center border-t border-border pt-12">
-                <h2 className="font-bebas text-4xl font-semibold text-text/80 tracking-wide">
-                  Suggested Scales
-                </h2>
-              </div>
-              <div className="space-y-12">
-                <Suspense fallback={<SkeletonScaleDiagram />}>
-                  {progressionResult.scales.map((scale, index) => (
-                    <div
-                      key={index}
-                      className="animate-fade-scale-in"
-                      style={{ animationDelay: `${index * 150}ms`, animationFillMode: 'backwards' }}
-                    >
-                      <LazyScaleDiagram scaleInfo={scale} musicalKey={key} />
-                    </div>
-                  ))}
-                </Suspense>
-              </div>
-            </div>
-          )}
+                  <div className="text-center border-t border-border pt-12">
+                    <h2 className="font-bebas text-4xl font-semibold text-text/80 tracking-wide">
+                      Suggested Scales
+                    </h2>
+                  </div>
+                  <div className="space-y-12">
+                    <Suspense fallback={<SkeletonScaleDiagram />}>
+                      {progressionResult.scales.map((scale, index) => (
+                        <div
+                          key={index}
+                          className="animate-fade-scale-in"
+                          style={{ animationDelay: `${index * 150}ms`, animationFillMode: 'backwards' }}
+                        >
+                          <LazyScaleDiagram scaleInfo={scale} musicalKey={key} />
+                        </div>
+                      ))}
+                    </Suspense>
+                  </div>
+                </div>
+              )}
 
-          {/* Initial/Empty State */}
-          {!isLoading && !progressionResult && !error && (
-            <VoicingsGrid progression={[]} isLoading={false} musicalKey={key} currentMode={mode} progressionResult={progressionResult} />
-          )}
-        </section>
+              {/* Initial/Empty State */}
+              {!isLoading && !progressionResult && !error && (
+                <VoicingsGrid progression={[]} isLoading={false} musicalKey={key} currentMode={mode} progressionResult={progressionResult} />
+              )}
+            </section>
+          </>
+        ) : (
+          <About onBackClick={() => setCurrentView('home')} />
+        )}
       </main>
-      <Footer />
+      <Footer onAboutClick={() => setCurrentView('about')} />
     </div>
   );
 };
