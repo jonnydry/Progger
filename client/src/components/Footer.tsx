@@ -7,12 +7,12 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ onAboutClick }) => {
   return (
-    <footer className="relative w-full mt-16 bg-black flex justify-center items-center overflow-hidden">
+    <footer className="relative w-full mt-16 bg-black overflow-hidden">
       <img
         src={footerBg}
         alt="Pixel art pond landscape with Progger logo"
-        className="w-full max-h-[180px] object-contain"
-        style={{ imageRendering: 'pixelated' }}
+        className="w-full h-auto object-cover object-center"
+        style={{ imageRendering: 'pixelated', maxHeight: '280px', minHeight: '120px' }}
       />
       <div className="absolute bottom-0 w-full text-center py-2 bg-black/30 backdrop-blur-[2px] text-white/80 text-sm font-medium flex justify-between items-center px-4">
         <span className="flex-grow text-center ml-20">Powered by xAI Grok</span>
