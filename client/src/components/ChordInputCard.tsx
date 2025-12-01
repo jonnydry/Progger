@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ROOT_NOTES } from '@/constants';
+import { PixelCard } from './PixelCard';
 import { WheelPicker } from './WheelPicker';
 import { VoicingPreview } from './VoicingPreview';
 import { ChordQualityCategoryTabs } from './ChordQualityCategoryTabs';
@@ -69,12 +70,13 @@ export const ChordInputCard: React.FC<ChordInputCardProps> = ({
   };
 
   return (
-    <div
+    <PixelCard
+      noAnimate
       className={`
-        bg-background/50 rounded-lg p-3 md:p-4 border space-y-3 relative group transition-all duration-300
+        p-3 md:p-4 space-y-3 transition-all duration-300
         ${isPlaying
           ? 'border-accent shadow-[0_0_15px_rgba(var(--accent),0.3)] scale-[1.02] z-10'
-          : 'border-border hover:border-primary/30 hover:shadow-sm'
+          : 'hover:border-primary/30'
         }
       `}
     >
@@ -187,6 +189,6 @@ export const ChordInputCard: React.FC<ChordInputCardProps> = ({
           <VoicingPreview voicing={voicing} isLoading={isLoading} />
         </div>
       </div>
-    </div>
+    </PixelCard>
   );
 };

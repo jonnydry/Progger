@@ -3,6 +3,7 @@ import type { ScaleInfo } from '../types';
 import { noteToValue as noteToValueBase, valueToNote, displayNote, STANDARD_TUNING_NAMES } from '../utils/musicTheory';
 import { getScaleIntervals, getScaleFingering, SCALE_LIBRARY, normalizeScaleName } from '../utils/scaleLibrary';
 import NoteDot from './NoteDot';
+import { PixelCard } from './PixelCard';
 
 interface ScaleDiagramModalProps {
   scaleInfo: ScaleInfo;
@@ -116,8 +117,8 @@ const PositionSelector: React.FC<{
           onClick={() => setCurrentPosition(index)}
           onKeyDown={handleKeyDown}
           className={`px-2 py-1 text-sm font-semibold rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background ${currentPosition === index
-              ? 'bg-secondary text-background shadow'
-              : 'text-text/60 hover:text-text hover:bg-surface/50'
+            ? 'bg-secondary text-background shadow'
+            : 'text-text/60 hover:text-text hover:bg-surface/50'
             }`}
           aria-label={`Position ${index + 1}`}
           aria-pressed={currentPosition === index}
@@ -186,8 +187,9 @@ const ScaleDiagramModal: React.FC<ScaleDiagramModalProps> = ({ scaleInfo, musica
       className="fixed inset-0 z-50 flex items-center justify-center bg-background/90 backdrop-blur-sm"
       onClick={onClose}
     >
-      <div
-        className="relative w-[95vw] max-w-7xl max-h-[90vh] bg-surface rounded-2xl shadow-2xl border-2 border-border overflow-hidden"
+      <PixelCard
+        noAnimate
+        className="w-[95vw] max-w-7xl max-h-[90vh] !p-0 overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -332,7 +334,7 @@ const ScaleDiagramModal: React.FC<ScaleDiagramModalProps> = ({ scaleInfo, musica
             </div>
           </div>
         </div>
-      </div>
+      </PixelCard>
     </div>
   );
 };

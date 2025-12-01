@@ -1,5 +1,7 @@
 import React from 'react';
 import proggerMascot from '../../../attached_assets/ProggerLogoMono2Lily_1761527600239.png';
+import { PixelCard } from './PixelCard';
+import { PixelButton } from './PixelButton';
 
 interface AboutProps {
     onBackClick: () => void;
@@ -8,13 +10,7 @@ interface AboutProps {
 export const About: React.FC<AboutProps> = ({ onBackClick }) => {
     return (
         <div className="container mx-auto px-4 pt-6 pb-10 md:pt-8 md:pb-16 flex-grow flex flex-col items-center justify-center min-h-[60vh]">
-            <div className="max-w-2xl w-full bg-surface border-2 border-border p-8 shadow-lg relative animate-fade-scale-in">
-                {/* Pixel corners decoration */}
-                <div className="absolute -top-1 -left-1 w-2 h-2 bg-primary"></div>
-                <div className="absolute -top-1 -right-1 w-2 h-2 bg-primary"></div>
-                <div className="absolute -bottom-1 -left-1 w-2 h-2 bg-primary"></div>
-                <div className="absolute -bottom-1 -right-1 w-2 h-2 bg-primary"></div>
-
+            <PixelCard className="max-w-2xl w-full">
                 <div className="text-center mb-8">
                     <img
                         src={proggerMascot}
@@ -50,14 +46,14 @@ export const About: React.FC<AboutProps> = ({ onBackClick }) => {
                 </div>
 
                 <div className="mt-10 text-center">
-                    <button
+                    <PixelButton
                         onClick={onBackClick}
-                        className="px-6 py-3 bg-primary text-background font-bold hover:bg-accent transition-all duration-200 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)] hover:translate-x-[2px] hover:translate-y-[2px] border-2 border-transparent hover:border-border"
+                        className="px-6 py-3"
                     >
                         ← BACK TO HOME
-                    </button>
+                    </PixelButton>
                 </div>
-            </div>
+            </PixelCard>
         </div>
     );
 };
