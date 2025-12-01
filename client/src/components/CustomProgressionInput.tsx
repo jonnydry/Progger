@@ -3,6 +3,7 @@ import { CHORD_COUNTS } from '@/constants';
 import { getSmartDefaultChord } from '@/utils/smartChordSuggestions';
 import { ChordInputCard } from './ChordInputCard';
 import { playProgression } from '@/utils/audioEngine';
+import { PixelButton } from './PixelButton';
 
 interface CustomProgressionInputProps {
   numChords: number;
@@ -112,7 +113,7 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
       {/* Top Controls: Key Display & Play All */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-4">
         {detectedKey && detectedMode ? (
-          <div className="text-center py-2 px-4 rounded-md bg-background/40 border border-border/30 flex-1 w-full md:w-auto">
+          <div className="text-center py-2 px-4 rounded-md bg-background/40 border-2 border-border flex-1 w-full md:w-auto">
             <div className="text-xs text-text/60 mb-1">Detected Key</div>
             <div className="text-sm font-semibold">
               <span className="text-primary">{detectedKey}</span>
@@ -122,16 +123,11 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
           </div>
         ) : <div className="flex-1"></div>}
 
-        <button
+        <PixelButton
           onClick={handlePlayProgression}
           disabled={isPlaying}
-          className={`
-            flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold transition-all duration-300 shadow-md
-            ${isPlaying
-              ? 'bg-accent/20 text-accent border border-accent/50 cursor-default'
-              : 'bg-accent text-background hover:bg-accent/90 hover:scale-105 hover:shadow-lg'
-            }
-          `}
+          variant="secondary"
+          className="flex items-center gap-2 px-5 py-2.5"
         >
           {isPlaying ? (
             <>
@@ -149,7 +145,7 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
               <span>Play Progression</span>
             </>
           )}
-        </button>
+        </PixelButton>
       </div>
 
       <div className="space-y-4">
@@ -173,9 +169,10 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
 
       {/* Add Chord Button */}
       <div className="flex justify-center pt-2 pb-2">
-        <button
+        <PixelButton
           onClick={handleAddChord}
-          className="flex items-center gap-2 px-4 py-2 rounded-full bg-background/50 border border-primary/30 text-primary hover:bg-primary/10 hover:border-primary/60 transition-all duration-300 group"
+          variant="ghost"
+          className="flex items-center gap-2 px-4 py-2 border-2 border-dashed border-primary/30 hover:border-primary/60"
         >
           <div className="bg-primary/10 rounded-full p-1 group-hover:bg-primary/20 transition-colors">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -184,38 +181,19 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
             </svg>
           </div>
           <span className="font-semibold">Add Chord</span>
-        </button>
+        </PixelButton>
       </div>
 
       <div className="pt-2">
-        <button
+        <PixelButton
           onClick={onAnalyze}
+          isLoading={isLoading}
           disabled={isLoading}
           aria-label={isLoading ? "Analyzing chord progression, please wait" : "Analyze chord progression"}
-          aria-busy={isLoading}
-          aria-live="polite"
-          className="w-full relative bg-primary text-background font-bold py-3 px-4 rounded-md hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 ease-in-out flex items-center justify-center border-b-4 border-primary/50 active:border-b-0 active:translate-y-1 shadow-lg hover:shadow-accent/40"
+          className="w-full py-3 px-4 text-base"
         >
-          <span className="relative">
-            {isLoading ? (
-              <span className="flex items-center" role="status">
-                <svg
-                  className="animate-spin -ml-1 mr-3 h-5 w-5 text-background"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span aria-live="assertive">Analyzing...</span>
-              </span>
-            ) : (
-              'Analyze Progression'
-            )}
-          </span>
-        </button>
+          {isLoading ? 'Analyzing...' : 'Analyze Progression'}
+        </PixelButton>
       </div>
     </div>
   );

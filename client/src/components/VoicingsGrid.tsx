@@ -1,9 +1,12 @@
+```typescript
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { VoicingDiagram } from './VoicingDiagram';
 import type { ChordInProgression, ProgressionResult } from '@/types';
 import { ChordDetailView } from './ChordDetailView';
 import { displayChordName } from '@/utils/musicTheory';
 import { useSaveToStash } from '../hooks/useStash';
+import { PixelCard } from './PixelCard';
+import { PixelButton } from './PixelButton';
 
 interface VoicingsGridProps {
   progression: ChordInProgression[];
@@ -43,8 +46,8 @@ const ArrowButton: React.FC<{
     <button
       onClick={onClick}
       onKeyDown={handleKeyDown}
-      aria-label={ariaLabel || `Navigate to ${direction === 'left' ? 'previous' : 'next'} voicing`}
-      className="p-2 md:p-1.5 rounded-full bg-surface hover:bg-background text-text/80 hover:text-text transition-all duration-200 shadow-sm hover:scale-110 border border-border active:scale-95 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface"
+      aria-label={ariaLabel || `Navigate to ${ direction === 'left' ? 'previous' : 'next' } voicing`}
+      className="p-2 md:p-1.5 rounded-full bg-surface hover:bg-background text-text/80 hover:text-text transition-all duration-200 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,0.2)] hover:translate-x-[1px] hover:translate-y-[1px] border-2 border-border active:translate-x-[2px] active:translate-y-[2px] active:shadow-none focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface"
     >
       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
         {direction === 'left' ? (
@@ -68,7 +71,7 @@ const generateAutoName = (key: string, mode: string, progression: ChordInProgres
   const progressionStr = chordNames.join(' - ');
   const suffix = progression.length > 4 ? '...' : '';
 
-  return `${key} ${mode} - ${progressionStr}${suffix} - ${dateStr} ${timeStr}`;
+  return `${ key } ${ mode } - ${ progressionStr }${ suffix } - ${ dateStr } ${ timeStr } `;
 };
 
 export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoading, skeletonCount = 4, musicalKey, currentMode, progressionResult }) => {
@@ -141,7 +144,7 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
 
   if (progression.length === 0) {
     return (
-      <div className="text-center py-20 px-6 bg-surface rounded-lg border border-border max-w-3xl mx-auto shadow-lg flex flex-col items-center">
+      <PixelCard className="text-center py-20 px-6 max-w-3xl mx-auto flex flex-col items-center">
         <div className="relative mb-4">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-text/30 relative" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 6l12-3" />
@@ -149,7 +152,7 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
         </div>
         <p className="text-xl font-semibold text-text">Your generated progression will appear here.</p>
         <p className="text-text/60">Select a key and mode, then click "Generate".</p>
-      </div>
+      </PixelCard>
     );
   }
 
@@ -162,15 +165,15 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
 
   return (
     <div className="flex flex-col items-center gap-10">
-      <div className="text-center bg-surface p-4 rounded-lg shadow-md border border-border">
+      <PixelCard className="text-center p-4 w-full max-w-4xl">
         <div className="flex items-center justify-center gap-4 mb-1">
           <h2 className="font-bebas text-3xl font-semibold text-text/80 tracking-wide">
             Generated Progression
           </h2>
           {progressionResult && currentMode && (
-            <button
+            <PixelButton
               onClick={handleOpenSaveForm}
-              className="p-2 rounded-full bg-primary/90 hover:bg-primary text-background transition-all duration-300 shadow-md hover:shadow-lg hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface"
+              className="p-2 rounded-full"
               title="Save to Stash"
               aria-label="Save progression to stash"
             >
@@ -188,7 +191,7 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
                   d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"
                 />
               </svg>
-            </button>
+            </PixelButton>
           )}
         </div>
         <p className="text-3xl tracking-wider text-text">
@@ -201,7 +204,7 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
               value={saveName}
               onChange={(e) => setSaveName(e.target.value)}
               placeholder="Enter a name for this progression..."
-              className="w-full px-4 py-2 rounded-lg bg-background border border-border text-text placeholder-text/50 focus:outline-none focus:ring-2 focus:ring-primary/50"
+              className="w-full px-4 py-2 bg-background border-2 border-border text-text placeholder-text/50 focus:outline-none focus:border-primary"
               onKeyPress={(e) => {
                 if (e.key === 'Enter') {
                   handleSave();
@@ -211,26 +214,27 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
               autoFocus
             />
             <div className="flex space-x-2">
-              <button
+              <PixelButton
                 onClick={handleSave}
                 disabled={!saveName.trim() || saveToStash.isPending}
-                className="flex-1 py-2 px-4 rounded-lg bg-primary/90 hover:bg-primary text-background font-medium transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                className="flex-1"
               >
                 {saveToStash.isPending ? 'Saving...' : 'Save'}
-              </button>
-              <button
+              </PixelButton>
+              <PixelButton
+                variant="secondary"
                 onClick={() => {
                   setShowSaveForm(false);
                   setSaveName('');
                 }}
-                className="flex-1 py-2 px-4 rounded-lg bg-surface/50 hover:bg-surface text-text font-medium transition-all duration-300 border border-border"
+                className="flex-1"
               >
                 Cancel
-              </button>
+              </PixelButton>
             </div>
           </div>
         )}
-      </div>
+      </PixelCard>
       <div className="flex flex-wrap justify-center gap-4 w-full max-w-7xl px-4">
         {progression.map((chord, index) => {
           const currentVoicingIndex = voicingIndices[index] ?? 0;
@@ -242,16 +246,18 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
           const isExpanded = expandedChordIndex === index;
           
           return (
-            <div 
-                key={`${chord.chordName}-${index}`} 
+            <PixelCard
+                key={`${ chord.chordName } -${ index } `} 
+                noAnimate
                 className={`
-                    flex flex-col items-center bg-surface border border-border rounded-xl transition-all duration-300 relative
-                    ${isCompact ? 'w-[145px] p-2' : 'w-[200px] p-4'}
-                    ${isExpanded 
-                        ? 'shadow-primary/40 shadow-2xl ring-2 ring-primary ring-offset-4 ring-offset-background scale-105 z-10' 
-                        : 'shadow-md hover:shadow-xl hover:scale-105'
-                    }
-                `}
+                    flex flex - col items - center transition - all duration - 300 relative
+                    ${ isCompact ? 'w-[160px] p-2' : 'w-[220px] p-4' }
+                    ${
+  isExpanded
+    ? 'scale-105 z-10 border-primary'
+    : 'hover:scale-105'
+}
+`}
             >
               <div
                 onClick={() => handleChordClick(index)}
@@ -259,7 +265,7 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
                 tabIndex={0}
                 role="button"
                 className="cursor-pointer w-full focus:outline-none"
-                aria-label={`View details for ${displayedChordName}`}
+                aria-label={`View details for ${ displayedChordName }`}
                 aria-expanded={isExpanded}
               >
                 <div key={currentVoicingIndex} className="animate-cross-fade-in w-full">
@@ -272,9 +278,9 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
               </div>
               
               <div 
-                className={`flex items-center justify-between w-full ${isCompact ? 'mt-1' : 'mt-3'}`}
+                className={`flex items - center justify - between w - full ${ isCompact ? 'mt-1' : 'mt-3' } `}
                 role="group"
-                aria-label={`Voicing navigation for ${displayedChordName}`}
+                aria-label={`Voicing navigation for ${ displayedChordName }`}
               >
                 <ArrowButton 
                   direction="left" 
@@ -285,7 +291,7 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
                       handleVoicingChange(index, 'prev');
                     }
                   }}
-                  ariaLabel={`Previous voicing for ${displayedChordName}`}
+                  ariaLabel={`Previous voicing for ${ displayedChordName }`}
                 />
                 <span className="text-xs text-text/60 font-medium tabular-nums">
                   {currentVoicingIndex + 1}/{chord.voicings.length}
@@ -299,10 +305,10 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
                       handleVoicingChange(index, 'next');
                     }
                   }}
-                  ariaLabel={`Next voicing for ${displayedChordName}`}
+                  ariaLabel={`Next voicing for ${ displayedChordName }`}
                 />
               </div>
-            </div>
+            </PixelCard>
           );
         })}
       </div>
@@ -317,3 +323,4 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
     </div>
   );
 };
+```
