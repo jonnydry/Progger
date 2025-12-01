@@ -1,4 +1,3 @@
-```typescript
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { VoicingDiagram } from './VoicingDiagram';
 import type { ChordInProgression, ProgressionResult } from '@/types';
@@ -46,7 +45,7 @@ const ArrowButton: React.FC<{
     <button
       onClick={onClick}
       onKeyDown={handleKeyDown}
-      aria-label={ariaLabel || `Navigate to ${ direction === 'left' ? 'previous' : 'next' } voicing`}
+      aria-label={ariaLabel || `Navigate to ${direction === 'left' ? 'previous' : 'next'} voicing`}
       className="p-2 md:p-1.5 rounded-full bg-surface hover:bg-background text-text/80 hover:text-text transition-all duration-200 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,0.2)] hover:translate-x-[1px] hover:translate-y-[1px] border-2 border-border active:translate-x-[2px] active:translate-y-[2px] active:shadow-none focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface"
     >
       <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -71,7 +70,7 @@ const generateAutoName = (key: string, mode: string, progression: ChordInProgres
   const progressionStr = chordNames.join(' - ');
   const suffix = progression.length > 4 ? '...' : '';
 
-  return `${ key } ${ mode } - ${ progressionStr }${ suffix } - ${ dateStr } ${ timeStr } `;
+  return `${key} ${mode} - ${progressionStr}${suffix} - ${dateStr} ${timeStr}`;
 };
 
 export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoading, skeletonCount = 4, musicalKey, currentMode, progressionResult }) => {
@@ -247,17 +246,13 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
           
           return (
             <PixelCard
-                key={`${ chord.chordName } -${ index } `} 
+                key={`${chord.chordName}-${index}`} 
                 noAnimate
                 className={`
-                    flex flex - col items - center transition - all duration - 300 relative
-                    ${ isCompact ? 'w-[160px] p-2' : 'w-[220px] p-4' }
-                    ${
-  isExpanded
-    ? 'scale-105 z-10 border-primary'
-    : 'hover:scale-105'
-}
-`}
+                    flex flex-col items-center transition-all duration-300 relative
+                    ${isCompact ? 'w-[160px] p-2' : 'w-[220px] p-4'}
+                    ${isExpanded ? 'scale-105 z-10 border-primary' : 'hover:scale-105'}
+                `}
             >
               <div
                 onClick={() => handleChordClick(index)}
@@ -265,7 +260,7 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
                 tabIndex={0}
                 role="button"
                 className="cursor-pointer w-full focus:outline-none"
-                aria-label={`View details for ${ displayedChordName }`}
+                aria-label={`View details for ${displayedChordName}`}
                 aria-expanded={isExpanded}
               >
                 <div key={currentVoicingIndex} className="animate-cross-fade-in w-full">
@@ -278,9 +273,9 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
               </div>
               
               <div 
-                className={`flex items - center justify - between w - full ${ isCompact ? 'mt-1' : 'mt-3' } `}
+                className={`flex items-center justify-between w-full ${isCompact ? 'mt-1' : 'mt-3'}`}
                 role="group"
-                aria-label={`Voicing navigation for ${ displayedChordName }`}
+                aria-label={`Voicing navigation for ${displayedChordName}`}
               >
                 <ArrowButton 
                   direction="left" 
@@ -291,7 +286,7 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
                       handleVoicingChange(index, 'prev');
                     }
                   }}
-                  ariaLabel={`Previous voicing for ${ displayedChordName }`}
+                  ariaLabel={`Previous voicing for ${displayedChordName}`}
                 />
                 <span className="text-xs text-text/60 font-medium tabular-nums">
                   {currentVoicingIndex + 1}/{chord.voicings.length}
@@ -305,7 +300,7 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
                       handleVoicingChange(index, 'next');
                     }
                   }}
-                  ariaLabel={`Next voicing for ${ displayedChordName }`}
+                  ariaLabel={`Next voicing for ${displayedChordName}`}
                 />
               </div>
             </PixelCard>
@@ -323,4 +318,3 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
     </div>
   );
 };
-```
