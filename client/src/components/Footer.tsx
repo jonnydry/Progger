@@ -9,10 +9,10 @@ export const Footer: React.FC<FooterProps> = ({ onAboutClick }) => {
   return (
     <footer className="relative w-full mt-16 bg-[#1a3a2a] overflow-hidden">
       <div 
-        className="w-full h-28 md:h-36 bg-center bg-cover"
+        className="w-full h-40 md:h-52 bg-center bg-cover"
         style={{ 
           backgroundImage: `url(${footerBg})`,
-          backgroundPosition: 'center 55%',
+          backgroundPosition: 'center 45%',
           imageRendering: 'pixelated'
         }}
         role="img"
