@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { ThemeSelector } from './ThemeSelector';
 import type { ThemeOption } from '@/constants';
-import proggerLogo from '../../../attached_assets/ProggerLogoMono2Lily_1761527600239.png';
+import proggerLogo from '../assets/progger-logo.png';
 
 interface GlassmorphicHeaderProps {
   theme: string;
@@ -17,6 +17,7 @@ interface GlassmorphicHeaderProps {
   onLogin?: () => void;
   onLogout?: () => void;
   onStashClick?: () => void;
+  onAboutClick?: () => void;
 }
 
 export const GlassmorphicHeader: React.FC<GlassmorphicHeaderProps> = ({

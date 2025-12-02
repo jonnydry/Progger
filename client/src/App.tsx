@@ -12,7 +12,7 @@ import { splitChordName, isSupportedChordQuality } from '@shared/music/chordQual
 import { detectKey } from './utils/smartChordSuggestions';
 import type { ProgressionResult } from './types';
 import { KEYS, MODES, COMMON_PROGRESSIONS } from './constants';
-import proggerMascot from '../../attached_assets/ProggerLogoMono2Lily_1761527600239.png';
+import proggerMascot from './assets/progger-logo.png';
 
 const LazyScaleDiagram = lazy(() => import('./components/ScaleDiagram'));
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import proggerMascot from '../../../attached_assets/ProggerLogoMono2Lily_1761527600239.png';
+import proggerMascot from '../assets/progger-logo.png';
 import { PixelCard } from './PixelCard';
 import { PixelButton } from './PixelButton';
 
