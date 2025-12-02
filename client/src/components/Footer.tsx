@@ -11,7 +11,7 @@ export const Footer: React.FC<FooterProps> = ({ onAboutClick }) => {
       <div 
         className="absolute inset-0 z-10 pointer-events-none"
         style={{
-          background: 'linear-gradient(to bottom, var(--background) 0%, transparent 40%)'
+          background: 'linear-gradient(to bottom, hsl(var(--color-background)) 0%, transparent 50%)'
         }}
       />
       <div 
