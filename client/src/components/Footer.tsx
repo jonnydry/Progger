@@ -1,5 +1,5 @@
 import React from 'react';
-import footerBg from '../assets/footer_frog_guitar.png';
+import footerBg from '../assets/footer_bg_wide.png';
 
 interface FooterProps {
   onAboutClick?: () => void;
@@ -7,12 +7,16 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ onAboutClick }) => {
   return (
-    <footer className="relative w-full mt-16 bg-[#1a3a2a]">
-      <img
-        src={footerBg}
-        alt="Pixel art pond landscape with Progger logo"
-        className="w-full h-auto block mx-auto"
-        style={{ imageRendering: 'pixelated', maxWidth: '100%' }}
+    <footer className="relative w-full mt-16 bg-[#1a3a2a] overflow-hidden">
+      <div 
+        className="w-full h-28 md:h-36 bg-center bg-cover"
+        style={{ 
+          backgroundImage: `url(${footerBg})`,
+          backgroundPosition: 'center 55%',
+          imageRendering: 'pixelated'
+        }}
+        role="img"
+        aria-label="Pixel art pond landscape with frog playing guitar"
       />
       <div className="absolute bottom-0 w-full text-center py-2 bg-black/30 backdrop-blur-[2px] text-white/80 text-sm font-medium flex justify-between items-center px-4">
         <span className="flex-grow text-center ml-20">Powered by xAI Grok</span>
