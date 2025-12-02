@@ -13,6 +13,7 @@ import { detectKey } from './utils/smartChordSuggestions';
 import type { ProgressionResult } from './types';
 import { KEYS, MODES, COMMON_PROGRESSIONS } from './constants';
 import proggerMascot from './assets/progger-logo.png';
+import { PixelCard } from './components/PixelCard';
 
 const LazyScaleDiagram = lazy(() => import('./components/ScaleDiagram'));
 
@@ -188,7 +189,7 @@ const App: React.FC = () => {
         </p>
       </header>
 
-      <section className="max-w-3xl mx-auto bg-surface rounded-lg p-4 md:p-6 shadow-sm border-2 border-border" style={{ borderStyle: 'solid' }}>
+      <PixelCard className="max-w-3xl mx-auto" noAnimate>
         <Controls
           selectedKey={key}
           onKeyChange={setKey}
@@ -212,7 +213,7 @@ const App: React.FC = () => {
           detectedKey={customKey}
           detectedMode={customMode}
         />
-      </section>
+      </PixelCard>
 
       <section ref={resultsRef} className="mt-16">
         {error && (
