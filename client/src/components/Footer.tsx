@@ -1,5 +1,5 @@
 import React from 'react';
-import footerBg from '../assets/footer_bg_wide.png';
+import footerBg from '../assets/footer_bg_new_wide.png';
 
 interface FooterProps {
   onAboutClick?: () => void;
