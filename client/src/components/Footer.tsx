@@ -7,7 +7,13 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({ onAboutClick }) => {
   return (
-    <footer className="relative w-full mt-16 bg-[#1a3a2a] overflow-hidden">
+    <footer className="relative w-full mt-16 overflow-hidden">
+      <div 
+        className="absolute inset-0 z-10 pointer-events-none"
+        style={{
+          background: 'linear-gradient(to bottom, var(--background) 0%, transparent 40%)'
+        }}
+      />
       <div 
         className="w-full h-40 md:h-52 bg-center bg-cover"
         style={{ 
