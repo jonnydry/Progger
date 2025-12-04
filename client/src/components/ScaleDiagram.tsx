@@ -1,7 +1,7 @@
 import React, { useState, useMemo, lazy, Suspense } from 'react';
 import type { ScaleInfo } from '../types';
 import { noteToValue as noteToValueBase, valueToNote, displayNote, STANDARD_TUNING_NAMES } from '../utils/musicTheory';
-import { getScaleIntervals, getScaleFingering, SCALE_LIBRARY, normalizeScaleName } from '../utils/scaleLibrary';
+import { getScaleIntervals, getScaleFingering, SCALE_LIBRARY, normalizeScaleName, getSortedPositions } from '../utils/scaleLibrary';
 
 const LazyScaleDiagramModal = lazy(() => import('./ScaleDiagramModal'));
 import NoteDot from './NoteDot';
@@ -188,7 +188,11 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) =>
     // Use proper scale name normalization to match SCALE_LIBRARY keys
     const scaleKey = normalizeScaleName(name);
     const scaleData = SCALE_LIBRARY[scaleKey];
-    return scaleData?.positions || ['Position 1'];
+    if (!scaleData) {
+      return ['Position 1'];
+    }
+    // Use getSortedPositions to ensure positions match the sorted fingerings order
+    return getSortedPositions(scaleData);
   }, [name]);
 
   // Calculate the best starting position for mobile devices

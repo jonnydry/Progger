@@ -176,6 +176,49 @@ function normalizeRootToken(token: string): string {
 }
 
 /**
+ * Normalizes mode names to canonical forms
+ * Ionian and Major are interchangeable (normalize to Major)
+ * Aeolian and Minor are interchangeable (normalize to Minor)
+ */
+function normalizeModeName(mode: string): string {
+  const normalized = mode.trim();
+  
+  // Normalize interchangeable terms to canonical forms
+  if (normalized === 'Ionian') {
+    return 'Major';
+  }
+  if (normalized === 'Aeolian') {
+    return 'Minor';
+  }
+  
+  return normalized;
+}
+
+/**
+ * Normalizes scale names to use canonical descriptors
+ * Converts "C Ionian" → "C Major" and "C Aeolian" → "C Minor"
+ */
+function normalizeScaleName(scaleName: string): string {
+  const trimmed = scaleName.trim();
+  const match = trimmed.match(/^([A-G][#b]?)(?:\s+)(.+)$/i);
+  
+  if (!match) {
+    return trimmed; // Return as-is if format doesn't match
+  }
+  
+  const [, rootNote, descriptor] = match;
+  const normalized = normalizeScaleDescriptor(descriptor);
+  
+  if (normalized) {
+    // Use canonical form (Major/Minor instead of Ionian/Aeolian)
+    return `${rootNote} ${normalized.canonical}`;
+  }
+  
+  // If normalization fails, return original
+  return trimmed;
+}
+
+/**
  * Enhanced validation for API responses
  * Validates structure, format, and data quality
  */
@@ -251,7 +294,8 @@ export function validateAPIResponse(result: unknown, expectedChordCount?: number
     }
   }
 
-  // Validate each scale
+  // Validate and normalize each scale
+  const normalizedScales: SimpleScale[] = [];
   for (let i = 0; i < scales.length; i++) {
     const scale = scales[i];
 
@@ -278,6 +322,13 @@ export function validateAPIResponse(result: unknown, expectedChordCount?: number
       }
       throw error;
     }
+    
+    // Normalize scale name to use canonical forms (Major/Minor instead of Ionian/Aeolian)
+    const normalizedName = normalizeScaleName(scale.name);
+    normalizedScales.push({
+      name: normalizedName,
+      rootNote: scale.rootNote.trim()
+    });
   }
 
   // Validate detectedKey and detectedMode (optional fields)
@@ -314,14 +365,19 @@ export function validateAPIResponse(result: unknown, expectedChordCount?: number
     detectedMode = apiResult.detectedMode.trim();
 
     // Validate mode is one of the standard modes
-    const validModes = ['Major', 'Minor', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian', 'Aeolian', 'Locrian'];
+    // Note: Ionian and Major are interchangeable (Ionian is accepted but normalized to Major)
+    // Aeolian is NOT accepted as a separate mode (it's the same as Minor)
+    const validModes = ['Major', 'Minor', 'Ionian', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian', 'Locrian'];
     if (!validModes.includes(detectedMode)) {
       throw new APIValidationError(
         `Invalid detectedMode: "${detectedMode}". Must be one of: ${validModes.join(', ')}`
       );
     }
+    
+    // Normalize interchangeable terms to canonical forms
+    detectedMode = normalizeModeName(detectedMode);
   }
 
-  return { progression, scales, detectedKey, detectedMode };
+  return { progression, scales: normalizedScales, detectedKey, detectedMode };
 }
 

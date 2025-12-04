@@ -256,19 +256,22 @@ export function getScalesContainingChord(chordName: string, key?: string): strin
 
   // Prioritize scales relevant to the key context
   if (key) {
+    // Normalize quality to canonical form (ionian -> major, aeolian -> minor)
+    const normalizedQuality = quality === 'ionian' ? 'major' : 
+                              quality === 'aeolian' ? 'minor' : 
+                              quality;
+    
     const keyModes: Record<string, string[]> = {
       'major': ['major', 'lydian', 'mixolydian'],
-      'minor': ['minor', 'dorian', 'phrygian', 'aeolian'],
-      'ionian': ['major'],
+      'minor': ['minor', 'dorian', 'phrygian'],
       'dorian': ['dorian'],
       'phrygian': ['phrygian'],
       'lydian': ['lydian'],
       'mixolydian': ['mixolydian'],
-      'aeolian': ['minor'],
       'locrian': ['locrian'],
     };
 
-    const relevantModes = keyModes[quality] || keyModes['major'];
+    const relevantModes = keyModes[normalizedQuality] || keyModes['major'];
 
     // Sort scales with key-relevant ones first
     matchingScales.sort((a, b) => {

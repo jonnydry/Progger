@@ -12,6 +12,7 @@ import { db } from "./db";
 import { redisCache } from "./cache";
 import { createAIGenerationLimiter, getRateLimitStatus } from "./rateLimit";
 import { requestIdMiddleware } from "./middleware/requestId";
+import { validateRequestSize } from "./index";
 
 // CSRF protection for session-based endpoints
 const { csrfSynchronisedProtection, generateToken } = csrfSync({
@@ -90,6 +91,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = req.user as AuthenticatedUser;
       const userId = user.claims.sub;
       const dbUser = await storage.getUser(userId);
+      // User data - short cache, must revalidate
+      res.set('Cache-Control', 'private, max-age=60, must-revalidate');
       res.json(dbUser);
     } catch (error) {
       logger.error("Error fetching user", error, { requestId: req.id, userId: (req.user as AuthenticatedUser)?.claims?.sub });
@@ -118,6 +121,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         chordCount: result.progression.length,
       });
 
+      // Set cache headers - results are cached for 24 hours
+      res.set('Cache-Control', 'public, max-age=86400');
       res.json(result);
     } catch (error) {
       logger.error("Error in /api/generate-progression", error, {
@@ -143,6 +148,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         scaleCount: result.scales.length,
       });
 
+      // Set cache headers - results are cached for 24 hours
+      res.set('Cache-Control', 'public, max-age=86400');
       res.json(result);
     } catch (error) {
       logger.error("Error in /api/analyze-custom-progression", error, {
@@ -183,6 +190,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const items = await storage.getUserStashItems(userId, limit, offset);
       logger.debug("Fetched stash items", { requestId: req.id, userId, itemCount: items.length, limit, offset });
+      // User-specific data - short cache, must revalidate
+      res.set('Cache-Control', 'private, max-age=60, must-revalidate');
       res.json(items);
     } catch (error) {
       logger.error("Error fetching stash items", error, {
@@ -194,6 +203,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post('/api/stash', csrfSynchronisedProtection, isAuthenticated, validateStashRequestMiddleware, async (req, res) => {
+    // Note: Request size is already limited by express.json({ limit: '10mb' }) middleware
+    // Stash items typically contain progression data which is well under this limit
     try {
       const user = req.user as AuthenticatedUser;
       const userId = user.claims.sub;
@@ -209,6 +220,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       logger.info("Stash item created", { requestId: req.id, userId, itemId: newItem.id, name });
+      // Newly created data - no cache
+      res.set('Cache-Control', 'no-cache');
       res.status(201).json(newItem);
     } catch (error) {
       logger.error("Error creating stash item", error, {

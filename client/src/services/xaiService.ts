@@ -535,8 +535,11 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
     // Cache the result with 24-hour TTL
     setCache(cacheKey, finalResult);
 
-    // Periodically clean up expired cache entries (1% chance on each request)
-    if (Math.random() < 0.01) {
+    // Clean up expired cache entries every 10 requests
+    const requestCount = parseInt(localStorage.getItem('progression_request_count') || '0', 10) + 1;
+    localStorage.setItem('progression_request_count', requestCount.toString());
+    
+    if (requestCount % 10 === 0) {
       clearExpiredCache();
     }
 

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import type { ScaleInfo } from '../types';
 import { noteToValue as noteToValueBase, valueToNote, displayNote, STANDARD_TUNING_NAMES } from '../utils/musicTheory';
-import { getScaleIntervals, getScaleFingering, SCALE_LIBRARY, normalizeScaleName } from '../utils/scaleLibrary';
+import { getScaleIntervals, getScaleFingering, SCALE_LIBRARY, normalizeScaleName, getSortedPositions } from '../utils/scaleLibrary';
 import NoteDot from './NoteDot';
 import { PixelCard } from './PixelCard';
 
@@ -157,13 +157,17 @@ const ScaleDiagramModal: React.FC<ScaleDiagramModalProps> = ({ scaleInfo, musica
     return currentFingering.map(frets => new Set(frets ?? []));
   }, [currentFingering]);
 
-  // Get available positions
+  // Get available positions (sorted to match fingerings order)
   const availablePositions = useMemo(() => {
     // Use centralized normalization to avoid mismatching composite scales
     // (e.g., "Harmonic Minor" should not match "Minor")
     const scaleKey = normalizeScaleName(name);
     const scaleData = SCALE_LIBRARY[scaleKey];
-    return scaleData?.positions || ['Position 1'];
+    if (!scaleData) {
+      return ['Position 1'];
+    }
+    // Use getSortedPositions to ensure positions match the sorted fingerings order
+    return getSortedPositions(scaleData);
   }, [name]);
 
   // Display scale name

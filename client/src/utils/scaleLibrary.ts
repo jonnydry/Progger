@@ -43,6 +43,8 @@ export interface ScalePattern {
 type ScaleLibrary = Record<string, ScalePattern>;
 
 export const SCALE_LIBRARY: ScaleLibrary = {
+  // Major scale (also known as Ionian mode)
+  // Stored patterns are for C major - transposed to other keys automatically
   'major': {
     intervals: [0, 2, 4, 5, 7, 9, 11],
     fingerings: [
@@ -56,23 +58,6 @@ export const SCALE_LIBRARY: ScaleLibrary = {
       [[5, 7, 9], [5, 7, 9], [6, 7, 9], [6, 7, 9], [7, 9, 10], [5, 7, 9]],
       // Position 5: Final position for complete neck coverage
       [[14, 16, 18], [14, 16, 18], [15, 16, 18], [15, 16, 18], [16, 18, 19], [14, 16, 18]],
-    ],
-    positions: ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'],
-  },
-  
-  'ionian': {
-    intervals: [0, 2, 4, 5, 7, 9, 11],
-    fingerings: [
-      // Position 1: C shape (8th fret on low E)
-      [[8, 10, 12], [8, 10, 12], [9, 10, 12], [9, 10, 12], [10, 12, 13], [8, 10, 12]],
-      // Position 2: A shape (5th fret on low E)
-      [[5, 7, 9], [5, 7, 9], [6, 7, 9], [6, 7, 9], [7, 9, 10], [5, 7, 9]],
-      // Position 3: G shape (3rd fret on low E)
-      [[3, 5, 7], [3, 5, 7], [4, 5, 7], [4, 5, 7], [5, 7, 8], [3, 5, 7]],
-      // Position 4: E shape (12th fret on low E)
-      [[12, 14, 16], [12, 14, 16], [13, 14, 16], [13, 14, 16], [14, 16, 17], [12, 14, 16]],
-      // Position 5: D shape (10th fret on low E)
-      [[10, 12, 14], [10, 12, 14], [11, 12, 14], [11, 12, 14], [12, 14, 15], [10, 12, 14]],
     ],
     positions: ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'],
   },
@@ -145,23 +130,8 @@ export const SCALE_LIBRARY: ScaleLibrary = {
     positions: ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'],
   },
   
-  'aeolian': {
-    intervals: [0, 2, 3, 5, 7, 8, 10],
-    fingerings: [
-      // Position 1: A shape (5th fret on low E) - A B C D E F G
-      [[5, 7, 8], [5, 7, 8], [5, 7, 9], [5, 7, 9], [5, 8, 10], [5, 7, 8]],
-      // Position 2: G shape (3rd fret on low E) - G A Bb C D Eb F
-      [[3, 5, 7], [3, 5, 6], [3, 5, 7], [3, 5, 7], [3, 6, 8], [3, 5, 7]],
-      // Position 3: E shape (12th fret on low E) - E F# G A B C D
-      [[12, 14, 15], [12, 14, 15], [12, 14, 16], [12, 14, 16], [12, 15, 17], [12, 14, 15]],
-      // Position 4: D shape (10th fret on low E) - D E F G A Bb C
-      [[10, 12, 13], [10, 12, 13], [10, 12, 14], [10, 12, 14], [10, 13, 15], [10, 12, 13]],
-      // Position 5: C shape (8th fret on low E) - C D Eb F G Ab Bb
-      [[8, 10, 11], [8, 10, 11], [8, 10, 12], [8, 10, 12], [8, 11, 13], [8, 10, 11]],
-    ],
-    positions: ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'],
-  },
-
+  // Minor scale (Natural Minor / Aeolian mode)
+  // Stored patterns are for A minor - transposed to other keys automatically
   'minor': {
     intervals: [0, 2, 3, 5, 7, 8, 10],
     fingerings: [
@@ -366,15 +336,14 @@ function extractRootFromScaleName(scaleName: string): string {
 function getStoredPatternRoot(scaleKey: string): string {
   // Mapping of scale types to the root note their stored patterns represent
   // Based on the comments in SCALE_LIBRARY
+  // Note: 'ionian' normalizes to 'major', 'aeolian' normalizes to 'minor'
   const STORED_PATTERN_ROOTS: Record<string, string> = {
-    'major': 'C',           // Ionian patterns are for C major
-    'ionian': 'C',         // Same as major
+    'major': 'C',           // Major/Ionian patterns are for C major
     'dorian': 'D',         // Dorian patterns are for D Dorian
     'phrygian': 'E',       // Phrygian patterns are for E Phrygian
     'lydian': 'F',         // Lydian patterns are for F Lydian
     'mixolydian': 'G',     // Mixolydian patterns are for G Mixolydian
-    'aeolian': 'A',        // Aeolian patterns are for A minor (natural minor)
-    'minor': 'A',          // Minor patterns are for A minor
+    'minor': 'A',          // Minor/Aeolian patterns are for A minor
     'locrian': 'B',        // Locrian patterns are for B Locrian
     'harmonic minor': 'A', // Harmonic minor patterns are for A harmonic minor
     'melodic minor': 'A',  // Melodic minor patterns are for A melodic minor
@@ -394,6 +363,36 @@ function getStoredPatternRoot(scaleKey: string): string {
   };
 
   return STORED_PATTERN_ROOTS[scaleKey] || 'C';
+}
+
+/**
+ * Get positions array sorted to match the fingerings order (by minimum fret)
+ * This ensures position labels correctly reflect the displayed patterns
+ * 
+ * @param scaleData - Scale pattern data from SCALE_LIBRARY
+ * @returns Sorted positions array matching the fingerings order
+ */
+export function getSortedPositions(scaleData: ScalePattern): string[] {
+  if (!scaleData.positions || scaleData.positions.length === 0) {
+    return ['Position 1'];
+  }
+  
+  if (!scaleData.fingerings || scaleData.fingerings.length === 0) {
+    return scaleData.positions;
+  }
+  
+  // Find the minimum fret for each stored pattern to determine ordering
+  const patternsWithMinFrets = scaleData.fingerings.map((pattern, index) => {
+    const allFrets = pattern.flat().filter(f => f >= 0);
+    const minFret = allFrets.length > 0 ? Math.min(...allFrets) : 999;
+    return { positionLabel: scaleData.positions![index] || `Position ${index + 1}`, minFret, originalIndex: index };
+  });
+  
+  // Sort by minimum fret (lowest first) to match the sorting in getScaleFingering
+  patternsWithMinFrets.sort((a, b) => a.minFret - b.minFret);
+  
+  // Return sorted position labels
+  return patternsWithMinFrets.map(item => item.positionLabel);
 }
 
 /**
@@ -481,13 +480,13 @@ function generateFingeringAlgorithmically(scaleName: string, rootNote: string, p
   const rootValue = noteToValue(rootNote);
 
   // Position configurations - relative start positions for different scale patterns
+  // Note: 'ionian' normalizes to 'major', 'aeolian' normalizes to 'minor'
   const POSITION_OFFSETS = {
     major: [8, 4, 0, 5, 9],
     dorian: [10, 7, 3, 0, 4],
     phrygian: [12, 8, 4, 1, 5],
     lydian: [7, 11, 2, 6, 9],
     mixolydian: [3, 10, 6, 0, 7],
-    aeolian: [5, 9, 2, 6, 10],
     locrian: [7, 11, 3, 8, 0],
     minor: [5, 9, 2, 6, 10],
     'harmonic minor': [0, 7, 2],

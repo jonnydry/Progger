@@ -9,6 +9,11 @@ import {
 import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
 import { logger } from "./utils/logger";
+import { redisCache } from "./cache";
+
+// In-memory cache for frequently accessed user data (short TTL)
+const userCache = new Map<string, { user: User; expires: number }>();
+const USER_CACHE_TTL = 60 * 1000; // 60 seconds
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -21,7 +26,32 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
     try {
+      // Check in-memory cache first
+      const cached = userCache.get(id);
+      if (cached && cached.expires > Date.now()) {
+        logger.debug("User cache hit", { userId: id });
+        return cached.user;
+      }
+
+      // Check Redis cache
+      const cacheKey = `user:${id}`;
+      const cachedUser = await redisCache.get<User>(cacheKey);
+      if (cachedUser) {
+        logger.debug("User Redis cache hit", { userId: id });
+        // Update in-memory cache
+        userCache.set(id, { user: cachedUser, expires: Date.now() + USER_CACHE_TTL });
+        return cachedUser;
+      }
+
+      // Fetch from database
       const [user] = await db.select().from(users).where(eq(users.id, id));
+      
+      if (user) {
+        // Cache in both Redis (longer TTL) and memory (shorter TTL)
+        await redisCache.set(cacheKey, user, 300); // 5 minutes in Redis
+        userCache.set(id, { user, expires: Date.now() + USER_CACHE_TTL });
+      }
+      
       return user;
     } catch (error) {
       logger.error("Error fetching user from database", error, { userId: id });
@@ -42,6 +72,12 @@ export class DatabaseStorage implements IStorage {
           },
         })
         .returning();
+      
+      // Invalidate caches after update
+      const cacheKey = `user:${user.id}`;
+      userCache.delete(user.id);
+      await redisCache.delete(cacheKey);
+      
       return user;
     } catch (error) {
       logger.error("Error upserting user in database", error, { userId: userData.id });

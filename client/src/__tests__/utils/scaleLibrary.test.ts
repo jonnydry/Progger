@@ -112,6 +112,20 @@ describe('scaleLibrary', () => {
       expect(normalizeScaleName('Lydian')).toBe('lydian');
     });
 
+    it('should normalize Ionian to Major', () => {
+      expect(normalizeScaleName('Ionian')).toBe('major');
+      expect(normalizeScaleName('C Ionian')).toBe('major');
+      expect(normalizeScaleName('G Ionian')).toBe('major');
+      expect(normalizeScaleName('ionian')).toBe('major');
+    });
+
+    it('should normalize Aeolian to Minor', () => {
+      expect(normalizeScaleName('Aeolian')).toBe('minor');
+      expect(normalizeScaleName('A Aeolian')).toBe('minor');
+      expect(normalizeScaleName('D Aeolian')).toBe('minor');
+      expect(normalizeScaleName('aeolian')).toBe('minor');
+    });
+
     it('should normalize advanced mode descriptors', () => {
       expect(normalizeScaleName('G Lydian Dominant')).toBe('lydian dominant');
       expect(normalizeScaleName('C Super Locrian')).toBe('super locrian');

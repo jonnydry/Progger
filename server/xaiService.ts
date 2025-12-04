@@ -237,6 +237,8 @@ CRITICAL REQUIREMENTS:
    - Identify major vs minor characteristics
    - Detect modal progressions if applicable
    - Provide confidence level (high/medium/low) if ambiguous
+   - NOTE: Ionian and Major are interchangeable (use 'Major' as canonical form)
+   - NOTE: Aeolian and Minor are interchangeable (use 'Minor' as canonical form)
 
 2. For each chord in the progression:
    - chordName: Use EXACT chord notation (e.g., 'Cmaj7', 'Am7', 'G7b9', 'D7alt', 'F#maj9')
@@ -261,7 +263,7 @@ CRITICAL REQUIREMENTS:
 Return ONLY valid JSON matching this schema:
 {
   "detectedKey": "string (REQUIRED: The detected key center - e.g., 'C', 'G', 'Am', 'F#'. Include 'm' suffix for minor keys)",
-  "detectedMode": "string (REQUIRED: The detected mode - must be exactly one of: 'Major', 'Minor', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian', 'Aeolian', 'Locrian')",
+  "detectedMode": "string (REQUIRED: The detected mode - must be exactly one of: 'Major', 'Minor', 'Ionian', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian', 'Locrian'. Note: Ionian and Major are interchangeable, use 'Major' as canonical form. Aeolian and Minor are interchangeable, use 'Minor' as canonical form.)",
   "progression": [
     {
       "chordName": "string (IMPORTANT: Use exact chord notation - e.g., 'Cmaj7', 'Am7', 'G7b9', 'D7alt', 'F#maj9')",

@@ -1,7 +1,7 @@
 import rateLimit from 'express-rate-limit';
 import RedisStore from 'rate-limit-redis';
-import { createClient } from 'redis';
 import { logger } from './utils/logger';
+import { getSharedRedisClient, isRedisAvailable, getRedisClient } from './redisClient';
 
 /**
  * Create Redis-backed rate limiter with graceful fallback to in-memory
@@ -10,57 +10,13 @@ import { logger } from './utils/logger';
  * - Works across multiple server instances (horizontal scaling)
  * - Persistent rate limits (survives server restarts)
  * - Falls back to in-memory if Redis unavailable
+ * - Reuses shared Redis client for better resource efficiency
  */
 
-let redisClient: ReturnType<typeof createClient> | null = null;
-let isRedisAvailable = false;
-
-// Timeout helper for network calls
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(`Operation timed out after ${timeoutMs}ms`)), timeoutMs)
-    ),
-  ]);
-}
-
-// Initialize Redis client for rate limiting
+// Initialize Redis client for rate limiting (uses shared client)
 async function initializeRedisClient() {
-  if (redisClient) return redisClient;
-
-  try {
-    redisClient = createClient({
-      url: process.env.REDIS_URL || 'redis://localhost:6379',
-      socket: {
-        connectTimeout: 5000, // 5 second connection timeout
-      },
-    });
-
-    redisClient.on('error', (err) => {
-      logger.warn('Redis rate limit client error', { error: err.message });
-      isRedisAvailable = false;
-    });
-
-    redisClient.on('connect', () => {
-      logger.info('Redis rate limit client connected');
-    });
-
-    // Add timeout wrapper to prevent hanging indefinitely
-    await withTimeout(redisClient.connect(), 5000);
-
-    // Set flag synchronously after connection completes
-    // Don't rely on 'connect' event which may fire asynchronously
-    isRedisAvailable = true;
-    logger.info('Redis rate limit client initialized successfully');
-
-    return redisClient;
-  } catch (error) {
-    logger.warn('Failed to connect Redis for rate limiting, falling back to in-memory', { error });
-    redisClient = null;
-    isRedisAvailable = false;
-    return null;
-  }
+  const redisClient = await getSharedRedisClient();
+  return redisClient;
 }
 
 /**
@@ -71,7 +27,7 @@ async function initializeRedisClient() {
  */
 export async function createAIGenerationLimiter() {
   // Try to initialize Redis connection (waits for connection to complete)
-  await initializeRedisClient();
+  const redisClient = await initializeRedisClient();
 
   const config = {
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -92,8 +48,8 @@ export async function createAIGenerationLimiter() {
     },
   };
 
-  // Use Redis store if available (flag is now set after await above)
-  if (isRedisAvailable && redisClient) {
+  // Use Redis store if available (uses shared Redis client)
+  if (isRedisAvailable() && redisClient) {
     logger.info('Using Redis-backed rate limiting for AI generation endpoints');
     return rateLimit({
       ...config,
@@ -114,8 +70,9 @@ export async function createAIGenerationLimiter() {
  * Get rate limiting status for monitoring
  */
 export function getRateLimitStatus() {
+  const available = isRedisAvailable();
   return {
-    redisAvailable: isRedisAvailable,
-    storeType: isRedisAvailable ? 'redis' : 'memory',
+    redisAvailable: available,
+    storeType: available ? 'redis' : 'memory',
   };
 }

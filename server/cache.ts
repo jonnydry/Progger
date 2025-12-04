@@ -1,53 +1,35 @@
-import { createClient, RedisClientType } from 'redis';
+import { RedisClientType } from 'redis';
 import { getProgressionCacheKey as getSharedCacheKey } from '../shared/cacheUtils';
 import { logger } from './utils/logger';
-
-// Timeout helper for network calls
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
-  return Promise.race([
-    promise,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(`Operation timed out after ${timeoutMs}ms`)), timeoutMs)
-    ),
-  ]);
-}
+import { getSharedRedisClient, isRedisAvailable } from './redisClient';
 
 class RedisCache {
-  private client: RedisClientType;
+  private client: RedisClientType | null = null;
   private isConnected = false;
 
   constructor() {
-    this.client = createClient({
-      url: process.env.REDIS_URL || 'redis://localhost:6379',
-      socket: {
-        connectTimeout: 5000, // 5 second connection timeout
-      },
-    });
-
-    this.client.on('connect', () => {
-      this.isConnected = true;
-      logger.info('Redis cache connected');
-    });
-
-    this.client.on('error', (err) => {
-      logger.warn('Redis cache connection error', { error: err.message });
-      this.isConnected = false;
-    });
-
-    // Connect asynchronously - don't block startup
+    // Initialize connection asynchronously using shared Redis client
     this.connect();
   }
 
   private async connect() {
     try {
-      await withTimeout(this.client.connect(), 5000);
+      this.client = await getSharedRedisClient();
+      this.isConnected = isRedisAvailable();
+      if (this.isConnected) {
+        logger.info('Redis cache using shared client');
+      } else {
+        logger.warn('Redis cache: shared client not available, falling back to in-memory caching');
+      }
     } catch (error) {
       logger.warn('Failed to connect to Redis cache, falling back to in-memory caching', { error });
+      this.isConnected = false;
+      this.client = null;
     }
   }
 
   async get<T>(key: string): Promise<T | null> {
-    if (!this.isConnected) return null;
+    if (!this.isConnected || !this.client) return null;
 
     try {
       const value = await this.client.get(key);
@@ -61,7 +43,7 @@ class RedisCache {
   }
 
   async set<T>(key: string, value: T, ttlSeconds?: number): Promise<void> {
-    if (!this.isConnected) return;
+    if (!this.isConnected || !this.client) return;
 
     try {
       const serialized = JSON.stringify(value);
@@ -76,7 +58,7 @@ class RedisCache {
   }
 
   async exists(key: string): Promise<boolean> {
-    if (!this.isConnected) return false;
+    if (!this.isConnected || !this.client) return false;
 
     try {
       const result = await this.client.exists(key);
@@ -88,7 +70,7 @@ class RedisCache {
   }
 
   async delete(key: string): Promise<void> {
-    if (!this.isConnected) return;
+    if (!this.isConnected || !this.client) return;
 
     try {
       await this.client.del(key);
@@ -110,7 +92,7 @@ class RedisCache {
 
   // Check if similar requests exist (for deduplication)
   async findSimilarRequests(cacheKey: string): Promise<string | null> {
-    if (!this.isConnected) return null;
+    if (!this.isConnected || !this.client) return null;
 
     try {
       // Look for patterns like the cache key but allowing some variation

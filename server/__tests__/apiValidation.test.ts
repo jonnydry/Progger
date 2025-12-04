@@ -60,4 +60,78 @@ describe('validateAPIResponse', () => {
 
     expect(() => validateAPIResponse(payload)).toThrow(APIValidationError);
   });
+
+  it('normalizes Ionian scale names to Major', () => {
+    const payload = {
+      progression: [
+        {
+          chordName: 'Cmaj7',
+          musicalFunction: 'Tonic',
+          relationToKey: 'Imaj7'
+        }
+      ],
+      scales: [
+        { name: 'C Ionian', rootNote: 'C' },
+        { name: 'G Ionian', rootNote: 'G' }
+      ]
+    };
+
+    const result = validateAPIResponse(payload);
+    expect(result.scales[0].name).toBe('C Major');
+    expect(result.scales[1].name).toBe('G Major');
+  });
+
+  it('normalizes Aeolian scale names to Minor', () => {
+    const payload = {
+      progression: [
+        {
+          chordName: 'Am7',
+          musicalFunction: 'Tonic',
+          relationToKey: 'im7'
+        }
+      ],
+      scales: [
+        { name: 'A Aeolian', rootNote: 'A' },
+        { name: 'D Aeolian', rootNote: 'D' }
+      ]
+    };
+
+    const result = validateAPIResponse(payload);
+    expect(result.scales[0].name).toBe('A Minor');
+    expect(result.scales[1].name).toBe('D Minor');
+  });
+
+  it('normalizes detectedMode Ionian to Major', () => {
+    const payload = {
+      progression: [
+        {
+          chordName: 'Cmaj7',
+          musicalFunction: 'Tonic',
+          relationToKey: 'Imaj7'
+        }
+      ],
+      scales: [{ name: 'C Major', rootNote: 'C' }],
+      detectedMode: 'Ionian'
+    };
+
+    const result = validateAPIResponse(payload);
+    expect(result.detectedMode).toBe('Major');
+  });
+
+  it('normalizes detectedMode Aeolian to Minor', () => {
+    const payload = {
+      progression: [
+        {
+          chordName: 'Am7',
+          musicalFunction: 'Tonic',
+          relationToKey: 'im7'
+        }
+      ],
+      scales: [{ name: 'A Minor', rootNote: 'A' }],
+      detectedMode: 'Aeolian'
+    };
+
+    const result = validateAPIResponse(payload);
+    expect(result.detectedMode).toBe('Minor');
+  });
 });
