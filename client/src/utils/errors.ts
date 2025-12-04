@@ -235,35 +235,38 @@ function formatKeyToken(raw: string): string {
 }
 
 async function buildLocalFallbackProgression(key: string, numChords: number, mode: string = 'major') {
+  // Extended fallback progressions with up to 7 chords each
+  // Pattern: I - vi - IV - V - ii - iii - I (for major)
+  // Pattern: i - iv - VII - III - VI - v - i (for minor)
   const majorProgressions: Record<string, string[]> = {
-    'C': ['Cmaj7', 'Dm7', 'G7', 'Cmaj7'],
-    'Db': ['Dbmaj7', 'Ebm7', 'Ab7', 'Dbmaj7'],
-    'D': ['Dmaj7', 'Em7', 'A7', 'Dmaj7'],
-    'Eb': ['Ebmaj7', 'Fm7', 'Bb7', 'Ebmaj7'],
-    'E': ['Emaj7', 'F#m7', 'B7', 'Emaj7'],
-    'F': ['Fmaj7', 'Gm7', 'C7', 'Fmaj7'],
-    'Gb': ['Gbmaj7', 'Abm7', 'Db7', 'Gbmaj7'],
-    'G': ['Gmaj7', 'Am7', 'D7', 'Gmaj7'],
-    'Ab': ['Abmaj7', 'Bbm7', 'Eb7', 'Abmaj7'],
-    'A': ['Amaj7', 'Bm7', 'E7', 'Amaj7'],
-    'Bb': ['Bbmaj7', 'Cm7', 'F7', 'Bbmaj7'],
-    'B': ['Bmaj7', 'C#m7', 'F#7', 'Bmaj7']
+    'C': ['Cmaj7', 'Am7', 'Fmaj7', 'G7', 'Dm7', 'Em7', 'Cmaj7'],
+    'Db': ['Dbmaj7', 'Bbm7', 'Gbmaj7', 'Ab7', 'Ebm7', 'Fm7', 'Dbmaj7'],
+    'D': ['Dmaj7', 'Bm7', 'Gmaj7', 'A7', 'Em7', 'F#m7', 'Dmaj7'],
+    'Eb': ['Ebmaj7', 'Cm7', 'Abmaj7', 'Bb7', 'Fm7', 'Gm7', 'Ebmaj7'],
+    'E': ['Emaj7', 'C#m7', 'Amaj7', 'B7', 'F#m7', 'G#m7', 'Emaj7'],
+    'F': ['Fmaj7', 'Dm7', 'Bbmaj7', 'C7', 'Gm7', 'Am7', 'Fmaj7'],
+    'Gb': ['Gbmaj7', 'Ebm7', 'Cbmaj7', 'Db7', 'Abm7', 'Bbm7', 'Gbmaj7'],
+    'G': ['Gmaj7', 'Em7', 'Cmaj7', 'D7', 'Am7', 'Bm7', 'Gmaj7'],
+    'Ab': ['Abmaj7', 'Fm7', 'Dbmaj7', 'Eb7', 'Bbm7', 'Cm7', 'Abmaj7'],
+    'A': ['Amaj7', 'F#m7', 'Dmaj7', 'E7', 'Bm7', 'C#m7', 'Amaj7'],
+    'Bb': ['Bbmaj7', 'Gm7', 'Ebmaj7', 'F7', 'Cm7', 'Dm7', 'Bbmaj7'],
+    'B': ['Bmaj7', 'G#m7', 'Emaj7', 'F#7', 'C#m7', 'D#m7', 'Bmaj7']
   };
 
   const minorProgressions: Record<string, string[]> = {
-    'C': ['Cm7', 'Fm7', 'G7', 'Cm7'],
-    'C#': ['C#m7', 'F#m7', 'G#7', 'C#m7'],
-    'Db': ['Dbm7', 'Gbm7', 'Ab7', 'Dbm7'],
-    'D': ['Dm7', 'Gm7', 'A7', 'Dm7'],
-    'Eb': ['Ebm7', 'Abm7', 'Bb7', 'Ebm7'],
-    'E': ['Em7', 'Am7', 'B7', 'Em7'],
-    'F': ['Fm7', 'Bbm7', 'C7', 'Fm7'],
-    'F#': ['F#m7', 'Bm7', 'C#7', 'F#m7'],
-    'G': ['Gm7', 'Cm7', 'D7', 'Gm7'],
-    'Ab': ['Abm7', 'Dbm7', 'Eb7', 'Abm7'],
-    'A': ['Am7', 'Dm7', 'E7', 'Am7'],
-    'Bb': ['Bbm7', 'Ebm7', 'F7', 'Bbm7'],
-    'B': ['Bm7', 'Em7', 'F#7', 'Bm7']
+    'C': ['Cm7', 'Fm7', 'Bbmaj7', 'Ebmaj7', 'Abmaj7', 'Gm7', 'Cm7'],
+    'C#': ['C#m7', 'F#m7', 'Bmaj7', 'Emaj7', 'Amaj7', 'G#m7', 'C#m7'],
+    'Db': ['Dbm7', 'Gbm7', 'Cbmaj7', 'Fbmaj7', 'Bbbmaj7', 'Abm7', 'Dbm7'],
+    'D': ['Dm7', 'Gm7', 'Cmaj7', 'Fmaj7', 'Bbmaj7', 'Am7', 'Dm7'],
+    'Eb': ['Ebm7', 'Abm7', 'Dbmaj7', 'Gbmaj7', 'Cbmaj7', 'Bbm7', 'Ebm7'],
+    'E': ['Em7', 'Am7', 'Dmaj7', 'Gmaj7', 'Cmaj7', 'Bm7', 'Em7'],
+    'F': ['Fm7', 'Bbm7', 'Ebmaj7', 'Abmaj7', 'Dbmaj7', 'Cm7', 'Fm7'],
+    'F#': ['F#m7', 'Bm7', 'Emaj7', 'Amaj7', 'Dmaj7', 'C#m7', 'F#m7'],
+    'G': ['Gm7', 'Cm7', 'Fmaj7', 'Bbmaj7', 'Ebmaj7', 'Dm7', 'Gm7'],
+    'Ab': ['Abm7', 'Dbm7', 'Gbmaj7', 'Cbmaj7', 'Fbmaj7', 'Ebm7', 'Abm7'],
+    'A': ['Am7', 'Dm7', 'Gmaj7', 'Cmaj7', 'Fmaj7', 'Em7', 'Am7'],
+    'Bb': ['Bbm7', 'Ebm7', 'Abmaj7', 'Dbmaj7', 'Gbmaj7', 'Fm7', 'Bbm7'],
+    'B': ['Bm7', 'Em7', 'Amaj7', 'Dmaj7', 'Gmaj7', 'F#m7', 'Bm7']
   };
 
   const source = mode === 'minor' ? minorProgressions : majorProgressions;

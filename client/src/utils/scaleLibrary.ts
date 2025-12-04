@@ -366,8 +366,33 @@ function getStoredPatternRoot(scaleKey: string): string {
 }
 
 /**
+ * Helper to sort fingering patterns by their minimum fret position
+ * Returns indices sorted from lowest to highest fret position
+ */
+function getSortedPatternIndices(fingerings: number[][][]): number[] {
+  if (!fingerings || fingerings.length === 0) {
+    return [];
+  }
+  
+  const patternsWithMinFrets = fingerings.map((pattern, index) => {
+    const allFrets = pattern.flat().filter(f => f >= 0);
+    const minFret = allFrets.length > 0 ? Math.min(...allFrets) : 999;
+    return { minFret, originalIndex: index };
+  });
+  
+  // Sort by minimum fret (lowest first)
+  patternsWithMinFrets.sort((a, b) => a.minFret - b.minFret);
+  
+  return patternsWithMinFrets.map(item => item.originalIndex);
+}
+
+/**
  * Get positions array sorted to match the fingerings order (by minimum fret)
  * This ensures position labels correctly reflect the displayed patterns
+ * 
+ * NOTE: Position labels are sorted based on the STORED patterns, not transposed patterns.
+ * This is intentional - position labels like "Position 1", "Position 2" refer to the 
+ * standard CAGED system positions, which stay consistent regardless of key.
  * 
  * @param scaleData - Scale pattern data from SCALE_LIBRARY
  * @returns Sorted positions array matching the fingerings order
@@ -381,18 +406,11 @@ export function getSortedPositions(scaleData: ScalePattern): string[] {
     return scaleData.positions;
   }
   
-  // Find the minimum fret for each stored pattern to determine ordering
-  const patternsWithMinFrets = scaleData.fingerings.map((pattern, index) => {
-    const allFrets = pattern.flat().filter(f => f >= 0);
-    const minFret = allFrets.length > 0 ? Math.min(...allFrets) : 999;
-    return { positionLabel: scaleData.positions![index] || `Position ${index + 1}`, minFret, originalIndex: index };
-  });
+  // Get sorted indices based on minimum fret
+  const sortedIndices = getSortedPatternIndices(scaleData.fingerings);
   
-  // Sort by minimum fret (lowest first) to match the sorting in getScaleFingering
-  patternsWithMinFrets.sort((a, b) => a.minFret - b.minFret);
-  
-  // Return sorted position labels
-  return patternsWithMinFrets.map(item => item.positionLabel);
+  // Return position labels in sorted order
+  return sortedIndices.map(index => scaleData.positions![index] || `Position ${index + 1}`);
 }
 
 /**
@@ -431,18 +449,11 @@ export function getScaleFingering(scaleName: string, rootNote?: string, position
   const availablePositions = scaleData.fingerings.length;
   const safePositionIndex = Math.max(0, Math.min(positionIndex, availablePositions - 1));
   
-  // Find the minimum fret for each stored pattern to determine ordering
-  const patternsWithMinFrets = scaleData.fingerings.map((pattern, index) => {
-    const allFrets = pattern.flat().filter(f => f >= 0);
-    const minFret = allFrets.length > 0 ? Math.min(...allFrets) : 999;
-    return { pattern, minFret, originalIndex: index };
-  });
-  
-  // Sort by minimum fret (lowest first) to ensure position 0 is the lowest position
-  patternsWithMinFrets.sort((a, b) => a.minFret - b.minFret);
+  // Use the same sorting helper as getSortedPositions for consistency
+  const sortedIndices = getSortedPatternIndices(scaleData.fingerings);
   
   // Get the stored pattern index for the requested position
-  const storedPatternIndex = patternsWithMinFrets[safePositionIndex]?.originalIndex ?? safePositionIndex;
+  const storedPatternIndex = sortedIndices[safePositionIndex] ?? safePositionIndex;
 
   // Get the stored pattern for this position
   const storedPattern = scaleData.fingerings[storedPatternIndex];
@@ -479,37 +490,56 @@ function generateFingeringAlgorithmically(scaleName: string, rootNote: string, p
   const intervals = getScaleIntervals(scaleName);
   const rootValue = noteToValue(rootNote);
 
-  // Position configurations - relative start positions for different scale patterns
-  // Note: 'ionian' normalizes to 'major', 'aeolian' normalizes to 'minor'
-  const POSITION_OFFSETS = {
-    major: [8, 4, 0, 5, 9],
-    dorian: [10, 7, 3, 0, 4],
-    phrygian: [12, 8, 4, 1, 5],
-    lydian: [7, 11, 2, 6, 9],
-    mixolydian: [3, 10, 6, 0, 7],
-    locrian: [7, 11, 3, 8, 0],
-    minor: [5, 9, 2, 6, 10],
-    'harmonic minor': [0, 7, 2],
-    'melodic minor': [0, 7, 2],
-    'pentatonic major': [0, 7, 5, 9, 2],
-    'pentatonic minor': [5, 0, 7, 3, 10],
-    blues: [0, 7, 2],
+  // Position configurations - starting fret positions for different scale patterns
+  // These represent the lowest fret where the pattern starts for each position
+  const POSITION_START_FRETS = {
+    major: [0, 2, 5, 7, 10],
+    dorian: [0, 3, 5, 7, 10],
+    phrygian: [0, 3, 5, 8, 10],
+    lydian: [0, 2, 4, 7, 9],
+    mixolydian: [0, 2, 5, 7, 10],
+    locrian: [0, 3, 5, 8, 10],
+    minor: [0, 3, 5, 7, 10],
+    'harmonic minor': [0, 5, 10],
+    'melodic minor': [0, 5, 10],
+    'pentatonic major': [0, 2, 5, 7, 10],
+    'pentatonic minor': [0, 3, 5, 8, 10],
+    blues: [0, 3, 8],
     'whole tone': [0, 6],
     diminished: [0, 3]
   };
 
-  const offsets = POSITION_OFFSETS[normalized as keyof typeof POSITION_OFFSETS] || POSITION_OFFSETS.major;
-  const safePositionIndex = Math.max(0, Math.min(positionIndex, offsets.length - 1));
-  const rootOffset = offsets[safePositionIndex] || 0;
-  const positionRootValue = (rootValue + rootOffset) % 12;
-
   // Standard guitar tuning values (chromatic scale where C=0)
+  // Low E = 4 (E), A = 9 (A), D = 2 (D), G = 7 (G), B = 11 (B), High E = 4 (E)
   const tuning = [4, 9, 2, 7, 11, 4]; // Low E, A, D, G, B, High E
 
-  // Generate scale shape from root on each string
+  const startFrets = POSITION_START_FRETS[normalized as keyof typeof POSITION_START_FRETS] || POSITION_START_FRETS.major;
+  const safePositionIndex = Math.max(0, Math.min(positionIndex, startFrets.length - 1));
+  
+  // Calculate the base fret for this position based on the root note
+  // Find where the root note falls on the low E string as a reference
+  const rootOnLowE = (rootValue - tuning[0] + 12) % 12;
+  const baseFret = rootOnLowE + startFrets[safePositionIndex];
+  
+  // Generate scale notes on each string within a reasonable fret range
   const fingerings = tuning.map(stringTuning => {
-    const rootFret = (positionRootValue - stringTuning + 12) % 12;
-    return intervals.map(interval => (rootFret + interval) % 12).sort((a, b) => a - b);
+    const frets: number[] = [];
+    
+    // Generate notes within a 5-fret span from the base fret for this string
+    // This creates a typical 3-notes-per-string pattern
+    const stringStartFret = Math.max(0, baseFret - 2);
+    const stringEndFret = stringStartFret + 6; // 6 fret span to capture 3 notes per string
+    
+    for (let fret = stringStartFret; fret <= stringEndFret && fret <= 24; fret++) {
+      const noteValue = (stringTuning + fret) % 12;
+      // Check if this note is in the scale
+      const isScaleNote = intervals.some(interval => (rootValue + interval) % 12 === noteValue);
+      if (isScaleNote) {
+        frets.push(fret);
+      }
+    }
+    
+    return frets;
   });
 
   return fingerings;
@@ -527,50 +557,62 @@ function transposeFingering(fingering: number[][], semitones: number): number[][
   // Always return a copy to prevent mutation of SCALE_LIBRARY data
   if (semitones === 0) return fingering.map(stringFrets => [...stringFrets]);
 
-  // First, try the direct transposition
-  let octaveAdjustment = 0;
-  let needsAdjustment = false;
-
   // Check if transposition would go out of bounds
-  const minFret = Math.min(...fingering.flat());
-  const maxFret = Math.max(...fingering.flat());
-
-  if (minFret + semitones < 0) {
-    // Would go below fret 0 - shift up by octave (12 frets)
-    octaveAdjustment = 12;
-    needsAdjustment = true;
-  } else if (maxFret + semitones > 24) {
-    // Would go above fret 24 - shift down by octave (12 frets)
-    octaveAdjustment = -12;
-    needsAdjustment = true;
+  const allFrets = fingering.flat();
+  if (allFrets.length === 0) {
+    return fingering.map(stringFrets => [...stringFrets]);
+  }
+  
+  const minFret = Math.min(...allFrets);
+  const maxFret = Math.max(...allFrets);
+  
+  // Calculate the best octave adjustment to keep the pattern in a playable range
+  let octaveAdjustment = 0;
+  const targetMin = minFret + semitones;
+  const targetMax = maxFret + semitones;
+  
+  // Prefer to keep patterns in the lower-middle range (frets 0-15) when possible
+  if (targetMin < 0) {
+    // Pattern would go below fret 0 - shift up by minimum necessary octaves
+    octaveAdjustment = Math.ceil(Math.abs(targetMin) / 12) * 12;
+  } else if (targetMax > 20) {
+    // Pattern would be too high - try to shift down if it doesn't go negative
+    const potentialShift = -Math.floor((targetMax - 12) / 12) * 12;
+    if (targetMin + potentialShift >= 0) {
+      octaveAdjustment = potentialShift;
+    }
   }
 
   // Apply transposition with octave adjustment
   const adjustedSemitones = semitones + octaveAdjustment;
-  let hasClampedFrets = false;
+  let hasInvalidFrets = false;
+  const invalidFretDetails: string[] = [];
 
-  const result = fingering.map(stringFrets =>
+  const result = fingering.map((stringFrets, stringIndex) =>
     stringFrets.map(fret => {
       const newFret = fret + adjustedSemitones;
-      // Final safety check - clamp only if still out of range after octave adjustment
+      // Validate fret is in playable range
       if (newFret < 0) {
-        hasClampedFrets = true;
+        hasInvalidFrets = true;
+        invalidFretDetails.push(`string ${stringIndex + 1}: fret ${fret} -> ${newFret} (clamped to 0)`);
         return 0;
       }
       if (newFret > 24) {
-        hasClampedFrets = true;
+        hasInvalidFrets = true;
+        invalidFretDetails.push(`string ${stringIndex + 1}: fret ${fret} -> ${newFret} (clamped to 24)`);
         return 24;
       }
       return newFret;
     })
   );
 
-  if (needsAdjustment) {
-    console.info(`Scale transposition adjusted by ${octaveAdjustment > 0 ? '+' : ''}${octaveAdjustment} frets (${Math.abs(octaveAdjustment / 12)} octave${Math.abs(octaveAdjustment) !== 12 ? 's' : ''}) to keep pattern playable`);
+  // Only log if there were issues
+  if (octaveAdjustment !== 0) {
+    console.debug(`Scale transposition: ${semitones} semitones + ${octaveAdjustment} octave adjustment = ${adjustedSemitones} total`);
   }
 
-  if (hasClampedFrets) {
-    console.warn(`Scale transposition by ${adjustedSemitones} semitones still exceeded playable range (0-24 frets) after octave adjustment. Some notes were clamped and may be incorrect.`);
+  if (hasInvalidFrets) {
+    console.warn(`Scale transposition produced out-of-range frets (some notes clamped):`, invalidFretDetails);
   }
 
   return result;
@@ -634,4 +676,87 @@ export function getScaleNotes(rootNote: string, scaleName: string): string[] {
   }
 
   return notes;
+}
+
+/**
+ * Validate that a fingering pattern contains notes from the specified scale
+ * 
+ * @param fingering - The fingering pattern (2D array of fret numbers per string)
+ * @param rootNote - The root note of the scale
+ * @param scaleName - The scale name
+ * @returns Object with validation results and details
+ */
+export function validateFingeringNotes(
+  fingering: number[][],
+  rootNote: string,
+  scaleName: string
+): { isValid: boolean; invalidNotes: string[]; coverage: number } {
+  // Get expected scale notes (as chromatic values 0-11)
+  const intervals = getScaleIntervals(scaleName);
+  const rootValue = noteToValue(rootNote);
+  const expectedNoteValues = new Set(intervals.map(i => (rootValue + i) % 12));
+  
+  // Standard guitar tuning values
+  const tuning = [4, 9, 2, 7, 11, 4]; // Low E, A, D, G, B, High E
+  
+  const invalidNotes: string[] = [];
+  let totalNotes = 0;
+  let correctNotes = 0;
+  
+  fingering.forEach((stringFrets, stringIndex) => {
+    const stringTuning = tuning[stringIndex];
+    
+    stringFrets.forEach(fret => {
+      if (fret >= 0 && fret <= 24) {
+        totalNotes++;
+        const noteValue = (stringTuning + fret) % 12;
+        
+        if (expectedNoteValues.has(noteValue)) {
+          correctNotes++;
+        } else {
+          const noteName = valueToNote(noteValue);
+          invalidNotes.push(`String ${stringIndex + 1}, fret ${fret}: ${noteName}`);
+        }
+      }
+    });
+  });
+  
+  const coverage = totalNotes > 0 ? correctNotes / totalNotes : 0;
+  
+  return {
+    isValid: invalidNotes.length === 0,
+    invalidNotes,
+    coverage
+  };
+}
+
+/**
+ * Get scale fingering with validation - logs warnings if notes don't match
+ * This is a wrapper around getScaleFingering that adds validation
+ * 
+ * @param scaleName - Scale name (e.g., "C major", "D minor pentatonic")
+ * @param rootNote - Optional explicit root note (extracted from name if not provided)
+ * @param positionIndex - Position index (0-4 for 5-position scales, fewer for limited scales)
+ * @returns 2D array of fret numbers for each string [lowE, A, D, G, B, highE]
+ */
+export function getValidatedScaleFingering(
+  scaleName: string,
+  rootNote?: string,
+  positionIndex: number = 0
+): number[][] {
+  const root = rootNote || extractRootFromScaleName(scaleName);
+  const fingering = getScaleFingering(scaleName, root, positionIndex);
+  
+  // Validate the fingering
+  const validation = validateFingeringNotes(fingering, root, scaleName);
+  
+  if (!validation.isValid) {
+    console.warn(
+      `Scale fingering validation failed for "${scaleName}" (root: ${root}, position: ${positionIndex}):`,
+      `\n  Coverage: ${(validation.coverage * 100).toFixed(1)}%`,
+      `\n  Invalid notes: ${validation.invalidNotes.slice(0, 5).join(', ')}${validation.invalidNotes.length > 5 ? '...' : ''}`
+    );
+  }
+  
+  return fingering;
 }

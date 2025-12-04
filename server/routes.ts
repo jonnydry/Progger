@@ -105,6 +105,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Request body is already validated by middleware
       const { key, mode, includeTensions, numChords, selectedProgression } = req.body;
 
+      // Log the received parameters to trace chord count through the pipeline
+      logger.info("POST /api/generate-progression - Request received", {
+        requestId: req.id,
+        key,
+        mode,
+        includeTensions,
+        numChords,
+        selectedProgression,
+        numChordsType: typeof numChords,
+      });
+
       const result = await generateChordProgression(
         key,
         mode,
@@ -113,12 +124,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         selectedProgression
       );
 
+      // Verify chord count matches request
+      if (result.progression.length !== numChords) {
+        logger.warn("Chord count mismatch detected", {
+          requestId: req.id,
+          requestedNumChords: numChords,
+          returnedChordCount: result.progression.length,
+          key,
+          mode,
+          selectedProgression,
+        });
+      }
+
       logger.info("Chord progression generated successfully", {
         requestId: req.id,
         key,
         mode,
-        numChords,
-        chordCount: result.progression.length,
+        requestedNumChords: numChords,
+        returnedChordCount: result.progression.length,
+        chordCountMatch: result.progression.length === numChords,
       });
 
       // Set cache headers - results are cached for 24 hours

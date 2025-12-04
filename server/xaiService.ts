@@ -57,8 +57,20 @@ export async function generateChordProgression(
   numChords: number,
   selectedProgression: string
 ): Promise<ProgressionResultFromAPI> {
+  // Log incoming parameters for debugging chord count issues
+  logger.info("generateChordProgression called", {
+    key,
+    mode,
+    includeTensions,
+    numChords,
+    selectedProgression,
+  });
+
   // Create cache key using semantic fingerprinting
   const cacheKey = getProgressionCacheKey(key, mode, includeTensions, numChords, selectedProgression);
+  
+  // Log the cache key to verify numChords is included
+  logger.debug("Cache key generated", { cacheKey, numChords });
 
   // Step 1: Check if we have a similar request already pending (deduplication)
   const pending = pendingRequests.get(cacheKey);
@@ -124,11 +136,19 @@ export async function generateChordProgression(
       const parsedResult = JSON.parse(jsonText);
 
       // Enhanced validation with format checking and chord count verification
+      logger.info("Validating API response", {
+        expectedChordCount: numChords,
+        actualChordCount: parsedResult?.progression?.length,
+        rawProgressionLength: Array.isArray(parsedResult?.progression) ? parsedResult.progression.length : 'not an array',
+      });
+      
       const resultFromApi = validateAPIResponse(parsedResult, numChords);
 
-      logger.debug("API response validated successfully", {
-        chordCount: resultFromApi.progression.length,
+      logger.info("API response validated successfully", {
+        requestedChordCount: numChords,
+        returnedChordCount: resultFromApi.progression.length,
         scaleCount: resultFromApi.scales.length,
+        chordCountMatch: resultFromApi.progression.length === numChords,
       });
 
       return resultFromApi;

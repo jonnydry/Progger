@@ -1,6 +1,6 @@
 import type { ChordInProgression, ProgressionResult, ScaleInfo } from '../types';
 import { getChordVoicingsAsync, isMutedVoicing } from '../utils/chords/index';
-import { getScaleFingering, getScaleNotes } from '../utils/scaleLibrary';
+import { getScaleFingering, getScaleNotes, validateFingeringNotes } from '../utils/scaleLibrary';
 import {
   MusicTheoryError,
   APIUnavailableError,
@@ -269,14 +269,27 @@ export async function generateChordProgression(key: string, mode: string, includ
           };
         })
       ),
-      // Parallel scale processing
+      // Parallel scale processing with validation
       Promise.allSettled(
-        resultFromApi.scales.map(async (scale) => ({
-          name: scale.name,
-          rootNote: scale.rootNote,
-          notes: getScaleNotes(scale.rootNote, scale.name),
-          fingering: getScaleFingering(scale.name, scale.rootNote)
-        }))
+        resultFromApi.scales.map(async (scale) => {
+          const fingering = getScaleFingering(scale.name, scale.rootNote);
+          
+          // Validate the fingering contains correct scale notes
+          const validation = validateFingeringNotes(fingering, scale.rootNote, scale.name);
+          if (!validation.isValid) {
+            console.warn(`⚠️ Scale fingering validation warning for "${scale.name}":`, {
+              coverage: `${(validation.coverage * 100).toFixed(1)}%`,
+              invalidNotes: validation.invalidNotes.slice(0, 3),
+            });
+          }
+          
+          return {
+            name: scale.name,
+            rootNote: scale.rootNote,
+            notes: getScaleNotes(scale.rootNote, scale.name),
+            fingering
+          };
+        })
       )
     ]);
 
@@ -309,6 +322,14 @@ export async function generateChordProgression(key: string, mode: string, includ
 
     console.log(`✅ Processed ${progression.length} chords and ${scales.length} scales successfully`);
 
+    // Verify that returned chord count matches what was requested
+    // This is a safety check - the server should have already validated this
+    if (progression.length !== numChords) {
+      console.warn(`⚠️ Chord count mismatch: requested ${numChords}, received ${progression.length}`);
+      // Don't cache mismatched results - throw an error to trigger retry or show user error
+      throw new Error(`Chord count mismatch: requested ${numChords} chords but received ${progression.length}. Please try again.`);
+    }
+
     const finalResult = { progression, scales };
 
     // Cache the result with 24-hour TTL
@@ -333,7 +354,13 @@ export async function generateChordProgression(key: string, mode: string, includ
       );
     }
 
-    // Check if this is a recoverable error
+    // Check if this is a chord count mismatch - don't recover, just fail
+    if (error instanceof Error && error.message.includes('Chord count mismatch')) {
+      console.warn('❌ Chord count mismatch detected - not recovering with fallback');
+      throw error; // Re-throw without recovery to show user the real error
+    }
+
+    // Check if this is a recoverable error (network issues, etc.)
     if (isRecoverableError(error)) {
       console.log(`🔄 Attempting automatic recovery for ${error.name}`);
 
@@ -348,6 +375,11 @@ export async function generateChordProgression(key: string, mode: string, includ
         }
 
         if (recoveredResult) {
+          // Verify recovered result has correct chord count
+          if (recoveredResult.progression?.length !== numChords) {
+            console.warn(`⚠️ Recovery produced wrong chord count: expected ${numChords}, got ${recoveredResult.progression?.length}`);
+            throw new Error(`Recovery failed: chord count mismatch`);
+          }
           console.log(`✅ Successfully recovered from ${error.name}`);
           return recoveredResult;
         }
@@ -490,14 +522,27 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
           };
         })
       ),
-      // Parallel scale processing
+      // Parallel scale processing with validation
       Promise.allSettled(
-        resultFromApi.scales.map(async (scale) => ({
-          name: scale.name,
-          rootNote: scale.rootNote,
-          notes: getScaleNotes(scale.rootNote, scale.name),
-          fingering: getScaleFingering(scale.name, scale.rootNote)
-        }))
+        resultFromApi.scales.map(async (scale) => {
+          const fingering = getScaleFingering(scale.name, scale.rootNote);
+          
+          // Validate the fingering contains correct scale notes
+          const validation = validateFingeringNotes(fingering, scale.rootNote, scale.name);
+          if (!validation.isValid) {
+            console.warn(`⚠️ Scale fingering validation warning for "${scale.name}":`, {
+              coverage: `${(validation.coverage * 100).toFixed(1)}%`,
+              invalidNotes: validation.invalidNotes.slice(0, 3),
+            });
+          }
+          
+          return {
+            name: scale.name,
+            rootNote: scale.rootNote,
+            notes: getScaleNotes(scale.rootNote, scale.name),
+            fingering
+          };
+        })
       )
     ]);
 

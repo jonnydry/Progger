@@ -33,9 +33,21 @@ class RedisCache {
 
     try {
       const value = await this.client.get(key);
-      if (typeof value !== 'string' || value === '{}' || value === '') return null;
+      if (typeof value !== 'string' || value === '{}' || value === '') {
+        logger.debug('Redis cache miss', { key });
+        return null;
+      }
 
-      return JSON.parse(value) as T;
+      const parsed = JSON.parse(value) as T;
+      
+      // Log cache hit with progression length if available
+      const progressionLength = (parsed as any)?.progression?.length;
+      logger.debug('Redis cache hit', { 
+        key, 
+        progressionLength: progressionLength ?? 'N/A',
+      });
+      
+      return parsed;
     } catch (error) {
       logger.warn('Redis cache get error', { error, key });
       return null;
@@ -47,6 +59,15 @@ class RedisCache {
 
     try {
       const serialized = JSON.stringify(value);
+      
+      // Log cache write with progression length if available
+      const progressionLength = (value as any)?.progression?.length;
+      logger.debug('Redis cache set', { 
+        key, 
+        ttlSeconds,
+        progressionLength: progressionLength ?? 'N/A',
+      });
+      
       if (ttlSeconds) {
         await this.client.setEx(key, ttlSeconds, serialized);
       } else {
