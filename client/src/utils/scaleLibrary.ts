@@ -45,19 +45,26 @@ type ScaleLibrary = Record<string, ScalePattern>;
 export const SCALE_LIBRARY: ScaleLibrary = {
   // Major scale (also known as Ionian mode)
   // Stored patterns are for C major - transposed to other keys automatically
+  // C Major notes: C(0), D(2), E(4), F(5), G(7), A(9), B(11)
+  // Standard tuning: Low E(4), A(9), D(2), G(7), B(11), High E(4)
   'major': {
     intervals: [0, 2, 4, 5, 7, 9, 11],
     fingerings: [
-      // Position 1: 3-note-per-string pattern starting from root on low E string
-      [[0, 2, 4], [0, 2, 4], [1, 2, 4], [1, 2, 4], [2, 4, 5], [0, 2, 4]],
-      // Position 2: Shift up 12 frets for next octave
-      [[12, 14, 16], [12, 14, 16], [13, 14, 16], [13, 14, 16], [14, 16, 17], [12, 14, 16]],
-      // Position 3: Pentatonic overlap pattern
-      [[7, 9, 11], [7, 9, 11], [8, 9, 11], [8, 9, 11], [9, 11, 12], [7, 9, 11]],
-      // Position 4: Another octave shift
-      [[5, 7, 9], [5, 7, 9], [6, 7, 9], [6, 7, 9], [7, 9, 10], [5, 7, 9]],
-      // Position 5: Final position for complete neck coverage
-      [[14, 16, 18], [14, 16, 18], [15, 16, 18], [15, 16, 18], [16, 18, 19], [14, 16, 18]],
+      // Position 1: Open position (frets 0-3) - CAGED "C shape"
+      // Low E: E(0), F(1), G(3) | A: A(0), B(2), C(3) | D: D(0), E(2), F(3) | G: G(0), A(2), B(4) | B: C(1), D(3), E(5) | High E: E(0), F(1), G(3)
+      [[0, 1, 3], [0, 2, 3], [0, 2, 3], [0, 2], [1, 3, 5], [0, 1, 3]],
+      // Position 2: 5th position (frets 5-8) - CAGED "A shape"
+      // Low E: A(5), B(7), C(8) | A: D(5), E(7), F(8) | D: G(5), A(7), B(9) | G: C(5), D(7), E(9) | B: F(6), G(8), A(10) | High E: A(5), B(7), C(8)
+      [[5, 7, 8], [5, 7, 8], [5, 7, 9], [5, 7, 9], [6, 8, 10], [5, 7, 8]],
+      // Position 3: 7th position (frets 7-10) - CAGED "G shape"
+      // Low E: B(7), C(8), D(10) | A: E(7), F(8), G(10) | D: A(7), B(9), C(10) | G: D(7), E(9), F(10) | B: G(8), A(10), B(12) | High E: B(7), C(8), D(10)
+      [[7, 8, 10], [7, 8, 10], [7, 9, 10], [7, 9, 10], [8, 10, 12], [7, 8, 10]],
+      // Position 4: 8th position (frets 8-12) - CAGED "E shape"
+      // Low E: C(8), D(10), E(12) | A: F(8), G(10), A(12) | D: B(9), C(10), D(12) | G: E(9), F(10), G(12) | B: A(10), B(12), C(13) | High E: C(8), D(10), E(12)
+      [[8, 10, 12], [8, 10, 12], [9, 10, 12], [9, 10, 12], [10, 12, 13], [8, 10, 12]],
+      // Position 5: 12th position (frets 12-15) - CAGED "D shape" (octave of open)
+      // Same as position 1 but 12 frets higher
+      [[12, 13, 15], [12, 14, 15], [12, 14, 15], [12, 14], [13, 15, 17], [12, 13, 15]],
     ],
     positions: ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'],
   },
@@ -414,6 +421,36 @@ export function getSortedPositions(scaleData: ScalePattern): string[] {
 }
 
 /**
+ * Validate a stored pattern against expected scale notes
+ * Returns true if at least 90% of notes are correct scale tones
+ */
+function validateStoredPattern(
+  pattern: number[][],
+  rootNote: string,
+  intervals: number[]
+): boolean {
+  const TUNING = [4, 9, 2, 7, 11, 4]; // Low E, A, D, G, B, High E
+  const rootValue = noteToValue(rootNote);
+  const expectedNotes = new Set(intervals.map(i => (rootValue + i) % 12));
+  
+  let totalNotes = 0;
+  let correctNotes = 0;
+  
+  pattern.forEach((stringFrets, stringIndex) => {
+    stringFrets.forEach(fret => {
+      if (fret >= 0 && fret <= 24) {
+        totalNotes++;
+        const noteValue = (TUNING[stringIndex] + fret) % 12;
+        if (expectedNotes.has(noteValue)) correctNotes++;
+      }
+    });
+  });
+  
+  const accuracy = totalNotes > 0 ? correctNotes / totalNotes : 0;
+  return accuracy >= 0.9; // Require 90% accuracy
+}
+
+/**
  * Get scale fingering pattern positioned at the correct location for the requested key
  *
  * Guitar scale positions are shapes that get moved up/down the neck to play different keys.
@@ -424,8 +461,9 @@ export function getSortedPositions(scaleData: ScalePattern): string[] {
  * 1. Extracts or uses provided root note
  * 2. Normalizes scale name to match library keys
  * 3. Gets the stored pattern for the requested position (sorted by minimum fret so position 0 is lowest)
- * 4. Gets the root note that stored patterns for this scale represent (from static mapping)
- * 5. Transposes the pattern to the requested root note
+ * 4. Validates the pattern produces correct scale notes
+ * 5. Falls back to algorithmic generation if pattern is invalid
+ * 6. Transposes the pattern to the requested root note
  *
  * @param scaleName - Scale name (e.g., "C major", "D minor pentatonic")
  * @param rootNote - Optional explicit root note (extracted from name if not provided)
@@ -439,7 +477,9 @@ export function getScaleFingering(scaleName: string, rootNote?: string, position
 
   // If no stored patterns exist, fall back to algorithmic generation
   if (!scaleData || !scaleData.fingerings || scaleData.fingerings.length === 0) {
-    console.warn(`No stored patterns found for scale "${normalized}", falling back to algorithmic generation`);
+    if (import.meta.env.DEV) {
+      console.warn(`No stored patterns found for scale "${normalized}", using algorithmic generation`);
+    }
     return generateFingeringAlgorithmically(scaleName, root, positionIndex);
   }
 
@@ -458,13 +498,26 @@ export function getScaleFingering(scaleName: string, rootNote?: string, position
   // Get the stored pattern for this position
   const storedPattern = scaleData.fingerings[storedPatternIndex];
   if (!storedPattern || storedPattern.length !== 6) {
-    console.warn(`Invalid stored pattern at position ${safePositionIndex} for scale "${normalized}"`);
+    if (import.meta.env.DEV) {
+      console.warn(`Invalid stored pattern at position ${safePositionIndex} for scale "${normalized}"`);
+    }
     return generateFingeringAlgorithmically(scaleName, root, positionIndex);
   }
 
   // Get the root note that stored patterns for this scale represent
   // Stored patterns are for canonical keys (C for major, D for Dorian, etc.)
   const storedRoot = getStoredPatternRoot(normalized);
+  
+  // Validate the stored pattern produces correct scale notes
+  if (!validateStoredPattern(storedPattern, storedRoot, scaleData.intervals)) {
+    if (import.meta.env.DEV) {
+      console.warn(
+        `⚠️ Scale pattern validation failed for "${normalized}" position ${safePositionIndex + 1}:\n` +
+        `   Pattern contains incorrect notes. Using algorithmic generation.`
+      );
+    }
+    return generateFingeringAlgorithmically(scaleName, root, positionIndex);
+  }
 
   // Calculate semitone offset to transpose from stored root to requested root
   const storedRootValue = noteToValue(storedRoot);
