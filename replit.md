@@ -40,6 +40,18 @@ The application is a full-stack project with a React frontend (Vite dev server o
 
 ## Recent Changes
 
+### 2025-12-06: Scale Library Data Quality Fix
+- 🔧 **Fixed Corrupt C Major Scale Patterns**: All 5 CAGED positions were completely wrong
+  - **Problem**: Original patterns produced F#, G#, C#, D# (chromatic notes NOT in C major)
+  - **Solution**: Rewrote all 5 positions with mathematically verified fingerings
+  - **Validation**: Each position now validates at 100% accuracy
+  - **CAGED Positions**: Open (frets 0-3), 5th (A shape), 7th (G shape), 8th (E shape), 12th (D shape)
+- ✅ **Runtime Scale Validation**: Added 90% accuracy threshold for stored patterns
+  - **Mechanism**: Validates that fret positions produce expected scale notes using `(TUNING[string] + fret) % 12`
+  - **Fallback**: Invalid patterns automatically fall back to algorithmic generation
+  - **Benefit**: Protects against data corruption while maintaining full functionality
+  - **Files Modified**: `client/src/utils/scaleLibrary.ts`
+
 ### 2025-11-11: Authentication System Fixes & Server Startup Resilience
 - 🔧 **Fixed Server Hanging on Startup**: Resolved critical issue where backend server failed to start
   - **Root Cause**: OIDC discovery call to Replit Auth was hanging indefinitely without timeout
