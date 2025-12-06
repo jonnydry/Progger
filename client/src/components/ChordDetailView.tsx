@@ -370,7 +370,8 @@ export const ChordDetailView: React.FC<ChordDetailViewProps> = ({ chord, musical
             </div>
           ) : (() => {
             // Check if we have any grouped voicings
-            const hasGroupedVoicings = Object.values(voicingGroups).some(group => group.length > 0);
+            type VoicingWithName = { voicing: ChordVoicing; chordName: string };
+            const hasGroupedVoicings = (Object.values(voicingGroups) as VoicingWithName[][]).some(group => group.length > 0);
             
             if (!hasGroupedVoicings) {
               // Fallback: show all voicings ungrouped

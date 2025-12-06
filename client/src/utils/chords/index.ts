@@ -97,15 +97,13 @@ export async function getChordVoicingsAsync(chordName: string): Promise<ChordVoi
   const voicings = chordData[key];
 
   if (voicings && voicings.length > 0) {
-    // Validate voicings in development mode
-    if (import.meta.env.DEV) {
-      voicings.forEach(voicing => {
-        validateVoicingNotes(voicing, chordName);
-      });
+    // Filter out invalid voicings (those where less than 50% of notes match the chord)
+    const validVoicings = voicings.filter(voicing => validateVoicingNotes(voicing, chordName));
+    
+    if (validVoicings.length > 0) {
+      return validVoicings;
     }
-    // Slash chord bass notes are logged but not enforced in voicing selection
-    // (see extractRootAndQuality for details)
-    return voicings;
+    // If all voicings failed validation, fall through to transposition fallback
   }
 
   // Fallback 1: Try mathematical transposition from other roots
@@ -160,6 +158,7 @@ export function extractVoicingNotes(voicing: ChordVoicing): Set<number> {
 
 /**
  * Validate that a voicing produces notes that match the expected chord
+ * Requires at least 50% of voicing notes to be valid chord tones
  * @param voicing - The voicing to validate
  * @param chordName - The chord name (e.g., "Cmaj7")
  * @returns True if voicing matches chord, false otherwise
@@ -169,27 +168,37 @@ export function validateVoicingNotes(voicing: ChordVoicing, chordName: string): 
   const voicingNotes = extractVoicingNotes(voicing);
   const expectedNotes = new Set(getChordNotes(chordName).map(note => noteToValue(note)));
 
-  // Check if at least one voicing note matches an expected chord note
-  // (allows for partial voicings and rootless voicings)
+  if (voicingNotes.size === 0) {
+    return false;
+  }
+
+  // Count how many voicing notes match expected chord notes
+  let matchCount = 0;
   for (const noteValue of voicingNotes) {
     if (expectedNotes.has(noteValue)) {
-      return true;
+      matchCount++;
     }
   }
 
-  // Development mode warning
-  if (import.meta.env.DEV) {
+  // Require at least 50% of voicing notes to be valid chord tones
+  // This filters out incorrect voicings while allowing partial/rootless voicings
+  const matchRatio = matchCount / voicingNotes.size;
+  const isValid = matchRatio >= 0.5;
+
+  // Development mode warning for invalid voicings
+  if (!isValid && import.meta.env.DEV) {
     const voicingNoteNames = Array.from(voicingNotes).map(v => valueToNote(v));
     const expectedNoteNames = Array.from(expectedNotes).map(v => valueToNote(v));
     console.warn(
       `⚠️ Voicing validation failed for "${chordName}":\n` +
       `   Expected notes: ${expectedNoteNames.join(', ')}\n` +
       `   Voicing notes: ${voicingNoteNames.join(', ')}\n` +
+      `   Match ratio: ${(matchRatio * 100).toFixed(0)}% (need 50%)\n` +
       `   Position: ${voicing.position || 'Unknown'}`
     );
   }
 
-  return false;
+  return isValid;
 }
 
 /**
