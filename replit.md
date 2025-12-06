@@ -40,6 +40,14 @@ The application is a full-stack project with a React frontend (Vite dev server o
 
 ## Recent Changes
 
+### 2025-12-06: Project Cleanup
+- 🧹 **Removed Development Artifacts**: Deleted ~8MB of unused files
+  - **Root Markdown Files**: Removed 5 analysis documents (chord-input-feature-analysis.md, chord-theory-validation-report.md, etc.)
+  - **Scripts Folder**: Removed 26 debug/validation scripts (2.3MB) - now that validation is built-in, these are unnecessary
+  - **Attached Assets**: Removed 5.7MB of development screenshots (not used in codebase)
+  - **Unused Asset Files**: Removed 4 unused image variants from client/src/assets
+- 📦 **Package.json Cleanup**: Removed obsolete script references that pointed to deleted scripts
+
 ### 2025-12-06: Scale Library Data Quality Fix
 - 🔧 **Fixed Corrupt C Major Scale Patterns**: All 5 CAGED positions were completely wrong
   - **Problem**: Original patterns produced F#, G#, C#, D# (chromatic notes NOT in C major)
