@@ -183,6 +183,8 @@ describe('scaleLibrary', () => {
   });
 
     describe('SCALE_LIBRARY - Comprehensive Structure Tests', () => {
+    // Note: 'aeolian' normalizes to 'minor' and 'ionian' normalizes to 'major'
+    // so they are not separate entries in SCALE_LIBRARY
     const SCALE_POSITION_REQUIREMENTS = {
       'major': 5,
       'minor': 5,
@@ -190,7 +192,6 @@ describe('scaleLibrary', () => {
       'phrygian': 5,
       'lydian': 5,
       'mixolydian': 5,
-      'aeolian': 5,
       'locrian': 5,
       'harmonic minor': 3,  // Only has 3 positions
       'melodic minor': 3,   // Only has 3 positions
@@ -285,6 +286,7 @@ describe('scaleLibrary', () => {
     });
 
     it('should have correct interval structures', () => {
+      // Note: 'aeolian' normalizes to 'minor' so it's not a separate entry
       const EXPECTED_INTERVALS = {
         'major': [0, 2, 4, 5, 7, 9, 11],
         'minor': [0, 2, 3, 5, 7, 8, 10],
@@ -292,7 +294,6 @@ describe('scaleLibrary', () => {
         'phrygian': [0, 1, 3, 5, 7, 8, 10],
         'lydian': [0, 2, 4, 6, 7, 9, 11],
         'mixolydian': [0, 2, 4, 5, 7, 9, 10],
-        'aeolian': [0, 2, 3, 5, 7, 8, 10],
         'locrian': [0, 1, 3, 5, 6, 8, 10],
         'harmonic minor': [0, 2, 3, 5, 7, 8, 11],
         'melodic minor': [0, 2, 3, 5, 7, 9, 11],

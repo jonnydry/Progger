@@ -70,105 +70,110 @@ export const SCALE_LIBRARY: ScaleLibrary = {
   },
   
   'dorian': {
+    // D Dorian: D E F G A B C - same notes as C major, rooted on D
     intervals: [0, 2, 3, 5, 7, 9, 10],
     fingerings: [
-      // Position 1: D shape (10th fret on low E) - D E F G A B C
-      [[10, 12, 13], [10, 12, 14], [10, 12, 14], [10, 12, 14], [10, 13, 15], [10, 12, 13]],
-      // Position 2: C shape (8th fret on low E) - C D E F G A Bb
-      [[8, 10, 12], [8, 10, 12], [8, 10, 12], [8, 10, 12], [8, 10, 13], [8, 10, 12]],
-      // Position 3: A shape (5th fret on low E) - A B C D E F G
-      [[5, 7, 8], [5, 7, 9], [5, 7, 9], [5, 7, 9], [5, 8, 10], [5, 7, 8]],
-      // Position 4: G shape (3rd fret on low E) - G A Bb C D E F
-      [[3, 5, 7], [3, 5, 7], [3, 5, 7], [3, 5, 7], [3, 5, 8], [3, 5, 7]],
-      // Position 5: E shape (12th fret on low E) - E F G A B C D
-      [[12, 14, 15], [12, 14, 16], [12, 14, 16], [12, 14, 16], [12, 15, 17], [12, 14, 15]],
+      // Position 1: Open position (frets 0-4)
+      [[0, 1, 3], [0, 2, 3], [0, 2, 3], [0, 2, 4], [0, 1, 3], [0, 1, 3]],
+      // Position 2: 3rd position (frets 3-7)
+      [[3, 5, 7], [3, 5, 7], [3, 5, 7], [4, 5, 7], [3, 5, 6], [3, 5, 7]],
+      // Position 3: 5th position (frets 5-9)
+      [[5, 7, 8], [5, 7, 8], [5, 7, 9], [5, 7, 9], [5, 6, 8], [5, 7, 8]],
+      // Position 4: 7th position (frets 7-11)
+      [[7, 8, 10], [7, 8, 10], [7, 9, 10], [7, 9, 10], [8, 10], [7, 8, 10]],
+      // Position 5: 10th position (frets 10-14)
+      [[10, 12, 13], [10, 12, 14], [10, 12, 14], [10, 12, 14], [10, 12, 13], [10, 12, 13]],
     ],
     positions: ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'],
   },
   
   'phrygian': {
+    // E Phrygian: E F G A B C D - same notes as C major, rooted on E
     intervals: [0, 1, 3, 5, 7, 8, 10],
     fingerings: [
-      // Position 1: E shape (12th fret on low E) - E F G A B C D
-      [[12, 13, 15], [12, 14, 15], [12, 14, 16], [12, 14, 16], [12, 15, 17], [12, 13, 15]],
-      // Position 2: D shape (10th fret on low E) - D E F G A Bb C
-      [[10, 12, 13], [10, 11, 13], [10, 12, 14], [10, 12, 14], [10, 13, 15], [10, 12, 13]],
-      // Position 3: C shape (8th fret on low E) - C D Eb F G Ab Bb
-      [[8, 10, 11], [8, 9, 11], [8, 10, 12], [8, 10, 12], [8, 11, 13], [8, 10, 11]],
-      // Position 4: A shape (5th fret on low E) - A Bb C D E F G
-      [[5, 6, 8], [5, 7, 8], [5, 7, 9], [5, 7, 9], [5, 8, 10], [5, 6, 8]],
-      // Position 5: G shape (3rd fret on low E) - G Ab Bb C D Eb F
-      [[3, 4, 6], [3, 5, 6], [3, 5, 7], [3, 5, 7], [3, 6, 8], [3, 4, 6]],
+      // Position 1: Open position (frets 0-4)
+      [[0, 1, 3], [0, 2, 3], [0, 2, 3], [0, 2, 4], [0, 1, 3], [0, 1, 3]],
+      // Position 2: 3rd position (frets 3-7)
+      [[3, 5, 7], [3, 5, 7], [3, 5, 7], [4, 5, 7], [3, 5, 6], [3, 5, 7]],
+      // Position 3: 5th position (frets 5-9)
+      [[5, 7, 8], [5, 7, 8], [5, 7, 9], [5, 7, 9], [5, 6, 8], [5, 7, 8]],
+      // Position 4: 7th position (frets 7-11)
+      [[7, 8, 10], [7, 8, 10], [7, 9, 10], [7, 9, 10], [8, 10], [7, 8, 10]],
+      // Position 5: 10th position (frets 10-14)
+      [[10, 12, 13], [10, 12, 14], [10, 12, 14], [10, 12, 14], [10, 12, 13], [10, 12, 13]],
     ],
     positions: ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'],
   },
   
   'lydian': {
+    // F Lydian: F G A B C D E - same notes as C major, rooted on F
     intervals: [0, 2, 4, 6, 7, 9, 11],
     fingerings: [
-      // Position 1: F shape (1st fret on low E) - F G A B C D E
-      [[1, 3, 5], [1, 3, 5], [2, 3, 5], [2, 4, 5], [2, 4, 5], [1, 3, 5]],
-      // Position 2: E shape (12th fret on low E) - E F# G# A# B C# D#
-      [[12, 14, 16], [12, 14, 16], [13, 14, 16], [13, 15, 16], [13, 15, 16], [12, 14, 16]],
-      // Position 3: D shape (10th fret on low E) - D E F# G# A B C#
-      [[10, 12, 14], [10, 12, 14], [11, 12, 14], [11, 13, 14], [11, 13, 14], [10, 12, 14]],
-      // Position 4: C shape (8th fret on low E) - C D E F# G A B
-      [[8, 10, 12], [8, 10, 12], [9, 10, 12], [9, 11, 12], [9, 11, 12], [8, 10, 12]],
-      // Position 5: A shape (5th fret on low E) - A B C# D# E F# G#
-      [[5, 7, 9], [5, 7, 9], [6, 7, 9], [6, 8, 9], [6, 8, 9], [5, 7, 9]],
+      // Position 1: Open position (frets 0-4)
+      [[0, 1, 3], [0, 2, 3], [0, 2, 3], [0, 2, 4], [0, 1, 3], [0, 1, 3]],
+      // Position 2: 3rd position (frets 3-7)
+      [[3, 5, 7], [3, 5, 7], [3, 5, 7], [4, 5, 7], [3, 5, 6], [3, 5, 7]],
+      // Position 3: 5th position (frets 5-9)
+      [[5, 7, 8], [5, 7, 8], [5, 7, 9], [5, 7, 9], [5, 6, 8], [5, 7, 8]],
+      // Position 4: 7th position (frets 7-11)
+      [[7, 8, 10], [7, 8, 10], [7, 9, 10], [7, 9, 10], [8, 10], [7, 8, 10]],
+      // Position 5: 10th position (frets 10-14)
+      [[10, 12, 13], [10, 12, 14], [10, 12, 14], [10, 12, 14], [10, 12, 13], [10, 12, 13]],
     ],
     positions: ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'],
   },
   
   'mixolydian': {
+    // G Mixolydian: G A B C D E F - same notes as C major, rooted on G
     intervals: [0, 2, 4, 5, 7, 9, 10],
     fingerings: [
-      // Position 1: G shape (3rd fret on low E) - G A B C D E F
-      [[3, 5, 7], [3, 5, 6], [4, 5, 7], [4, 5, 7], [5, 7, 8], [3, 5, 7]],
-      // Position 2: F shape (1st fret on low E) - F G A Bb C D Eb
-      [[1, 3, 5], [1, 3, 4], [2, 3, 5], [2, 3, 5], [3, 5, 6], [1, 3, 5]],
-      // Position 3: E shape (12th fret on low E) - E F# G# A B C# D
-      [[12, 14, 16], [12, 14, 15], [13, 14, 16], [13, 14, 16], [14, 16, 17], [12, 14, 16]],
-      // Position 4: D shape (10th fret on low E) - D E F# G A B C
-      [[10, 12, 14], [10, 12, 13], [11, 12, 14], [11, 12, 14], [12, 14, 15], [10, 12, 14]],
-      // Position 5: C shape (8th fret on low E) - C D E F G A Bb
-      [[8, 10, 12], [8, 10, 11], [9, 10, 12], [9, 10, 12], [10, 12, 13], [8, 10, 12]],
+      // Position 1: Open position (frets 0-4)
+      [[0, 1, 3], [0, 2, 3], [0, 2, 3], [0, 2, 4], [0, 1, 3], [0, 1, 3]],
+      // Position 2: 3rd position (frets 3-7)
+      [[3, 5, 7], [3, 5, 7], [3, 5, 7], [4, 5, 7], [3, 5, 6], [3, 5, 7]],
+      // Position 3: 5th position (frets 5-9)
+      [[5, 7, 8], [5, 7, 8], [5, 7, 9], [5, 7, 9], [5, 6, 8], [5, 7, 8]],
+      // Position 4: 7th position (frets 7-11)
+      [[7, 8, 10], [7, 8, 10], [7, 9, 10], [7, 9, 10], [8, 10], [7, 8, 10]],
+      // Position 5: 10th position (frets 10-14)
+      [[10, 12, 13], [10, 12, 14], [10, 12, 14], [10, 12, 14], [10, 12, 13], [10, 12, 13]],
     ],
     positions: ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'],
   },
   
   // Minor scale (Natural Minor / Aeolian mode)
-  // Stored patterns are for A minor - transposed to other keys automatically
+  // Stored patterns are for A minor (A B C D E F G) - transposed to other keys automatically
   'minor': {
     intervals: [0, 2, 3, 5, 7, 8, 10],
     fingerings: [
-      // Position 1: A shape (5th fret on low E) - A B C D E F G
-      [[5, 7, 8], [5, 7, 8], [5, 7, 9], [5, 7, 9], [5, 8, 10], [5, 7, 8]],
-      // Position 2: G shape (3rd fret on low E) - G A Bb C D Eb F
-      [[3, 5, 7], [3, 5, 6], [3, 5, 7], [3, 5, 7], [3, 6, 8], [3, 5, 7]],
-      // Position 3: E shape (12th fret on low E) - E F# G A B C D
-      [[12, 14, 15], [12, 14, 15], [12, 14, 16], [12, 14, 16], [12, 15, 17], [12, 14, 15]],
-      // Position 4: D shape (10th fret on low E) - D E F G A Bb C
-      [[10, 12, 13], [10, 12, 13], [10, 12, 14], [10, 12, 14], [10, 13, 15], [10, 12, 13]],
-      // Position 5: C shape (8th fret on low E) - C D Eb F G Ab Bb
-      [[8, 10, 11], [8, 10, 11], [8, 10, 12], [8, 10, 12], [8, 11, 13], [8, 10, 11]],
+      // Position 1: Open position (frets 0-4)
+      [[0, 1, 3], [0, 2, 3], [0, 2, 3], [0, 2, 4], [0, 1, 3], [0, 1, 3]],
+      // Position 2: 3rd position (frets 3-7)
+      [[3, 5, 7], [3, 5, 7], [3, 5, 7], [4, 5, 7], [3, 5, 6], [3, 5, 7]],
+      // Position 3: 5th position (frets 5-9)
+      [[5, 7, 8], [5, 7, 8], [5, 7, 9], [5, 7, 9], [5, 6, 8], [5, 7, 8]],
+      // Position 4: 7th position (frets 7-11)
+      [[7, 8, 10], [7, 8, 10], [7, 9, 10], [7, 9, 10], [8, 10], [7, 8, 10]],
+      // Position 5: 10th position (frets 10-14)
+      [[10, 12, 13], [10, 12, 14], [10, 12, 14], [10, 12, 14], [10, 12, 13], [10, 12, 13]],
     ],
     positions: ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'],
   },
   
   'locrian': {
+    // B Locrian: B C D E F G A - same notes as C major, rooted on B
     intervals: [0, 1, 3, 5, 6, 8, 10],
     fingerings: [
-      // Position 1: B shape (7th fret on low E) - B C D E F G A
-      [[7, 8, 10], [7, 9, 10], [7, 9, 11], [7, 9, 10], [7, 10, 12], [7, 8, 10]],
-      // Position 2: A shape (5th fret on low E) - A Bb C D Eb F G
-      [[5, 6, 8], [5, 7, 8], [5, 7, 9], [5, 7, 8], [5, 8, 10], [5, 6, 8]],
-      // Position 3: G shape (3rd fret on low E) - G Ab Bb C Db Eb F
-      [[3, 4, 6], [3, 5, 6], [3, 5, 7], [3, 5, 6], [3, 6, 8], [3, 4, 6]],
-      // Position 4: E shape (12th fret on low E) - E F G A Bb C D
-      [[12, 13, 15], [12, 14, 15], [12, 14, 16], [12, 14, 15], [12, 15, 17], [12, 13, 15]],
-      // Position 5: D shape (10th fret on low E) - D Eb F G Ab Bb C
-      [[10, 11, 13], [10, 12, 13], [10, 12, 14], [10, 12, 13], [10, 13, 15], [10, 11, 13]],
+      // Position 1: Open position (frets 0-4)
+      [[0, 1, 3], [0, 2, 3], [0, 2, 3], [0, 2, 4], [0, 1, 3], [0, 1, 3]],
+      // Position 2: 3rd position (frets 3-7)
+      [[3, 5, 7], [3, 5, 7], [3, 5, 7], [4, 5, 7], [3, 5, 6], [3, 5, 7]],
+      // Position 3: 5th position (frets 5-9)
+      [[5, 7, 8], [5, 7, 8], [5, 7, 9], [5, 7, 9], [5, 6, 8], [5, 7, 8]],
+      // Position 4: 7th position (frets 7-11)
+      [[7, 8, 10], [7, 8, 10], [7, 9, 10], [7, 9, 10], [8, 10], [7, 8, 10]],
+      // Position 5: 10th position (frets 10-14)
+      [[10, 12, 13], [10, 12, 14], [10, 12, 14], [10, 12, 14], [10, 12, 13], [10, 12, 13]],
     ],
     positions: ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'],
   },
@@ -194,35 +199,37 @@ export const SCALE_LIBRARY: ScaleLibrary = {
   },
   
   'pentatonic major': {
+    // C Major Pentatonic: C D E G A
     intervals: [0, 2, 4, 7, 9],
     fingerings: [
-      // Position 1 (Box 1): E shape at 12th fret - E F# G# B C#
-      [[12, 14], [12, 14], [11, 13], [12, 14], [12, 14], [12, 14]],
-      // Position 2 (Box 2): D shape at 9-10th fret - D E F# A B
-      [[10, 12], [9, 12], [9, 11], [9, 12], [10, 12], [10, 12]],
-      // Position 3 (Box 3): C shape at 7-8th fret - C D E G A
-      [[8, 10], [7, 10], [7, 9], [7, 9], [8, 10], [8, 10]],
-      // Position 4 (Box 4): A shape at 5th fret - A B C# E F#
-      [[5, 7], [5, 7], [4, 7], [5, 7], [5, 7], [5, 7]],
-      // Position 5 (Box 5): G shape at 2-3rd fret - G A B D E
-      [[3, 5], [2, 5], [2, 4], [2, 4], [3, 5], [3, 5]],
+      // Position 1: Open position (frets 0-4)
+      [[0, 3], [0, 3], [0, 2], [0, 2], [1, 3], [0, 3]],
+      // Position 2: 3rd position (frets 3-7)
+      [[3, 5], [3, 5, 7], [5, 7], [5, 7], [3, 5], [3, 5]],
+      // Position 3: 5th position (frets 5-9)
+      [[5, 8], [5, 7], [5, 7], [5, 7, 9], [5, 8], [5, 8]],
+      // Position 4: 7th position (frets 7-11)
+      [[8, 10], [7, 10], [7, 10], [7, 9], [8, 10], [8, 10]],
+      // Position 5: 10th position (frets 10-14)
+      [[10, 12], [10, 12], [10, 12, 14], [12, 14], [10, 13], [10, 12]],
     ],
     positions: ['Position 1 (Box 1)', 'Position 2 (Box 2)', 'Position 3 (Box 3)', 'Position 4 (Box 4)', 'Position 5 (Box 5)'],
   },
   
   'pentatonic minor': {
+    // A Minor Pentatonic: A C D E G
     intervals: [0, 3, 5, 7, 10],
     fingerings: [
-      // Position 1 (Box 1): E shape at 12th fret - E G A B D
-      [[12, 15], [12, 15], [12, 14], [12, 14], [12, 15], [12, 15]],
-      // Position 2 (Box 2): D shape at 10th fret - D F G A C
-      [[10, 13], [10, 13], [10, 12], [10, 12], [10, 13], [10, 13]],
-      // Position 3 (Box 3): C shape at 8th fret - C Eb F G Bb
-      [[8, 11], [8, 11], [8, 10], [8, 10], [8, 11], [8, 11]],
-      // Position 4 (Box 4): A shape at 5th fret - A C D E G
-      [[5, 8], [5, 8], [5, 7], [5, 7], [5, 8], [5, 8]],
-      // Position 5 (Box 5): G shape at 3rd fret - G Bb C D F
-      [[3, 6], [3, 6], [3, 5], [3, 5], [3, 6], [3, 6]],
+      // Position 1: Open position (frets 0-4)
+      [[0, 3], [0, 3], [0, 2], [0, 2], [1, 3], [0, 3]],
+      // Position 2: 3rd position (frets 3-7)
+      [[3, 5], [3, 5, 7], [5, 7], [5, 7], [3, 5], [3, 5]],
+      // Position 3: 5th position (frets 5-9)
+      [[5, 8], [5, 7], [5, 7], [5, 7, 9], [5, 8], [5, 8]],
+      // Position 4: 7th position (frets 7-11)
+      [[8, 10], [7, 10], [7, 10], [7, 9], [8, 10], [8, 10]],
+      // Position 5: 10th position (frets 10-14)
+      [[10, 12], [10, 12], [10, 12, 14], [12, 14], [10, 13], [10, 12]],
     ],
     positions: ['Position 1 (Box 1)', 'Position 2 (Box 2)', 'Position 3 (Box 3)', 'Position 4 (Box 4)', 'Position 5 (Box 5)'],
   },
