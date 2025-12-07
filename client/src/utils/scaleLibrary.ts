@@ -73,16 +73,16 @@ export const SCALE_LIBRARY: ScaleLibrary = {
     // D Dorian: D E F G A B C - same notes as C major, rooted on D
     intervals: [0, 2, 3, 5, 7, 9, 10],
     fingerings: [
-      // Position 1: Open position (frets 0-4)
-      [[0, 1, 3], [0, 2, 3], [0, 2, 3], [0, 2, 4], [0, 1, 3], [0, 1, 3]],
-      // Position 2: 3rd position (frets 3-7)
-      [[3, 5, 7], [3, 5, 7], [3, 5, 7], [4, 5, 7], [3, 5, 6], [3, 5, 7]],
-      // Position 3: 5th position (frets 5-9)
-      [[5, 7, 8], [5, 7, 8], [5, 7, 9], [5, 7, 9], [5, 6, 8], [5, 7, 8]],
-      // Position 4: 7th position (frets 7-11)
-      [[7, 8, 10], [7, 8, 10], [7, 9, 10], [7, 9, 10], [8, 10], [7, 8, 10]],
-      // Position 5: 10th position (frets 10-14)
-      [[10, 12, 13], [10, 12, 14], [10, 12, 14], [10, 12, 14], [10, 12, 13], [10, 12, 13]],
+      // Position 1: 10th position (frets 10-15) - root on 6th string 10th fret
+      [[10, 12, 13], [10, 12, 14], [10, 12, 14], [10, 12, 14], [12, 13, 15], [12, 13, 15]],
+      // Position 2: 13th position (frets 13-17)
+      [[13, 15, 17], [14, 15, 17], [14, 15, 17], [14, 16, 17], [15, 17, 18], [15, 17, 19]],
+      // Position 3: 15th position (frets 15-20)
+      [[15, 17, 19], [15, 17, 19], [15, 17, 19], [16, 17, 19], [17, 18, 20], [17, 19, 20]],
+      // Position 4: 17th position (frets 17-22)
+      [[17, 19, 20], [17, 19, 20], [17, 19, 21], [17, 19, 21], [20, 22, 24], [19, 20, 22]],
+      // Position 5: 20th position (frets 20-24)
+      [[20, 22, 24], [20, 22, 24], [21, 22, 24], [21, 22, 24], [20, 22, 24], [20, 22, 24]],
     ],
     positions: ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'],
   },
@@ -91,16 +91,16 @@ export const SCALE_LIBRARY: ScaleLibrary = {
     // E Phrygian: E F G A B C D - same notes as C major, rooted on E
     intervals: [0, 1, 3, 5, 7, 8, 10],
     fingerings: [
-      // Position 1: Open position (frets 0-4)
-      [[0, 1, 3], [0, 2, 3], [0, 2, 3], [0, 2, 4], [0, 1, 3], [0, 1, 3]],
-      // Position 2: 3rd position (frets 3-7)
-      [[3, 5, 7], [3, 5, 7], [3, 5, 7], [4, 5, 7], [3, 5, 6], [3, 5, 7]],
-      // Position 3: 5th position (frets 5-9)
-      [[5, 7, 8], [5, 7, 8], [5, 7, 9], [5, 7, 9], [5, 6, 8], [5, 7, 8]],
-      // Position 4: 7th position (frets 7-11)
-      [[7, 8, 10], [7, 8, 10], [7, 9, 10], [7, 9, 10], [8, 10], [7, 8, 10]],
-      // Position 5: 10th position (frets 10-14)
-      [[10, 12, 13], [10, 12, 14], [10, 12, 14], [10, 12, 14], [10, 12, 13], [10, 12, 13]],
+      // Position 1: 12th position (frets 12-17) - root on 6th string 12th fret
+      [[12, 13, 15], [12, 14, 15], [12, 14, 15], [12, 14, 16], [15, 17, 18], [15, 17, 19]],
+      // Position 2: 15th position (frets 15-19)
+      [[15, 17, 19], [15, 17, 19], [15, 17, 19], [16, 17, 19], [17, 18, 20], [17, 19, 20]],
+      // Position 3: 17th position (frets 17-22)
+      [[17, 19, 20], [17, 19, 20], [17, 19, 21], [17, 19, 21], [20, 22, 24], [19, 20, 22]],
+      // Position 4: 19th position (frets 19-24)
+      [[19, 20, 22], [19, 20, 22], [19, 21, 22], [19, 21, 22], [20, 22, 24], [20, 22, 24]],
+      // Position 5: 22nd position (frets 20-24 high register)
+      [[20, 22, 24], [20, 22, 24], [21, 22, 24], [21, 22, 24], [22, 24], [22, 24]],
     ],
     positions: ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'],
   },
@@ -109,16 +109,16 @@ export const SCALE_LIBRARY: ScaleLibrary = {
     // F Lydian: F G A B C D E - same notes as C major, rooted on F
     intervals: [0, 2, 4, 6, 7, 9, 11],
     fingerings: [
-      // Position 1: Open position (frets 0-4)
-      [[0, 1, 3], [0, 2, 3], [0, 2, 3], [0, 2, 4], [0, 1, 3], [0, 1, 3]],
+      // Position 1: 1st position (frets 1-5) - bright Lydian shape
+      [[1, 3, 5], [2, 3, 5], [2, 3, 5], [2, 4, 5], [3, 5, 6], [3, 5, 7]],
       // Position 2: 3rd position (frets 3-7)
-      [[3, 5, 7], [3, 5, 7], [3, 5, 7], [4, 5, 7], [3, 5, 6], [3, 5, 7]],
+      [[3, 5, 7], [3, 5, 7], [3, 5, 7], [4, 5, 7], [5, 6, 8], [5, 7, 8]],
       // Position 3: 5th position (frets 5-9)
-      [[5, 7, 8], [5, 7, 8], [5, 7, 9], [5, 7, 9], [5, 6, 8], [5, 7, 8]],
-      // Position 4: 7th position (frets 7-11)
-      [[7, 8, 10], [7, 8, 10], [7, 9, 10], [7, 9, 10], [8, 10], [7, 8, 10]],
+      [[5, 7, 8], [5, 7, 8], [5, 7, 9], [5, 7, 9], [8, 10, 12], [7, 8, 10]],
+      // Position 4: 8th position (frets 8-12)
+      [[8, 10, 12], [8, 10, 12], [9, 10, 12], [9, 10, 12], [10, 12, 13], [10, 12, 13]],
       // Position 5: 10th position (frets 10-14)
-      [[10, 12, 13], [10, 12, 14], [10, 12, 14], [10, 12, 14], [10, 12, 13], [10, 12, 13]],
+      [[10, 12, 13], [10, 12, 14], [10, 12, 14], [10, 12, 14], [12, 13, 15], [12, 13, 15]],
     ],
     positions: ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'],
   },
@@ -127,16 +127,16 @@ export const SCALE_LIBRARY: ScaleLibrary = {
     // G Mixolydian: G A B C D E F - same notes as C major, rooted on G
     intervals: [0, 2, 4, 5, 7, 9, 10],
     fingerings: [
-      // Position 1: Open position (frets 0-4)
-      [[0, 1, 3], [0, 2, 3], [0, 2, 3], [0, 2, 4], [0, 1, 3], [0, 1, 3]],
-      // Position 2: 3rd position (frets 3-7)
-      [[3, 5, 7], [3, 5, 7], [3, 5, 7], [4, 5, 7], [3, 5, 6], [3, 5, 7]],
-      // Position 3: 5th position (frets 5-9)
-      [[5, 7, 8], [5, 7, 8], [5, 7, 9], [5, 7, 9], [5, 6, 8], [5, 7, 8]],
-      // Position 4: 7th position (frets 7-11)
-      [[7, 8, 10], [7, 8, 10], [7, 9, 10], [7, 9, 10], [8, 10], [7, 8, 10]],
-      // Position 5: 10th position (frets 10-14)
-      [[10, 12, 13], [10, 12, 14], [10, 12, 14], [10, 12, 14], [10, 12, 13], [10, 12, 13]],
+      // Position 1: 3rd position (frets 3-7)
+      [[3, 5, 7], [3, 5, 7], [3, 5, 7], [4, 5, 7], [5, 6, 8], [5, 7, 8]],
+      // Position 2: 5th position (frets 5-9)
+      [[5, 7, 8], [5, 7, 8], [5, 7, 9], [5, 7, 9], [8, 10, 12], [7, 8, 10]],
+      // Position 3: 8th position (frets 8-12)
+      [[8, 10, 12], [8, 10, 12], [9, 10, 12], [9, 10, 12], [10, 12, 13], [10, 12, 13]],
+      // Position 4: 10th position (frets 10-14)
+      [[10, 12, 13], [10, 12, 14], [10, 12, 14], [10, 12, 14], [12, 13, 15], [12, 13, 15]],
+      // Position 5: 13th position (frets 13-17)
+      [[13, 15, 17], [14, 15, 17], [14, 15, 17], [14, 16, 17], [15, 17, 18], [15, 17, 19]],
     ],
     positions: ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'],
   },
@@ -146,16 +146,16 @@ export const SCALE_LIBRARY: ScaleLibrary = {
   'minor': {
     intervals: [0, 2, 3, 5, 7, 8, 10],
     fingerings: [
-      // Position 1: Open position (frets 0-4)
-      [[0, 1, 3], [0, 2, 3], [0, 2, 3], [0, 2, 4], [0, 1, 3], [0, 1, 3]],
-      // Position 2: 3rd position (frets 3-7)
-      [[3, 5, 7], [3, 5, 7], [3, 5, 7], [4, 5, 7], [3, 5, 6], [3, 5, 7]],
-      // Position 3: 5th position (frets 5-9)
-      [[5, 7, 8], [5, 7, 8], [5, 7, 9], [5, 7, 9], [5, 6, 8], [5, 7, 8]],
-      // Position 4: 7th position (frets 7-11)
-      [[7, 8, 10], [7, 8, 10], [7, 9, 10], [7, 9, 10], [8, 10], [7, 8, 10]],
-      // Position 5: 10th position (frets 10-14)
-      [[10, 12, 13], [10, 12, 14], [10, 12, 14], [10, 12, 14], [10, 12, 13], [10, 12, 13]],
+      // Position 1: 5th position (frets 5-9) - classic A Aeolian box
+      [[5, 7, 8], [5, 7, 8], [5, 7, 9], [5, 7, 9], [8, 10, 12], [7, 8, 10]],
+      // Position 2: 8th position (frets 8-12)
+      [[8, 10, 12], [8, 10, 12], [9, 10, 12], [9, 10, 12], [10, 12, 13], [10, 12, 13]],
+      // Position 3: 10th position (frets 10-14)
+      [[10, 12, 13], [10, 12, 14], [10, 12, 14], [10, 12, 14], [12, 13, 15], [12, 13, 15]],
+      // Position 4: 12th position (frets 12-16)
+      [[12, 13, 15], [12, 14, 15], [12, 14, 15], [12, 14, 16], [15, 17, 18], [15, 17, 19]],
+      // Position 5: 15th position (frets 15-19)
+      [[15, 17, 19], [15, 17, 19], [15, 17, 19], [16, 17, 19], [17, 18, 20], [17, 19, 20]],
     ],
     positions: ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'],
   },
@@ -164,16 +164,16 @@ export const SCALE_LIBRARY: ScaleLibrary = {
     // B Locrian: B C D E F G A - same notes as C major, rooted on B
     intervals: [0, 1, 3, 5, 6, 8, 10],
     fingerings: [
-      // Position 1: Open position (frets 0-4)
-      [[0, 1, 3], [0, 2, 3], [0, 2, 3], [0, 2, 4], [0, 1, 3], [0, 1, 3]],
-      // Position 2: 3rd position (frets 3-7)
-      [[3, 5, 7], [3, 5, 7], [3, 5, 7], [4, 5, 7], [3, 5, 6], [3, 5, 7]],
-      // Position 3: 5th position (frets 5-9)
-      [[5, 7, 8], [5, 7, 8], [5, 7, 9], [5, 7, 9], [5, 6, 8], [5, 7, 8]],
-      // Position 4: 7th position (frets 7-11)
-      [[7, 8, 10], [7, 8, 10], [7, 9, 10], [7, 9, 10], [8, 10], [7, 8, 10]],
-      // Position 5: 10th position (frets 10-14)
-      [[10, 12, 13], [10, 12, 14], [10, 12, 14], [10, 12, 14], [10, 12, 13], [10, 12, 13]],
+      // Position 1: 7th position (frets 7-11) - unstable Locrian box
+      [[7, 8, 10], [7, 8, 10], [7, 9, 10], [7, 9, 10], [10, 12, 13], [10, 12, 13]],
+      // Position 2: 10th position (frets 10-14)
+      [[10, 12, 13], [10, 12, 14], [10, 12, 14], [10, 12, 14], [12, 13, 15], [12, 13, 15]],
+      // Position 3: 12th position (frets 12-16)
+      [[12, 13, 15], [12, 14, 15], [12, 14, 15], [12, 14, 16], [15, 17, 18], [15, 17, 19]],
+      // Position 4: 15th position (frets 15-19)
+      [[15, 17, 19], [15, 17, 19], [15, 17, 19], [16, 17, 19], [17, 18, 20], [17, 19, 20]],
+      // Position 5: 17th position (frets 17-22)
+      [[17, 19, 20], [17, 19, 20], [17, 19, 21], [17, 19, 21], [20, 22, 24], [19, 20, 22]],
     ],
     positions: ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'],
   },
