@@ -190,3 +190,71 @@ export function displayChordName(chordName: string, key: string): string {
   
   return displayRoot + quality;
 }
+
+/**
+ * Extract the root note from a chord name
+ * @param chordName - The chord name (e.g., "Cmaj7", "F#m", "Bbdim")
+ * @returns The root note (e.g., "C", "F#", "Bb")
+ */
+export function extractChordRoot(chordName: string): string {
+  const match = chordName.match(/^([A-G][#b]?)/i);
+  return match ? match[1] : chordName;
+}
+
+/**
+ * Get the interval name between two chord roots
+ * @param fromChord - The starting chord name
+ * @param toChord - The target chord name
+ * @returns The interval name (e.g., "P4", "m3", "M2")
+ */
+export function getIntervalBetweenChords(fromChord: string, toChord: string): string {
+  const fromRoot = extractChordRoot(fromChord);
+  const toRoot = extractChordRoot(toChord);
+  const semitones = calculateSemitoneDistance(fromRoot, toRoot);
+  
+  const intervalNames: Record<number, string> = {
+    0: 'P1',   // Perfect unison
+    1: 'm2',   // Minor 2nd
+    2: 'M2',   // Major 2nd
+    3: 'm3',   // Minor 3rd
+    4: 'M3',   // Major 3rd
+    5: 'P4',   // Perfect 4th
+    6: 'TT',   // Tritone
+    7: 'P5',   // Perfect 5th
+    8: 'm6',   // Minor 6th
+    9: 'M6',   // Major 6th
+    10: 'm7',  // Minor 7th
+    11: 'M7',  // Major 7th
+  };
+  
+  return intervalNames[semitones] || `${semitones}`;
+}
+
+/**
+ * Get a human-readable interval description
+ * @param fromChord - The starting chord name
+ * @param toChord - The target chord name
+ * @returns Human-readable interval (e.g., "4th", "3rd", "5th")
+ */
+export function getIntervalDescription(fromChord: string, toChord: string): string {
+  const fromRoot = extractChordRoot(fromChord);
+  const toRoot = extractChordRoot(toChord);
+  const semitones = calculateSemitoneDistance(fromRoot, toRoot);
+  
+  const descriptions: Record<number, string> = {
+    0: 'unison',
+    1: 'min 2nd',
+    2: 'maj 2nd',
+    3: 'min 3rd',
+    4: 'maj 3rd',
+    5: '4th',
+    6: 'tritone',
+    7: '5th',
+    8: 'min 6th',
+    9: 'maj 6th',
+    10: 'min 7th',
+    11: 'maj 7th',
+  };
+  
+  return descriptions[semitones] || `${semitones} semitones`;
+}
