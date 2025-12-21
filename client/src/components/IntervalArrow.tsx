@@ -17,37 +17,37 @@ export const IntervalArrow: React.FC<IntervalArrowProps> = ({
   return (
     <div 
       className={`
-        flex flex-col items-center justify-center
-        ${isCompact ? 'mx-1 min-w-[32px]' : 'mx-2 min-w-[40px]'}
+        flex items-center justify-center self-center
+        ${isCompact ? 'mx-2 my-2' : 'mx-3 my-2'}
       `}
       aria-label={`Interval from ${fromChord} to ${toChord}: ${interval}`}
     >
       <div 
         className={`
-          flex items-center justify-center
+          flex items-center gap-1
           bg-surface/60 backdrop-blur-sm
           border border-border/50 rounded-full
           text-text/70 font-mono font-semibold
-          shadow-sm
-          ${isCompact ? 'w-8 h-8 text-[10px]' : 'w-10 h-10 text-xs'}
+          shadow-sm px-2
+          ${isCompact ? 'h-7 text-[10px]' : 'h-8 text-xs'}
         `}
       >
-        {interval}
+        <span>{interval}</span>
+        <svg 
+          className={`text-text/50 ${isCompact ? 'w-3 h-3' : 'w-4 h-4'}`}
+          viewBox="0 0 16 16" 
+          fill="none"
+          aria-hidden="true"
+        >
+          <path 
+            d="M3 8h10M10 5l3 3-3 3" 
+            stroke="currentColor" 
+            strokeWidth="1.5" 
+            strokeLinecap="round" 
+            strokeLinejoin="round"
+          />
+        </svg>
       </div>
-      <svg 
-        className={`text-text/40 ${isCompact ? 'w-4 h-2 mt-0.5' : 'w-5 h-3 mt-1'}`}
-        viewBox="0 0 20 12" 
-        fill="none"
-        aria-hidden="true"
-      >
-        <path 
-          d="M2 6h14M12 2l4 4-4 4" 
-          stroke="currentColor" 
-          strokeWidth="2" 
-          strokeLinecap="round" 
-          strokeLinejoin="round"
-        />
-      </svg>
     </div>
   );
 };
