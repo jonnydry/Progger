@@ -4,9 +4,28 @@
  */
 
 /**
+ * Normalize a progression string for consistent caching
+ * Removes whitespace, converts to lowercase, and removes special characters
+ *
+ * @param progression - Progression pattern (e.g., 'I-IV-V', 'i - iv - v', 'I - IV - V')
+ * @returns Normalized progression string
+ */
+function normalizeProgression(progression: string): string {
+  return progression
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "") // Remove all whitespace
+    .replace(/[^a-z0-9]/g, "-"); // Replace special chars with dashes
+}
+
+/**
  * Generate a cache key for a chord progression request
  * This function must be identical in both client and server code
- * 
+ *
+ * Normalization ensures cache hits for similar requests:
+ * - 'I-IV-V' === 'i-iv-v' === 'I - IV - V'
+ * - 'C Major' === 'c major' === 'C  Major'
+ *
  * @param key - Musical key (e.g., 'C', 'F#', 'Bb')
  * @param mode - Mode (e.g., 'major', 'minor', 'dorian')
  * @param includeTensions - Whether to include tension chords
@@ -19,16 +38,15 @@ export function getProgressionCacheKey(
   mode: string,
   includeTensions: boolean,
   numChords: number,
-  selectedProgression: string
+  selectedProgression: string,
 ): string {
   const semanticParts = [
-    key.toLowerCase(),
-    mode.toLowerCase(),
-    includeTensions ? 'tensions' : 'no-tensions',
+    key.toLowerCase().trim(),
+    mode.toLowerCase().trim(),
+    includeTensions ? "tensions" : "no-tensions",
     numChords.toString(),
-    selectedProgression.toLowerCase().replace(/[^a-z0-9]/g, '-')
+    normalizeProgression(selectedProgression),
   ];
-  
-  return `progression:${semanticParts.join(':')}`;
-}
 
+  return `progression:${semanticParts.join(":")}`;
+}

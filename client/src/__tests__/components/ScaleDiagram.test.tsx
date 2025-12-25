@@ -1,12 +1,13 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
-import { ScaleDiagram } from '@/components/ScaleDiagram';
-import type { ScaleInfo } from '@/types';
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import { ScaleDiagram } from "@/components/ScaleDiagram";
+import { SkeletonScaleDiagram } from "@/components/SkeletonScaleDiagram";
+import type { ScaleInfo } from "@/types";
 
 const mockScaleInfo = (overrides: Partial<ScaleInfo> = {}): ScaleInfo => ({
-  name: 'C Major',
-  rootNote: 'C',
-  notes: ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
+  name: "C Major",
+  rootNote: "C",
+  notes: ["C", "D", "E", "F", "G", "A", "B"],
   fingering: [
     [8, 10, 12],
     [8, 10, 12],
@@ -18,7 +19,7 @@ const mockScaleInfo = (overrides: Partial<ScaleInfo> = {}): ScaleInfo => ({
   ...overrides,
 });
 
-vi.mock('@/components/ScaleDiagramModal', () => ({
+vi.mock("@/components/ScaleDiagramModal", () => ({
   __esModule: true,
   default: ({ onClose }: { onClose: () => void }) => (
     <div data-testid="scale-diagram-modal">
@@ -27,30 +28,29 @@ vi.mock('@/components/ScaleDiagramModal', () => ({
   ),
 }));
 
-describe('ScaleDiagram', () => {
+describe("ScaleDiagram", () => {
   afterEach(() => {
     vi.clearAllMocks();
   });
 
-  it('renders modal toggle and view buttons', async () => {
-    render(
-      <ScaleDiagram
-        scaleInfo={mockScaleInfo()}
-        musicalKey="C"
-      />
-    );
+  it("renders modal toggle and view buttons", async () => {
+    render(<ScaleDiagram scaleInfo={mockScaleInfo()} musicalKey="C" />);
 
-    expect(screen.getByRole('button', { name: /pattern/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /map/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /pattern/i }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /map/i })).toBeInTheDocument();
 
     const expandButton = screen.getByLabelText(/expand to full view/i);
     fireEvent.click(expandButton);
-    expect(await screen.findByTestId('scale-diagram-modal')).toBeInTheDocument();
+    expect(
+      await screen.findByTestId("scale-diagram-modal"),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByText(/close/i));
-    expect(screen.queryByTestId('scale-diagram-modal')).not.toBeInTheDocument();
+    expect(screen.queryByTestId("scale-diagram-modal")).not.toBeInTheDocument();
   });
 
-  it('displays position selector when multiple positions exist', () => {
+  it("displays position selector when multiple positions exist", () => {
     const multiPositionScale: ScaleInfo = {
       ...mockScaleInfo(),
       fingering: [
@@ -63,12 +63,7 @@ describe('ScaleDiagram', () => {
       ],
     };
 
-    render(
-      <ScaleDiagram
-        scaleInfo={multiPositionScale}
-        musicalKey="C"
-      />
-    );
+    render(<ScaleDiagram scaleInfo={multiPositionScale} musicalKey="C" />);
 
     expect(screen.getByText(/Pos:/)).toBeInTheDocument();
   });

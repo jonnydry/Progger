@@ -1,85 +1,119 @@
-import React, { useState, useCallback, useEffect, useMemo, lazy, Suspense, useRef } from 'react';
-import { Controls } from './components/Controls';
-import { VoicingsGrid } from './components/VoicingsGrid';
-import { SkeletonScaleDiagram } from './components/ScaleDiagram';
-import { MainLayout } from './components/Layout/MainLayout';
-import { useAuth } from './hooks/useAuth';
-import { useTheme } from './hooks/useTheme';
-import { useGenerateProgression, useAnalyzeCustomProgression } from './hooks/useProgression';
-import { validateChordLibrary, preloadAllChords } from './utils/chordLibrary';
-import { formatChordDisplayName } from './utils/chordFormatting';
-import { splitChordName, isSupportedChordQuality } from '@shared/music/chordQualities';
-import { detectKey } from './utils/smartChordSuggestions';
-import type { ProgressionResult } from './types';
-import { KEYS, MODES, COMMON_PROGRESSIONS } from './constants';
-import proggerMascot from './assets/progger-logo.png';
-import { PixelCard } from './components/PixelCard';
+import React, {
+  useState,
+  useCallback,
+  useEffect,
+  useMemo,
+  lazy,
+  Suspense,
+  useRef,
+} from "react";
+import { Controls } from "./components/Controls";
+import { VoicingsGrid } from "./components/VoicingsGrid";
+import { SkeletonScaleDiagram } from "./components/SkeletonScaleDiagram";
+import { MainLayout } from "./components/Layout/MainLayout";
+import { useAuth } from "./hooks/useAuth";
+import { useTheme } from "./hooks/useTheme";
+import {
+  useGenerateProgression,
+  useAnalyzeCustomProgression,
+} from "./hooks/useProgression";
+import { validateChordLibrary, preloadAllChords } from "./utils/chordLibrary";
+import { formatChordDisplayName } from "./utils/chordFormatting";
+import {
+  splitChordName,
+  isSupportedChordQuality,
+} from "@shared/music/chordQualities";
+import { detectKey } from "./utils/smartChordSuggestions";
+import type { ProgressionResult } from "./types";
+import { KEYS, MODES, COMMON_PROGRESSIONS } from "./constants";
+import proggerMascot from "./assets/progger-logo.webp";
+import { PixelCard } from "./components/PixelCard";
 
-const LazyScaleDiagram = lazy(() => import('./components/ScaleDiagram'));
+const LazyScaleDiagram = lazy(() => import("./components/ScaleDiagram"));
 
 const App: React.FC = () => {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
-  const { theme, themes, themeIndex, setThemeIndex, toggleTheme, isProggerTheme } = useTheme();
+  const {
+    theme,
+    themes,
+    themeIndex,
+    setThemeIndex,
+    toggleTheme,
+    isProggerTheme,
+  } = useTheme();
 
   const generateMutation = useGenerateProgression();
   const analyzeMutation = useAnalyzeCustomProgression();
 
   const [key, setKey] = useState<string>(KEYS[0]);
   const [mode, setMode] = useState<string>(MODES[0].value);
-  const [selectedProgression, setSelectedProgression] = useState<string>(COMMON_PROGRESSIONS[0].value);
+  const [selectedProgression, setSelectedProgression] = useState<string>(
+    COMMON_PROGRESSIONS[0].value,
+  );
   const [numChords, setNumChords] = useState<number>(4);
   const [includeTensions, setIncludeTensions] = useState<boolean>(false);
-  const [progressionResult, setProgressionResult] = useState<ProgressionResult | null>(null);
+  const [progressionResult, setProgressionResult] =
+    useState<ProgressionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const [isStashOpen, setIsStashOpen] = useState(false);
   const [isCustomMode, setIsCustomMode] = useState(false);
-  const [customProgression, setCustomProgression] = useState<Array<{ root: string; quality: string }>>([
-    { root: 'C', quality: 'major' },
-    { root: 'A', quality: 'minor' },
-    { root: 'F', quality: 'major' },
-    { root: 'G', quality: 'major' },
+  const [customProgression, setCustomProgression] = useState<
+    Array<{ root: string; quality: string }>
+  >([
+    { root: "C", quality: "major" },
+    { root: "A", quality: "minor" },
+    { root: "F", quality: "major" },
+    { root: "G", quality: "major" },
   ]);
   const [numCustomChords, setNumCustomChords] = useState<number>(4);
-  const [customKey, setCustomKey] = useState<string>('C');
-  const [customMode, setCustomMode] = useState<string>('Major');
-  const [currentView, setCurrentView] = useState<'home' | 'about'>('home');
+  const [customKey, setCustomKey] = useState<string>("C");
+  const [customMode, setCustomMode] = useState<string>("Major");
+  const [currentView, setCurrentView] = useState<"home" | "about">("home");
   const resultsRef = useRef<HTMLElement>(null);
 
   const isLoading = generateMutation.isPending || analyzeMutation.isPending;
 
   const handleLogin = () => {
-    window.location.href = '/api/login';
+    window.location.href = "/api/login";
   };
 
   const handleLogout = () => {
-    window.location.href = '/api/logout';
+    window.location.href = "/api/logout";
   };
 
   useEffect(() => {
     validateChordLibrary();
-    preloadAllChords().catch(err => {
-      console.warn('Failed to preload chord data:', err);
+    preloadAllChords().catch((err) => {
+      console.warn("Failed to preload chord data:", err);
     });
   }, []);
 
-  const userProfile = useMemo(() => user ? {
-    name: user.firstName && user.lastName
-      ? `${user.firstName} ${user.lastName}`.trim()
-      : user.email || 'User',
-    email: user.email || '',
-    avatar: user.profileImageUrl || undefined,
-  } : null, [user]);
+  const userProfile = useMemo(
+    () =>
+      user
+        ? {
+            name:
+              user.firstName && user.lastName
+                ? `${user.firstName} ${user.lastName}`.trim()
+                : user.email || "User",
+            email: user.email || "",
+            avatar: user.profileImageUrl || undefined,
+          }
+        : null,
+    [user],
+  );
 
   useEffect(() => {
     if (!isLoading && progressionResult && resultsRef.current) {
-      resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      resultsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   }, [isLoading, progressionResult]);
 
   useEffect(() => {
-    (window as any).clearProgCache = () => console.log('Cache clearing is now handled by React Query');
-    console.log('💡 Debug: Cache is now handled by React Query');
+    (window as any).clearProgCache = () =>
+      console.log("Cache clearing is now handled by React Query");
+    console.log("💡 Debug: Cache is now handled by React Query");
   }, []);
 
   useEffect(() => {
@@ -87,44 +121,69 @@ const App: React.FC = () => {
       const detected = detectKey(customProgression);
       if (detected) {
         setCustomKey(detected.key);
-        setCustomMode(detected.mode === 'major' ? 'Major' : 'Minor');
+        setCustomMode(detected.mode === "major" ? "Major" : "Minor");
       }
     }
   }, [customProgression, isCustomMode]);
 
-  const handleLoadProgression = useCallback((loadedKey: string, loadedMode: string, progression: ProgressionResult) => {
-    setKey(loadedKey);
-    setMode(loadedMode);
-    setProgressionResult(progression);
+  const handleLoadProgression = useCallback(
+    (loadedKey: string, loadedMode: string, progression: ProgressionResult) => {
+      setKey(loadedKey);
+      setMode(loadedMode);
+      setProgressionResult(progression);
 
-    setTimeout(() => {
-      if (resultsRef.current) {
-        resultsRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }, 100);
-  }, []);
+      setTimeout(() => {
+        if (resultsRef.current) {
+          resultsRef.current.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }
+      }, 100);
+    },
+    [],
+  );
 
-  const progressionLength = useMemo(() =>
-    selectedProgression === 'auto' ? numChords : selectedProgression.split('-').length,
-    [selectedProgression, numChords]
+  const progressionLength = useMemo(
+    () =>
+      selectedProgression === "auto"
+        ? numChords
+        : selectedProgression.split("-").length,
+    [selectedProgression, numChords],
   );
 
   const handleGenerate = useCallback(() => {
     setError(null);
     setProgressionResult(null);
-    generateMutation.mutate({
-      key, mode, includeTensions, numChords: progressionLength, selectedProgression
-    }, {
-      onSuccess: (data) => setProgressionResult(data),
-      onError: (err) => setError(err.message)
-    });
-  }, [key, mode, includeTensions, progressionLength, selectedProgression, generateMutation]);
+    generateMutation.mutate(
+      {
+        key,
+        mode,
+        includeTensions,
+        numChords: progressionLength,
+        selectedProgression,
+      },
+      {
+        onSuccess: (data) => setProgressionResult(data),
+        onError: (err) => setError(err.message),
+      },
+    );
+  }, [
+    key,
+    mode,
+    includeTensions,
+    progressionLength,
+    selectedProgression,
+    generateMutation,
+  ]);
 
   const handleAnalyzeCustom = useCallback(() => {
     setError(null);
     setProgressionResult(null);
 
-    const formattedChords = customProgression.map(chord => formatChordDisplayName(chord.root, chord.quality));
+    const formattedChords = customProgression.map((chord) =>
+      formatChordDisplayName(chord.root, chord.quality),
+    );
     const invalidChords: string[] = [];
     for (const chordName of formattedChords) {
       const parsed = splitChordName(chordName);
@@ -134,7 +193,9 @@ const App: React.FC = () => {
     }
 
     if (invalidChords.length > 0) {
-      setError(`Invalid chord${invalidChords.length > 1 ? 's' : ''}: ${invalidChords.join(', ')}. Please check your chord selections.`);
+      setError(
+        `Invalid chord${invalidChords.length > 1 ? "s" : ""}: ${invalidChords.join(", ")}. Please check your chord selections.`,
+      );
       return;
     }
 
@@ -142,12 +203,12 @@ const App: React.FC = () => {
       onSuccess: (result) => {
         setProgressionResult(result);
         if (result.detectedKey && result.detectedMode) {
-          const normalizedKey = result.detectedKey.replace(/m$/i, '');
+          const normalizedKey = result.detectedKey.replace(/m$/i, "");
           setCustomKey(normalizedKey);
           setCustomMode(result.detectedMode);
         }
       },
-      onError: (err) => setError(err.message)
+      onError: (err) => setError(err.message),
     });
   }, [customProgression, analyzeMutation]);
 
@@ -226,7 +287,14 @@ const App: React.FC = () => {
         {/* Loading State */}
         {isLoading && (
           <div className="space-y-16">
-            <VoicingsGrid progression={[]} isLoading={true} skeletonCount={skeletonCount} musicalKey={key} currentMode={mode} progressionResult={progressionResult} />
+            <VoicingsGrid
+              progression={[]}
+              isLoading={true}
+              skeletonCount={skeletonCount}
+              musicalKey={key}
+              currentMode={mode}
+              progressionResult={progressionResult}
+            />
             <SkeletonScaleDiagram />
           </div>
         )}
@@ -234,7 +302,13 @@ const App: React.FC = () => {
         {/* Result State */}
         {!isLoading && progressionResult && (
           <div className="space-y-16">
-            <VoicingsGrid progression={progressionResult.progression} isLoading={false} musicalKey={key} currentMode={mode} progressionResult={progressionResult} />
+            <VoicingsGrid
+              progression={progressionResult.progression}
+              isLoading={false}
+              musicalKey={key}
+              currentMode={mode}
+              progressionResult={progressionResult}
+            />
 
             <div className="text-center border-t border-border pt-12">
               <h2 className="font-bebas text-4xl font-semibold text-text/80 tracking-wide">
@@ -247,7 +321,10 @@ const App: React.FC = () => {
                   <div
                     key={index}
                     className="animate-fade-scale-in"
-                    style={{ animationDelay: `${index * 150}ms`, animationFillMode: 'backwards' }}
+                    style={{
+                      animationDelay: `${index * 150}ms`,
+                      animationFillMode: "backwards",
+                    }}
                   >
                     <LazyScaleDiagram scaleInfo={scale} musicalKey={key} />
                   </div>
@@ -259,7 +336,13 @@ const App: React.FC = () => {
 
         {/* Initial/Empty State */}
         {!isLoading && !progressionResult && !error && (
-          <VoicingsGrid progression={[]} isLoading={false} musicalKey={key} currentMode={mode} progressionResult={progressionResult} />
+          <VoicingsGrid
+            progression={[]}
+            isLoading={false}
+            musicalKey={key}
+            currentMode={mode}
+            progressionResult={progressionResult}
+          />
         )}
       </section>
     </MainLayout>

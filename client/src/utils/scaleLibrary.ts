@@ -31,8 +31,11 @@
  * ...
  */
 
-import { noteToValue, valueToNote } from './musicTheory';
-import { normalizeScaleDescriptor, FALLBACK_SCALE_LIBRARY_KEYS } from '@shared/music/scaleModes';
+import { noteToValue, valueToNote } from "./musicTheory";
+import {
+  normalizeScaleDescriptor,
+  FALLBACK_SCALE_LIBRARY_KEYS,
+} from "@shared/music/scaleModes";
 
 export interface ScalePattern {
   intervals: number[];
@@ -42,308 +45,889 @@ export interface ScalePattern {
 
 type ScaleLibrary = Record<string, ScalePattern>;
 
+// Cache for sorted pattern indices to avoid redundant sorting
+const sortedPatternIndicesCache = new Map<string, number[]>();
+
 export const SCALE_LIBRARY: ScaleLibrary = {
   // Major scale (also known as Ionian mode)
   // Stored patterns are for C major - transposed to other keys automatically
   // C Major notes: C(0), D(2), E(4), F(5), G(7), A(9), B(11)
   // Standard tuning: Low E(4), A(9), D(2), G(7), B(11), High E(4)
-  'major': {
+  major: {
     intervals: [0, 2, 4, 5, 7, 9, 11],
     fingerings: [
       // Position 1: Open position (frets 0-3) - CAGED "C shape"
       // Low E: E(0), F(1), G(3) | A: A(0), B(2), C(3) | D: D(0), E(2), F(3) | G: G(0), A(2), B(4) | B: C(1), D(3), E(5) | High E: E(0), F(1), G(3)
-      [[0, 1, 3], [0, 2, 3], [0, 2, 3], [0, 2], [1, 3, 5], [0, 1, 3]],
+      [
+        [0, 1, 3],
+        [0, 2, 3],
+        [0, 2, 3],
+        [0, 2],
+        [1, 3, 5],
+        [0, 1, 3],
+      ],
       // Position 2: 5th position (frets 5-8) - CAGED "A shape"
       // Low E: A(5), B(7), C(8) | A: D(5), E(7), F(8) | D: G(5), A(7), B(9) | G: C(5), D(7), E(9) | B: F(6), G(8), A(10) | High E: A(5), B(7), C(8)
-      [[5, 7, 8], [5, 7, 8], [5, 7, 9], [5, 7, 9], [6, 8, 10], [5, 7, 8]],
+      [
+        [5, 7, 8],
+        [5, 7, 8],
+        [5, 7, 9],
+        [5, 7, 9],
+        [6, 8, 10],
+        [5, 7, 8],
+      ],
       // Position 3: 7th position (frets 7-10) - CAGED "G shape"
       // Low E: B(7), C(8), D(10) | A: E(7), F(8), G(10) | D: A(7), B(9), C(10) | G: D(7), E(9), F(10) | B: G(8), A(10), B(12) | High E: B(7), C(8), D(10)
-      [[7, 8, 10], [7, 8, 10], [7, 9, 10], [7, 9, 10], [8, 10, 12], [7, 8, 10]],
+      [
+        [7, 8, 10],
+        [7, 8, 10],
+        [7, 9, 10],
+        [7, 9, 10],
+        [8, 10, 12],
+        [7, 8, 10],
+      ],
       // Position 4: 8th position (frets 8-12) - CAGED "E shape"
       // Low E: C(8), D(10), E(12) | A: F(8), G(10), A(12) | D: B(9), C(10), D(12) | G: E(9), F(10), G(12) | B: A(10), B(12), C(13) | High E: C(8), D(10), E(12)
-      [[8, 10, 12], [8, 10, 12], [9, 10, 12], [9, 10, 12], [10, 12, 13], [8, 10, 12]],
+      [
+        [8, 10, 12],
+        [8, 10, 12],
+        [9, 10, 12],
+        [9, 10, 12],
+        [10, 12, 13],
+        [8, 10, 12],
+      ],
       // Position 5: 12th position (frets 12-15) - CAGED "D shape" (octave of open)
       // Same as position 1 but 12 frets higher
-      [[12, 13, 15], [12, 14, 15], [12, 14, 15], [12, 14], [13, 15, 17], [12, 13, 15]],
+      [
+        [12, 13, 15],
+        [12, 14, 15],
+        [12, 14, 15],
+        [12, 14],
+        [13, 15, 17],
+        [12, 13, 15],
+      ],
     ],
-    positions: ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'],
+    positions: [
+      "Position 1",
+      "Position 2",
+      "Position 3",
+      "Position 4",
+      "Position 5",
+    ],
   },
-  
-  'dorian': {
+
+  dorian: {
     // D Dorian: D E F G A B C - same notes as C major, rooted on D
+    // Patterns stored for D Dorian - transpose automatically to other keys
     intervals: [0, 2, 3, 5, 7, 9, 10],
     fingerings: [
-      // Position 1: 10th position (frets 10-15) - root on 6th string 10th fret
-      [[10, 12, 13], [10, 12, 14], [10, 12, 14], [10, 12, 14], [12, 13, 15], [12, 13, 15]],
-      // Position 2: 13th position (frets 13-17)
-      [[13, 15, 17], [14, 15, 17], [14, 15, 17], [14, 16, 17], [15, 17, 18], [15, 17, 19]],
-      // Position 3: 15th position (frets 15-20)
-      [[15, 17, 19], [15, 17, 19], [15, 17, 19], [16, 17, 19], [17, 18, 20], [17, 19, 20]],
-      // Position 4: 17th position (frets 17-22)
-      [[17, 19, 20], [17, 19, 20], [17, 19, 21], [17, 19, 21], [20, 22, 24], [19, 20, 22]],
-      // Position 5: 20th position (frets 20-24)
-      [[20, 22, 24], [20, 22, 24], [21, 22, 24], [21, 22, 24], [20, 22, 24], [20, 22, 24]],
+      // Position 1: Open position (frets 0-4) - CAGED "D shape"
+      // D Dorian root on low E 10th fret, transposed down to open position
+      [
+        [0, 2, 3],
+        [0, 2, 4],
+        [0, 2, 4],
+        [0, 2, 4],
+        [2, 3, 5],
+        [2, 3, 5],
+      ],
+      // Position 2: 3rd position (frets 3-7)
+      [
+        [3, 5, 7],
+        [4, 5, 7],
+        [4, 5, 7],
+        [4, 6, 7],
+        [5, 7, 8],
+        [5, 7, 9],
+      ],
+      // Position 3: 5th position (frets 5-9)
+      [
+        [5, 7, 9],
+        [5, 7, 9],
+        [5, 7, 9],
+        [6, 7, 9],
+        [7, 8, 10],
+        [7, 9, 10],
+      ],
+      // Position 4: 7th position (frets 7-11)
+      [
+        [7, 9, 10],
+        [7, 9, 10],
+        [7, 9, 11],
+        [7, 9, 11],
+        [10, 12, 14],
+        [9, 10, 12],
+      ],
+      // Position 5: 10th position (frets 10-14)
+      [
+        [10, 12, 14],
+        [10, 12, 14],
+        [11, 12, 14],
+        [11, 12, 14],
+        [10, 12, 14],
+        [10, 12, 14],
+      ],
     ],
-    positions: ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'],
+    positions: [
+      "Position 1",
+      "Position 2",
+      "Position 3",
+      "Position 4",
+      "Position 5",
+    ],
   },
-  
-  'phrygian': {
+
+  phrygian: {
     // E Phrygian: E F G A B C D - same notes as C major, rooted on E
+    // Patterns stored for E Phrygian - transpose automatically to other keys
     intervals: [0, 1, 3, 5, 7, 8, 10],
     fingerings: [
-      // Position 1: 12th position (frets 12-17) - root on 6th string 12th fret
-      [[12, 13, 15], [12, 14, 15], [12, 14, 15], [12, 14, 16], [15, 17, 18], [15, 17, 19]],
-      // Position 2: 15th position (frets 15-19)
-      [[15, 17, 19], [15, 17, 19], [15, 17, 19], [16, 17, 19], [17, 18, 20], [17, 19, 20]],
-      // Position 3: 17th position (frets 17-22)
-      [[17, 19, 20], [17, 19, 20], [17, 19, 21], [17, 19, 21], [20, 22, 24], [19, 20, 22]],
-      // Position 4: 19th position (frets 19-24)
-      [[19, 20, 22], [19, 20, 22], [19, 21, 22], [19, 21, 22], [20, 22, 24], [20, 22, 24]],
-      // Position 5: 22nd position (frets 20-24 high register)
-      [[20, 22, 24], [20, 22, 24], [21, 22, 24], [21, 22, 24], [22, 24], [22, 24]],
+      // Position 1: Open position (frets 0-5) - CAGED "E shape"
+      [
+        [0, 1, 3],
+        [0, 2, 3],
+        [0, 2, 3],
+        [0, 2, 4],
+        [3, 5, 6],
+        [3, 5, 7],
+      ],
+      // Position 2: 3rd position (frets 3-7)
+      [
+        [3, 5, 7],
+        [3, 5, 7],
+        [3, 5, 7],
+        [4, 5, 7],
+        [5, 6, 8],
+        [5, 7, 8],
+      ],
+      // Position 3: 5th position (frets 5-10)
+      [
+        [5, 7, 8],
+        [5, 7, 8],
+        [5, 7, 9],
+        [5, 7, 9],
+        [8, 10, 12],
+        [7, 8, 10],
+      ],
+      // Position 4: 7th position (frets 7-12)
+      [
+        [7, 8, 10],
+        [7, 8, 10],
+        [7, 9, 10],
+        [7, 9, 10],
+        [8, 10, 12],
+        [8, 10, 12],
+      ],
+      // Position 5: 10th position (frets 10-14)
+      [
+        [10, 12, 14],
+        [10, 12, 14],
+        [11, 12, 14],
+        [11, 12, 14],
+        [12, 14],
+        [12, 14],
+      ],
     ],
-    positions: ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'],
+    positions: [
+      "Position 1",
+      "Position 2",
+      "Position 3",
+      "Position 4",
+      "Position 5",
+    ],
   },
-  
-  'lydian': {
+
+  lydian: {
     // F Lydian: F G A B C D E - same notes as C major, rooted on F
+    // Patterns stored for F Lydian - transpose automatically to other keys
     intervals: [0, 2, 4, 6, 7, 9, 11],
     fingerings: [
-      // Position 1: 1st position (frets 1-5) - bright Lydian shape
-      [[1, 3, 5], [2, 3, 5], [2, 3, 5], [2, 4, 5], [3, 5, 6], [3, 5, 7]],
-      // Position 2: 3rd position (frets 3-7)
-      [[3, 5, 7], [3, 5, 7], [3, 5, 7], [4, 5, 7], [5, 6, 8], [5, 7, 8]],
-      // Position 3: 5th position (frets 5-9)
-      [[5, 7, 8], [5, 7, 8], [5, 7, 9], [5, 7, 9], [8, 10, 12], [7, 8, 10]],
-      // Position 4: 8th position (frets 8-12)
-      [[8, 10, 12], [8, 10, 12], [9, 10, 12], [9, 10, 12], [10, 12, 13], [10, 12, 13]],
-      // Position 5: 10th position (frets 10-14)
-      [[10, 12, 13], [10, 12, 14], [10, 12, 14], [10, 12, 14], [12, 13, 15], [12, 13, 15]],
+      // Position 1: 1st position (frets 1-6) - CAGED "F shape" - bright Lydian shape
+      [
+        [1, 3, 5],
+        [2, 3, 5],
+        [2, 3, 5],
+        [2, 4, 5],
+        [3, 5, 6],
+        [3, 5, 7],
+      ],
+      // Position 2: 3rd position (frets 3-8) - CAGED "D shape"
+      [
+        [3, 5, 7],
+        [3, 5, 7],
+        [3, 5, 7],
+        [4, 5, 7],
+        [5, 6, 8],
+        [5, 7, 8],
+      ],
+      // Position 3: 5th position (frets 5-10) - CAGED "C shape"
+      [
+        [5, 7, 8],
+        [5, 7, 8],
+        [5, 7, 9],
+        [5, 7, 9],
+        [8, 10, 12],
+        [7, 8, 10],
+      ],
+      // Position 4: 8th position (frets 8-13) - CAGED "A shape"
+      [
+        [8, 10, 12],
+        [8, 10, 12],
+        [9, 10, 12],
+        [9, 10, 12],
+        [10, 12, 13],
+        [10, 12, 13],
+      ],
+      // Position 5: 10th position (frets 10-15) - CAGED "G shape"
+      [
+        [10, 12, 13],
+        [10, 12, 14],
+        [10, 12, 14],
+        [10, 12, 14],
+        [12, 13, 15],
+        [12, 13, 15],
+      ],
     ],
-    positions: ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'],
+    positions: [
+      "Position 1",
+      "Position 2",
+      "Position 3",
+      "Position 4",
+      "Position 5",
+    ],
   },
-  
-  'mixolydian': {
+
+  mixolydian: {
     // G Mixolydian: G A B C D E F - same notes as C major, rooted on G
+    // Patterns stored for G Mixolydian - transpose automatically to other keys
     intervals: [0, 2, 4, 5, 7, 9, 10],
     fingerings: [
-      // Position 1: 3rd position (frets 3-7)
-      [[3, 5, 7], [3, 5, 7], [3, 5, 7], [4, 5, 7], [5, 6, 8], [5, 7, 8]],
-      // Position 2: 5th position (frets 5-9)
-      [[5, 7, 8], [5, 7, 8], [5, 7, 9], [5, 7, 9], [8, 10, 12], [7, 8, 10]],
-      // Position 3: 8th position (frets 8-12)
-      [[8, 10, 12], [8, 10, 12], [9, 10, 12], [9, 10, 12], [10, 12, 13], [10, 12, 13]],
-      // Position 4: 10th position (frets 10-14)
-      [[10, 12, 13], [10, 12, 14], [10, 12, 14], [10, 12, 14], [12, 13, 15], [12, 13, 15]],
-      // Position 5: 13th position (frets 13-17)
-      [[13, 15, 17], [14, 15, 17], [14, 15, 17], [14, 16, 17], [15, 17, 18], [15, 17, 19]],
+      // Position 1: 3rd position (frets 3-8) - CAGED "G shape"
+      [
+        [3, 5, 7],
+        [3, 5, 7],
+        [3, 5, 7],
+        [4, 5, 7],
+        [5, 6, 8],
+        [5, 7, 8],
+      ],
+      // Position 2: 5th position (frets 5-10) - CAGED "E shape"
+      [
+        [5, 7, 8],
+        [5, 7, 8],
+        [5, 7, 9],
+        [5, 7, 9],
+        [8, 10, 12],
+        [7, 8, 10],
+      ],
+      // Position 3: 8th position (frets 8-13) - CAGED "D shape"
+      [
+        [8, 10, 12],
+        [8, 10, 12],
+        [9, 10, 12],
+        [9, 10, 12],
+        [10, 12, 13],
+        [10, 12, 13],
+      ],
+      // Position 4: 10th position (frets 10-15) - CAGED "C shape"
+      [
+        [10, 12, 13],
+        [10, 12, 14],
+        [10, 12, 14],
+        [10, 12, 14],
+        [12, 13, 15],
+        [12, 13, 15],
+      ],
+      // Position 5: 3rd position higher octave (frets 3-7)
+      [
+        [3, 5, 7],
+        [4, 5, 7],
+        [4, 5, 7],
+        [4, 6, 7],
+        [5, 7, 8],
+        [5, 7, 9],
+      ],
     ],
-    positions: ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'],
+    positions: [
+      "Position 1",
+      "Position 2",
+      "Position 3",
+      "Position 4",
+      "Position 5",
+    ],
   },
-  
+
   // Minor scale (Natural Minor / Aeolian mode)
   // Stored patterns are for A minor (A B C D E F G) - transposed to other keys automatically
-  'minor': {
+  minor: {
     intervals: [0, 2, 3, 5, 7, 8, 10],
     fingerings: [
       // Position 1: 5th position (frets 5-9) - classic A Aeolian box
-      [[5, 7, 8], [5, 7, 8], [5, 7, 9], [5, 7, 9], [8, 10, 12], [7, 8, 10]],
+      [
+        [5, 7, 8],
+        [5, 7, 8],
+        [5, 7, 9],
+        [5, 7, 9],
+        [8, 10, 12],
+        [7, 8, 10],
+      ],
       // Position 2: 8th position (frets 8-12)
-      [[8, 10, 12], [8, 10, 12], [9, 10, 12], [9, 10, 12], [10, 12, 13], [10, 12, 13]],
+      [
+        [8, 10, 12],
+        [8, 10, 12],
+        [9, 10, 12],
+        [9, 10, 12],
+        [10, 12, 13],
+        [10, 12, 13],
+      ],
       // Position 3: 10th position (frets 10-14)
-      [[10, 12, 13], [10, 12, 14], [10, 12, 14], [10, 12, 14], [12, 13, 15], [12, 13, 15]],
+      [
+        [10, 12, 13],
+        [10, 12, 14],
+        [10, 12, 14],
+        [10, 12, 14],
+        [12, 13, 15],
+        [12, 13, 15],
+      ],
       // Position 4: 12th position (frets 12-16)
-      [[12, 13, 15], [12, 14, 15], [12, 14, 15], [12, 14, 16], [15, 17, 18], [15, 17, 19]],
+      [
+        [12, 13, 15],
+        [12, 14, 15],
+        [12, 14, 15],
+        [12, 14, 16],
+        [15, 17, 18],
+        [15, 17, 19],
+      ],
       // Position 5: 15th position (frets 15-19)
-      [[15, 17, 19], [15, 17, 19], [15, 17, 19], [16, 17, 19], [17, 18, 20], [17, 19, 20]],
+      [
+        [15, 17, 19],
+        [15, 17, 19],
+        [15, 17, 19],
+        [16, 17, 19],
+        [17, 18, 20],
+        [17, 19, 20],
+      ],
     ],
-    positions: ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'],
+    positions: [
+      "Position 1",
+      "Position 2",
+      "Position 3",
+      "Position 4",
+      "Position 5",
+    ],
   },
-  
-  'locrian': {
+
+  locrian: {
     // B Locrian: B C D E F G A - same notes as C major, rooted on B
+    // Patterns stored for B Locrian - transpose automatically to other keys
     intervals: [0, 1, 3, 5, 6, 8, 10],
     fingerings: [
-      // Position 1: 7th position (frets 7-11) - unstable Locrian box
-      [[7, 8, 10], [7, 8, 10], [7, 9, 10], [7, 9, 10], [10, 12, 13], [10, 12, 13]],
-      // Position 2: 10th position (frets 10-14)
-      [[10, 12, 13], [10, 12, 14], [10, 12, 14], [10, 12, 14], [12, 13, 15], [12, 13, 15]],
-      // Position 3: 12th position (frets 12-16)
-      [[12, 13, 15], [12, 14, 15], [12, 14, 15], [12, 14, 16], [15, 17, 18], [15, 17, 19]],
-      // Position 4: 15th position (frets 15-19)
-      [[15, 17, 19], [15, 17, 19], [15, 17, 19], [16, 17, 19], [17, 18, 20], [17, 19, 20]],
-      // Position 5: 17th position (frets 17-22)
-      [[17, 19, 20], [17, 19, 20], [17, 19, 21], [17, 19, 21], [20, 22, 24], [19, 20, 22]],
+      // Position 1: Open position (frets 0-5) - CAGED "B shape" - unstable Locrian box
+      [
+        [0, 1, 3],
+        [0, 1, 3],
+        [0, 2, 3],
+        [0, 2, 3],
+        [3, 5, 6],
+        [3, 5, 6],
+      ],
+      // Position 2: 3rd position (frets 3-7)
+      [
+        [3, 5, 6],
+        [3, 5, 7],
+        [3, 5, 7],
+        [3, 5, 7],
+        [5, 6, 8],
+        [5, 6, 8],
+      ],
+      // Position 3: 5th position (frets 5-9)
+      [
+        [5, 6, 8],
+        [5, 7, 8],
+        [5, 7, 8],
+        [5, 7, 9],
+        [8, 10, 11],
+        [8, 10, 12],
+      ],
+      // Position 4: 8th position (frets 8-12)
+      [
+        [8, 10, 12],
+        [8, 10, 12],
+        [8, 10, 12],
+        [9, 10, 12],
+        [10, 11, 13],
+        [10, 12, 13],
+      ],
+      // Position 5: 10th position (frets 10-15)
+      [
+        [10, 12, 13],
+        [10, 12, 13],
+        [10, 12, 14],
+        [10, 12, 14],
+        [13, 15, 17],
+        [12, 13, 15],
+      ],
     ],
-    positions: ['Position 1', 'Position 2', 'Position 3', 'Position 4', 'Position 5'],
+    positions: [
+      "Position 1",
+      "Position 2",
+      "Position 3",
+      "Position 4",
+      "Position 5",
+    ],
   },
-  
-  'harmonic minor': {
+
+  "harmonic minor": {
     intervals: [0, 2, 3, 5, 7, 8, 11],
     fingerings: [
-      [[5, 7, 8], [5, 7, 8], [5, 7, 9], [5, 7, 9], [5, 8, 9], [5, 7, 8]],
-      [[0, 2, 3], [0, 2, 3], [0, 2, 4], [0, 2, 4], [0, 3, 4], [0, 2, 3]],
-      [[8, 10, 11], [8, 10, 11], [9, 10, 12], [9, 10, 12], [8, 11, 12], [8, 10, 11]],
+      [
+        [5, 7, 8],
+        [5, 7, 8],
+        [5, 7, 9],
+        [5, 7, 9],
+        [5, 8, 9],
+        [5, 7, 8],
+      ],
+      [
+        [0, 2, 3],
+        [0, 2, 3],
+        [0, 2, 4],
+        [0, 2, 4],
+        [0, 3, 4],
+        [0, 2, 3],
+      ],
+      [
+        [8, 10, 11],
+        [8, 10, 11],
+        [9, 10, 12],
+        [9, 10, 12],
+        [8, 11, 12],
+        [8, 10, 11],
+      ],
     ],
-    positions: ['Position 1', 'Position 2', 'Position 3'],
+    positions: ["Position 1", "Position 2", "Position 3"],
   },
-  
-  'melodic minor': {
+
+  "melodic minor": {
     intervals: [0, 2, 3, 5, 7, 9, 11],
     fingerings: [
-      [[5, 7, 8], [5, 7, 9], [5, 7, 9], [5, 7, 9], [5, 7, 9], [5, 7, 8]],
-      [[0, 2, 3], [0, 2, 4], [0, 2, 4], [0, 2, 4], [0, 2, 4], [0, 2, 3]],
-      [[8, 10, 12], [8, 10, 12], [9, 10, 12], [9, 10, 12], [8, 10, 12], [8, 10, 12]],
+      [
+        [5, 7, 8],
+        [5, 7, 9],
+        [5, 7, 9],
+        [5, 7, 9],
+        [5, 7, 9],
+        [5, 7, 8],
+      ],
+      [
+        [0, 2, 3],
+        [0, 2, 4],
+        [0, 2, 4],
+        [0, 2, 4],
+        [0, 2, 4],
+        [0, 2, 3],
+      ],
+      [
+        [8, 10, 12],
+        [8, 10, 12],
+        [9, 10, 12],
+        [9, 10, 12],
+        [8, 10, 12],
+        [8, 10, 12],
+      ],
     ],
-    positions: ['Position 1', 'Position 2', 'Position 3'],
+    positions: ["Position 1", "Position 2", "Position 3"],
   },
-  
-  'pentatonic major': {
+
+  "pentatonic major": {
     // C Major Pentatonic: C D E G A
     intervals: [0, 2, 4, 7, 9],
     fingerings: [
       // Position 1: Open position (frets 0-4)
-      [[0, 3], [0, 3], [0, 2], [0, 2], [1, 3], [0, 3]],
+      [
+        [0, 3],
+        [0, 3],
+        [0, 2],
+        [0, 2],
+        [1, 3],
+        [0, 3],
+      ],
       // Position 2: 3rd position (frets 3-7)
-      [[3, 5], [3, 5, 7], [5, 7], [5, 7], [3, 5], [3, 5]],
+      [
+        [3, 5],
+        [3, 5, 7],
+        [5, 7],
+        [5, 7],
+        [3, 5],
+        [3, 5],
+      ],
       // Position 3: 5th position (frets 5-9)
-      [[5, 8], [5, 7], [5, 7], [5, 7, 9], [5, 8], [5, 8]],
+      [
+        [5, 8],
+        [5, 7],
+        [5, 7],
+        [5, 7, 9],
+        [5, 8],
+        [5, 8],
+      ],
       // Position 4: 7th position (frets 7-11)
-      [[8, 10], [7, 10], [7, 10], [7, 9], [8, 10], [8, 10]],
+      [
+        [8, 10],
+        [7, 10],
+        [7, 10],
+        [7, 9],
+        [8, 10],
+        [8, 10],
+      ],
       // Position 5: 10th position (frets 10-14)
-      [[10, 12], [10, 12], [10, 12, 14], [12, 14], [10, 13], [10, 12]],
+      [
+        [10, 12],
+        [10, 12],
+        [10, 12, 14],
+        [12, 14],
+        [10, 13],
+        [10, 12],
+      ],
     ],
-    positions: ['Position 1 (Box 1)', 'Position 2 (Box 2)', 'Position 3 (Box 3)', 'Position 4 (Box 4)', 'Position 5 (Box 5)'],
+    positions: [
+      "Position 1 (Box 1)",
+      "Position 2 (Box 2)",
+      "Position 3 (Box 3)",
+      "Position 4 (Box 4)",
+      "Position 5 (Box 5)",
+    ],
   },
-  
-  'pentatonic minor': {
+
+  "pentatonic minor": {
     // A Minor Pentatonic: A C D E G
     intervals: [0, 3, 5, 7, 10],
     fingerings: [
       // Position 1: Open position (frets 0-4)
-      [[0, 3], [0, 3], [0, 2], [0, 2], [1, 3], [0, 3]],
+      [
+        [0, 3],
+        [0, 3],
+        [0, 2],
+        [0, 2],
+        [1, 3],
+        [0, 3],
+      ],
       // Position 2: 3rd position (frets 3-7)
-      [[3, 5], [3, 5, 7], [5, 7], [5, 7], [3, 5], [3, 5]],
+      [
+        [3, 5],
+        [3, 5, 7],
+        [5, 7],
+        [5, 7],
+        [3, 5],
+        [3, 5],
+      ],
       // Position 3: 5th position (frets 5-9)
-      [[5, 8], [5, 7], [5, 7], [5, 7, 9], [5, 8], [5, 8]],
+      [
+        [5, 8],
+        [5, 7],
+        [5, 7],
+        [5, 7, 9],
+        [5, 8],
+        [5, 8],
+      ],
       // Position 4: 7th position (frets 7-11)
-      [[8, 10], [7, 10], [7, 10], [7, 9], [8, 10], [8, 10]],
+      [
+        [8, 10],
+        [7, 10],
+        [7, 10],
+        [7, 9],
+        [8, 10],
+        [8, 10],
+      ],
       // Position 5: 10th position (frets 10-14)
-      [[10, 12], [10, 12], [10, 12, 14], [12, 14], [10, 13], [10, 12]],
+      [
+        [10, 12],
+        [10, 12],
+        [10, 12, 14],
+        [12, 14],
+        [10, 13],
+        [10, 12],
+      ],
     ],
-    positions: ['Position 1 (Box 1)', 'Position 2 (Box 2)', 'Position 3 (Box 3)', 'Position 4 (Box 4)', 'Position 5 (Box 5)'],
+    positions: [
+      "Position 1 (Box 1)",
+      "Position 2 (Box 2)",
+      "Position 3 (Box 3)",
+      "Position 4 (Box 4)",
+      "Position 5 (Box 5)",
+    ],
   },
-  
-  'blues': {
+
+  blues: {
     intervals: [0, 3, 5, 6, 7, 10],
     fingerings: [
-      [[5, 8, 10], [5, 8, 10], [5, 7, 8], [5, 7, 8], [5, 8, 10], [5, 8, 10]],
-      [[0, 3, 5], [0, 3, 5], [0, 2, 3], [0, 2, 3], [0, 3, 5], [0, 3, 5]],
-      [[10, 13, 15], [10, 13, 15], [10, 12, 13], [10, 12, 13], [10, 13, 15], [10, 13, 15]],
+      [
+        [5, 8, 10],
+        [5, 8, 10],
+        [5, 7, 8],
+        [5, 7, 8],
+        [5, 8, 10],
+        [5, 8, 10],
+      ],
+      [
+        [0, 3, 5],
+        [0, 3, 5],
+        [0, 2, 3],
+        [0, 2, 3],
+        [0, 3, 5],
+        [0, 3, 5],
+      ],
+      [
+        [10, 13, 15],
+        [10, 13, 15],
+        [10, 12, 13],
+        [10, 12, 13],
+        [10, 13, 15],
+        [10, 13, 15],
+      ],
     ],
-    positions: ['Position 1', 'Position 2', 'Position 3'],
+    positions: ["Position 1", "Position 2", "Position 3"],
   },
-  
-  'whole tone': {
+
+  "whole tone": {
     intervals: [0, 2, 4, 6, 8, 10],
     fingerings: [
-      [[6, 8, 10], [6, 8, 10], [6, 8, 10], [7, 9, 11], [7, 9, 11], [6, 8, 10]],
-      [[1, 3, 5], [1, 3, 5], [1, 3, 5], [2, 4, 6], [2, 4, 6], [1, 3, 5]],
+      [
+        [6, 8, 10],
+        [6, 8, 10],
+        [6, 8, 10],
+        [7, 9, 11],
+        [7, 9, 11],
+        [6, 8, 10],
+      ],
+      [
+        [1, 3, 5],
+        [1, 3, 5],
+        [1, 3, 5],
+        [2, 4, 6],
+        [2, 4, 6],
+        [1, 3, 5],
+      ],
     ],
-    positions: ['Position 1', 'Position 2'],
+    positions: ["Position 1", "Position 2"],
   },
-  
-  'diminished': {
+
+  diminished: {
     intervals: [0, 2, 3, 5, 6, 8, 9, 11],
     fingerings: [
-      [[6, 7, 9], [6, 8, 9], [6, 7, 9], [7, 8, 10], [6, 8, 9], [6, 7, 9]],
-      [[1, 2, 4], [1, 3, 4], [1, 2, 4], [2, 3, 5], [1, 3, 4], [1, 2, 4]],
+      [
+        [6, 7, 9],
+        [6, 8, 9],
+        [6, 7, 9],
+        [7, 8, 10],
+        [6, 8, 9],
+        [6, 7, 9],
+      ],
+      [
+        [1, 2, 4],
+        [1, 3, 4],
+        [1, 2, 4],
+        [2, 3, 5],
+        [1, 3, 4],
+        [1, 2, 4],
+      ],
     ],
-    positions: ['Position 1', 'Position 2'],
+    positions: ["Position 1", "Position 2"],
   },
-  
-  'altered': {
+
+  altered: {
     intervals: [0, 1, 3, 4, 6, 8, 10],
     fingerings: [
-      [[6, 7, 9], [7, 8, 10], [6, 8, 9], [7, 9, 10], [6, 8, 10], [6, 7, 9]],
-      [[1, 2, 4], [2, 3, 5], [1, 3, 4], [2, 4, 5], [1, 3, 5], [1, 2, 4]],
+      [
+        [6, 7, 9],
+        [7, 8, 10],
+        [6, 8, 9],
+        [7, 9, 10],
+        [6, 8, 10],
+        [6, 7, 9],
+      ],
+      [
+        [1, 2, 4],
+        [2, 3, 5],
+        [1, 3, 4],
+        [2, 4, 5],
+        [1, 3, 5],
+        [1, 2, 4],
+      ],
     ],
-    positions: ['Position 1', 'Position 2'],
+    positions: ["Position 1", "Position 2"],
   },
-  
-  'bebop dominant': {
+
+  "bebop dominant": {
     intervals: [0, 2, 4, 5, 7, 9, 10, 11],
     fingerings: [
-      [[8, 10, 11], [8, 10, 12], [9, 10, 11], [9, 10, 12], [10, 11, 13], [8, 10, 11]],
-      [[3, 5, 6], [3, 5, 7], [4, 5, 6], [4, 5, 7], [5, 6, 8], [3, 5, 6]],
+      [
+        [8, 10, 11],
+        [8, 10, 12],
+        [9, 10, 11],
+        [9, 10, 12],
+        [10, 11, 13],
+        [8, 10, 11],
+      ],
+      [
+        [3, 5, 6],
+        [3, 5, 7],
+        [4, 5, 6],
+        [4, 5, 7],
+        [5, 6, 8],
+        [3, 5, 6],
+      ],
     ],
-    positions: ['Position 1', 'Position 2'],
+    positions: ["Position 1", "Position 2"],
   },
-  
-  'bebop major': {
+
+  "bebop major": {
     intervals: [0, 2, 4, 5, 7, 8, 9, 11],
     fingerings: [
-      [[8, 9, 11], [8, 10, 12], [9, 10, 12], [9, 11, 12], [8, 10, 12], [8, 9, 11]],
-      [[3, 4, 6], [3, 5, 7], [4, 5, 7], [4, 6, 7], [3, 5, 7], [3, 4, 6]],
+      [
+        [8, 9, 11],
+        [8, 10, 12],
+        [9, 10, 12],
+        [9, 11, 12],
+        [8, 10, 12],
+        [8, 9, 11],
+      ],
+      [
+        [3, 4, 6],
+        [3, 5, 7],
+        [4, 5, 7],
+        [4, 6, 7],
+        [3, 5, 7],
+        [3, 4, 6],
+      ],
     ],
-    positions: ['Position 1', 'Position 2'],
+    positions: ["Position 1", "Position 2"],
   },
-  
-  'phrygian dominant': {
+
+  "phrygian dominant": {
     intervals: [0, 1, 4, 5, 7, 8, 10],
     fingerings: [
-      [[8, 9, 12], [8, 10, 12], [9, 10, 12], [9, 10, 12], [8, 10, 12], [8, 9, 12]],
-      [[3, 4, 7], [3, 5, 7], [4, 5, 7], [4, 5, 7], [3, 5, 7], [3, 4, 7]],
+      [
+        [8, 9, 12],
+        [8, 10, 12],
+        [9, 10, 12],
+        [9, 10, 12],
+        [8, 10, 12],
+        [8, 9, 12],
+      ],
+      [
+        [3, 4, 7],
+        [3, 5, 7],
+        [4, 5, 7],
+        [4, 5, 7],
+        [3, 5, 7],
+        [3, 4, 7],
+      ],
     ],
-    positions: ['Position 1', 'Position 2'],
+    positions: ["Position 1", "Position 2"],
   },
-  
-  'hungarian minor': {
+
+  "hungarian minor": {
     intervals: [0, 2, 3, 6, 7, 8, 11],
     fingerings: [
-      [[5, 7, 8], [5, 7, 8], [5, 8, 9], [5, 7, 9], [5, 8, 9], [5, 7, 8]],
-      [[0, 2, 3], [0, 2, 3], [0, 3, 4], [0, 2, 4], [0, 3, 4], [0, 2, 3]],
+      [
+        [5, 7, 8],
+        [5, 7, 8],
+        [5, 8, 9],
+        [5, 7, 9],
+        [5, 8, 9],
+        [5, 7, 8],
+      ],
+      [
+        [0, 2, 3],
+        [0, 2, 3],
+        [0, 3, 4],
+        [0, 2, 4],
+        [0, 3, 4],
+        [0, 2, 3],
+      ],
     ],
-    positions: ['Position 1', 'Position 2'],
+    positions: ["Position 1", "Position 2"],
   },
-  
-  'gypsy': {
+
+  gypsy: {
     intervals: [0, 2, 3, 6, 7, 8, 11],
     fingerings: [
-      [[5, 7, 8], [5, 7, 8], [5, 8, 9], [5, 7, 9], [5, 8, 9], [5, 7, 8]],
-      [[0, 2, 3], [0, 2, 3], [0, 3, 4], [0, 2, 4], [0, 3, 4], [0, 2, 3]],
+      [
+        [5, 7, 8],
+        [5, 7, 8],
+        [5, 8, 9],
+        [5, 7, 9],
+        [5, 8, 9],
+        [5, 7, 8],
+      ],
+      [
+        [0, 2, 3],
+        [0, 2, 3],
+        [0, 3, 4],
+        [0, 2, 4],
+        [0, 3, 4],
+        [0, 2, 3],
+      ],
     ],
-    positions: ['Position 1', 'Position 2'],
+    positions: ["Position 1", "Position 2"],
   },
-  
-  'lydian dominant': {
+
+  "lydian dominant": {
     intervals: [0, 2, 4, 6, 7, 9, 10],
     fingerings: [
-      [[7, 9, 11], [7, 9, 10], [8, 9, 11], [9, 11, 12], [9, 10, 12], [7, 9, 11]],
-      [[2, 4, 6], [2, 4, 5], [3, 4, 6], [4, 6, 7], [4, 5, 7], [2, 4, 6]],
+      [
+        [7, 9, 11],
+        [7, 9, 10],
+        [8, 9, 11],
+        [9, 11, 12],
+        [9, 10, 12],
+        [7, 9, 11],
+      ],
+      [
+        [2, 4, 6],
+        [2, 4, 5],
+        [3, 4, 6],
+        [4, 6, 7],
+        [4, 5, 7],
+        [2, 4, 6],
+      ],
     ],
-    positions: ['Position 1', 'Position 2'],
+    positions: ["Position 1", "Position 2"],
   },
-  
-  'super locrian': {
+
+  "super locrian": {
     intervals: [0, 1, 3, 4, 6, 8, 10],
     fingerings: [
-      [[6, 7, 9], [7, 8, 10], [6, 8, 9], [7, 9, 10], [6, 8, 10], [6, 7, 9]],
-      [[1, 2, 4], [2, 3, 5], [1, 3, 4], [2, 4, 5], [1, 3, 5], [1, 2, 4]],
+      [
+        [6, 7, 9],
+        [7, 8, 10],
+        [6, 8, 9],
+        [7, 9, 10],
+        [6, 8, 10],
+        [6, 7, 9],
+      ],
+      [
+        [1, 2, 4],
+        [2, 3, 5],
+        [1, 3, 4],
+        [2, 4, 5],
+        [1, 3, 5],
+        [1, 2, 4],
+      ],
     ],
-    positions: ['Position 1', 'Position 2'],
+    positions: ["Position 1", "Position 2"],
   },
 };
 
 function extractRootFromScaleName(scaleName: string): string {
   const match = scaleName.match(/^([A-G][#b]?)/);
-  return match ? match[1] : 'C';
+  return match ? match[1] : "C";
 }
 
 /**
  * Get the root note that a stored pattern represents based on scale type
  * Stored patterns are typically for a canonical key (C for major, D for Dorian, etc.)
- * 
+ *
  * @param scaleKey - Normalized scale key (e.g., 'major', 'dorian', 'pentatonic minor')
  * @returns Root note that stored patterns for this scale represent
  */
@@ -352,79 +936,100 @@ function getStoredPatternRoot(scaleKey: string): string {
   // Based on the comments in SCALE_LIBRARY
   // Note: 'ionian' normalizes to 'major', 'aeolian' normalizes to 'minor'
   const STORED_PATTERN_ROOTS: Record<string, string> = {
-    'major': 'C',           // Major/Ionian patterns are for C major
-    'dorian': 'D',         // Dorian patterns are for D Dorian
-    'phrygian': 'E',       // Phrygian patterns are for E Phrygian
-    'lydian': 'F',         // Lydian patterns are for F Lydian
-    'mixolydian': 'G',     // Mixolydian patterns are for G Mixolydian
-    'minor': 'A',          // Minor/Aeolian patterns are for A minor
-    'locrian': 'B',        // Locrian patterns are for B Locrian
-    'harmonic minor': 'A', // Harmonic minor patterns are for A harmonic minor
-    'melodic minor': 'A',  // Melodic minor patterns are for A melodic minor
-    'pentatonic major': 'C', // Pentatonic major patterns are for C
-    'pentatonic minor': 'A', // Pentatonic minor patterns are for A minor pentatonic
-    'blues': 'A',          // Blues patterns are for A blues
-    'whole tone': 'C',     // Whole tone patterns are for C whole tone
-    'diminished': 'C',     // Diminished patterns are for C diminished
-    'altered': 'C',        // Altered patterns (default to C)
-    'bebop dominant': 'C', // Bebop patterns (default to C)
-    'bebop major': 'C',
-    'phrygian dominant': 'E',
-    'hungarian minor': 'A',
-    'gypsy': 'A',
-    'lydian dominant': 'C',
-    'super locrian': 'B',
+    major: "C", // Major/Ionian patterns are for C major
+    dorian: "D", // Dorian patterns are for D Dorian
+    phrygian: "E", // Phrygian patterns are for E Phrygian
+    lydian: "F", // Lydian patterns are for F Lydian
+    mixolydian: "G", // Mixolydian patterns are for G Mixolydian
+    minor: "A", // Minor/Aeolian patterns are for A minor
+    locrian: "B", // Locrian patterns are for B Locrian
+    "harmonic minor": "A", // Harmonic minor patterns are for A harmonic minor
+    "melodic minor": "A", // Melodic minor patterns are for A melodic minor
+    "pentatonic major": "C", // Pentatonic major patterns are for C
+    "pentatonic minor": "A", // Pentatonic minor patterns are for A minor pentatonic
+    blues: "A", // Blues patterns are for A blues
+    "whole tone": "C", // Whole tone patterns are for C whole tone
+    diminished: "C", // Diminished patterns are for C diminished
+    altered: "C", // Altered patterns (default to C)
+    "bebop dominant": "C", // Bebop patterns (default to C)
+    "bebop major": "C",
+    "phrygian dominant": "E",
+    "hungarian minor": "A",
+    gypsy: "A",
+    "lydian dominant": "C",
+    "super locrian": "B",
   };
 
-  return STORED_PATTERN_ROOTS[scaleKey] || 'C';
+  return STORED_PATTERN_ROOTS[scaleKey] || "C";
 }
 
 /**
  * Helper to sort fingering patterns by their minimum fret position
  * Returns indices sorted from lowest to highest fret position
  */
-function getSortedPatternIndices(fingerings: number[][][]): number[] {
+function getSortedPatternIndices(
+  fingerings: number[][][],
+  cacheKey?: string,
+): number[] {
   if (!fingerings || fingerings.length === 0) {
     return [];
   }
-  
+
+  // Check cache if key is provided
+  if (cacheKey && sortedPatternIndicesCache.has(cacheKey)) {
+    return sortedPatternIndicesCache.get(cacheKey)!;
+  }
+
   const patternsWithMinFrets = fingerings.map((pattern, index) => {
-    const allFrets = pattern.flat().filter(f => f >= 0);
+    const allFrets = pattern.flat().filter((f) => f >= 0);
     const minFret = allFrets.length > 0 ? Math.min(...allFrets) : 999;
     return { minFret, originalIndex: index };
   });
-  
+
   // Sort by minimum fret (lowest first)
   patternsWithMinFrets.sort((a, b) => a.minFret - b.minFret);
-  
-  return patternsWithMinFrets.map(item => item.originalIndex);
+
+  const sortedIndices = patternsWithMinFrets.map((item) => item.originalIndex);
+
+  // Cache the result if key is provided
+  if (cacheKey) {
+    sortedPatternIndicesCache.set(cacheKey, sortedIndices);
+  }
+
+  return sortedIndices;
 }
 
 /**
  * Get positions array sorted to match the fingerings order (by minimum fret)
  * This ensures position labels correctly reflect the displayed patterns
- * 
+ *
  * NOTE: Position labels are sorted based on the STORED patterns, not transposed patterns.
- * This is intentional - position labels like "Position 1", "Position 2" refer to the 
+ * This is intentional - position labels like "Position 1", "Position 2" refer to the
  * standard CAGED system positions, which stay consistent regardless of key.
- * 
+ *
  * @param scaleData - Scale pattern data from SCALE_LIBRARY
  * @returns Sorted positions array matching the fingerings order
  */
-export function getSortedPositions(scaleData: ScalePattern): string[] {
+export function getSortedPositions(
+  scaleData: ScalePattern,
+  scaleKey?: string,
+): string[] {
   if (!scaleData.positions || scaleData.positions.length === 0) {
-    return ['Position 1'];
+    return ["Position 1"];
   }
-  
+
   if (!scaleData.fingerings || scaleData.fingerings.length === 0) {
     return scaleData.positions;
   }
-  
-  // Get sorted indices based on minimum fret
-  const sortedIndices = getSortedPatternIndices(scaleData.fingerings);
-  
+
+  // Get sorted indices based on minimum fret (cached if scaleKey provided)
+  const cacheKey = scaleKey ? `positions:${scaleKey}` : undefined;
+  const sortedIndices = getSortedPatternIndices(scaleData.fingerings, cacheKey);
+
   // Return position labels in sorted order
-  return sortedIndices.map(index => scaleData.positions![index] || `Position ${index + 1}`);
+  return sortedIndices.map(
+    (index) => scaleData.positions![index] || `Position ${index + 1}`,
+  );
 }
 
 /**
@@ -434,17 +1039,17 @@ export function getSortedPositions(scaleData: ScalePattern): string[] {
 function validateStoredPattern(
   pattern: number[][],
   rootNote: string,
-  intervals: number[]
+  intervals: number[],
 ): boolean {
   const TUNING = [4, 9, 2, 7, 11, 4]; // Low E, A, D, G, B, High E
   const rootValue = noteToValue(rootNote);
-  const expectedNotes = new Set(intervals.map(i => (rootValue + i) % 12));
-  
+  const expectedNotes = new Set(intervals.map((i) => (rootValue + i) % 12));
+
   let totalNotes = 0;
   let correctNotes = 0;
-  
+
   pattern.forEach((stringFrets, stringIndex) => {
-    stringFrets.forEach(fret => {
+    stringFrets.forEach((fret) => {
       if (fret >= 0 && fret <= 24) {
         totalNotes++;
         const noteValue = (TUNING[stringIndex] + fret) % 12;
@@ -452,7 +1057,7 @@ function validateStoredPattern(
       }
     });
   });
-  
+
   const accuracy = totalNotes > 0 ? correctNotes / totalNotes : 0;
   return accuracy >= 0.9; // Require 90% accuracy
 }
@@ -477,15 +1082,25 @@ function validateStoredPattern(
  * @param positionIndex - Position index (0-4 for 5-position scales, fewer for limited scales)
  * @returns 2D array of fret numbers for each string [lowE, A, D, G, B, highE]
  */
-export function getScaleFingering(scaleName: string, rootNote?: string, positionIndex: number = 0): number[][] {
+export function getScaleFingering(
+  scaleName: string,
+  rootNote?: string,
+  positionIndex: number = 0,
+): number[][] {
   const root = rootNote || extractRootFromScaleName(scaleName);
   const normalized = normalizeScaleName(scaleName);
   const scaleData = SCALE_LIBRARY[normalized];
 
   // If no stored patterns exist, fall back to algorithmic generation
-  if (!scaleData || !scaleData.fingerings || scaleData.fingerings.length === 0) {
+  if (
+    !scaleData ||
+    !scaleData.fingerings ||
+    scaleData.fingerings.length === 0
+  ) {
     if (import.meta.env.DEV) {
-      console.warn(`No stored patterns found for scale "${normalized}", using algorithmic generation`);
+      console.warn(
+        `No stored patterns found for scale "${normalized}", using algorithmic generation`,
+      );
     }
     return generateFingeringAlgorithmically(scaleName, root, positionIndex);
   }
@@ -494,19 +1109,26 @@ export function getScaleFingering(scaleName: string, rootNote?: string, position
   // Position 0 should be the lowest position on the neck
   // We sort stored patterns by their minimum fret to ensure position 0 is lowest
   const availablePositions = scaleData.fingerings.length;
-  const safePositionIndex = Math.max(0, Math.min(positionIndex, availablePositions - 1));
-  
-  // Use the same sorting helper as getSortedPositions for consistency
-  const sortedIndices = getSortedPatternIndices(scaleData.fingerings);
-  
+  const safePositionIndex = Math.max(
+    0,
+    Math.min(positionIndex, availablePositions - 1),
+  );
+
+  // Use the same sorting helper as getSortedPositions for consistency (with caching)
+  const cacheKey = `fingering:${normalized}`;
+  const sortedIndices = getSortedPatternIndices(scaleData.fingerings, cacheKey);
+
   // Get the stored pattern index for the requested position
-  const storedPatternIndex = sortedIndices[safePositionIndex] ?? safePositionIndex;
+  const storedPatternIndex =
+    sortedIndices[safePositionIndex] ?? safePositionIndex;
 
   // Get the stored pattern for this position
   const storedPattern = scaleData.fingerings[storedPatternIndex];
   if (!storedPattern || storedPattern.length !== 6) {
     if (import.meta.env.DEV) {
-      console.warn(`Invalid stored pattern at position ${safePositionIndex} for scale "${normalized}"`);
+      console.warn(
+        `Invalid stored pattern at position ${safePositionIndex} for scale "${normalized}"`,
+      );
     }
     return generateFingeringAlgorithmically(scaleName, root, positionIndex);
   }
@@ -514,13 +1136,13 @@ export function getScaleFingering(scaleName: string, rootNote?: string, position
   // Get the root note that stored patterns for this scale represent
   // Stored patterns are for canonical keys (C for major, D for Dorian, etc.)
   const storedRoot = getStoredPatternRoot(normalized);
-  
+
   // Validate the stored pattern produces correct scale notes
   if (!validateStoredPattern(storedPattern, storedRoot, scaleData.intervals)) {
     if (import.meta.env.DEV) {
       console.warn(
         `⚠️ Scale pattern validation failed for "${normalized}" position ${safePositionIndex + 1}:\n` +
-        `   Pattern contains incorrect notes. Using algorithmic generation.`
+          `   Pattern contains incorrect notes. Using algorithmic generation.`,
       );
     }
     return generateFingeringAlgorithmically(scaleName, root, positionIndex);
@@ -529,12 +1151,12 @@ export function getScaleFingering(scaleName: string, rootNote?: string, position
   // Calculate semitone offset to transpose from stored root to requested root
   const storedRootValue = noteToValue(storedRoot);
   const requestedRootValue = noteToValue(root);
-  const semitoneOffset = ((requestedRootValue - storedRootValue) + 12) % 12;
+  const semitoneOffset = (requestedRootValue - storedRootValue + 12) % 12;
 
   // Transpose the stored pattern to the requested root
   // If no transposition needed, return a copy of the stored pattern
   if (semitoneOffset === 0) {
-    return storedPattern.map(stringFrets => [...stringFrets]);
+    return storedPattern.map((stringFrets) => [...stringFrets]);
   }
 
   // Transpose using the existing transposeFingering function
@@ -545,7 +1167,11 @@ export function getScaleFingering(scaleName: string, rootNote?: string, position
  * Fallback function to generate fingering algorithmically when stored patterns aren't available
  * This maintains backward compatibility for scales without stored patterns
  */
-function generateFingeringAlgorithmically(scaleName: string, rootNote: string, positionIndex: number): number[][] {
+function generateFingeringAlgorithmically(
+  scaleName: string,
+  rootNote: string,
+  positionIndex: number,
+): number[][] {
   const normalized = normalizeScaleName(scaleName);
   const intervals = getScaleIntervals(scaleName);
   const rootValue = noteToValue(rootNote);
@@ -560,45 +1186,56 @@ function generateFingeringAlgorithmically(scaleName: string, rootNote: string, p
     mixolydian: [0, 2, 5, 7, 10],
     locrian: [0, 3, 5, 8, 10],
     minor: [0, 3, 5, 7, 10],
-    'harmonic minor': [0, 5, 10],
-    'melodic minor': [0, 5, 10],
-    'pentatonic major': [0, 2, 5, 7, 10],
-    'pentatonic minor': [0, 3, 5, 8, 10],
+    "harmonic minor": [0, 5, 10],
+    "melodic minor": [0, 5, 10],
+    "pentatonic major": [0, 2, 5, 7, 10],
+    "pentatonic minor": [0, 3, 5, 8, 10],
     blues: [0, 3, 8],
-    'whole tone': [0, 6],
-    diminished: [0, 3]
+    "whole tone": [0, 6],
+    diminished: [0, 3],
   };
 
   // Standard guitar tuning values (chromatic scale where C=0)
   // Low E = 4 (E), A = 9 (A), D = 2 (D), G = 7 (G), B = 11 (B), High E = 4 (E)
   const tuning = [4, 9, 2, 7, 11, 4]; // Low E, A, D, G, B, High E
 
-  const startFrets = POSITION_START_FRETS[normalized as keyof typeof POSITION_START_FRETS] || POSITION_START_FRETS.major;
-  const safePositionIndex = Math.max(0, Math.min(positionIndex, startFrets.length - 1));
-  
+  const startFrets =
+    POSITION_START_FRETS[normalized as keyof typeof POSITION_START_FRETS] ||
+    POSITION_START_FRETS.major;
+  const safePositionIndex = Math.max(
+    0,
+    Math.min(positionIndex, startFrets.length - 1),
+  );
+
   // Calculate the base fret for this position based on the root note
   // Find where the root note falls on the low E string as a reference
   const rootOnLowE = (rootValue - tuning[0] + 12) % 12;
   const baseFret = rootOnLowE + startFrets[safePositionIndex];
-  
+
   // Generate scale notes on each string within a reasonable fret range
-  const fingerings = tuning.map(stringTuning => {
+  const fingerings = tuning.map((stringTuning) => {
     const frets: number[] = [];
-    
+
     // Generate notes within a 5-fret span from the base fret for this string
     // This creates a typical 3-notes-per-string pattern
     const stringStartFret = Math.max(0, baseFret - 2);
     const stringEndFret = stringStartFret + 6; // 6 fret span to capture 3 notes per string
-    
-    for (let fret = stringStartFret; fret <= stringEndFret && fret <= 24; fret++) {
+
+    for (
+      let fret = stringStartFret;
+      fret <= stringEndFret && fret <= 24;
+      fret++
+    ) {
       const noteValue = (stringTuning + fret) % 12;
       // Check if this note is in the scale
-      const isScaleNote = intervals.some(interval => (rootValue + interval) % 12 === noteValue);
+      const isScaleNote = intervals.some(
+        (interval) => (rootValue + interval) % 12 === noteValue,
+      );
       if (isScaleNote) {
         frets.push(fret);
       }
     }
-    
+
     return frets;
   });
 
@@ -613,24 +1250,27 @@ function generateFingeringAlgorithmically(scaleName: string, rootNote: string, p
  * @param semitones - Number of semitones to transpose (can be negative)
  * @returns Transposed fingering pattern, with octave adjustment if needed
  */
-function transposeFingering(fingering: number[][], semitones: number): number[][] {
+function transposeFingering(
+  fingering: number[][],
+  semitones: number,
+): number[][] {
   // Always return a copy to prevent mutation of SCALE_LIBRARY data
-  if (semitones === 0) return fingering.map(stringFrets => [...stringFrets]);
+  if (semitones === 0) return fingering.map((stringFrets) => [...stringFrets]);
 
   // Check if transposition would go out of bounds
   const allFrets = fingering.flat();
   if (allFrets.length === 0) {
-    return fingering.map(stringFrets => [...stringFrets]);
+    return fingering.map((stringFrets) => [...stringFrets]);
   }
-  
+
   const minFret = Math.min(...allFrets);
   const maxFret = Math.max(...allFrets);
-  
+
   // Calculate the best octave adjustment to keep the pattern in a playable range
   let octaveAdjustment = 0;
   const targetMin = minFret + semitones;
   const targetMax = maxFret + semitones;
-  
+
   // Prefer to keep patterns in the lower-middle range (frets 0-15) when possible
   if (targetMin < 0) {
     // Pattern would go below fret 0 - shift up by minimum necessary octaves
@@ -645,34 +1285,31 @@ function transposeFingering(fingering: number[][], semitones: number): number[][
 
   // Apply transposition with octave adjustment
   const adjustedSemitones = semitones + octaveAdjustment;
-  let hasInvalidFrets = false;
-  const invalidFretDetails: string[] = [];
 
-  const result = fingering.map((stringFrets, stringIndex) =>
-    stringFrets.map(fret => {
+  const result = fingering.map((stringFrets) =>
+    stringFrets.map((fret) => {
       const newFret = fret + adjustedSemitones;
-      // Validate fret is in playable range
-      if (newFret < 0) {
-        hasInvalidFrets = true;
-        invalidFretDetails.push(`string ${stringIndex + 1}: fret ${fret} -> ${newFret} (clamped to 0)`);
-        return 0;
-      }
-      if (newFret > 24) {
-        hasInvalidFrets = true;
-        invalidFretDetails.push(`string ${stringIndex + 1}: fret ${fret} -> ${newFret} (clamped to 24)`);
-        return 24;
+      // Return transposed fret - octave adjustment logic above ensures it's in range
+      // If somehow still out of range, clamp as last resort (shouldn't happen with correct octave adjustment)
+      if (newFret < 0 || newFret > 24) {
+        // This indicates octave adjustment calculation failed - log and clamp
+        if (import.meta.env.DEV) {
+          console.warn(
+            `Scale transposition produced out-of-range fret: ${newFret} (from fret ${fret} + ${adjustedSemitones}). ` +
+              `Clamping to valid range. This may indicate a bug in octave adjustment logic.`,
+          );
+        }
+        return Math.max(0, Math.min(newFret, 24));
       }
       return newFret;
-    })
+    }),
   );
 
-  // Only log if there were issues
-  if (octaveAdjustment !== 0) {
-    console.debug(`Scale transposition: ${semitones} semitones + ${octaveAdjustment} octave adjustment = ${adjustedSemitones} total`);
-  }
-
-  if (hasInvalidFrets) {
-    console.warn(`Scale transposition produced out-of-range frets (some notes clamped):`, invalidFretDetails);
+  // Log octave adjustments in dev mode
+  if (octaveAdjustment !== 0 && import.meta.env.DEV) {
+    console.debug(
+      `Scale transposition: ${semitones} semitones + ${octaveAdjustment} octave adjustment = ${adjustedSemitones} total`,
+    );
   }
 
   return result;
@@ -681,27 +1318,25 @@ function transposeFingering(fingering: number[][], semitones: number): number[][
 export function getScaleIntervals(scaleName: string): number[] {
   const normalized = normalizeScaleName(scaleName);
   const scaleData = SCALE_LIBRARY[normalized];
-  
+
   if (scaleData) {
     return scaleData.intervals;
   }
-  
+
   for (const [key, data] of Object.entries(SCALE_LIBRARY)) {
     if (normalized.includes(key) || key.includes(normalized)) {
       return data.intervals;
     }
   }
-  
-  return SCALE_LIBRARY['major'].intervals;
+
+  return SCALE_LIBRARY["major"].intervals;
 }
-
-
 
 function toScaleDescriptor(name: string): string {
   const trimmed = name.trim();
   const match = trimmed.match(/^([A-G][#b]?)(?:\s+)(.+)$/i);
   const descriptor = match ? match[2] : trimmed;
-  return descriptor.replace(/\b(scale|mode)\b/gi, '').trim();
+  return descriptor.replace(/\b(scale|mode)\b/gi, "").trim();
 }
 
 export function normalizeScaleName(name: string): string {
@@ -716,13 +1351,13 @@ export function normalizeScaleName(name: string): string {
     return fallback;
   }
 
-  const sanitized = descriptor.replace(/\s+|-/g, '').toLowerCase();
+  const sanitized = descriptor.replace(/\s+|-/g, "").toLowerCase();
   const fallbackKey = FALLBACK_SCALE_LIBRARY_KEYS.get(sanitized);
   if (fallbackKey && SCALE_LIBRARY[fallbackKey]) {
     return fallbackKey;
   }
 
-  return 'major';
+  return "major";
 }
 
 export function getScaleNotes(rootNote: string, scaleName: string): string[] {
@@ -740,7 +1375,7 @@ export function getScaleNotes(rootNote: string, scaleName: string): string[] {
 
 /**
  * Validate that a fingering pattern contains notes from the specified scale
- * 
+ *
  * @param fingering - The fingering pattern (2D array of fret numbers per string)
  * @param rootNote - The root note of the scale
  * @param scaleName - The scale name
@@ -749,51 +1384,55 @@ export function getScaleNotes(rootNote: string, scaleName: string): string[] {
 export function validateFingeringNotes(
   fingering: number[][],
   rootNote: string,
-  scaleName: string
+  scaleName: string,
 ): { isValid: boolean; invalidNotes: string[]; coverage: number } {
   // Get expected scale notes (as chromatic values 0-11)
   const intervals = getScaleIntervals(scaleName);
   const rootValue = noteToValue(rootNote);
-  const expectedNoteValues = new Set(intervals.map(i => (rootValue + i) % 12));
-  
+  const expectedNoteValues = new Set(
+    intervals.map((i) => (rootValue + i) % 12),
+  );
+
   // Standard guitar tuning values
   const tuning = [4, 9, 2, 7, 11, 4]; // Low E, A, D, G, B, High E
-  
+
   const invalidNotes: string[] = [];
   let totalNotes = 0;
   let correctNotes = 0;
-  
+
   fingering.forEach((stringFrets, stringIndex) => {
     const stringTuning = tuning[stringIndex];
-    
-    stringFrets.forEach(fret => {
+
+    stringFrets.forEach((fret) => {
       if (fret >= 0 && fret <= 24) {
         totalNotes++;
         const noteValue = (stringTuning + fret) % 12;
-        
+
         if (expectedNoteValues.has(noteValue)) {
           correctNotes++;
         } else {
           const noteName = valueToNote(noteValue);
-          invalidNotes.push(`String ${stringIndex + 1}, fret ${fret}: ${noteName}`);
+          invalidNotes.push(
+            `String ${stringIndex + 1}, fret ${fret}: ${noteName}`,
+          );
         }
       }
     });
   });
-  
+
   const coverage = totalNotes > 0 ? correctNotes / totalNotes : 0;
-  
+
   return {
     isValid: invalidNotes.length === 0,
     invalidNotes,
-    coverage
+    coverage,
   };
 }
 
 /**
  * Get scale fingering with validation - logs warnings if notes don't match
  * This is a wrapper around getScaleFingering that adds validation
- * 
+ *
  * @param scaleName - Scale name (e.g., "C major", "D minor pentatonic")
  * @param rootNote - Optional explicit root note (extracted from name if not provided)
  * @param positionIndex - Position index (0-4 for 5-position scales, fewer for limited scales)
@@ -802,21 +1441,21 @@ export function validateFingeringNotes(
 export function getValidatedScaleFingering(
   scaleName: string,
   rootNote?: string,
-  positionIndex: number = 0
+  positionIndex: number = 0,
 ): number[][] {
   const root = rootNote || extractRootFromScaleName(scaleName);
   const fingering = getScaleFingering(scaleName, root, positionIndex);
-  
+
   // Validate the fingering
   const validation = validateFingeringNotes(fingering, root, scaleName);
-  
+
   if (!validation.isValid) {
     console.warn(
       `Scale fingering validation failed for "${scaleName}" (root: ${root}, position: ${positionIndex}):`,
       `\n  Coverage: ${(validation.coverage * 100).toFixed(1)}%`,
-      `\n  Invalid notes: ${validation.invalidNotes.slice(0, 5).join(', ')}${validation.invalidNotes.length > 5 ? '...' : ''}`
+      `\n  Invalid notes: ${validation.invalidNotes.slice(0, 5).join(", ")}${validation.invalidNotes.length > 5 ? "..." : ""}`,
     );
   }
-  
+
   return fingering;
 }

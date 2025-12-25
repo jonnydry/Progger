@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import type { ChordVoicing } from '@/types';
+import React, { useMemo } from "react";
+import type { ChordVoicing } from "@/types";
 
 interface VoicingDiagramProps {
   chordName: string;
@@ -7,7 +7,41 @@ interface VoicingDiagramProps {
   className?: string;
 }
 
-export const VoicingDiagram: React.FC<VoicingDiagramProps> = ({ chordName, voicing, className }) => {
+/**
+ * VoicingDiagram Component
+ *
+ * Displays a guitar chord diagram with proper fretboard positioning.
+ *
+ * FRET NUMBER FORMAT:
+ * - Voicings use TWO different fret numbering formats:
+ *
+ * 1. ABSOLUTE FORMAT (Open chords, firstFret <= 1):
+ *    - frets array contains actual fret numbers on the guitar
+ *    - Example: [0, 2, 2, 1, 0, 0] = E major open chord
+ *    - frets[0] = 0 means open low E string (no finger)
+ *    - frets[1] = 2 means 2nd fret on A string
+ *
+ * 2. RELATIVE FORMAT (Barre chords, firstFret > 1):
+ *    - frets array contains finger POSITIONS relative to the barre
+ *    - firstFret indicates the barre position
+ *    - Absolute fret = (fret value) + firstFret - 1
+ *    - Example: frets = [1, 3, 3, 2, 1, 1], firstFret = 3
+ *      - Position 1 at barre = 1 + 3 - 1 = fret 3
+ *      - Position 3 above barre = 3 + 3 - 1 = fret 5
+ *
+ * STRING ORDERING:
+ * - frets[0] = Low E (6th string)
+ * - frets[5] = High E (1st string)
+ *
+ * @param chordName - Display name of the chord
+ * @param voicing - Chord voicing data with frets array and optional firstFret
+ * @param className - Optional CSS classes for styling
+ */
+export const VoicingDiagram: React.FC<VoicingDiagramProps> = ({
+  chordName,
+  voicing,
+  className,
+}) => {
   const { frets, firstFret = 1 } = voicing;
 
   const FRET_COUNT = 5;
@@ -17,16 +51,19 @@ export const VoicingDiagram: React.FC<VoicingDiagramProps> = ({ chordName, voici
   const DOT_RADIUS = 7;
   const PADDING = 20;
   const LEFT_MARGIN = 18;
-  
+
   // String stroke widths - thicker strings (lower index) are visually thicker
   const STRING_STROKE_WIDTHS = [1.5, 1.4, 1.3, 1.2, 1.1, 1.0] as const;
 
   const width = LEFT_MARGIN + (STRING_COUNT - 1) * STRING_WIDTH + PADDING * 2;
   const height = FRET_COUNT * FRET_HEIGHT + PADDING * 2.5;
 
-  const highestFret = useMemo(() =>
-    Math.max(...frets.filter(f => typeof f === 'number').map(f => f as number)),
-    [frets]
+  const highestFret = useMemo(
+    () =>
+      Math.max(
+        ...frets.filter((f) => typeof f === "number").map((f) => f as number),
+      ),
+    [frets],
   );
 
   // Determine if this voicing uses relative positioning to firstFret (barre chords)
@@ -36,14 +73,20 @@ export const VoicingDiagram: React.FC<VoicingDiagramProps> = ({ chordName, voici
     return firstFret > 1; // Barre chords always use relative positioning
   }, [firstFret]);
 
-  const effectiveFirstFret = useMemo(() =>
-    firstFret > 1 ? firstFret : (highestFret > FRET_COUNT ? highestFret - FRET_COUNT + 1 : 1),
-    [firstFret, highestFret]
+  const effectiveFirstFret = useMemo(
+    () =>
+      firstFret > 1
+        ? firstFret
+        : highestFret > FRET_COUNT
+          ? highestFret - FRET_COUNT + 1
+          : 1,
+    [firstFret, highestFret],
   );
 
-  const containerClass = className !== undefined
-    ? `flex flex-col items-center ${className}`
-    : "flex flex-col items-center p-3 rounded-lg bg-surface border border-border shadow-md w-full max-w-[180px]";
+  const containerClass =
+    className !== undefined
+      ? `flex flex-col items-center ${className}`
+      : "flex flex-col items-center p-3 rounded-lg bg-surface border border-border shadow-md w-full max-w-[180px]";
 
   return (
     <div className={containerClass}>
@@ -78,7 +121,11 @@ export const VoicingDiagram: React.FC<VoicingDiagramProps> = ({ chordName, voici
             x2={LEFT_MARGIN + PADDING + (STRING_COUNT - 1) * STRING_WIDTH}
             y2={PADDING + i * FRET_HEIGHT}
             strokeWidth={i === 0 && effectiveFirstFret === 1 ? 3 : 1}
-            className={i === 0 && effectiveFirstFret === 1 ? 'stroke-text/60' : 'stroke-text/20'}
+            className={
+              i === 0 && effectiveFirstFret === 1
+                ? "stroke-text/60"
+                : "stroke-text/20"
+            }
           />
         ))}
 
@@ -99,42 +146,58 @@ export const VoicingDiagram: React.FC<VoicingDiagramProps> = ({ chordName, voici
         {frets.map((fret, i) => {
           const cx = LEFT_MARGIN + PADDING + i * STRING_WIDTH;
           const cy = PADDING - 10;
-          if (fret === 'x') {
+          if (fret === "x") {
             return (
-              <text key={`indicator-x-${i}`} x={cx} y={cy + 4} fontSize="14" className="fill-text/50" textAnchor="middle">x</text>
+              <text
+                key={`indicator-x-${i}`}
+                x={cx}
+                y={cy + 4}
+                fontSize="14"
+                className="fill-text/50"
+                textAnchor="middle"
+              >
+                x
+              </text>
             );
           }
           if (fret === 0) {
-             return (
-              <circle key={`indicator-o-${i}`} cx={cx} cy={cy} r={4} strokeWidth="1.5" className="stroke-text/70 fill-none" />
+            return (
+              <circle
+                key={`indicator-o-${i}`}
+                cx={cx}
+                cy={cy}
+                r={4}
+                strokeWidth="1.5"
+                className="stroke-text/70 fill-none"
+              />
             );
           }
           return null;
         })}
-        
+
         {/* Fingering dots */}
         {frets.map((fret, stringIndex) => {
-          if (typeof fret !== 'number' || fret <= 0) return null;
-          
+          if (typeof fret !== "number" || fret <= 0) return null;
+
           // Convert relative finger positions to absolute fret numbers if needed
           const absoluteFret = usesRelativeFormat ? fret + firstFret - 1 : fret;
-          
+
           // Calculate which fret position on the diagram (1-5) this absolute fret should appear at
           const fretIndex = absoluteFret - effectiveFirstFret + 1;
           if (fretIndex < 1 || fretIndex > FRET_COUNT) return null;
 
           const cx = LEFT_MARGIN + PADDING + stringIndex * STRING_WIDTH;
-          const cy = PADDING + (fretIndex * FRET_HEIGHT) - (FRET_HEIGHT / 2);
+          const cy = PADDING + fretIndex * FRET_HEIGHT - FRET_HEIGHT / 2;
 
           return (
             <circle
-                key={`dot-${stringIndex}-${fret}`}
-                cx={cx}
-                cy={cy}
-                r={DOT_RADIUS}
-                className="fill-primary stroke-background"
-                strokeWidth="2"
-              />
+              key={`dot-${stringIndex}-${fret}`}
+              cx={cx}
+              cy={cy}
+              r={DOT_RADIUS}
+              className="fill-primary stroke-background"
+              strokeWidth="2"
+            />
           );
         })}
       </svg>

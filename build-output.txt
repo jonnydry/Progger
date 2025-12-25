@@ -1,0 +1,37 @@
+
+> chord-progression-generator@0.0.0 build
+> vite build
+
+vite v6.4.1 building for production...
+transforming...
+✓ 140 modules transformed.
+rendering chunks...
+[plugin vite:reporter] 
+(!) /Users/jonathandrybanski/Documents/Cursor Projects/PROGGER/client/src/utils/chords/index.ts is dynamically imported by /Users/jonathandrybanski/Documents/Cursor Projects/PROGGER/client/src/utils/errors.ts, /Users/jonathandrybanski/Documents/Cursor Projects/PROGGER/client/src/utils/errors.ts, /Users/jonathandrybanski/Documents/Cursor Projects/PROGGER/client/src/utils/errors.ts but also statically imported by /Users/jonathandrybanski/Documents/Cursor Projects/PROGGER/client/src/components/ChordDetailView.tsx, /Users/jonathandrybanski/Documents/Cursor Projects/PROGGER/client/src/hooks/useChordVoicingPreview.ts, /Users/jonathandrybanski/Documents/Cursor Projects/PROGGER/client/src/services/xaiService.ts, /Users/jonathandrybanski/Documents/Cursor Projects/PROGGER/client/src/utils/chordLibrary.ts, dynamic import will not move module into another chunk.
+
+[plugin vite:reporter] 
+(!) /Users/jonathandrybanski/Documents/Cursor Projects/PROGGER/client/src/utils/scaleLibrary.ts is dynamically imported by /Users/jonathandrybanski/Documents/Cursor Projects/PROGGER/client/src/utils/errors.ts, /Users/jonathandrybanski/Documents/Cursor Projects/PROGGER/client/src/utils/errors.ts but also statically imported by /Users/jonathandrybanski/Documents/Cursor Projects/PROGGER/client/src/components/ScaleDiagram.tsx, /Users/jonathandrybanski/Documents/Cursor Projects/PROGGER/client/src/components/ScaleDiagramModal.tsx, /Users/jonathandrybanski/Documents/Cursor Projects/PROGGER/client/src/services/xaiService.ts, dynamic import will not move module into another chunk.
+
+[plugin vite:reporter] 
+(!) /Users/jonathandrybanski/Documents/Cursor Projects/PROGGER/client/src/components/ScaleDiagram.tsx is dynamically imported by /Users/jonathandrybanski/Documents/Cursor Projects/PROGGER/client/src/App.tsx but also statically imported by /Users/jonathandrybanski/Documents/Cursor Projects/PROGGER/client/src/App.tsx, dynamic import will not move module into another chunk.
+
+computing gzip size...
+../../dist/index.html                                5.12 kB │ gzip:   1.76 kB
+../../dist/assets/progger-logo-hFcqylI1.png        460.61 kB
+../../dist/assets/footer_bg_new_wide-B63nXUHP.png  691.18 kB
+../../dist/assets/index-DmkEJ22d.css                11.21 kB │ gzip:   1.84 kB
+../../dist/assets/ScaleDiagramModal-DV71nH9r.js      6.39 kB │ gzip:   2.44 kB
+../../dist/assets/A-CFWp9mdh.js                      8.38 kB │ gzip:   1.03 kB
+../../dist/assets/B-DPZj6nPB.js                      8.41 kB │ gzip:   1.06 kB
+../../dist/assets/E-CobdFxIM.js                      8.42 kB │ gzip:   1.07 kB
+../../dist/assets/D-B5bheYbU.js                      8.50 kB │ gzip:   1.04 kB
+../../dist/assets/C-BcmD4KhU.js                      8.57 kB │ gzip:   1.05 kB
+../../dist/assets/G-B5YiRAOP.js                      8.63 kB │ gzip:   1.10 kB
+../../dist/assets/F-CPd9uhAY.js                      9.03 kB │ gzip:   1.05 kB
+../../dist/assets/G_sharp-BhaDKvBf.js               17.29 kB │ gzip:   1.32 kB
+../../dist/assets/F_sharp-BEJ5oH_o.js               17.44 kB │ gzip:   1.29 kB
+../../dist/assets/D_sharp-MhfFgkzT.js               17.49 kB │ gzip:   1.34 kB
+../../dist/assets/C_sharp-aE49VW71.js               17.74 kB │ gzip:   1.37 kB
+../../dist/assets/A_sharp-ClGUYJ5m.js               18.07 kB │ gzip:   1.34 kB
+../../dist/assets/index-owJjrhwx.js                368.34 kB │ gzip: 110.19 kB
+✓ built in 648ms

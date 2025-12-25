@@ -1,7 +1,7 @@
-import React, { useMemo } from 'react';
-import { ThemeSelector } from './ThemeSelector';
-import type { ThemeOption } from '@/constants';
-import proggerLogo from '../assets/progger-logo.png';
+import React, { useMemo } from "react";
+import { ThemeSelector } from "./ThemeSelector";
+import type { ThemeOption } from "@/constants";
+import proggerLogo from "../assets/progger-logo.webp";
 
 interface GlassmorphicHeaderProps {
   theme: string;
@@ -31,34 +31,31 @@ export const GlassmorphicHeader: React.FC<GlassmorphicHeaderProps> = ({
   onLogout,
   onStashClick,
 }) => {
-  const headerStyle = useMemo(() => ({
-    backdropFilter: 'blur(6px)',
-    WebkitBackdropFilter: 'blur(6px)',
-    background: theme === 'dark'
-      ? 'rgba(0, 0, 0, 0.75)'
-      : 'rgba(255, 255, 255, 0.75)',
-    borderBottom: theme === 'dark'
-      ? '1px solid rgba(255, 255, 255, 0.15)'
-      : '1px solid rgba(0, 0, 0, 0.15)',
-    boxShadow: theme === 'dark'
-      ? '0 1px 3px rgba(0, 0, 0, 0.2)'
-      : '0 1px 3px rgba(0, 0, 0, 0.1)',
-  }), [theme]);
+  const headerStyle = useMemo(
+    () => ({
+      backdropFilter: "blur(6px)",
+      WebkitBackdropFilter: "blur(6px)",
+      background:
+        theme === "dark" ? "rgba(0, 0, 0, 0.75)" : "rgba(255, 255, 255, 0.75)",
+      borderBottom:
+        theme === "dark"
+          ? "1px solid rgba(255, 255, 255, 0.15)"
+          : "1px solid rgba(0, 0, 0, 0.15)",
+      boxShadow:
+        theme === "dark"
+          ? "0 1px 3px rgba(0, 0, 0, 0.2)"
+          : "0 1px 3px rgba(0, 0, 0, 0.1)",
+    }),
+    [theme],
+  );
 
   return (
-    <header
-      className="sticky top-0 z-50 w-full"
-      style={headerStyle}
-    >
+    <header className="sticky top-0 z-50 w-full" style={headerStyle}>
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           {/* Logo / Brand */}
           <div className="flex items-center space-x-2">
-            <img
-              src={proggerLogo}
-              alt="Progger mascot"
-              className="h-12 w-12"
-            />
+            <img src={proggerLogo} alt="Progger mascot" className="h-12 w-12" />
             <h1 className="font-grotesk text-2xl font-bold text-text/90 tracking-tight hidden sm:block">
               PROGGER
             </h1>
@@ -103,7 +100,7 @@ export const GlassmorphicHeader: React.FC<GlassmorphicHeaderProps> = ({
               className="p-2 rounded-full text-text/70 hover:bg-surface/50 hover:text-text transition-all duration-300"
               aria-label="Toggle theme"
             >
-              {theme === 'dark' ? (
+              {theme === "dark" ? (
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   className="h-6 w-6"
@@ -157,23 +154,30 @@ export const GlassmorphicHeader: React.FC<GlassmorphicHeaderProps> = ({
                 </button>
 
                 {/* Dropdown Menu */}
-                <div className="absolute right-0 mt-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200"
+                <div
+                  className="absolute right-0 mt-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200"
                   style={{
-                    backdropFilter: 'blur(12px)',
-                    WebkitBackdropFilter: 'blur(12px)',
-                    background: theme === 'dark'
-                      ? 'rgba(20, 20, 20, 0.9)'
-                      : 'rgba(255, 255, 255, 0.9)',
-                    border: theme === 'dark'
-                      ? '1px solid rgba(255, 255, 255, 0.1)'
-                      : '1px solid rgba(0, 0, 0, 0.1)',
-                    borderRadius: '0.5rem',
-                    boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
+                    backdropFilter: "blur(12px)",
+                    WebkitBackdropFilter: "blur(12px)",
+                    background:
+                      theme === "dark"
+                        ? "rgba(20, 20, 20, 0.9)"
+                        : "rgba(255, 255, 255, 0.9)",
+                    border:
+                      theme === "dark"
+                        ? "1px solid rgba(255, 255, 255, 0.1)"
+                        : "1px solid rgba(0, 0, 0, 0.1)",
+                    borderRadius: "0.5rem",
+                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.3)",
                   }}
                 >
                   <div className="px-4 py-3 border-b border-border/30">
-                    <p className="text-sm font-medium text-text">{userProfile.name}</p>
-                    <p className="text-xs text-text/60 truncate">{userProfile.email}</p>
+                    <p className="text-sm font-medium text-text">
+                      {userProfile.name}
+                    </p>
+                    <p className="text-xs text-text/60 truncate">
+                      {userProfile.email}
+                    </p>
                   </div>
                   <button
                     onClick={onLogout}
