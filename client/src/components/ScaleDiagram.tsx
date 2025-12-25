@@ -11,6 +11,7 @@ import {
   SCALE_LIBRARY,
   normalizeScaleName,
   getSortedPositions,
+  getScaleIntervals,
 } from "../utils/scaleLibrary";
 
 const LazyScaleDiagramModal = lazy(() => import("./ScaleDiagramModal"));
