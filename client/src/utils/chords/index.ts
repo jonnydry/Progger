@@ -44,8 +44,9 @@ const ENHARMONIC_ROOTS: Record<string, string> = {
  * Normalize root note to canonical form
  */
 export function normalizeRoot(root: string): string {
-  const upper = root.toUpperCase();
-  return ENHARMONIC_ROOTS[upper] || upper;
+  // Normalize to proper case: uppercase first letter, rest as-is
+  const normalized = root.charAt(0).toUpperCase() + root.slice(1).toLowerCase();
+  return ENHARMONIC_ROOTS[normalized] || normalized;
 }
 
 /**

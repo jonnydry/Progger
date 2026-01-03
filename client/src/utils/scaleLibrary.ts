@@ -121,51 +121,50 @@ export const SCALE_LIBRARY: ScaleLibrary = {
     // Patterns stored for D Dorian - transpose automatically to other keys
     intervals: [0, 2, 3, 5, 7, 9, 10],
     fingerings: [
-      // Position 1: Open position (frets 0-4) - CAGED "D shape"
-      // D Dorian root on low E 10th fret, transposed down to open position
+      // Position 1: Open position (frets 0-4)
       [
+        [0, 1, 3],
+        [0, 2, 3],
         [0, 2, 3],
         [0, 2, 4],
-        [0, 2, 4],
-        [0, 2, 4],
-        [2, 3, 5],
-        [2, 3, 5],
+        [0, 1, 3],
+        [0, 1, 3],
       ],
       // Position 2: 3rd position (frets 3-7)
       [
         [3, 5, 7],
+        [3, 5, 7],
+        [3, 5, 7],
         [4, 5, 7],
-        [4, 5, 7],
-        [4, 6, 7],
-        [5, 7, 8],
-        [5, 7, 9],
+        [3, 5, 6],
+        [3, 5, 7],
       ],
       // Position 3: 5th position (frets 5-9)
       [
+        [5, 7, 8],
+        [5, 7, 8],
         [5, 7, 9],
         [5, 7, 9],
-        [5, 7, 9],
-        [6, 7, 9],
-        [7, 8, 10],
-        [7, 9, 10],
+        [5, 6, 8],
+        [5, 7, 8],
       ],
       // Position 4: 7th position (frets 7-11)
       [
+        [7, 8, 10],
+        [7, 8, 10],
         [7, 9, 10],
         [7, 9, 10],
-        [7, 9, 11],
-        [7, 9, 11],
-        [10, 12, 14],
-        [9, 10, 12],
+        [8, 10],
+        [7, 8, 10],
       ],
       // Position 5: 10th position (frets 10-14)
       [
+        [10, 12, 13],
         [10, 12, 14],
         [10, 12, 14],
-        [11, 12, 14],
-        [11, 12, 14],
         [10, 12, 14],
-        [10, 12, 14],
+        [10, 12, 13],
+        [10, 12, 13],
       ],
     ],
     positions: [
@@ -220,12 +219,12 @@ export const SCALE_LIBRARY: ScaleLibrary = {
       ],
       // Position 5: 10th position (frets 10-14)
       [
+        [10, 12, 13],
         [10, 12, 14],
         [10, 12, 14],
-        [11, 12, 14],
-        [11, 12, 14],
-        [12, 14],
-        [12, 14],
+        [10, 12, 14],
+        [10, 12, 13],
+        [10, 12, 13],
       ],
     ],
     positions: [
@@ -338,14 +337,14 @@ export const SCALE_LIBRARY: ScaleLibrary = {
         [12, 13, 15],
         [12, 13, 15],
       ],
-      // Position 5: 3rd position higher octave (frets 3-7)
+      // Position 5: Open position (frets 0-4)
       [
-        [3, 5, 7],
-        [4, 5, 7],
-        [4, 5, 7],
-        [4, 6, 7],
-        [5, 7, 8],
-        [5, 7, 9],
+        [0, 1, 3],
+        [0, 2, 3],
+        [0, 2, 3],
+        [0, 2, 4],
+        [0, 1, 3],
+        [0, 1, 3],
       ],
     ],
     positions: [
@@ -422,50 +421,50 @@ export const SCALE_LIBRARY: ScaleLibrary = {
     // Patterns stored for B Locrian - transpose automatically to other keys
     intervals: [0, 1, 3, 5, 6, 8, 10],
     fingerings: [
-      // Position 1: Open position (frets 0-5) - CAGED "B shape" - unstable Locrian box
+      // Position 1: Open position (frets 0-4)
       [
         [0, 1, 3],
+        [0, 2, 3],
+        [0, 2, 3],
+        [0, 2, 4],
         [0, 1, 3],
-        [0, 2, 3],
-        [0, 2, 3],
-        [3, 5, 6],
-        [3, 5, 6],
+        [0, 1, 3],
       ],
       // Position 2: 3rd position (frets 3-7)
       [
+        [3, 5, 7],
+        [3, 5, 7],
+        [3, 5, 7],
+        [4, 5, 7],
         [3, 5, 6],
         [3, 5, 7],
-        [3, 5, 7],
-        [3, 5, 7],
-        [5, 6, 8],
-        [5, 6, 8],
       ],
       // Position 3: 5th position (frets 5-9)
       [
-        [5, 6, 8],
         [5, 7, 8],
         [5, 7, 8],
         [5, 7, 9],
-        [8, 10, 11],
-        [8, 10, 12],
+        [5, 7, 9],
+        [5, 6, 8],
+        [5, 7, 8],
       ],
-      // Position 4: 8th position (frets 8-12)
+      // Position 4: 7th position (frets 7-11)
       [
-        [8, 10, 12],
-        [8, 10, 12],
-        [8, 10, 12],
-        [9, 10, 12],
-        [10, 11, 13],
-        [10, 12, 13],
+        [7, 8, 10],
+        [7, 8, 10],
+        [7, 9, 10],
+        [7, 9, 10],
+        [8, 10],
+        [7, 8, 10],
       ],
-      // Position 5: 10th position (frets 10-15)
+      // Position 5: 10th position (frets 10-14)
       [
-        [10, 12, 13],
         [10, 12, 13],
         [10, 12, 14],
         [10, 12, 14],
-        [13, 15, 17],
-        [12, 13, 15],
+        [10, 12, 14],
+        [10, 12, 13],
+        [10, 12, 13],
       ],
     ],
     positions: [

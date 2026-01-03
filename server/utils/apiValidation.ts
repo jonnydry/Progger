@@ -365,9 +365,8 @@ export function validateAPIResponse(result: unknown, expectedChordCount?: number
     detectedMode = apiResult.detectedMode.trim();
 
     // Validate mode is one of the standard modes
-    // Note: Ionian and Major are interchangeable (Ionian is accepted but normalized to Major)
-    // Aeolian is NOT accepted as a separate mode (it's the same as Minor)
-    const validModes = ['Major', 'Minor', 'Ionian', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian', 'Locrian'];
+    // Note: Ionian/Major and Aeolian/Minor are interchangeable pairs (normalized to Major/Minor)
+    const validModes = ['Major', 'Minor', 'Ionian', 'Aeolian', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian', 'Locrian'];
     if (!validModes.includes(detectedMode)) {
       throw new APIValidationError(
         `Invalid detectedMode: "${detectedMode}". Must be one of: ${validModes.join(', ')}`

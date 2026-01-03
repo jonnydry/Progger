@@ -203,8 +203,8 @@ export const A_CHORDS: ChordVoicingsMap = {
     { frets: ['x', 0, 2, 2, 1, 0], position: 'Open' },
     { frets: ['x', 'x', 2, 2, 1, 0], position: 'Partial 2nd' },
     { frets: [1, 3, 3, 1, 1, 1], firstFret: 5, position: 'Barre 5th' },
-    { frets: ['x', 1, 3, 3, 2, 1], firstFret: 5, position: 'Barre 5th Alt' },
-    { frets: [1, 3, 3, 1, 1, 1], firstFret: 12, position: 'Barre 12th' },
+    { frets: ['x', 3, 3, 1, 1, 1], firstFret: 5, position: 'Partial 5th' },
+    { frets: [1, 1, 3, 3, 2, 1], firstFret: 12, position: 'Barre 12th' },
   ],
   'A_power_Aroot': [
     { frets: ['x', 0, 2, 2, 'x', 'x'], position: 'A-string Root' },

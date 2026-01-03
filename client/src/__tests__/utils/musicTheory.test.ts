@@ -155,7 +155,8 @@ describe('musicTheory', () => {
 
     it('should use conventional spellings for C major', () => {
       expect(displayNote('C#', 'C')).toBe('C#');
-      expect(displayNote('Db', 'C')).toBe('Eb'); // C major uses Eb, not Db
+      expect(displayNote('Db', 'C')).toBe('C#'); // C major uses C# spelling for chromatic value 1
+      expect(displayNote('D#', 'C')).toBe('Eb'); // C major uses Eb spelling for chromatic value 3
     });
   });
 
