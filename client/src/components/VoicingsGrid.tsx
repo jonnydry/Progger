@@ -6,6 +6,7 @@ import { displayChordName } from '@/utils/musicTheory';
 import { useSaveToStash } from '../hooks/useStash';
 import { PixelCard } from './PixelCard';
 import { PixelButton } from './PixelButton';
+import { IntervalArrow } from './IntervalArrow';
 
 interface VoicingsGridProps {
   progression: ChordInProgression[];
@@ -234,7 +235,7 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
           </div>
         )}
       </PixelCard>
-      <div className="flex flex-wrap justify-center gap-4 w-full max-w-7xl px-4">
+      <div className="flex flex-wrap justify-center items-center w-full max-w-7xl px-4">
         {progression.map((chord, index) => {
           const currentVoicingIndex = voicingIndices[index] ?? 0;
           const currentVoicing = chord.voicings[currentVoicingIndex];
@@ -243,67 +244,77 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({ progression, isLoadi
 
           const displayedChordName = displayChordName(chord.chordName, musicalKey);
           const isExpanded = expandedChordIndex === index;
+          const nextChord = progression[index + 1];
           
           return (
-            <PixelCard
-                key={`${chord.chordName}-${index}`} 
-                noAnimate
-                className={`
-                    flex flex-col items-center transition-all duration-300 relative
-                    ${isCompact ? 'w-[160px] p-2' : 'w-[220px] p-4'}
-                    ${isExpanded ? 'scale-105 z-10 border-primary' : 'hover:scale-105'}
-                `}
-            >
-              <div
-                onClick={() => handleChordClick(index)}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleChordClick(index); } }}
-                tabIndex={0}
-                role="button"
-                className="cursor-pointer w-full focus:outline-none"
-                aria-label={`View details for ${displayedChordName}`}
-                aria-expanded={isExpanded}
+            <React.Fragment key={`${chord.chordName}-${index}`}>
+              <PixelCard
+                  noAnimate
+                  className={`
+                      flex flex-col items-center transition-all duration-300 relative
+                      ${isCompact ? 'w-[160px] p-2' : 'w-[220px] p-4'}
+                      ${isExpanded ? 'scale-105 z-10 border-primary' : 'hover:scale-105'}
+                  `}
               >
-                <div key={currentVoicingIndex} className="animate-cross-fade-in w-full">
-                  <VoicingDiagram 
-                    chordName={displayedChordName} 
-                    voicing={currentVoicing} 
-                    className="w-full border-none shadow-none bg-transparent p-0"
+                <div
+                  onClick={() => handleChordClick(index)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleChordClick(index); } }}
+                  tabIndex={0}
+                  role="button"
+                  className="cursor-pointer w-full focus:outline-none"
+                  aria-label={`View details for ${displayedChordName}`}
+                  aria-expanded={isExpanded}
+                >
+                  <div key={currentVoicingIndex} className="animate-cross-fade-in w-full">
+                    <VoicingDiagram 
+                      chordName={displayedChordName} 
+                      voicing={currentVoicing} 
+                      className="w-full border-none shadow-none bg-transparent p-0"
+                    />
+                  </div>
+                </div>
+                
+                <div 
+                  className={`flex items-center justify-between w-full ${isCompact ? 'mt-1' : 'mt-3'}`}
+                  role="group"
+                  aria-label={`Voicing navigation for ${displayedChordName}`}
+                >
+                  <ArrowButton 
+                    direction="left" 
+                    onClick={() => handleVoicingChange(index, 'prev')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'ArrowLeft') {
+                        e.preventDefault();
+                        handleVoicingChange(index, 'prev');
+                      }
+                    }}
+                    ariaLabel={`Previous voicing for ${displayedChordName}`}
+                  />
+                  <span className="text-xs text-text/60 font-medium tabular-nums">
+                    {currentVoicingIndex + 1}/{chord.voicings.length}
+                  </span>
+                  <ArrowButton 
+                    direction="right" 
+                    onClick={() => handleVoicingChange(index, 'next')}
+                    onKeyDown={(e) => {
+                      if (e.key === 'ArrowRight') {
+                        e.preventDefault();
+                        handleVoicingChange(index, 'next');
+                      }
+                    }}
+                    ariaLabel={`Next voicing for ${displayedChordName}`}
                   />
                 </div>
-              </div>
+              </PixelCard>
               
-              <div 
-                className={`flex items-center justify-between w-full ${isCompact ? 'mt-1' : 'mt-3'}`}
-                role="group"
-                aria-label={`Voicing navigation for ${displayedChordName}`}
-              >
-                <ArrowButton 
-                  direction="left" 
-                  onClick={() => handleVoicingChange(index, 'prev')}
-                  onKeyDown={(e) => {
-                    if (e.key === 'ArrowLeft') {
-                      e.preventDefault();
-                      handleVoicingChange(index, 'prev');
-                    }
-                  }}
-                  ariaLabel={`Previous voicing for ${displayedChordName}`}
+              {nextChord && (
+                <IntervalArrow 
+                  fromChord={chord.chordName} 
+                  toChord={nextChord.chordName}
+                  isCompact={isCompact}
                 />
-                <span className="text-xs text-text/60 font-medium tabular-nums">
-                  {currentVoicingIndex + 1}/{chord.voicings.length}
-                </span>
-                <ArrowButton 
-                  direction="right" 
-                  onClick={() => handleVoicingChange(index, 'next')}
-                  onKeyDown={(e) => {
-                    if (e.key === 'ArrowRight') {
-                      e.preventDefault();
-                      handleVoicingChange(index, 'next');
-                    }
-                  }}
-                  ariaLabel={`Next voicing for ${displayedChordName}`}
-                />
-              </div>
-            </PixelCard>
+              )}
+            </React.Fragment>
           );
         })}
       </div>
