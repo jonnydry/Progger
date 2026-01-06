@@ -185,21 +185,22 @@ describe("scaleLibrary", () => {
   describe("SCALE_LIBRARY - Comprehensive Structure Tests", () => {
     // Note: 'aeolian' normalizes to 'minor' and 'ionian' normalizes to 'major'
     // so they are not separate entries in SCALE_LIBRARY
+    // 3NPS (3 Notes Per String) system uses 7 positions for 7-note scales
     const SCALE_POSITION_REQUIREMENTS = {
-      major: 5,
-      minor: 5,
-      dorian: 5,
-      phrygian: 5,
-      lydian: 5,
-      mixolydian: 5,
-      locrian: 5,
-      "harmonic minor": 3, // Only has 3 positions
-      "melodic minor": 3, // Only has 3 positions
-      "pentatonic major": 5,
-      "pentatonic minor": 5,
-      blues: 3, // Only has 3 positions
-      "whole tone": 2, // Only has 2 positions
-      diminished: 2, // Only has 2 positions
+      major: 7, // 3NPS: 7 positions for 7-note scale
+      minor: 7, // 3NPS: 7 positions for 7-note scale
+      dorian: 7, // 3NPS: 7 positions for 7-note scale
+      phrygian: 7, // 3NPS: 7 positions for 7-note scale
+      lydian: 7, // 3NPS: 7 positions for 7-note scale
+      mixolydian: 7, // 3NPS: 7 positions for 7-note scale
+      locrian: 7, // 3NPS: 7 positions for 7-note scale
+      "harmonic minor": 7, // 3NPS: 7 positions for 7-note scale
+      "melodic minor": 7, // 3NPS: 7 positions for 7-note scale
+      "pentatonic major": 5, // 5 boxes for 5-note scale
+      "pentatonic minor": 5, // 5 boxes for 5-note scale
+      blues: 5, // 5 boxes (6-note scale, uses pentatonic boxes + blue note)
+      "whole tone": 2, // Symmetric 6-note scale, only 2 unique positions
+      diminished: 3, // Symmetric 8-note scale, 3 unique positions
     } as Record<string, number>;
 
     it("should contain major scale", () => {
@@ -245,9 +246,9 @@ describe("scaleLibrary", () => {
     it("should handle blank position requests gracefully", () => {
       // Test scales with limited positions - requesting non-existent positions should not crash
       const testCases = [
-        { scale: "blues", availablePositions: 3, testPosition: 4 },
+        { scale: "blues", availablePositions: 5, testPosition: 6 },
         { scale: "whole tone", availablePositions: 2, testPosition: 3 },
-        { scale: "harmonic minor", availablePositions: 3, testPosition: 5 },
+        { scale: "diminished", availablePositions: 3, testPosition: 5 },
       ] as const;
 
       for (const { scale, availablePositions, testPosition } of testCases) {
@@ -314,7 +315,7 @@ describe("scaleLibrary", () => {
         "pentatonic minor": [0, 3, 5, 7, 10],
         blues: [0, 3, 5, 6, 7, 10],
         "whole tone": [0, 2, 4, 6, 8, 10],
-        diminished: [0, 2, 3, 5, 6, 8, 9, 11],
+        diminished: [0, 1, 3, 4, 6, 7, 9, 10], // Half-Whole diminished (most common)
       } as const;
 
       for (const [scaleName, expectedIntervals] of Object.entries(

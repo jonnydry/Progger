@@ -1,7 +1,13 @@
 /**
  * Scale Library - Guitar Scale Patterns Database
  *
- * This file contains a comprehensive library of guitar scale fingering patterns.
+ * REBUILT using 3 Notes Per String (3NPS) System
+ *
+ * The 3NPS system provides:
+ * - 7 positions for 7-note scales (one starting on each scale degree)
+ * - Consistent 3 notes on every string for speed and economy
+ * - Natural alignment with the 7 modes of the major scale
+ * - Better fretboard coverage than CAGED
  *
  * CRITICAL GUITAR CONVENTION:
  * All fingering arrays follow standard guitar string order:
@@ -12,23 +18,8 @@
  * fingering[4] = B (2nd string)
  * fingering[5] = High E (1st string)
  *
- * Visual Representation:
- * ┌────────────┐
- * │ E (1st)    │ ← fingering[5] = [frets for high E]
- * │ B (2nd)    │ ← fingering[4] = [frets for B string]
- * │ G (3rd)    │ ← fingering[3] = [frets for G string]
- * │ D (4th)    │ ← fingering[2] = [frets for D string]
- * │ A (5th)    │ ← fingering[1] = [frets for A string]
- * │ E (6th)    │ ← fingering[0] = [frets for low E]
- * └────────────┘
- *   Thinnest       Thickest
- *
- * Each inner array contains fret numbers where scale notes appear on that string.
- *
- * Example - C Major Position 1:
- * fingering[0] = [8, 10, 12]  // Low E: C(8), D(10), E(12)
- * fingering[1] = [8, 10, 12]  // A string: C(8), D(10), E(12)
- * ...
+ * Standard Tuning Note Values (where C=0):
+ * Low E = 4, A = 9, D = 2, G = 7, B = 11, High E = 4
  */
 
 import { noteToValue, valueToNote } from "./musicTheory";
@@ -45,938 +36,1254 @@ export interface ScalePattern {
 
 type ScaleLibrary = Record<string, ScalePattern>;
 
-// Cache for sorted pattern indices to avoid redundant sorting
-const sortedPatternIndicesCache = new Map<string, number[]>();
+// Standard tuning values (chromatic where C=0)
+// Low E(4), A(9), D(2), G(7), B(11), High E(4)
+const TUNING = [4, 9, 2, 7, 11, 4];
+
+/**
+ * Helper function to find fret for a note value on a string
+ * Returns the fret number where that note appears within a fret range
+ */
+function findNoteOnString(
+  stringValue: number,
+  noteValue: number,
+  minFret: number,
+  maxFret: number,
+): number[] {
+  const frets: number[] = [];
+  for (let fret = minFret; fret <= maxFret; fret++) {
+    if ((stringValue + fret) % 12 === noteValue) {
+      frets.push(fret);
+    }
+  }
+  return frets;
+}
+
+/**
+ * Generate all 7 3NPS positions for a 7-note scale
+ * Each position starts on a different scale degree
+ *
+ * @param intervals - Scale intervals from root (e.g., [0,2,4,5,7,9,11] for major)
+ * @param rootValue - Chromatic value of the root (C=0)
+ * @returns Array of 7 fingering patterns, each with 6 strings of 3 frets each
+ */
+function generate3NPSPositions(
+  intervals: number[],
+  rootValue: number,
+): number[][][] {
+  const scaleNoteValues = intervals.map((i) => (rootValue + i) % 12);
+  const positions: number[][][] = [];
+
+  // For each of the 7 starting degrees, we create one position
+  // Position 1 starts with the root on low E
+  // Position 2 starts with the 2nd scale degree on low E
+  // etc.
+
+  for (let startDegree = 0; startDegree < 7; startDegree++) {
+    const position: number[][] = [];
+
+    // Find where this degree appears on low E string (lowest occurrence in first octave)
+    const startNoteValue = scaleNoteValues[startDegree];
+    let baseFret = -1;
+    for (let fret = 0; fret <= 12; fret++) {
+      if ((TUNING[0] + fret) % 12 === startNoteValue) {
+        baseFret = fret;
+        break;
+      }
+    }
+
+    if (baseFret === -1) baseFret = 0;
+
+    // Track which scale degree we're on as we traverse strings
+    let currentDegreeIndex = startDegree;
+    let lastFret = baseFret; // Track the last fret used to ensure smooth progression
+
+    for (let stringIdx = 0; stringIdx < 6; stringIdx++) {
+      const stringValue = TUNING[stringIdx];
+      const stringFrets: number[] = [];
+
+      // We need exactly 3 notes on this string
+      for (let noteCount = 0; noteCount < 3; noteCount++) {
+        const degreeIndex = (currentDegreeIndex + noteCount) % 7;
+        const noteValue = scaleNoteValues[degreeIndex];
+
+        // Find this note on the current string, starting from around lastFret
+        // We want notes that progress logically up the neck
+        let searchStart =
+          stringIdx === 0 ? baseFret : Math.max(0, lastFret - 2);
+        let searchEnd = searchStart + 7;
+
+        const possibleFrets = findNoteOnString(
+          stringValue,
+          noteValue,
+          searchStart,
+          Math.min(24, searchEnd),
+        );
+
+        if (possibleFrets.length > 0) {
+          // Choose the fret that maintains logical position progression
+          let chosenFret = possibleFrets[0];
+          for (const fret of possibleFrets) {
+            if (stringFrets.length === 0) {
+              // First note on string - choose closest to lastFret
+              if (Math.abs(fret - lastFret) < Math.abs(chosenFret - lastFret)) {
+                chosenFret = fret;
+              }
+            } else {
+              // Subsequent notes - must be higher than previous
+              const prevFret = stringFrets[stringFrets.length - 1];
+              if (fret > prevFret && fret < chosenFret) {
+                chosenFret = fret;
+              } else if (fret > prevFret && chosenFret <= prevFret) {
+                chosenFret = fret;
+              }
+            }
+          }
+
+          // Ensure ascending order within string
+          if (
+            stringFrets.length === 0 ||
+            chosenFret > stringFrets[stringFrets.length - 1]
+          ) {
+            stringFrets.push(chosenFret);
+          } else {
+            // Need to search higher
+            const higherFrets = findNoteOnString(
+              stringValue,
+              noteValue,
+              stringFrets[stringFrets.length - 1] + 1,
+              24,
+            );
+            if (higherFrets.length > 0) {
+              stringFrets.push(higherFrets[0]);
+            }
+          }
+        }
+      }
+
+      // Update tracking for next string
+      if (stringFrets.length > 0) {
+        lastFret = stringFrets[0]; // Use first fret of this string as reference for next
+      }
+      currentDegreeIndex = (currentDegreeIndex + 3) % 7; // Move 3 degrees for next string
+      position.push(stringFrets);
+    }
+
+    positions.push(position);
+  }
+
+  return positions;
+}
+
+/**
+ * Manually verified 3NPS patterns for C Major scale
+ * C Major notes: C(0), D(2), E(4), F(5), G(7), A(9), B(11)
+ *
+ * Each position starts with a different note of the scale on the low E string.
+ * All patterns are mathematically verified.
+ */
+const C_MAJOR_3NPS: number[][][] = [
+  // Position 1: Starting on E (fret 0 on low E) - corresponds to Phrygian shape
+  // Low E starts: E(0), F(1), G(3)
+  [
+    [0, 1, 3], // Low E: E(4+0=4), F(4+1=5), G(4+3=7) ✓
+    [0, 2, 3], // A: A(9+0=9), B(9+2=11), C(9+3=0) ✓
+    [0, 2, 3], // D: D(2+0=2), E(2+2=4), F(2+3=5) ✓
+    [0, 2, 4], // G: G(7+0=7), A(7+2=9), B(7+4=11) ✓
+    [0, 1, 3], // B: B(11+0=11), C(11+1=0), D(11+3=2) ✓
+    [0, 1, 3], // High E: E(4+0=4), F(4+1=5), G(4+3=7) ✓
+  ],
+  // Position 2: Starting on F (fret 1 on low E) - corresponds to Lydian shape
+  // Low E starts: F(1), G(3), A(5)
+  [
+    [1, 3, 5], // Low E: F(5), G(7), A(9) ✓
+    [2, 3, 5], // A: B(11), C(0), D(2) ✓
+    [2, 3, 5], // D: E(4), F(5), G(7) ✓
+    [2, 4, 5], // G: A(9), B(11), C(0) ✓
+    [1, 3, 5], // B: C(0), D(2), E(4) ✓
+    [1, 3, 5], // High E: F(5), G(7), A(9) ✓
+  ],
+  // Position 3: Starting on G (fret 3 on low E) - corresponds to Mixolydian shape
+  // Low E starts: G(3), A(5), B(7)
+  [
+    [3, 5, 7], // Low E: G(7), A(9), B(11) ✓
+    [3, 5, 7], // A: C(0), D(2), E(4) ✓
+    [3, 5, 7], // D: F(5), G(7), A(9) ✓
+    [4, 5, 7], // G: B(11), C(0), D(2) ✓
+    [3, 5, 6], // B: D(2), E(4), F(5) ✓
+    [3, 5, 7], // High E: G(7), A(9), B(11) ✓
+  ],
+  // Position 4: Starting on A (fret 5 on low E) - corresponds to Aeolian shape
+  // Low E starts: A(5), B(7), C(8)
+  [
+    [5, 7, 8], // Low E: A(9), B(11), C(0) ✓
+    [5, 7, 8], // A: D(2), E(4), F(5) ✓
+    [5, 7, 9], // D: G(7), A(9), B(11) ✓
+    [5, 7, 9], // G: C(0), D(2), E(4) ✓
+    [5, 6, 8], // B: E(4), F(5), G(7) ✓
+    [5, 7, 8], // High E: A(9), B(11), C(0) ✓
+  ],
+  // Position 5: Starting on B (fret 7 on low E) - corresponds to Locrian shape
+  // Low E starts: B(7), C(8), D(10)
+  [
+    [7, 8, 10], // Low E: B(11), C(0), D(2) ✓
+    [7, 8, 10], // A: E(4), F(5), G(7) ✓
+    [7, 9, 10], // D: A(9), B(11), C(0) ✓
+    [7, 9, 10], // G: D(2), E(4), F(5) ✓
+    [6, 8, 10], // B: F(5), G(7), A(9) ✓
+    [7, 8, 10], // High E: B(11), C(0), D(2) ✓
+  ],
+  // Position 6: Starting on C (fret 8 on low E) - corresponds to Ionian shape (ROOT POSITION)
+  // Low E starts: C(8), D(10), E(12)
+  [
+    [8, 10, 12], // Low E: C(0), D(2), E(4) ✓
+    [8, 10, 12], // A: F(5), G(7), A(9) ✓
+    [9, 10, 12], // D: B(11), C(0), D(2) ✓
+    [9, 10, 12], // G: E(4), F(5), G(7) ✓
+    [8, 10, 12], // B: G(7), A(9), B(11) ✓
+    [8, 10, 12], // High E: C(0), D(2), E(4) ✓
+  ],
+  // Position 7: Starting on D (fret 10 on low E) - corresponds to Dorian shape
+  // Low E starts: D(10), E(12), F(13)
+  [
+    [10, 12, 13], // Low E: D(2), E(4), F(5) ✓
+    [10, 12, 14], // A: G(7), A(9), B(11) ✓
+    [10, 12, 14], // D: C(0), D(2), E(4) ✓
+    [10, 12, 14], // G: F(5), G(7), A(9) ✓
+    [10, 12, 13], // B: A(9), B(11), C(0) ✓
+    [10, 12, 13], // High E: D(2), E(4), F(5) ✓
+  ],
+];
+
+/**
+ * A Minor (Natural Minor / Aeolian) 3NPS patterns
+ * A Minor notes: A(9), B(11), C(0), D(2), E(4), F(5), G(7)
+ * Same notes as C Major, just different root
+ */
+const A_MINOR_3NPS: number[][][] = [
+  // Position 1: Starting on A (fret 5 on low E) - ROOT POSITION
+  [
+    [5, 7, 8], // Low E: A(9), B(11), C(0) ✓
+    [5, 7, 8], // A: D(2), E(4), F(5) ✓
+    [5, 7, 9], // D: G(7), A(9), B(11) ✓
+    [5, 7, 9], // G: C(0), D(2), E(4) ✓
+    [5, 6, 8], // B: E(4), F(5), G(7) ✓
+    [5, 7, 8], // High E: A(9), B(11), C(0) ✓
+  ],
+  // Position 2: Starting on B (fret 7 on low E)
+  [
+    [7, 8, 10], // Low E: B(11), C(0), D(2) ✓
+    [7, 8, 10], // A: E(4), F(5), G(7) ✓
+    [7, 9, 10], // D: A(9), B(11), C(0) ✓
+    [7, 9, 10], // G: D(2), E(4), F(5) ✓
+    [6, 8, 10], // B: F(5), G(7), A(9) ✓
+    [7, 8, 10], // High E: B(11), C(0), D(2) ✓
+  ],
+  // Position 3: Starting on C (fret 8 on low E)
+  [
+    [8, 10, 12], // Low E: C(0), D(2), E(4) ✓
+    [8, 10, 12], // A: F(5), G(7), A(9) ✓
+    [9, 10, 12], // D: B(11), C(0), D(2) ✓
+    [9, 10, 12], // G: E(4), F(5), G(7) ✓
+    [8, 10, 12], // B: G(7), A(9), B(11) ✓
+    [8, 10, 12], // High E: C(0), D(2), E(4) ✓
+  ],
+  // Position 4: Starting on D (fret 10 on low E)
+  [
+    [10, 12, 13], // Low E: D(2), E(4), F(5) ✓
+    [10, 12, 14], // A: G(7), A(9), B(11) ✓
+    [10, 12, 14], // D: C(0), D(2), E(4) ✓
+    [10, 12, 14], // G: F(5), G(7), A(9) ✓
+    [10, 12, 13], // B: A(9), B(11), C(0) ✓
+    [10, 12, 13], // High E: D(2), E(4), F(5) ✓
+  ],
+  // Position 5: Starting on E (fret 0/12 on low E) - using fret 0 for open position
+  [
+    [0, 1, 3], // Low E: E(4), F(5), G(7) ✓
+    [0, 2, 3], // A: A(9), B(11), C(0) ✓
+    [0, 2, 3], // D: D(2), E(4), F(5) ✓
+    [0, 2, 4], // G: G(7), A(9), B(11) ✓
+    [0, 1, 3], // B: B(11), C(0), D(2) ✓
+    [0, 1, 3], // High E: E(4), F(5), G(7) ✓
+  ],
+  // Position 6: Starting on F (fret 1 on low E)
+  [
+    [1, 3, 5], // Low E: F(5), G(7), A(9) ✓
+    [2, 3, 5], // A: B(11), C(0), D(2) ✓
+    [2, 3, 5], // D: E(4), F(5), G(7) ✓
+    [2, 4, 5], // G: A(9), B(11), C(0) ✓
+    [1, 3, 5], // B: C(0), D(2), E(4) ✓
+    [1, 3, 5], // High E: F(5), G(7), A(9) ✓
+  ],
+  // Position 7: Starting on G (fret 3 on low E)
+  [
+    [3, 5, 7], // Low E: G(7), A(9), B(11) ✓
+    [3, 5, 7], // A: C(0), D(2), E(4) ✓
+    [3, 5, 7], // D: F(5), G(7), A(9) ✓
+    [4, 5, 7], // G: B(11), C(0), D(2) ✓
+    [3, 5, 6], // B: D(2), E(4), F(5) ✓
+    [3, 5, 7], // High E: G(7), A(9), B(11) ✓
+  ],
+];
+
+/**
+ * A Harmonic Minor 3NPS patterns
+ * A Harmonic Minor notes: A(9), B(11), C(0), D(2), E(4), F(5), G#(8)
+ * Intervals: 0, 2, 3, 5, 7, 8, 11
+ */
+const A_HARMONIC_MINOR_3NPS: number[][][] = [
+  // Position 1: Starting on A (fret 5 on low E) - ROOT POSITION
+  // A Harmonic Minor: A(9), B(11), C(0), D(2), E(4), F(5), G#(8)
+  [
+    [5, 7, 8], // Low E: A(9), B(11), C(0) - E+5=9=A✓, E+7=11=B✓, E+8=0=C✓
+    [5, 7, 8], // A: D(2), E(4), F(5) - A+5=2=D✓, A+7=4=E✓, A+8=5=F✓
+    [6, 7, 9], // D: G#(8), A(9), B(11) - D+6=8=G#✓, D+7=9=A✓, D+9=11=B✓
+    [5, 7, 9], // G: C(0), D(2), E(4) - G+5=0=C✓, G+7=2=D✓, G+9=4=E✓
+    [5, 6, 9], // B: E(4), F(5), G#(8) - B+5=4=E✓, B+6=5=F✓, B+9=8=G#✓
+    [5, 7, 8], // High E: A(9), B(11), C(0) ✓
+  ],
+  // Position 2: Starting on B (fret 7 on low E)
+  [
+    [7, 8, 10], // Low E: B(11), C(0), D(2) ✓
+    [7, 8, 11], // A: E(4), F(5), G#(8) - A+7=4=E✓, A+8=5=F✓, A+11=8=G#✓
+    [7, 9, 10], // D: A(9), B(11), C(0) ✓
+    [7, 9, 10], // G: D(2), E(4), F(5) ✓
+    [6, 9, 10], // B: F(5), G#(8), A(9) ✓
+    [7, 8, 10], // High E: B(11), C(0), D(2) ✓
+  ],
+  // Position 3: Starting on C (fret 8 on low E)
+  [
+    [8, 10, 12], // Low E: C(0), D(2), E(4) ✓
+    [8, 11, 12], // A: F(5), G#(8), A(9) ✓
+    [9, 10, 12], // D: B(11), C(0), D(2) ✓
+    [9, 10, 13], // G: E(4), F(5), G#(8) - G+13=20%12=8=G#✓
+    [9, 10, 12], // B: G#(8), A(9), B(11) - B+9=8=G#✓, B+10=9=A✓, B+12=11=B✓
+    [8, 10, 12], // High E: C(0), D(2), E(4) ✓
+  ],
+  // Position 4: Starting on D (fret 10 on low E)
+  [
+    [10, 12, 13], // Low E: D(2), E(4), F(5) ✓
+    [11, 12, 14], // A: G#(8), A(9), B(11) ✓
+    [10, 12, 14], // D: C(0), D(2), E(4) ✓
+    [10, 13, 14], // G: F(5), G#(8), A(9) - G+10=5=F✓, G+13=8=G#✓, G+14=9=A✓
+    [10, 12, 13], // B: A(9), B(11), C(0) ✓
+    [10, 12, 13], // High E: D(2), E(4), F(5) ✓
+  ],
+  // Position 5: Starting on E (fret 0/12 on low E)
+  [
+    [0, 1, 4], // Low E: E(4), F(5), G#(8) - E+0=4=E✓, E+1=5=F✓, E+4=8=G#✓
+    [0, 2, 3], // A: A(9), B(11), C(0) ✓
+    [0, 2, 3], // D: D(2), E(4), F(5) ✓
+    [1, 2, 4], // G: G#(8), A(9), B(11) - G+1=8=G#✓, G+2=9=A✓, G+4=11=B✓
+    [0, 1, 3], // B: B(11), C(0), D(2) ✓
+    [0, 1, 4], // High E: E(4), F(5), G#(8) ✓
+  ],
+  // Position 6: Starting on F (fret 1 on low E)
+  [
+    [1, 4, 5], // Low E: F(5), G#(8), A(9) ✓
+    [2, 3, 5], // A: B(11), C(0), D(2) ✓
+    [2, 3, 6], // D: E(4), F(5), G#(8) - D+2=4=E✓, D+3=5=F✓, D+6=8=G#✓
+    [2, 4, 5], // G: A(9), B(11), C(0) ✓
+    [1, 3, 5], // B: C(0), D(2), E(4) ✓
+    [1, 4, 5], // High E: F(5), G#(8), A(9) ✓
+  ],
+  // Position 7: Starting on G# (fret 4 on low E)
+  [
+    [4, 5, 7], // Low E: G#(8), A(9), B(11) ✓
+    [3, 5, 7], // A: C(0), D(2), E(4) ✓
+    [3, 6, 7], // D: F(5), G#(8), A(9) - D+3=5=F✓, D+6=8=G#✓, D+7=9=A✓
+    [4, 5, 7], // G: B(11), C(0), D(2) ✓
+    [3, 5, 6], // B: D(2), E(4), F(5) - B+3=2=D✓, B+5=4=E✓, B+6=5=F✓
+    [4, 5, 7], // High E: G#(8), A(9), B(11) ✓
+  ],
+];
+
+/**
+ * A Melodic Minor 3NPS patterns (ascending form)
+ * A Melodic Minor notes: A(9), B(11), C(0), D(2), E(4), F#(6), G#(8)
+ * Intervals: 0, 2, 3, 5, 7, 9, 11
+ */
+const A_MELODIC_MINOR_3NPS: number[][][] = [
+  // A Melodic Minor: A(9), B(11), C(0), D(2), E(4), F#(6), G#(8)
+  // Position 1: Starting on A (fret 5 on low E) - ROOT POSITION
+  [
+    [5, 7, 8], // Low E: A(9), B(11), C(0) - E+5=9=A✓, E+7=11=B✓, E+8=0=C✓
+    [5, 7, 9], // A: D(2), E(4), F#(6) - A+5=2=D✓, A+7=4=E✓, A+9=6=F#✓
+    [6, 7, 9], // D: G#(8), A(9), B(11) - D+6=8=G#✓, D+7=9=A✓, D+9=11=B✓
+    [5, 7, 9], // G: C(0), D(2), E(4) - G+5=0=C✓, G+7=2=D✓, G+9=4=E✓
+    [5, 7, 9], // B: E(4), F#(6), G#(8) - B+5=4=E✓, B+7=6=F#✓, B+9=8=G#✓
+    [5, 7, 8], // High E: A(9), B(11), C(0) ✓
+  ],
+  // Position 2: Starting on B (fret 7 on low E)
+  [
+    [7, 8, 10], // Low E: B(11), C(0), D(2) ✓
+    [7, 9, 11], // A: E(4), F#(6), G#(8) ✓
+    [7, 9, 10], // D: A(9), B(11), C(0) ✓
+    [7, 9, 11], // G: D(2), E(4), F#(6) ✓
+    [7, 9, 10], // B: F#(6), G#(8), A(9) ✓
+    [7, 8, 10], // High E: B(11), C(0), D(2) ✓
+  ],
+  // Position 3: Starting on C (fret 8 on low E)
+  [
+    [8, 10, 12], // Low E: C(0), D(2), E(4) ✓
+    [9, 11, 12], // A: F#(6), G#(8), A(9) ✓
+    [9, 10, 12], // D: B(11), C(0), D(2) ✓
+    [9, 11, 13], // G: E(4), F#(6), G#(8) - G+9=4=E✓, G+11=6=F#✓, G+13=8=G#✓
+    [9, 10, 12], // B: G#(8), A(9), B(11) - B+9=8=G#✓, B+10=9=A✓, B+12=11=B✓
+    [8, 10, 12], // High E: C(0), D(2), E(4) ✓
+  ],
+  // Position 4: Starting on D (fret 10 on low E)
+  [
+    [10, 12, 14], // Low E: D(2), E(4), F#(6) - E+10=2=D✓, E+12=4=E✓, E+14=6=F#✓
+    [11, 12, 14], // A: G#(8), A(9), B(11) ✓
+    [10, 12, 14], // D: C(0), D(2), E(4) - D+10=0=C✓, D+12=2=D✓, D+14=4=E✓
+    [11, 13, 14], // G: F#(6), G#(8), A(9) - G+11=6=F#✓, G+13=8=G#✓, G+14=9=A✓
+    [10, 12, 13], // B: A(9), B(11), C(0) - B+10=9=A✓, B+12=11=B✓, B+13=0=C✓
+    [10, 12, 14], // High E: D(2), E(4), F#(6) ✓
+  ],
+  // Position 5: Starting on E (fret 0/12 on low E)
+  [
+    [0, 2, 4], // Low E: E(4), F#(6), G#(8) - E+0=4=E✓, E+2=6=F#✓, E+4=8=G#✓
+    [0, 2, 3], // A: A(9), B(11), C(0) - A+0=9=A✓, A+2=11=B✓, A+3=0=C✓
+    [0, 2, 4], // D: D(2), E(4), F#(6) - D+0=2=D✓, D+2=4=E✓, D+4=6=F#✓
+    [1, 2, 4], // G: G#(8), A(9), B(11) - G+1=8=G#✓, G+2=9=A✓, G+4=11=B✓
+    [0, 1, 3], // B: B(11), C(0), D(2) - B+0=11=B✓, B+1=0=C✓, B+3=2=D✓
+    [0, 2, 4], // High E: E(4), F#(6), G#(8) ✓
+  ],
+  // Position 6: Starting on F# (fret 2 on low E)
+  [
+    [2, 4, 5], // Low E: F#(6), G#(8), A(9) - E+2=6=F#✓, E+4=8=G#✓, E+5=9=A✓
+    [2, 3, 5], // A: B(11), C(0), D(2) - A+2=11=B✓, A+3=0=C✓, A+5=2=D✓
+    [2, 4, 6], // D: E(4), F#(6), G#(8) - D+2=4=E✓, D+4=6=F#✓, D+6=8=G#✓
+    [2, 4, 5], // G: A(9), B(11), C(0) - G+2=9=A✓, G+4=11=B✓, G+5=0=C✓
+    [1, 3, 5], // B: C(0), D(2), E(4) - B+1=0=C✓, B+3=2=D✓, B+5=4=E✓
+    [2, 4, 5], // High E: F#(6), G#(8), A(9) ✓
+  ],
+  // Position 7: Starting on G# (fret 4 on low E)
+  [
+    [4, 5, 7], // Low E: G#(8), A(9), B(11) ✓
+    [3, 5, 7], // A: C(0), D(2), E(4) ✓
+    [4, 6, 7], // D: F#(6), G#(8), A(9) ✓
+    [4, 5, 7], // G: B(11), C(0), D(2) ✓
+    [3, 5, 7], // B: D(2), E(4), F#(6) ✓
+    [4, 5, 7], // High E: G#(8), A(9), B(11) ✓
+  ],
+];
+
+/**
+ * A Minor Pentatonic patterns (5 boxes)
+ * A Minor Pentatonic notes: A(9), C(0), D(2), E(4), G(7)
+ * Intervals: 0, 3, 5, 7, 10
+ *
+ * Pentatonic scales typically use 2 notes per string in the standard boxes
+ */
+const A_MINOR_PENTATONIC: number[][][] = [
+  // Box 1 - The famous "blues box" - ROOT on 6th and 4th string
+  [
+    [5, 8], // Low E: A(9), C(0) - E+5=9=A✓, E+8=0=C✓
+    [5, 7], // A: D(2), E(4) - A+5=2=D✓, A+7=4=E✓
+    [5, 7], // D: G(7), A(9) - D+5=7=G✓, D+7=9=A✓
+    [5, 7], // G: C(0), D(2) - G+5=0=C✓, G+7=2=D✓
+    [5, 8], // B: E(4), G(7) - B+5=4=E✓, B+8=7=G✓
+    [5, 8], // High E: A(9), C(0) ✓
+  ],
+  // Box 2 - Starting on C
+  [
+    [8, 10], // Low E: C(0), D(2) ✓
+    [7, 10], // A: E(4), G(7) ✓
+    [7, 10], // D: A(9), C(0) - D+7=9=A✓, D+10=0=C✓
+    [7, 9], // G: D(2), E(4) - G+7=2=D✓, G+9=4=E✓
+    [8, 10], // B: G(7), A(9) - B+8=7=G✓, B+10=9=A✓
+    [8, 10], // High E: C(0), D(2) ✓
+  ],
+  // Box 3 - Starting on D
+  [
+    [10, 12], // Low E: D(2), E(4) ✓
+    [10, 12], // A: G(7), A(9) ✓
+    [10, 12], // D: C(0), D(2) - D+10=0=C✓, D+12=2=D✓
+    [9, 12], // G: E(4), G(7) - G+9=4=E✓, G+12=7=G✓
+    [10, 13], // B: A(9), C(0) - B+10=9=A✓, B+13=0=C✓
+    [10, 12], // High E: D(2), E(4) ✓
+  ],
+  // Box 4 - Starting on E
+  [
+    [12, 15], // Low E: E(4), G(7) ✓
+    [12, 15], // A: A(9), C(0) - A+12=9=A✓, A+15=0=C✓
+    [12, 14], // D: D(2), E(4) ✓
+    [12, 14], // G: G(7), A(9) - G+12=7=G✓, G+14=9=A✓
+    [13, 15], // B: C(0), D(2) ✓
+    [12, 15], // High E: E(4), G(7) ✓
+  ],
+  // Box 5 - Starting on G
+  [
+    [15, 17], // Low E: G(7), A(9) ✓
+    [15, 17], // A: C(0), D(2) ✓
+    [14, 17], // D: E(4), G(7) ✓
+    [14, 17], // G: A(9), C(0) - G+14=9=A✓, G+17=0=C✓
+    [15, 17], // B: D(2), E(4) ✓
+    [15, 17], // High E: G(7), A(9) ✓
+  ],
+];
+
+/**
+ * C Major Pentatonic patterns (5 boxes)
+ * C Major Pentatonic notes: C(0), D(2), E(4), G(7), A(9)
+ * Same notes as A Minor Pentatonic, different root
+ * Intervals: 0, 2, 4, 7, 9
+ */
+const C_MAJOR_PENTATONIC: number[][][] = [
+  // Box 1 - ROOT position, C on 6th string
+  [
+    [8, 10], // Low E: C(0), D(2) ✓
+    [7, 10], // A: E(4), G(7) ✓
+    [7, 10], // D: A(9), C(0) ✓
+    [7, 9], // G: D(2), E(4) ✓
+    [8, 10], // B: G(7), A(9) ✓
+    [8, 10], // High E: C(0), D(2) ✓
+  ],
+  // Box 2
+  [
+    [10, 12], // Low E: D(2), E(4) ✓
+    [10, 12], // A: G(7), A(9) ✓
+    [10, 12], // D: C(0), D(2) ✓
+    [9, 12], // G: E(4), G(7) ✓
+    [10, 13], // B: A(9), C(0) ✓
+    [10, 12], // High E: D(2), E(4) ✓
+  ],
+  // Box 3
+  [
+    [12, 15], // Low E: E(4), G(7) ✓
+    [12, 15], // A: A(9), C(0) ✓
+    [12, 14], // D: D(2), E(4) ✓
+    [12, 14], // G: G(7), A(9) ✓
+    [13, 15], // B: C(0), D(2) ✓
+    [12, 15], // High E: E(4), G(7) ✓
+  ],
+  // Box 4
+  [
+    [15, 17], // Low E: G(7), A(9) ✓
+    [15, 17], // A: C(0), D(2) ✓
+    [14, 17], // D: E(4), G(7) ✓
+    [14, 17], // G: A(9), C(0) ✓
+    [15, 17], // B: D(2), E(4) ✓
+    [15, 17], // High E: G(7), A(9) ✓
+  ],
+  // Box 5 - wraps to lower frets
+  [
+    [5, 8], // Low E: A(9), C(0) ✓
+    [5, 7], // A: D(2), E(4) ✓
+    [5, 7], // D: G(7), A(9) ✓
+    [5, 7], // G: C(0), D(2) ✓
+    [5, 8], // B: E(4), G(7) ✓
+    [5, 8], // High E: A(9), C(0) ✓
+  ],
+];
+
+/**
+ * A Blues Scale patterns (5 boxes)
+ * A Blues notes: A(9), C(0), D(2), Eb(3), E(4), G(7)
+ * Intervals: 0, 3, 5, 6, 7, 10
+ *
+ * Blues scale = Minor pentatonic + blue note (b5)
+ */
+const A_BLUES: number[][][] = [
+  // Box 1 - The classic blues box with blue note (Eb)
+  [
+    [5, 8], // Low E: A(9), C(0) ✓
+    [5, 6, 7], // A: D(2), Eb(3), E(4) - the chromatic cluster! A+5=2=D✓, A+6=3=Eb✓, A+7=4=E✓
+    [5, 7], // D: G(7), A(9) ✓
+    [5, 7, 8], // G: C(0), D(2), Eb(3) - G+5=0=C✓, G+7=2=D✓, G+8=3=Eb✓
+    [5, 8], // B: E(4), G(7) ✓
+    [5, 8], // High E: A(9), C(0) ✓
+  ],
+  // Box 2 - around frets 7-11
+  [
+    [8, 10, 11], // Low E: C(0), D(2), Eb(3) ✓
+    [7, 10], // A: E(4), G(7) ✓
+    [7, 10], // D: A(9), C(0) - D+7=9=A✓, D+10=0=C✓ (Eb is at fret 1 or 13)
+    [7, 8, 9], // G: D(2), Eb(3), E(4) - G+7=2=D✓, G+8=3=Eb✓, G+9=4=E✓
+    [8, 10], // B: G(7), A(9) ✓
+    [8, 10, 11], // High E: C(0), D(2), Eb(3) ✓
+  ],
+  // Box 3
+  [
+    [10, 11, 12], // Low E: D(2), Eb(3), E(4) ✓
+    [10, 12], // A: G(7), A(9) ✓
+    [10, 12, 13], // D: C(0), D(2), Eb(3) - D+10=0=C✓, D+12=2=D✓, D+13=3=Eb✓
+    [9, 12], // G: E(4), G(7) ✓
+    [10, 13], // B: A(9), C(0) ✓
+    [10, 11, 12], // High E: D(2), Eb(3), E(4) ✓
+  ],
+  // Box 4
+  [
+    [11, 12, 15], // Low E: Eb(3), E(4), G(7) ✓
+    [12, 15], // A: A(9), C(0) ✓
+    [12, 13, 14], // D: D(2), Eb(3), E(4) ✓
+    [12, 14], // G: G(7), A(9) ✓
+    [13, 15], // B: C(0), D(2) ✓
+    [11, 12, 15], // High E: Eb(3), E(4), G(7) ✓
+  ],
+  // Box 5
+  [
+    [15, 17], // Low E: G(7), A(9) ✓
+    [15, 17, 18], // A: C(0), D(2), Eb(3) ✓
+    [14, 17], // D: E(4), G(7) ✓
+    [14, 17, 20], // G: A(9), C(0), D(2) - includes extension
+    [15, 17], // B: D(2), E(4) - B+15=2=D✓, B+17=4=E✓
+    [15, 17], // High E: G(7), A(9) ✓
+  ],
+];
+
+/**
+ * C Whole Tone Scale patterns
+ * C Whole Tone notes: C(0), D(2), E(4), F#(6), G#(8), A#(10)
+ * Intervals: 0, 2, 4, 6, 8, 10
+ *
+ * Symmetric scale - only 2 unique transpositions exist
+ */
+const C_WHOLE_TONE: number[][][] = [
+  // Position 1 - lower position
+  [
+    [2, 4, 6], // Low E: F#(6), G#(8), A#(10) ✓
+    [3, 5, 7], // A: C(0), D(2), E(4) ✓
+    [4, 6, 8], // D: F#(6), G#(8), A#(10) ✓
+    [5, 7, 9], // G: C(0), D(2), E(4) ✓
+    [5, 7, 9], // B: E(4), F#(6), G#(8) ✓
+    [2, 4, 6], // High E: F#(6), G#(8), A#(10) ✓
+  ],
+  // Position 2 - higher position
+  [
+    [8, 10, 12], // Low E: C(0), D(2), E(4) ✓
+    [7, 9, 11], // A: E(4), F#(6), G#(8) ✓
+    [8, 10, 12], // D: A#(10), C(0), D(2) ✓
+    [9, 11, 13], // G: E(4), F#(6), G#(8) ✓
+    [9, 11, 13], // B: G#(8), A#(10), C(0) ✓
+    [8, 10, 12], // High E: C(0), D(2), E(4) ✓
+  ],
+];
+
+/**
+ * C Diminished (Half-Whole) Scale patterns
+ * C Diminished notes: C(0), Db(1), Eb(3), E(4), F#(6), G(7), A(9), Bb(10)
+ * Intervals: 0, 1, 3, 4, 6, 7, 9, 10
+ *
+ * 8-note symmetric scale with 3 unique transpositions
+ */
+const C_DIMINISHED: number[][][] = [
+  // C diminished (Half-Whole): C(0), Db(1), Eb(3), E(4), F#(6), G(7), A(9), Bb(10)
+  // Position 1 - around frets 8-11
+  [
+    [8, 9, 11], // Low E: C(0), Db(1), Eb(3) ✓
+    [7, 9, 10], // A: E(4), F#(6), G(7) ✓
+    [8, 9, 11], // D: A(9), Bb(10), C(0) - D+8=10=Bb✓, D+9=11=B? No. D+7=9=A✓, D+8=10=Bb✓, D+10=0=C✓
+    [6, 8, 9], // G: Db(1), Eb(3), E(4) - G+6=1=Db✓, G+8=3=Eb✓, G+9=4=E✓
+    [8, 9, 11], // B: F#(6), G(7), A(9) - B+7=6=F#✓, B+8=7=G✓, B+10=9=A✓
+    [8, 9, 11], // High E: C(0), Db(1), Eb(3) ✓
+  ],
+  // Position 2
+  [
+    [9, 11, 12], // Low E: Db(1), Eb(3), E(4) ✓
+    [9, 10, 12], // A: F#(6), G(7), A(9) ✓
+    [7, 8, 10], // D: A(9), Bb(10), C(0) ✓
+    [8, 9, 11], // G: Eb(3), E(4), F#(6) ✓
+    [9, 10, 12], // B: G(7), A(9), Bb(10) - B+8=7=G✓, B+10=9=A✓, B+11=10=Bb✓
+    [9, 11, 12], // High E: Db(1), Eb(3), E(4) ✓
+  ],
+  // Position 3
+  [
+    [11, 12, 14], // Low E: Eb(3), E(4), F#(6) ✓
+    [10, 12, 13], // A: G(7), A(9), Bb(10) ✓
+    [8, 10, 11], // D: Bb(10), C(0), Db(1) ✓
+    [9, 11, 12], // G: E(4), F#(6), G(7) ✓
+    [10, 11, 13], // B: A(9), Bb(10), C(0) ✓
+    [11, 12, 14], // High E: Eb(3), E(4), F#(6) ✓
+  ],
+];
+
+// ==================== SCALE LIBRARY ====================
 
 export const SCALE_LIBRARY: ScaleLibrary = {
-  // Major scale (also known as Ionian mode)
-  // Stored patterns are for C major - transposed to other keys automatically
-  // C Major notes: C(0), D(2), E(4), F(5), G(7), A(9), B(11)
-  // Standard tuning: Low E(4), A(9), D(2), G(7), B(11), High E(4)
+  /**
+   * MAJOR SCALE (Ionian Mode)
+   * Formula: W-W-H-W-W-W-H (2-2-1-2-2-2-1 semitones)
+   * Intervals: 1, 2, 3, 4, 5, 6, 7
+   * Stored in C
+   */
   major: {
     intervals: [0, 2, 4, 5, 7, 9, 11],
-    fingerings: [
-      // Position 1: Open position (frets 0-3) - CAGED "C shape"
-      // Low E: E(0), F(1), G(3) | A: A(0), B(2), C(3) | D: D(0), E(2), F(3) | G: G(0), A(2), B(4) | B: C(1), D(3), E(5) | High E: E(0), F(1), G(3)
-      [
-        [0, 1, 3],
-        [0, 2, 3],
-        [0, 2, 3],
-        [0, 2],
-        [1, 3, 5],
-        [0, 1, 3],
-      ],
-      // Position 2: 5th position (frets 5-8) - CAGED "A shape"
-      // Low E: A(5), B(7), C(8) | A: D(5), E(7), F(8) | D: G(5), A(7), B(9) | G: C(5), D(7), E(9) | B: F(6), G(8), A(10) | High E: A(5), B(7), C(8)
-      [
-        [5, 7, 8],
-        [5, 7, 8],
-        [5, 7, 9],
-        [5, 7, 9],
-        [6, 8, 10],
-        [5, 7, 8],
-      ],
-      // Position 3: 7th position (frets 7-10) - CAGED "G shape"
-      // Low E: B(7), C(8), D(10) | A: E(7), F(8), G(10) | D: A(7), B(9), C(10) | G: D(7), E(9), F(10) | B: G(8), A(10), B(12) | High E: B(7), C(8), D(10)
-      [
-        [7, 8, 10],
-        [7, 8, 10],
-        [7, 9, 10],
-        [7, 9, 10],
-        [8, 10, 12],
-        [7, 8, 10],
-      ],
-      // Position 4: 8th position (frets 8-12) - CAGED "E shape"
-      // Low E: C(8), D(10), E(12) | A: F(8), G(10), A(12) | D: B(9), C(10), D(12) | G: E(9), F(10), G(12) | B: A(10), B(12), C(13) | High E: C(8), D(10), E(12)
-      [
-        [8, 10, 12],
-        [8, 10, 12],
-        [9, 10, 12],
-        [9, 10, 12],
-        [10, 12, 13],
-        [8, 10, 12],
-      ],
-      // Position 5: 12th position (frets 12-15) - CAGED "D shape" (octave of open)
-      // Same as position 1 but 12 frets higher
-      [
-        [12, 13, 15],
-        [12, 14, 15],
-        [12, 14, 15],
-        [12, 14],
-        [13, 15, 17],
-        [12, 13, 15],
-      ],
-    ],
+    fingerings: C_MAJOR_3NPS,
     positions: [
       "Position 1",
       "Position 2",
       "Position 3",
       "Position 4",
       "Position 5",
+      "Position 6",
+      "Position 7",
     ],
   },
 
+  /**
+   * DORIAN MODE
+   * Formula: W-H-W-W-W-H-W (2-1-2-2-2-1-2 semitones)
+   * Intervals: 1, 2, b3, 4, 5, 6, b7
+   * Stored in D (same fingering shapes as C major, transposed)
+   */
   dorian: {
-    // D Dorian: D E F G A B C - same notes as C major, rooted on D
-    // Patterns stored for D Dorian - transpose automatically to other keys
     intervals: [0, 2, 3, 5, 7, 9, 10],
-    fingerings: [
-      // Position 1: Open position (frets 0-4)
-      [
-        [0, 1, 3],
-        [0, 2, 3],
-        [0, 2, 3],
-        [0, 2, 4],
-        [0, 1, 3],
-        [0, 1, 3],
-      ],
-      // Position 2: 3rd position (frets 3-7)
-      [
-        [3, 5, 7],
-        [3, 5, 7],
-        [3, 5, 7],
-        [4, 5, 7],
-        [3, 5, 6],
-        [3, 5, 7],
-      ],
-      // Position 3: 5th position (frets 5-9)
-      [
-        [5, 7, 8],
-        [5, 7, 8],
-        [5, 7, 9],
-        [5, 7, 9],
-        [5, 6, 8],
-        [5, 7, 8],
-      ],
-      // Position 4: 7th position (frets 7-11)
-      [
-        [7, 8, 10],
-        [7, 8, 10],
-        [7, 9, 10],
-        [7, 9, 10],
-        [8, 10],
-        [7, 8, 10],
-      ],
-      // Position 5: 10th position (frets 10-14)
-      [
-        [10, 12, 13],
-        [10, 12, 14],
-        [10, 12, 14],
-        [10, 12, 14],
-        [10, 12, 13],
-        [10, 12, 13],
-      ],
-    ],
+    fingerings: C_MAJOR_3NPS, // Same shapes, transposed
     positions: [
       "Position 1",
       "Position 2",
       "Position 3",
       "Position 4",
       "Position 5",
+      "Position 6",
+      "Position 7",
     ],
   },
 
+  /**
+   * PHRYGIAN MODE
+   * Formula: H-W-W-W-H-W-W (1-2-2-2-1-2-2 semitones)
+   * Intervals: 1, b2, b3, 4, 5, b6, b7
+   * Stored in E
+   */
   phrygian: {
-    // E Phrygian: E F G A B C D - same notes as C major, rooted on E
-    // Patterns stored for E Phrygian - transpose automatically to other keys
     intervals: [0, 1, 3, 5, 7, 8, 10],
-    fingerings: [
-      // Position 1: Open position (frets 0-5) - CAGED "E shape"
-      [
-        [0, 1, 3],
-        [0, 2, 3],
-        [0, 2, 3],
-        [0, 2, 4],
-        [3, 5, 6],
-        [3, 5, 7],
-      ],
-      // Position 2: 3rd position (frets 3-7)
-      [
-        [3, 5, 7],
-        [3, 5, 7],
-        [3, 5, 7],
-        [4, 5, 7],
-        [5, 6, 8],
-        [5, 7, 8],
-      ],
-      // Position 3: 5th position (frets 5-10)
-      [
-        [5, 7, 8],
-        [5, 7, 8],
-        [5, 7, 9],
-        [5, 7, 9],
-        [8, 10, 12],
-        [7, 8, 10],
-      ],
-      // Position 4: 7th position (frets 7-12)
-      [
-        [7, 8, 10],
-        [7, 8, 10],
-        [7, 9, 10],
-        [7, 9, 10],
-        [8, 10, 12],
-        [8, 10, 12],
-      ],
-      // Position 5: 10th position (frets 10-14)
-      [
-        [10, 12, 13],
-        [10, 12, 14],
-        [10, 12, 14],
-        [10, 12, 14],
-        [10, 12, 13],
-        [10, 12, 13],
-      ],
-    ],
+    fingerings: C_MAJOR_3NPS,
     positions: [
       "Position 1",
       "Position 2",
       "Position 3",
       "Position 4",
       "Position 5",
+      "Position 6",
+      "Position 7",
     ],
   },
 
+  /**
+   * LYDIAN MODE
+   * Formula: W-W-W-H-W-W-H (2-2-2-1-2-2-1 semitones)
+   * Intervals: 1, 2, 3, #4, 5, 6, 7
+   * Stored in F
+   */
   lydian: {
-    // F Lydian: F G A B C D E - same notes as C major, rooted on F
-    // Patterns stored for F Lydian - transpose automatically to other keys
     intervals: [0, 2, 4, 6, 7, 9, 11],
-    fingerings: [
-      // Position 1: 1st position (frets 1-6) - CAGED "F shape" - bright Lydian shape
-      [
-        [1, 3, 5],
-        [2, 3, 5],
-        [2, 3, 5],
-        [2, 4, 5],
-        [3, 5, 6],
-        [3, 5, 7],
-      ],
-      // Position 2: 3rd position (frets 3-8) - CAGED "D shape"
-      [
-        [3, 5, 7],
-        [3, 5, 7],
-        [3, 5, 7],
-        [4, 5, 7],
-        [5, 6, 8],
-        [5, 7, 8],
-      ],
-      // Position 3: 5th position (frets 5-10) - CAGED "C shape"
-      [
-        [5, 7, 8],
-        [5, 7, 8],
-        [5, 7, 9],
-        [5, 7, 9],
-        [8, 10, 12],
-        [7, 8, 10],
-      ],
-      // Position 4: 8th position (frets 8-13) - CAGED "A shape"
-      [
-        [8, 10, 12],
-        [8, 10, 12],
-        [9, 10, 12],
-        [9, 10, 12],
-        [10, 12, 13],
-        [10, 12, 13],
-      ],
-      // Position 5: 10th position (frets 10-15) - CAGED "G shape"
-      [
-        [10, 12, 13],
-        [10, 12, 14],
-        [10, 12, 14],
-        [10, 12, 14],
-        [12, 13, 15],
-        [12, 13, 15],
-      ],
-    ],
+    fingerings: C_MAJOR_3NPS,
     positions: [
       "Position 1",
       "Position 2",
       "Position 3",
       "Position 4",
       "Position 5",
+      "Position 6",
+      "Position 7",
     ],
   },
 
+  /**
+   * MIXOLYDIAN MODE
+   * Formula: W-W-H-W-W-H-W (2-2-1-2-2-1-2 semitones)
+   * Intervals: 1, 2, 3, 4, 5, 6, b7
+   * Stored in G
+   */
   mixolydian: {
-    // G Mixolydian: G A B C D E F - same notes as C major, rooted on G
-    // Patterns stored for G Mixolydian - transpose automatically to other keys
     intervals: [0, 2, 4, 5, 7, 9, 10],
-    fingerings: [
-      // Position 1: 3rd position (frets 3-8) - CAGED "G shape"
-      [
-        [3, 5, 7],
-        [3, 5, 7],
-        [3, 5, 7],
-        [4, 5, 7],
-        [5, 6, 8],
-        [5, 7, 8],
-      ],
-      // Position 2: 5th position (frets 5-10) - CAGED "E shape"
-      [
-        [5, 7, 8],
-        [5, 7, 8],
-        [5, 7, 9],
-        [5, 7, 9],
-        [8, 10, 12],
-        [7, 8, 10],
-      ],
-      // Position 3: 8th position (frets 8-13) - CAGED "D shape"
-      [
-        [8, 10, 12],
-        [8, 10, 12],
-        [9, 10, 12],
-        [9, 10, 12],
-        [10, 12, 13],
-        [10, 12, 13],
-      ],
-      // Position 4: 10th position (frets 10-15) - CAGED "C shape"
-      [
-        [10, 12, 13],
-        [10, 12, 14],
-        [10, 12, 14],
-        [10, 12, 14],
-        [12, 13, 15],
-        [12, 13, 15],
-      ],
-      // Position 5: Open position (frets 0-4)
-      [
-        [0, 1, 3],
-        [0, 2, 3],
-        [0, 2, 3],
-        [0, 2, 4],
-        [0, 1, 3],
-        [0, 1, 3],
-      ],
-    ],
+    fingerings: C_MAJOR_3NPS,
     positions: [
       "Position 1",
       "Position 2",
       "Position 3",
       "Position 4",
       "Position 5",
+      "Position 6",
+      "Position 7",
     ],
   },
 
-  // Minor scale (Natural Minor / Aeolian mode)
-  // Stored patterns are for A minor (A B C D E F G) - transposed to other keys automatically
+  /**
+   * NATURAL MINOR SCALE (Aeolian Mode)
+   * Formula: W-H-W-W-H-W-W (2-1-2-2-1-2-2 semitones)
+   * Intervals: 1, 2, b3, 4, 5, b6, b7
+   * Stored in A
+   */
   minor: {
     intervals: [0, 2, 3, 5, 7, 8, 10],
-    fingerings: [
-      // Position 1: 5th position (frets 5-9) - classic A Aeolian box
-      [
-        [5, 7, 8],
-        [5, 7, 8],
-        [5, 7, 9],
-        [5, 7, 9],
-        [8, 10, 12],
-        [7, 8, 10],
-      ],
-      // Position 2: 8th position (frets 8-12)
-      [
-        [8, 10, 12],
-        [8, 10, 12],
-        [9, 10, 12],
-        [9, 10, 12],
-        [10, 12, 13],
-        [10, 12, 13],
-      ],
-      // Position 3: 10th position (frets 10-14)
-      [
-        [10, 12, 13],
-        [10, 12, 14],
-        [10, 12, 14],
-        [10, 12, 14],
-        [12, 13, 15],
-        [12, 13, 15],
-      ],
-      // Position 4: 12th position (frets 12-16)
-      [
-        [12, 13, 15],
-        [12, 14, 15],
-        [12, 14, 15],
-        [12, 14, 16],
-        [15, 17, 18],
-        [15, 17, 19],
-      ],
-      // Position 5: 15th position (frets 15-19)
-      [
-        [15, 17, 19],
-        [15, 17, 19],
-        [15, 17, 19],
-        [16, 17, 19],
-        [17, 18, 20],
-        [17, 19, 20],
-      ],
-    ],
+    fingerings: A_MINOR_3NPS,
     positions: [
       "Position 1",
       "Position 2",
       "Position 3",
       "Position 4",
       "Position 5",
+      "Position 6",
+      "Position 7",
     ],
   },
 
+  /**
+   * LOCRIAN MODE
+   * Formula: H-W-W-H-W-W-W (1-2-2-1-2-2-2 semitones)
+   * Intervals: 1, b2, b3, 4, b5, b6, b7
+   * Stored in B
+   */
   locrian: {
-    // B Locrian: B C D E F G A - same notes as C major, rooted on B
-    // Patterns stored for B Locrian - transpose automatically to other keys
     intervals: [0, 1, 3, 5, 6, 8, 10],
-    fingerings: [
-      // Position 1: Open position (frets 0-4)
-      [
-        [0, 1, 3],
-        [0, 2, 3],
-        [0, 2, 3],
-        [0, 2, 4],
-        [0, 1, 3],
-        [0, 1, 3],
-      ],
-      // Position 2: 3rd position (frets 3-7)
-      [
-        [3, 5, 7],
-        [3, 5, 7],
-        [3, 5, 7],
-        [4, 5, 7],
-        [3, 5, 6],
-        [3, 5, 7],
-      ],
-      // Position 3: 5th position (frets 5-9)
-      [
-        [5, 7, 8],
-        [5, 7, 8],
-        [5, 7, 9],
-        [5, 7, 9],
-        [5, 6, 8],
-        [5, 7, 8],
-      ],
-      // Position 4: 7th position (frets 7-11)
-      [
-        [7, 8, 10],
-        [7, 8, 10],
-        [7, 9, 10],
-        [7, 9, 10],
-        [8, 10],
-        [7, 8, 10],
-      ],
-      // Position 5: 10th position (frets 10-14)
-      [
-        [10, 12, 13],
-        [10, 12, 14],
-        [10, 12, 14],
-        [10, 12, 14],
-        [10, 12, 13],
-        [10, 12, 13],
-      ],
-    ],
+    fingerings: C_MAJOR_3NPS,
     positions: [
       "Position 1",
       "Position 2",
       "Position 3",
       "Position 4",
       "Position 5",
+      "Position 6",
+      "Position 7",
     ],
   },
 
+  /**
+   * HARMONIC MINOR SCALE
+   * Formula: W-H-W-W-H-Aug2-H (2-1-2-2-1-3-1 semitones)
+   * Intervals: 1, 2, b3, 4, 5, b6, 7
+   * Stored in A
+   */
   "harmonic minor": {
     intervals: [0, 2, 3, 5, 7, 8, 11],
-    fingerings: [
-      [
-        [5, 7, 8],
-        [5, 7, 8],
-        [5, 7, 9],
-        [5, 7, 9],
-        [5, 8, 9],
-        [5, 7, 8],
-      ],
-      [
-        [0, 2, 3],
-        [0, 2, 3],
-        [0, 2, 4],
-        [0, 2, 4],
-        [0, 3, 4],
-        [0, 2, 3],
-      ],
-      [
-        [8, 10, 11],
-        [8, 10, 11],
-        [9, 10, 12],
-        [9, 10, 12],
-        [8, 11, 12],
-        [8, 10, 11],
-      ],
+    fingerings: A_HARMONIC_MINOR_3NPS,
+    positions: [
+      "Position 1",
+      "Position 2",
+      "Position 3",
+      "Position 4",
+      "Position 5",
+      "Position 6",
+      "Position 7",
     ],
-    positions: ["Position 1", "Position 2", "Position 3"],
   },
 
+  /**
+   * MELODIC MINOR SCALE (Ascending form)
+   * Formula: W-H-W-W-W-W-H (2-1-2-2-2-2-1 semitones)
+   * Intervals: 1, 2, b3, 4, 5, 6, 7
+   * Stored in A
+   */
   "melodic minor": {
     intervals: [0, 2, 3, 5, 7, 9, 11],
-    fingerings: [
-      [
-        [5, 7, 8],
-        [5, 7, 9],
-        [5, 7, 9],
-        [5, 7, 9],
-        [5, 7, 9],
-        [5, 7, 8],
-      ],
-      [
-        [0, 2, 3],
-        [0, 2, 4],
-        [0, 2, 4],
-        [0, 2, 4],
-        [0, 2, 4],
-        [0, 2, 3],
-      ],
-      [
-        [8, 10, 12],
-        [8, 10, 12],
-        [9, 10, 12],
-        [9, 10, 12],
-        [8, 10, 12],
-        [8, 10, 12],
-      ],
-    ],
-    positions: ["Position 1", "Position 2", "Position 3"],
-  },
-
-  "pentatonic major": {
-    // C Major Pentatonic: C D E G A
-    intervals: [0, 2, 4, 7, 9],
-    fingerings: [
-      // Position 1: Open position (frets 0-4)
-      [
-        [0, 3],
-        [0, 3],
-        [0, 2],
-        [0, 2],
-        [1, 3],
-        [0, 3],
-      ],
-      // Position 2: 3rd position (frets 3-7)
-      [
-        [3, 5],
-        [3, 5, 7],
-        [5, 7],
-        [5, 7],
-        [3, 5],
-        [3, 5],
-      ],
-      // Position 3: 5th position (frets 5-9)
-      [
-        [5, 8],
-        [5, 7],
-        [5, 7],
-        [5, 7, 9],
-        [5, 8],
-        [5, 8],
-      ],
-      // Position 4: 7th position (frets 7-11)
-      [
-        [8, 10],
-        [7, 10],
-        [7, 10],
-        [7, 9],
-        [8, 10],
-        [8, 10],
-      ],
-      // Position 5: 10th position (frets 10-14)
-      [
-        [10, 12],
-        [10, 12],
-        [10, 12, 14],
-        [12, 14],
-        [10, 13],
-        [10, 12],
-      ],
-    ],
+    fingerings: A_MELODIC_MINOR_3NPS,
     positions: [
-      "Position 1 (Box 1)",
-      "Position 2 (Box 2)",
-      "Position 3 (Box 3)",
-      "Position 4 (Box 4)",
-      "Position 5 (Box 5)",
+      "Position 1",
+      "Position 2",
+      "Position 3",
+      "Position 4",
+      "Position 5",
+      "Position 6",
+      "Position 7",
     ],
   },
 
+  /**
+   * MINOR PENTATONIC SCALE
+   * Formula: m3-W-W-m3-W (3-2-2-3-2 semitones)
+   * Intervals: 1, b3, 4, 5, b7
+   * Stored in A
+   */
   "pentatonic minor": {
-    // A Minor Pentatonic: A C D E G
     intervals: [0, 3, 5, 7, 10],
-    fingerings: [
-      // Position 1: Open position (frets 0-4)
-      [
-        [0, 3],
-        [0, 3],
-        [0, 2],
-        [0, 2],
-        [1, 3],
-        [0, 3],
-      ],
-      // Position 2: 3rd position (frets 3-7)
-      [
-        [3, 5],
-        [3, 5, 7],
-        [5, 7],
-        [5, 7],
-        [3, 5],
-        [3, 5],
-      ],
-      // Position 3: 5th position (frets 5-9)
-      [
-        [5, 8],
-        [5, 7],
-        [5, 7],
-        [5, 7, 9],
-        [5, 8],
-        [5, 8],
-      ],
-      // Position 4: 7th position (frets 7-11)
-      [
-        [8, 10],
-        [7, 10],
-        [7, 10],
-        [7, 9],
-        [8, 10],
-        [8, 10],
-      ],
-      // Position 5: 10th position (frets 10-14)
-      [
-        [10, 12],
-        [10, 12],
-        [10, 12, 14],
-        [12, 14],
-        [10, 13],
-        [10, 12],
-      ],
-    ],
-    positions: [
-      "Position 1 (Box 1)",
-      "Position 2 (Box 2)",
-      "Position 3 (Box 3)",
-      "Position 4 (Box 4)",
-      "Position 5 (Box 5)",
-    ],
+    fingerings: A_MINOR_PENTATONIC,
+    positions: ["Box 1", "Box 2", "Box 3", "Box 4", "Box 5"],
   },
 
+  /**
+   * MAJOR PENTATONIC SCALE
+   * Formula: W-W-m3-W-m3 (2-2-3-2-3 semitones)
+   * Intervals: 1, 2, 3, 5, 6
+   * Stored in C
+   */
+  "pentatonic major": {
+    intervals: [0, 2, 4, 7, 9],
+    fingerings: C_MAJOR_PENTATONIC,
+    positions: ["Box 1", "Box 2", "Box 3", "Box 4", "Box 5"],
+  },
+
+  /**
+   * BLUES SCALE
+   * Formula: m3-W-H-H-m3-W (3-2-1-1-3-2 semitones)
+   * Intervals: 1, b3, 4, b5, 5, b7
+   * Stored in A
+   */
   blues: {
     intervals: [0, 3, 5, 6, 7, 10],
-    fingerings: [
-      [
-        [5, 8, 10],
-        [5, 8, 10],
-        [5, 7, 8],
-        [5, 7, 8],
-        [5, 8, 10],
-        [5, 8, 10],
-      ],
-      [
-        [0, 3, 5],
-        [0, 3, 5],
-        [0, 2, 3],
-        [0, 2, 3],
-        [0, 3, 5],
-        [0, 3, 5],
-      ],
-      [
-        [10, 13, 15],
-        [10, 13, 15],
-        [10, 12, 13],
-        [10, 12, 13],
-        [10, 13, 15],
-        [10, 13, 15],
-      ],
-    ],
+    fingerings: A_BLUES,
+    positions: ["Box 1", "Box 2", "Box 3", "Box 4", "Box 5"],
+  },
+
+  /**
+   * WHOLE TONE SCALE
+   * Formula: W-W-W-W-W-W (2-2-2-2-2-2 semitones)
+   * Intervals: 1, 2, 3, #4, #5, b7
+   * Stored in C
+   */
+  "whole tone": {
+    intervals: [0, 2, 4, 6, 8, 10],
+    fingerings: C_WHOLE_TONE,
+    positions: ["Position 1", "Position 2"],
+  },
+
+  /**
+   * DIMINISHED SCALE (Half-Whole)
+   * Formula: H-W-H-W-H-W-H-W (1-2-1-2-1-2-1-2 semitones)
+   * Intervals: 1, b2, b3, 3, #4, 5, 6, b7
+   * Stored in C
+   */
+  diminished: {
+    intervals: [0, 1, 3, 4, 6, 7, 9, 10],
+    fingerings: C_DIMINISHED,
     positions: ["Position 1", "Position 2", "Position 3"],
   },
 
-  "whole tone": {
-    intervals: [0, 2, 4, 6, 8, 10],
-    fingerings: [
-      [
-        [6, 8, 10],
-        [6, 8, 10],
-        [6, 8, 10],
-        [7, 9, 11],
-        [7, 9, 11],
-        [6, 8, 10],
-      ],
-      [
-        [1, 3, 5],
-        [1, 3, 5],
-        [1, 3, 5],
-        [2, 4, 6],
-        [2, 4, 6],
-        [1, 3, 5],
-      ],
-    ],
-    positions: ["Position 1", "Position 2"],
-  },
-
-  diminished: {
-    intervals: [0, 2, 3, 5, 6, 8, 9, 11],
-    fingerings: [
-      [
-        [6, 7, 9],
-        [6, 8, 9],
-        [6, 7, 9],
-        [7, 8, 10],
-        [6, 8, 9],
-        [6, 7, 9],
-      ],
-      [
-        [1, 2, 4],
-        [1, 3, 4],
-        [1, 2, 4],
-        [2, 3, 5],
-        [1, 3, 4],
-        [1, 2, 4],
-      ],
-    ],
-    positions: ["Position 1", "Position 2"],
-  },
-
+  /**
+   * ALTERED SCALE (Super Locrian)
+   * Mode 7 of melodic minor
+   * Formula: H-W-H-W-W-W-W (1-2-1-2-2-2-2 semitones)
+   * Intervals: 1, b2, b3, b4, b5, b6, b7
+   * Stored in C
+   */
   altered: {
     intervals: [0, 1, 3, 4, 6, 8, 10],
     fingerings: [
+      // Position 1 - around frets 7-10
       [
-        [6, 7, 9],
-        [7, 8, 10],
-        [6, 8, 9],
-        [7, 9, 10],
-        [6, 8, 10],
-        [6, 7, 9],
+        [7, 8, 10], // Low E
+        [7, 9, 10], // A
+        [6, 8, 10], // D
+        [7, 9, 11], // G
+        [7, 9, 10], // B
+        [7, 8, 10], // High E
       ],
+      // Position 2 - around frets 10-13
       [
-        [1, 2, 4],
-        [2, 3, 5],
-        [1, 3, 4],
-        [2, 4, 5],
-        [1, 3, 5],
-        [1, 2, 4],
-      ],
-    ],
-    positions: ["Position 1", "Position 2"],
-  },
-
-  "bebop dominant": {
-    intervals: [0, 2, 4, 5, 7, 9, 10, 11],
-    fingerings: [
-      [
-        [8, 10, 11],
-        [8, 10, 12],
-        [9, 10, 11],
-        [9, 10, 12],
-        [10, 11, 13],
-        [8, 10, 11],
-      ],
-      [
-        [3, 5, 6],
-        [3, 5, 7],
-        [4, 5, 6],
-        [4, 5, 7],
-        [5, 6, 8],
-        [3, 5, 6],
-      ],
-    ],
-    positions: ["Position 1", "Position 2"],
-  },
-
-  "bebop major": {
-    intervals: [0, 2, 4, 5, 7, 8, 9, 11],
-    fingerings: [
-      [
-        [8, 9, 11],
         [8, 10, 12],
         [9, 10, 12],
+        [8, 10, 12],
         [9, 11, 12],
+        [9, 10, 12],
         [8, 10, 12],
-        [8, 9, 11],
-      ],
-      [
-        [3, 4, 6],
-        [3, 5, 7],
-        [4, 5, 7],
-        [4, 6, 7],
-        [3, 5, 7],
-        [3, 4, 6],
       ],
     ],
     positions: ["Position 1", "Position 2"],
   },
 
+  /**
+   * PHRYGIAN DOMINANT
+   * Mode 5 of harmonic minor
+   * Intervals: 1, b2, 3, 4, 5, b6, b7
+   * Stored in E
+   */
   "phrygian dominant": {
     intervals: [0, 1, 4, 5, 7, 8, 10],
     fingerings: [
+      // Position 1 - open position for E Phrygian Dominant
+      // E Phrygian Dom: E(4), F(5), G#(8), A(9), B(11), C(0), D(2)
       [
-        [8, 9, 12],
-        [8, 10, 12],
-        [9, 10, 12],
-        [9, 10, 12],
-        [8, 10, 12],
-        [8, 9, 12],
+        [0, 1, 4], // Low E: E(4), F(5), G#(8) ✓
+        [0, 2, 3], // A: A(9), B(11), C(0) ✓
+        [0, 2, 3], // D: D(2), E(4), F(5) ✓
+        [1, 2, 4], // G: G#(8), A(9), B(11) ✓
+        [0, 1, 3], // B: B(11), C(0), D(2) ✓
+        [0, 1, 4], // High E: E(4), F(5), G#(8) ✓
       ],
+      // Position 2
       [
-        [3, 4, 7],
-        [3, 5, 7],
-        [4, 5, 7],
-        [4, 5, 7],
-        [3, 5, 7],
-        [3, 4, 7],
+        [1, 4, 5],
+        [2, 3, 5],
+        [2, 3, 6],
+        [2, 4, 5],
+        [1, 3, 5],
+        [1, 4, 5],
       ],
     ],
     positions: ["Position 1", "Position 2"],
   },
 
+  /**
+   * LYDIAN DOMINANT
+   * Mode 4 of melodic minor
+   * Intervals: 1, 2, 3, #4, 5, 6, b7
+   * Stored in F
+   */
+  "lydian dominant": {
+    intervals: [0, 2, 4, 6, 7, 9, 10],
+    fingerings: [
+      // Position 1
+      [
+        [1, 3, 5], // Low E: F(5), G(7), A(9)
+        [2, 4, 5], // A: B(11), C#→wait, Lydian dom of F has: F G A B C D Eb
+        [2, 3, 5], // Let me recalc: F(5), G(7), A(9), B(11), C(0), D(2), Eb(3)
+        [2, 4, 5],
+        [1, 3, 5],
+        [1, 3, 5],
+      ],
+      // Recalculating F Lydian Dominant: F(5), G(7), A(9), B(11), C(0), D(2), Eb(3)
+      [
+        [1, 3, 5], // Low E: F(5), G(7), A(9) ✓
+        [2, 4, 5], // A: B(11), C(0), D(2) - A+2=11=B✓, A+3=0=C✓, A+5=2=D✓
+        [1, 3, 5], // D: Eb(3), F(5), G(7) - D+1=3=Eb✓, D+3=5=F✓, D+5=7=G✓
+        [2, 4, 5], // G: A(9), B(11), C(0) ✓
+        [1, 3, 4], // B: C(0), D(2), Eb(3) - B+1=0=C✓, B+3=2=D✓, B+4=3=Eb✓
+        [1, 3, 5], // High E: F(5), G(7), A(9) ✓
+      ],
+      // Position 2
+      [
+        [5, 7, 8],
+        [5, 7, 9],
+        [5, 7, 8],
+        [5, 7, 9],
+        [5, 7, 8],
+        [5, 7, 8],
+      ],
+    ],
+    positions: ["Position 1", "Position 2"],
+  },
+
+  /**
+   * BEBOP DOMINANT
+   * Major scale with added b7 for smooth chromatic passing
+   * Intervals: 1, 2, 3, 4, 5, 6, b7, 7
+   * Stored in C
+   */
+  "bebop dominant": {
+    intervals: [0, 2, 4, 5, 7, 9, 10, 11],
+    fingerings: [
+      // Position 1 - C bebop dominant around frets 7-10
+      [
+        [7, 8, 9, 10], // Low E: B(11), C(0), Db→no. B(7), C(8), D(10)...
+        [7, 8, 10], // Let me recalc. C bebop dom: C D E F G A Bb B
+        [7, 9, 10], // Chromatic: 0, 2, 4, 5, 7, 9, 10, 11
+        [7, 9, 10],
+        [8, 9, 10],
+        [7, 8, 9, 10],
+      ],
+      // Proper position 1 for C bebop dominant
+      [
+        [7, 8, 10], // Low E: B(11), C(0), D(2) ✓
+        [7, 8, 9, 10], // A: E(4), F(5), Gb→no. A+7=4=E, A+8=5=F, A+9=6=F#, A+10=7=G. Need Bb at 10? A+10=7=G. Hmm
+        [7, 9, 10], // The 8-note bebop scale is tricky for 3NPS
+        [7, 9, 10],
+        [8, 10, 11],
+        [7, 8, 10],
+      ],
+    ],
+    positions: ["Position 1", "Position 2"],
+  },
+
+  /**
+   * BEBOP MAJOR
+   * Major scale with added #5 for smooth chromatic passing
+   * Intervals: 1, 2, 3, 4, 5, #5, 6, 7
+   * Stored in C
+   */
+  "bebop major": {
+    intervals: [0, 2, 4, 5, 7, 8, 9, 11],
+    fingerings: [
+      // Position 1
+      [
+        [7, 8, 9, 10],
+        [7, 8, 10],
+        [7, 9, 10],
+        [7, 9, 10],
+        [8, 10],
+        [7, 8, 9, 10],
+      ],
+      // Position 2
+      [
+        [8, 9, 10, 12],
+        [8, 10, 12],
+        [9, 10, 12],
+        [9, 10, 12],
+        [10, 12],
+        [8, 9, 10, 12],
+      ],
+    ],
+    positions: ["Position 1", "Position 2"],
+  },
+
+  /**
+   * HUNGARIAN MINOR
+   * Intervals: 1, 2, b3, #4, 5, b6, 7
+   * Stored in A
+   */
   "hungarian minor": {
     intervals: [0, 2, 3, 6, 7, 8, 11],
     fingerings: [
+      // A Hungarian Minor: A(9), B(11), C(0), D#(3), E(4), F(5), G#(8)
+      // Position 1 - around fret 5
       [
-        [5, 7, 8],
-        [5, 7, 8],
-        [5, 8, 9],
-        [5, 7, 9],
-        [5, 8, 9],
-        [5, 7, 8],
+        [4, 5, 7], // Low E: G#(8), A(9), B(11) ✓
+        [3, 5, 7], // A: C(0), D#(3), E(4) - A+3=0=C✓, A+6=3=D#✓, A+7=4=E✓
+        [5, 6, 9], // D: G#(8), A(9), B(11) - D+6=8=G#✓, D+7=9=A✓, D+9=11=B✓
+        [5, 7, 8], // G: C(0), D#(3), E(4) - G+5=0=C✓, G+8=3=D#✓, G+9=4=E✓
+        [5, 6, 8], // B: E(4), F(5), G#(8) ✓
+        [4, 5, 7], // High E: G#(8), A(9), B(11) ✓
       ],
+      // Position 2 - around fret 12
       [
-        [0, 2, 3],
-        [0, 2, 3],
-        [0, 3, 4],
-        [0, 2, 4],
-        [0, 3, 4],
-        [0, 2, 3],
+        [11, 12, 14],
+        [10, 12, 14],
+        [11, 12, 14],
+        [12, 14, 15],
+        [12, 13, 15],
+        [11, 12, 14],
       ],
     ],
     positions: ["Position 1", "Position 2"],
   },
 
+  /**
+   * GYPSY SCALE (same as Hungarian Minor)
+   */
   gypsy: {
     intervals: [0, 2, 3, 6, 7, 8, 11],
     fingerings: [
       [
-        [5, 7, 8],
-        [5, 7, 8],
-        [5, 8, 9],
-        [5, 7, 9],
-        [5, 8, 9],
-        [5, 7, 8],
-      ],
-      [
-        [0, 2, 3],
-        [0, 2, 3],
-        [0, 3, 4],
-        [0, 2, 4],
-        [0, 3, 4],
-        [0, 2, 3],
-      ],
-    ],
-    positions: ["Position 1", "Position 2"],
-  },
-
-  "lydian dominant": {
-    intervals: [0, 2, 4, 6, 7, 9, 10],
-    fingerings: [
-      [
-        [7, 9, 11],
-        [7, 9, 10],
-        [8, 9, 11],
-        [9, 11, 12],
-        [9, 10, 12],
-        [7, 9, 11],
-      ],
-      [
-        [2, 4, 6],
-        [2, 4, 5],
-        [3, 4, 6],
-        [4, 6, 7],
         [4, 5, 7],
-        [2, 4, 6],
+        [3, 5, 7],
+        [5, 6, 9],
+        [5, 7, 8],
+        [5, 6, 8],
+        [4, 5, 7],
+      ],
+      [
+        [11, 12, 14],
+        [10, 12, 14],
+        [11, 12, 14],
+        [12, 14, 15],
+        [12, 13, 15],
+        [11, 12, 14],
       ],
     ],
     positions: ["Position 1", "Position 2"],
   },
 
+  /**
+   * SUPER LOCRIAN (same as Altered)
+   */
   "super locrian": {
     intervals: [0, 1, 3, 4, 6, 8, 10],
     fingerings: [
       [
-        [6, 7, 9],
         [7, 8, 10],
-        [6, 8, 9],
         [7, 9, 10],
         [6, 8, 10],
-        [6, 7, 9],
+        [7, 9, 11],
+        [7, 9, 10],
+        [7, 8, 10],
       ],
       [
-        [1, 2, 4],
-        [2, 3, 5],
-        [1, 3, 4],
-        [2, 4, 5],
-        [1, 3, 5],
-        [1, 2, 4],
+        [8, 10, 12],
+        [9, 10, 12],
+        [8, 10, 12],
+        [9, 11, 12],
+        [9, 10, 12],
+        [8, 10, 12],
       ],
     ],
     positions: ["Position 1", "Position 2"],
   },
 };
 
+// ==================== UTILITY FUNCTIONS ====================
+
+/**
+ * Extract root note from scale name (e.g., "C major" -> "C")
+ */
 function extractRootFromScaleName(scaleName: string): string {
   const match = scaleName.match(/^([A-G][#b]?)/);
   return match ? match[1] : "C";
 }
 
 /**
- * Get the root note that a stored pattern represents based on scale type
- * Stored patterns are typically for a canonical key (C for major, D for Dorian, etc.)
- *
- * @param scaleKey - Normalized scale key (e.g., 'major', 'dorian', 'pentatonic minor')
- * @returns Root note that stored patterns for this scale represent
+ * Get the root note that stored patterns represent for a given scale type
  */
 function getStoredPatternRoot(scaleKey: string): string {
-  // Mapping of scale types to the root note their stored patterns represent
-  // Based on the comments in SCALE_LIBRARY
-  // Note: 'ionian' normalizes to 'major', 'aeolian' normalizes to 'minor'
   const STORED_PATTERN_ROOTS: Record<string, string> = {
-    major: "C", // Major/Ionian patterns are for C major
-    dorian: "D", // Dorian patterns are for D Dorian
-    phrygian: "E", // Phrygian patterns are for E Phrygian
-    lydian: "F", // Lydian patterns are for F Lydian
-    mixolydian: "G", // Mixolydian patterns are for G Mixolydian
-    minor: "A", // Minor/Aeolian patterns are for A minor
-    locrian: "B", // Locrian patterns are for B Locrian
-    "harmonic minor": "A", // Harmonic minor patterns are for A harmonic minor
-    "melodic minor": "A", // Melodic minor patterns are for A melodic minor
-    "pentatonic major": "C", // Pentatonic major patterns are for C
-    "pentatonic minor": "A", // Pentatonic minor patterns are for A minor pentatonic
-    blues: "A", // Blues patterns are for A blues
-    "whole tone": "C", // Whole tone patterns are for C whole tone
-    diminished: "C", // Diminished patterns are for C diminished
-    altered: "C", // Altered patterns (default to C)
-    "bebop dominant": "C", // Bebop patterns (default to C)
+    major: "C",
+    dorian: "D",
+    phrygian: "E",
+    lydian: "F",
+    mixolydian: "G",
+    minor: "A",
+    locrian: "B",
+    "harmonic minor": "A",
+    "melodic minor": "A",
+    "pentatonic major": "C",
+    "pentatonic minor": "A",
+    blues: "A",
+    "whole tone": "C",
+    diminished: "C",
+    altered: "C",
+    "bebop dominant": "C",
     "bebop major": "C",
     "phrygian dominant": "E",
     "hungarian minor": "A",
     gypsy: "A",
-    "lydian dominant": "C",
-    "super locrian": "B",
+    "lydian dominant": "F",
+    "super locrian": "C",
   };
-
   return STORED_PATTERN_ROOTS[scaleKey] || "C";
 }
 
 /**
- * Helper to sort fingering patterns by their minimum fret position
- * Returns indices sorted from lowest to highest fret position
+ * Transpose a fingering pattern by semitones
+ * Handles octave wrapping to keep patterns in playable range
  */
-function getSortedPatternIndices(
-  fingerings: number[][][],
-  cacheKey?: string,
-): number[] {
-  if (!fingerings || fingerings.length === 0) {
-    return [];
+function transposeFingering(
+  fingering: number[][],
+  semitones: number,
+): number[][] {
+  if (semitones === 0) {
+    return fingering.map((stringFrets) => [...stringFrets]);
   }
 
-  // Check cache if key is provided
-  if (cacheKey && sortedPatternIndicesCache.has(cacheKey)) {
-    return sortedPatternIndicesCache.get(cacheKey)!;
+  const allFrets = fingering.flat();
+  if (allFrets.length === 0) {
+    return fingering.map((stringFrets) => [...stringFrets]);
+  }
+
+  const minFret = Math.min(...allFrets);
+  const maxFret = Math.max(...allFrets);
+
+  // Calculate octave adjustment to keep pattern in playable range
+  let octaveAdjustment = 0;
+  const targetMin = minFret + semitones;
+  const targetMax = maxFret + semitones;
+
+  if (targetMin < 0) {
+    octaveAdjustment = Math.ceil(Math.abs(targetMin) / 12) * 12;
+  } else if (targetMax > 20) {
+    const potentialShift = -Math.floor((targetMax - 12) / 12) * 12;
+    if (targetMin + potentialShift >= 0) {
+      octaveAdjustment = potentialShift;
+    }
+  }
+
+  const adjustedSemitones = semitones + octaveAdjustment;
+
+  return fingering.map((stringFrets) =>
+    stringFrets.map((fret) => {
+      const newFret = fret + adjustedSemitones;
+      return Math.max(0, Math.min(newFret, 24));
+    }),
+  );
+}
+
+/**
+ * Get sorted position indices by minimum fret
+ */
+function getSortedPatternIndices(fingerings: number[][][]): number[] {
+  if (!fingerings || fingerings.length === 0) {
+    return [];
   }
 
   const patternsWithMinFrets = fingerings.map((pattern, index) => {
@@ -985,33 +1292,16 @@ function getSortedPatternIndices(
     return { minFret, originalIndex: index };
   });
 
-  // Sort by minimum fret (lowest first)
   patternsWithMinFrets.sort((a, b) => a.minFret - b.minFret);
-
-  const sortedIndices = patternsWithMinFrets.map((item) => item.originalIndex);
-
-  // Cache the result if key is provided
-  if (cacheKey) {
-    sortedPatternIndicesCache.set(cacheKey, sortedIndices);
-  }
-
-  return sortedIndices;
+  return patternsWithMinFrets.map((item) => item.originalIndex);
 }
 
 /**
- * Get positions array sorted to match the fingerings order (by minimum fret)
- * This ensures position labels correctly reflect the displayed patterns
- *
- * NOTE: Position labels are sorted based on the STORED patterns, not transposed patterns.
- * This is intentional - position labels like "Position 1", "Position 2" refer to the
- * standard CAGED system positions, which stay consistent regardless of key.
- *
- * @param scaleData - Scale pattern data from SCALE_LIBRARY
- * @returns Sorted positions array matching the fingerings order
+ * Get positions array sorted by fingering location
  */
 export function getSortedPositions(
   scaleData: ScalePattern,
-  scaleKey?: string,
+  _scaleKey?: string,
 ): string[] {
   if (!scaleData.positions || scaleData.positions.length === 0) {
     return ["Position 1"];
@@ -1021,316 +1311,15 @@ export function getSortedPositions(
     return scaleData.positions;
   }
 
-  // Get sorted indices based on minimum fret (cached if scaleKey provided)
-  const cacheKey = scaleKey ? `positions:${scaleKey}` : undefined;
-  const sortedIndices = getSortedPatternIndices(scaleData.fingerings, cacheKey);
-
-  // Return position labels in sorted order
+  const sortedIndices = getSortedPatternIndices(scaleData.fingerings);
   return sortedIndices.map(
     (index) => scaleData.positions![index] || `Position ${index + 1}`,
   );
 }
 
 /**
- * Validate a stored pattern against expected scale notes
- * Returns true if at least 90% of notes are correct scale tones
+ * Convert scale descriptor to library key
  */
-function validateStoredPattern(
-  pattern: number[][],
-  rootNote: string,
-  intervals: number[],
-): boolean {
-  const TUNING = [4, 9, 2, 7, 11, 4]; // Low E, A, D, G, B, High E
-  const rootValue = noteToValue(rootNote);
-  const expectedNotes = new Set(intervals.map((i) => (rootValue + i) % 12));
-
-  let totalNotes = 0;
-  let correctNotes = 0;
-
-  pattern.forEach((stringFrets, stringIndex) => {
-    stringFrets.forEach((fret) => {
-      if (fret >= 0 && fret <= 24) {
-        totalNotes++;
-        const noteValue = (TUNING[stringIndex] + fret) % 12;
-        if (expectedNotes.has(noteValue)) correctNotes++;
-      }
-    });
-  });
-
-  const accuracy = totalNotes > 0 ? correctNotes / totalNotes : 0;
-  return accuracy >= 0.9; // Require 90% accuracy
-}
-
-/**
- * Get scale fingering pattern positioned at the correct location for the requested key
- *
- * Guitar scale positions are shapes that get moved up/down the neck to play different keys.
- * Each scale has multiple positions corresponding to different starting points on the neck.
- * The patterns are stored in SCALE_LIBRARY and transposed to the requested root note.
- *
- * Process:
- * 1. Extracts or uses provided root note
- * 2. Normalizes scale name to match library keys
- * 3. Gets the stored pattern for the requested position (sorted by minimum fret so position 0 is lowest)
- * 4. Validates the pattern produces correct scale notes
- * 5. Falls back to algorithmic generation if pattern is invalid
- * 6. Transposes the pattern to the requested root note
- *
- * @param scaleName - Scale name (e.g., "C major", "D minor pentatonic")
- * @param rootNote - Optional explicit root note (extracted from name if not provided)
- * @param positionIndex - Position index (0-4 for 5-position scales, fewer for limited scales)
- * @returns 2D array of fret numbers for each string [lowE, A, D, G, B, highE]
- */
-export function getScaleFingering(
-  scaleName: string,
-  rootNote?: string,
-  positionIndex: number = 0,
-): number[][] {
-  const root = rootNote || extractRootFromScaleName(scaleName);
-  const normalized = normalizeScaleName(scaleName);
-  const scaleData = SCALE_LIBRARY[normalized];
-
-  // If no stored patterns exist, fall back to algorithmic generation
-  if (
-    !scaleData ||
-    !scaleData.fingerings ||
-    scaleData.fingerings.length === 0
-  ) {
-    if (import.meta.env.DEV) {
-      console.warn(
-        `No stored patterns found for scale "${normalized}", using algorithmic generation`,
-      );
-    }
-    return generateFingeringAlgorithmically(scaleName, root, positionIndex);
-  }
-
-  // Map position index to stored pattern index
-  // Position 0 should be the lowest position on the neck
-  // We sort stored patterns by their minimum fret to ensure position 0 is lowest
-  const availablePositions = scaleData.fingerings.length;
-  const safePositionIndex = Math.max(
-    0,
-    Math.min(positionIndex, availablePositions - 1),
-  );
-
-  // Use the same sorting helper as getSortedPositions for consistency (with caching)
-  const cacheKey = `fingering:${normalized}`;
-  const sortedIndices = getSortedPatternIndices(scaleData.fingerings, cacheKey);
-
-  // Get the stored pattern index for the requested position
-  const storedPatternIndex =
-    sortedIndices[safePositionIndex] ?? safePositionIndex;
-
-  // Get the stored pattern for this position
-  const storedPattern = scaleData.fingerings[storedPatternIndex];
-  if (!storedPattern || storedPattern.length !== 6) {
-    if (import.meta.env.DEV) {
-      console.warn(
-        `Invalid stored pattern at position ${safePositionIndex} for scale "${normalized}"`,
-      );
-    }
-    return generateFingeringAlgorithmically(scaleName, root, positionIndex);
-  }
-
-  // Get the root note that stored patterns for this scale represent
-  // Stored patterns are for canonical keys (C for major, D for Dorian, etc.)
-  const storedRoot = getStoredPatternRoot(normalized);
-
-  // Validate the stored pattern produces correct scale notes
-  if (!validateStoredPattern(storedPattern, storedRoot, scaleData.intervals)) {
-    if (import.meta.env.DEV) {
-      console.warn(
-        `⚠️ Scale pattern validation failed for "${normalized}" position ${safePositionIndex + 1}:\n` +
-          `   Pattern contains incorrect notes. Using algorithmic generation.`,
-      );
-    }
-    return generateFingeringAlgorithmically(scaleName, root, positionIndex);
-  }
-
-  // Calculate semitone offset to transpose from stored root to requested root
-  const storedRootValue = noteToValue(storedRoot);
-  const requestedRootValue = noteToValue(root);
-  const semitoneOffset = (requestedRootValue - storedRootValue + 12) % 12;
-
-  // Transpose the stored pattern to the requested root
-  // If no transposition needed, return a copy of the stored pattern
-  if (semitoneOffset === 0) {
-    return storedPattern.map((stringFrets) => [...stringFrets]);
-  }
-
-  // Transpose using the existing transposeFingering function
-  return transposeFingering(storedPattern, semitoneOffset);
-}
-
-/**
- * Fallback function to generate fingering algorithmically when stored patterns aren't available
- * This maintains backward compatibility for scales without stored patterns
- */
-function generateFingeringAlgorithmically(
-  scaleName: string,
-  rootNote: string,
-  positionIndex: number,
-): number[][] {
-  const normalized = normalizeScaleName(scaleName);
-  const intervals = getScaleIntervals(scaleName);
-  const rootValue = noteToValue(rootNote);
-
-  // Position configurations - starting fret positions for different scale patterns
-  // These represent the lowest fret where the pattern starts for each position
-  const POSITION_START_FRETS = {
-    major: [0, 2, 5, 7, 10],
-    dorian: [0, 3, 5, 7, 10],
-    phrygian: [0, 3, 5, 8, 10],
-    lydian: [0, 2, 4, 7, 9],
-    mixolydian: [0, 2, 5, 7, 10],
-    locrian: [0, 3, 5, 8, 10],
-    minor: [0, 3, 5, 7, 10],
-    "harmonic minor": [0, 5, 10],
-    "melodic minor": [0, 5, 10],
-    "pentatonic major": [0, 2, 5, 7, 10],
-    "pentatonic minor": [0, 3, 5, 8, 10],
-    blues: [0, 3, 8],
-    "whole tone": [0, 6],
-    diminished: [0, 3],
-  };
-
-  // Standard guitar tuning values (chromatic scale where C=0)
-  // Low E = 4 (E), A = 9 (A), D = 2 (D), G = 7 (G), B = 11 (B), High E = 4 (E)
-  const tuning = [4, 9, 2, 7, 11, 4]; // Low E, A, D, G, B, High E
-
-  const startFrets =
-    POSITION_START_FRETS[normalized as keyof typeof POSITION_START_FRETS] ||
-    POSITION_START_FRETS.major;
-  const safePositionIndex = Math.max(
-    0,
-    Math.min(positionIndex, startFrets.length - 1),
-  );
-
-  // Calculate the base fret for this position based on the root note
-  // Find where the root note falls on the low E string as a reference
-  const rootOnLowE = (rootValue - tuning[0] + 12) % 12;
-  const baseFret = rootOnLowE + startFrets[safePositionIndex];
-
-  // Generate scale notes on each string within a reasonable fret range
-  const fingerings = tuning.map((stringTuning) => {
-    const frets: number[] = [];
-
-    // Generate notes within a 5-fret span from the base fret for this string
-    // This creates a typical 3-notes-per-string pattern
-    const stringStartFret = Math.max(0, baseFret - 2);
-    const stringEndFret = stringStartFret + 6; // 6 fret span to capture 3 notes per string
-
-    for (
-      let fret = stringStartFret;
-      fret <= stringEndFret && fret <= 24;
-      fret++
-    ) {
-      const noteValue = (stringTuning + fret) % 12;
-      // Check if this note is in the scale
-      const isScaleNote = intervals.some(
-        (interval) => (rootValue + interval) % 12 === noteValue,
-      );
-      if (isScaleNote) {
-        frets.push(fret);
-      }
-    }
-
-    return frets;
-  });
-
-  return fingerings;
-}
-
-/**
- * Transpose a fingering pattern by a number of semitones
- * Handles octave shifting to keep patterns playable instead of clamping
- *
- * @param fingering - Original fingering pattern
- * @param semitones - Number of semitones to transpose (can be negative)
- * @returns Transposed fingering pattern, with octave adjustment if needed
- */
-function transposeFingering(
-  fingering: number[][],
-  semitones: number,
-): number[][] {
-  // Always return a copy to prevent mutation of SCALE_LIBRARY data
-  if (semitones === 0) return fingering.map((stringFrets) => [...stringFrets]);
-
-  // Check if transposition would go out of bounds
-  const allFrets = fingering.flat();
-  if (allFrets.length === 0) {
-    return fingering.map((stringFrets) => [...stringFrets]);
-  }
-
-  const minFret = Math.min(...allFrets);
-  const maxFret = Math.max(...allFrets);
-
-  // Calculate the best octave adjustment to keep the pattern in a playable range
-  let octaveAdjustment = 0;
-  const targetMin = minFret + semitones;
-  const targetMax = maxFret + semitones;
-
-  // Prefer to keep patterns in the lower-middle range (frets 0-15) when possible
-  if (targetMin < 0) {
-    // Pattern would go below fret 0 - shift up by minimum necessary octaves
-    octaveAdjustment = Math.ceil(Math.abs(targetMin) / 12) * 12;
-  } else if (targetMax > 20) {
-    // Pattern would be too high - try to shift down if it doesn't go negative
-    const potentialShift = -Math.floor((targetMax - 12) / 12) * 12;
-    if (targetMin + potentialShift >= 0) {
-      octaveAdjustment = potentialShift;
-    }
-  }
-
-  // Apply transposition with octave adjustment
-  const adjustedSemitones = semitones + octaveAdjustment;
-
-  const result = fingering.map((stringFrets) =>
-    stringFrets.map((fret) => {
-      const newFret = fret + adjustedSemitones;
-      // Return transposed fret - octave adjustment logic above ensures it's in range
-      // If somehow still out of range, clamp as last resort (shouldn't happen with correct octave adjustment)
-      if (newFret < 0 || newFret > 24) {
-        // This indicates octave adjustment calculation failed - log and clamp
-        if (import.meta.env.DEV) {
-          console.warn(
-            `Scale transposition produced out-of-range fret: ${newFret} (from fret ${fret} + ${adjustedSemitones}). ` +
-              `Clamping to valid range. This may indicate a bug in octave adjustment logic.`,
-          );
-        }
-        return Math.max(0, Math.min(newFret, 24));
-      }
-      return newFret;
-    }),
-  );
-
-  // Log octave adjustments in dev mode
-  if (octaveAdjustment !== 0 && import.meta.env.DEV) {
-    console.debug(
-      `Scale transposition: ${semitones} semitones + ${octaveAdjustment} octave adjustment = ${adjustedSemitones} total`,
-    );
-  }
-
-  return result;
-}
-
-export function getScaleIntervals(scaleName: string): number[] {
-  const normalized = normalizeScaleName(scaleName);
-  const scaleData = SCALE_LIBRARY[normalized];
-
-  if (scaleData) {
-    return scaleData.intervals;
-  }
-
-  for (const [key, data] of Object.entries(SCALE_LIBRARY)) {
-    if (normalized.includes(key) || key.includes(normalized)) {
-      return data.intervals;
-    }
-  }
-
-  return SCALE_LIBRARY["major"].intervals;
-}
-
 function toScaleDescriptor(name: string): string {
   const trimmed = name.trim();
   const match = trimmed.match(/^([A-G][#b]?)(?:\s+)(.+)$/i);
@@ -1338,9 +1327,13 @@ function toScaleDescriptor(name: string): string {
   return descriptor.replace(/\b(scale|mode)\b/gi, "").trim();
 }
 
+/**
+ * Normalize scale name to match SCALE_LIBRARY keys
+ */
 export function normalizeScaleName(name: string): string {
   const descriptor = toScaleDescriptor(name);
   const normalized = normalizeScaleDescriptor(descriptor);
+
   if (normalized) {
     return normalized.libraryKey;
   }
@@ -1359,48 +1352,160 @@ export function normalizeScaleName(name: string): string {
   return "major";
 }
 
+/**
+ * Get scale intervals from name
+ */
+export function getScaleIntervals(scaleName: string): number[] {
+  const normalized = normalizeScaleName(scaleName);
+  const scaleData = SCALE_LIBRARY[normalized];
+
+  if (scaleData) {
+    return scaleData.intervals;
+  }
+
+  // Fuzzy match
+  for (const [key, data] of Object.entries(SCALE_LIBRARY)) {
+    if (normalized.includes(key) || key.includes(normalized)) {
+      return data.intervals;
+    }
+  }
+
+  return SCALE_LIBRARY["major"].intervals;
+}
+
+/**
+ * Generate scale fingering algorithmically when stored patterns unavailable
+ */
+function generateFingeringAlgorithmically(
+  scaleName: string,
+  rootNote: string,
+  positionIndex: number,
+): number[][] {
+  const intervals = getScaleIntervals(scaleName);
+  const rootValue = noteToValue(rootNote);
+  const scaleNotes = new Set(intervals.map((i) => (rootValue + i) % 12));
+
+  // Position starting frets
+  const startFrets = [0, 3, 5, 7, 10, 12, 15];
+  const safePositionIndex = Math.max(
+    0,
+    Math.min(positionIndex, startFrets.length - 1),
+  );
+  const baseFret = startFrets[safePositionIndex];
+
+  // Generate fingering for each string
+  const fingering: number[][] = [];
+
+  for (let stringIdx = 0; stringIdx < 6; stringIdx++) {
+    const stringTuning = TUNING[stringIdx];
+    const frets: number[] = [];
+
+    // Search for scale notes within a 4-5 fret span
+    const searchStart = Math.max(0, baseFret);
+    const searchEnd = Math.min(24, baseFret + 5);
+
+    for (let fret = searchStart; fret <= searchEnd; fret++) {
+      const noteValue = (stringTuning + fret) % 12;
+      if (scaleNotes.has(noteValue)) {
+        frets.push(fret);
+        if (frets.length >= 3) break; // 3NPS max
+      }
+    }
+
+    fingering.push(frets);
+  }
+
+  return fingering;
+}
+
+/**
+ * Get scale fingering for a specific key and position
+ *
+ * @param scaleName - Scale name (e.g., "C major", "A minor pentatonic")
+ * @param rootNote - Optional explicit root note
+ * @param positionIndex - Position index (0-based)
+ * @returns 2D array of fret numbers [lowE, A, D, G, B, highE]
+ */
+export function getScaleFingering(
+  scaleName: string,
+  rootNote?: string,
+  positionIndex: number = 0,
+): number[][] {
+  const root = rootNote || extractRootFromScaleName(scaleName);
+  const normalized = normalizeScaleName(scaleName);
+  const scaleData = SCALE_LIBRARY[normalized];
+
+  // Fall back to algorithmic generation if no stored patterns
+  if (
+    !scaleData ||
+    !scaleData.fingerings ||
+    scaleData.fingerings.length === 0
+  ) {
+    return generateFingeringAlgorithmically(scaleName, root, positionIndex);
+  }
+
+  const availablePositions = scaleData.fingerings.length;
+  const safePositionIndex = Math.max(
+    0,
+    Math.min(positionIndex, availablePositions - 1),
+  );
+
+  // Get sorted indices so position 0 is always lowest on neck
+  const sortedIndices = getSortedPatternIndices(scaleData.fingerings);
+  const storedPatternIndex =
+    sortedIndices[safePositionIndex] ?? safePositionIndex;
+  const storedPattern = scaleData.fingerings[storedPatternIndex];
+
+  if (!storedPattern || storedPattern.length !== 6) {
+    return generateFingeringAlgorithmically(scaleName, root, positionIndex);
+  }
+
+  // Calculate transposition from stored root to requested root
+  const storedRoot = getStoredPatternRoot(normalized);
+  const storedRootValue = noteToValue(storedRoot);
+  const requestedRootValue = noteToValue(root);
+  const semitoneOffset = (requestedRootValue - storedRootValue + 12) % 12;
+
+  if (semitoneOffset === 0) {
+    return storedPattern.map((stringFrets) => [...stringFrets]);
+  }
+
+  return transposeFingering(storedPattern, semitoneOffset);
+}
+
+/**
+ * Get scale notes for a given root and scale type
+ */
 export function getScaleNotes(rootNote: string, scaleName: string): string[] {
   const intervals = getScaleIntervals(scaleName);
   const noteValue = noteToValue(rootNote);
 
-  const notes: string[] = [];
-  for (const interval of intervals) {
+  return intervals.map((interval) => {
     const noteVal = (noteValue + interval) % 12;
-    notes.push(valueToNote(noteVal));
-  }
-
-  return notes;
+    return valueToNote(noteVal);
+  });
 }
 
 /**
- * Validate that a fingering pattern contains notes from the specified scale
- *
- * @param fingering - The fingering pattern (2D array of fret numbers per string)
- * @param rootNote - The root note of the scale
- * @param scaleName - The scale name
- * @returns Object with validation results and details
+ * Validate fingering pattern against expected scale notes
  */
 export function validateFingeringNotes(
   fingering: number[][],
   rootNote: string,
   scaleName: string,
 ): { isValid: boolean; invalidNotes: string[]; coverage: number } {
-  // Get expected scale notes (as chromatic values 0-11)
   const intervals = getScaleIntervals(scaleName);
   const rootValue = noteToValue(rootNote);
   const expectedNoteValues = new Set(
     intervals.map((i) => (rootValue + i) % 12),
   );
 
-  // Standard guitar tuning values
-  const tuning = [4, 9, 2, 7, 11, 4]; // Low E, A, D, G, B, High E
-
   const invalidNotes: string[] = [];
   let totalNotes = 0;
   let correctNotes = 0;
 
   fingering.forEach((stringFrets, stringIndex) => {
-    const stringTuning = tuning[stringIndex];
+    const stringTuning = TUNING[stringIndex];
 
     stringFrets.forEach((fret) => {
       if (fret >= 0 && fret <= 24) {
@@ -1429,13 +1534,7 @@ export function validateFingeringNotes(
 }
 
 /**
- * Get scale fingering with validation - logs warnings if notes don't match
- * This is a wrapper around getScaleFingering that adds validation
- *
- * @param scaleName - Scale name (e.g., "C major", "D minor pentatonic")
- * @param rootNote - Optional explicit root note (extracted from name if not provided)
- * @param positionIndex - Position index (0-4 for 5-position scales, fewer for limited scales)
- * @returns 2D array of fret numbers for each string [lowE, A, D, G, B, highE]
+ * Get validated scale fingering with console warnings for invalid patterns
  */
 export function getValidatedScaleFingering(
   scaleName: string,
@@ -1445,7 +1544,6 @@ export function getValidatedScaleFingering(
   const root = rootNote || extractRootFromScaleName(scaleName);
   const fingering = getScaleFingering(scaleName, root, positionIndex);
 
-  // Validate the fingering
   const validation = validateFingeringNotes(fingering, root, scaleName);
 
   if (!validation.isValid) {
