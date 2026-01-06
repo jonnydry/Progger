@@ -8,7 +8,7 @@
    ============================================================================ */
 
 .progger-theme body::before {
-  display: none !important;
+    display: none !important;
 }
 
 /* Remove all border radius for sharp pixel aesthetic */
@@ -19,7 +19,7 @@
 .progger-theme .rounded-full,
 .progger-theme .rounded-xl,
 .progger-theme .rounded-2xl {
-  border-radius: 0 !important;
+    border-radius: 0 !important;
 }
 
 /* ============================================================================
@@ -27,7 +27,7 @@
    ============================================================================ */
 
 .progger-theme {
-  background: hsl(var(--color-background));
+    background: hsl(var(--color-background));
 }
 
 /* ============================================================================
@@ -35,24 +35,25 @@
    ============================================================================ */
 
 .progger-theme .pixel-border {
-  position: relative;
-  border: 2px solid hsl(var(--color-border));
+    position: relative;
+    border: 2px solid hsl(var(--color-border));
 }
 
 .progger-theme .pixel-border::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border: 2px solid transparent;
-  border-image: repeating-linear-gradient(
-    0deg,
-    hsl(var(--color-primary)) 0px,
-    hsl(var(--color-primary)) 2px,
-    transparent 2px,
-    transparent 4px
-  ) 2;
-  pointer-events: none;
-  z-index: -1;
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border: 2px solid transparent;
+    border-image: repeating-linear-gradient(
+            0deg,
+            hsl(var(--color-primary)) 0px,
+            hsl(var(--color-primary)) 2px,
+            transparent 2px,
+            transparent 4px
+        )
+        2;
+    pointer-events: none;
+    z-index: -1;
 }
 
 /* ============================================================================
@@ -61,93 +62,102 @@
 
 .progger-theme section > div.bg-surface,
 .progger-theme section.bg-surface {
-  position: relative;
-  background: hsl(var(--color-surface));
-  border: 2px solid hsl(var(--color-border));
-  box-shadow: 
-    0 2px 0 0 hsl(var(--color-primary) / 0.2),
-    0 4px 0 0 hsl(var(--color-primary) / 0.1);
-  transition: box-shadow 0.15s ease, transform 0.15s ease;
+    position: relative;
+    background: hsl(var(--color-surface));
+    border: 2px solid hsl(var(--color-border));
+    box-shadow:
+        0 2px 0 0 hsl(var(--color-primary) / 0.2),
+        0 4px 0 0 hsl(var(--color-primary) / 0.1);
+    transition:
+        box-shadow 0.15s ease,
+        transform 0.15s ease;
 }
 
 .progger-theme section > div.bg-surface::before,
 .progger-theme section.bg-surface::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border: 2px solid transparent;
-  border-image: repeating-linear-gradient(
-    0deg,
-    hsl(var(--color-primary) / 0.6) 0px,
-    hsl(var(--color-primary) / 0.6) 2px,
-    transparent 2px,
-    transparent 4px
-  ) 2;
-  pointer-events: none;
-  z-index: -1;
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border: 2px solid transparent;
+    border-image: repeating-linear-gradient(
+            0deg,
+            hsl(var(--color-primary) / 0.6) 0px,
+            hsl(var(--color-primary) / 0.6) 2px,
+            transparent 2px,
+            transparent 4px
+        )
+        2;
+    pointer-events: none;
+    z-index: -1;
 }
 
 .progger-theme section > div.bg-surface:hover,
 .progger-theme section.bg-surface:hover {
-  box-shadow: 
-    0 3px 0 0 hsl(var(--color-accent) / 0.3),
-    0 6px 0 0 hsl(var(--color-accent) / 0.15);
-  transform: translateY(-1px);
+    box-shadow:
+        0 3px 0 0 hsl(var(--color-accent) / 0.3),
+        0 6px 0 0 hsl(var(--color-accent) / 0.15);
+    transform: translateY(-1px);
 }
 
 .progger-theme section > div.bg-surface:hover::before,
 .progger-theme section.bg-surface:hover::before {
-  border-image: repeating-linear-gradient(
-    0deg,
-    hsl(var(--color-accent) / 0.7) 0px,
-    hsl(var(--color-accent) / 0.7) 2px,
-    transparent 2px,
-    transparent 4px
-  ) 2;
+    border-image: repeating-linear-gradient(
+            0deg,
+            hsl(var(--color-accent) / 0.7) 0px,
+            hsl(var(--color-accent) / 0.7) 2px,
+            transparent 2px,
+            transparent 4px
+        )
+        2;
 }
 
 .progger-theme .bg-surface.border {
-  position: relative;
-  background: hsl(var(--color-surface));
-  border: 2px solid hsl(var(--color-border));
-  box-shadow: 
-    0 2px 0 0 hsl(var(--color-primary) / 0.2),
-    0 4px 0 0 hsl(var(--color-primary) / 0.1);
-  transition: box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+    position: relative;
+    background: hsl(var(--color-surface));
+    border: 2px solid hsl(var(--color-border));
+    box-shadow:
+        0 2px 0 0 hsl(var(--color-primary) / 0.2),
+        0 4px 0 0 hsl(var(--color-primary) / 0.1);
+    transition:
+        box-shadow 0.15s ease,
+        transform 0.15s ease,
+        border-color 0.15s ease;
 }
 
 .progger-theme .bg-surface.border::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border: 2px solid transparent;
-  border-image: repeating-linear-gradient(
-    0deg,
-    hsl(var(--color-primary) / 0.6) 0px,
-    hsl(var(--color-primary) / 0.6) 2px,
-    transparent 2px,
-    transparent 4px
-  ) 2;
-  pointer-events: none;
-  z-index: -1;
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border: 2px solid transparent;
+    border-image: repeating-linear-gradient(
+            0deg,
+            hsl(var(--color-primary) / 0.6) 0px,
+            hsl(var(--color-primary) / 0.6) 2px,
+            transparent 2px,
+            transparent 4px
+        )
+        2;
+    pointer-events: none;
+    z-index: -1;
 }
 
 .progger-theme .bg-surface.border:hover {
-  border-color: hsl(var(--color-accent));
-  box-shadow: 
-    0 3px 0 0 hsl(var(--color-accent) / 0.3),
-    0 6px 0 0 hsl(var(--color-accent) / 0.15);
-  transform: translateY(-1px);
+    border-color: hsl(var(--color-accent));
+    box-shadow:
+        0 3px 0 0 hsl(var(--color-accent) / 0.3),
+        0 6px 0 0 hsl(var(--color-accent) / 0.15);
+    transform: translateY(-1px);
 }
 
 .progger-theme .bg-surface.border:hover::before {
-  border-image: repeating-linear-gradient(
-    0deg,
-    hsl(var(--color-accent) / 0.7) 0px,
-    hsl(var(--color-accent) / 0.7) 2px,
-    transparent 2px,
-    transparent 4px
-  ) 2;
+    border-image: repeating-linear-gradient(
+            0deg,
+            hsl(var(--color-accent) / 0.7) 0px,
+            hsl(var(--color-accent) / 0.7) 2px,
+            transparent 2px,
+            transparent 4px
+        )
+        2;
 }
 
 /* ============================================================================
@@ -155,100 +165,106 @@
    ============================================================================ */
 
 .progger-theme button {
-  position: relative;
-  border-radius: 0 !important;
-  border: 2px solid hsl(var(--color-border));
-  background: hsl(var(--color-primary));
-  color: hsl(var(--color-text));
-  font-weight: 600;
-  padding: 0.65rem 1.2rem;
-  box-shadow: 
-    0 2px 0 0 hsl(var(--color-secondary) / 0.4),
-    0 4px 0 0 hsl(var(--color-secondary) / 0.2);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-  image-rendering: pixelated;
+    position: relative;
+    border-radius: 0 !important;
+    border: 2px solid hsl(var(--color-border));
+    background: hsl(var(--color-primary));
+    color: hsl(var(--color-text));
+    font-weight: 600;
+    padding: 0.65rem 1.2rem;
+    box-shadow:
+        0 2px 0 0 hsl(var(--color-secondary) / 0.4),
+        0 4px 0 0 hsl(var(--color-secondary) / 0.2);
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.15s ease,
+        background 0.15s ease;
+    image-rendering: pixelated;
 }
 
 .progger-theme button::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border: 2px solid transparent;
-  border-image: repeating-linear-gradient(
-    0deg,
-    hsl(var(--color-secondary) / 0.7) 0px,
-    hsl(var(--color-secondary) / 0.7) 2px,
-    transparent 2px,
-    transparent 4px
-  ) 2;
-  pointer-events: none;
-  z-index: -1;
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border: 2px solid transparent;
+    border-image: repeating-linear-gradient(
+            0deg,
+            hsl(var(--color-secondary) / 0.7) 0px,
+            hsl(var(--color-secondary) / 0.7) 2px,
+            transparent 2px,
+            transparent 4px
+        )
+        2;
+    pointer-events: none;
+    z-index: -1;
 }
 
 .progger-theme button:hover:not(:disabled) {
-  background: hsl(var(--color-accent));
-  transform: translateY(-1px);
-  box-shadow: 
-    0 3px 0 0 hsl(var(--color-secondary) / 0.5),
-    0 6px 0 0 hsl(var(--color-secondary) / 0.25);
+    background: hsl(var(--color-accent));
+    transform: translateY(-1px);
+    box-shadow:
+        0 3px 0 0 hsl(var(--color-secondary) / 0.5),
+        0 6px 0 0 hsl(var(--color-secondary) / 0.25);
 }
 
 .progger-theme button:hover:not(:disabled)::before {
-  border-image: repeating-linear-gradient(
-    0deg,
-    hsl(var(--color-accent) / 0.8) 0px,
-    hsl(var(--color-accent) / 0.8) 2px,
-    transparent 2px,
-    transparent 4px
-  ) 2;
+    border-image: repeating-linear-gradient(
+            0deg,
+            hsl(var(--color-accent) / 0.8) 0px,
+            hsl(var(--color-accent) / 0.8) 2px,
+            transparent 2px,
+            transparent 4px
+        )
+        2;
 }
 
 .progger-theme button:active:not(:disabled) {
-  transform: translateY(1px);
-  box-shadow: 
-    0 1px 0 0 hsl(var(--color-secondary) / 0.3),
-    0 2px 0 0 hsl(var(--color-secondary) / 0.15);
+    transform: translateY(1px);
+    box-shadow:
+        0 1px 0 0 hsl(var(--color-secondary) / 0.3),
+        0 2px 0 0 hsl(var(--color-secondary) / 0.15);
 }
 
 .progger-theme button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  filter: grayscale(0.3);
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: grayscale(0.3);
 }
 
 .progger-theme button:disabled::before {
-  opacity: 0.3;
+    opacity: 0.3;
 }
 
 /* Primary button styling */
 .progger-theme button.bg-primary,
 .progger-theme button[class*="bg-primary"] {
-  background: hsl(var(--color-accent));
-  color: hsl(var(--color-background));
-  border-color: hsl(var(--color-accent));
-  box-shadow: 
-    0 2px 0 0 hsl(var(--color-primary) / 0.5),
-    0 4px 0 0 hsl(var(--color-primary) / 0.25);
+    background: hsl(var(--color-accent));
+    color: hsl(var(--color-background));
+    border-color: hsl(var(--color-accent));
+    box-shadow:
+        0 2px 0 0 hsl(var(--color-primary) / 0.5),
+        0 4px 0 0 hsl(var(--color-primary) / 0.25);
 }
 
 .progger-theme button.bg-primary::before,
 .progger-theme button[class*="bg-primary"]::before {
-  border-image: repeating-linear-gradient(
-    0deg,
-    hsl(var(--color-primary) / 0.8) 0px,
-    hsl(var(--color-primary) / 0.8) 2px,
-    transparent 2px,
-    transparent 4px
-  ) 2;
+    border-image: repeating-linear-gradient(
+            0deg,
+            hsl(var(--color-primary) / 0.8) 0px,
+            hsl(var(--color-primary) / 0.8) 2px,
+            transparent 2px,
+            transparent 4px
+        )
+        2;
 }
 
 .progger-theme button.bg-primary:hover:not(:disabled),
 .progger-theme button[class*="bg-primary"]:hover:not(:disabled) {
-  background: hsl(var(--color-accent));
-  filter: brightness(1.1);
-  box-shadow: 
-    0 3px 0 0 hsl(var(--color-primary) / 0.6),
-    0 6px 0 0 hsl(var(--color-primary) / 0.3);
+    background: hsl(var(--color-accent));
+    filter: brightness(1.1);
+    box-shadow:
+        0 3px 0 0 hsl(var(--color-primary) / 0.6),
+        0 6px 0 0 hsl(var(--color-primary) / 0.3);
 }
 
 /* ============================================================================
@@ -256,10 +272,10 @@
    ============================================================================ */
 
 .progger-theme header {
-  border-bottom: 2px solid hsl(var(--color-border)) !important;
-  background: hsl(var(--color-background) / 0.95) !important;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 2px 0 0 hsl(var(--color-primary) / 0.1);
+    border-bottom: 2px solid hsl(var(--color-border)) !important;
+    background: hsl(var(--color-background) / 0.95) !important;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 2px 0 0 hsl(var(--color-primary) / 0.1);
 }
 
 /* ============================================================================
@@ -270,82 +286,87 @@
 .progger-theme input[type="text"],
 .progger-theme input[type="number"],
 .progger-theme textarea {
-  position: relative;
-  border-radius: 0 !important;
-  border: 2px solid hsl(var(--color-border));
-  background: hsl(var(--color-surface));
-  padding: 0.5rem;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  font-family: 'Source Code Pro', monospace;
+    position: relative;
+    border-radius: 0 !important;
+    border: 2px solid hsl(var(--color-border));
+    background: hsl(var(--color-surface));
+    padding: 0.5rem;
+    transition:
+        border-color 0.15s ease,
+        box-shadow 0.15s ease;
+    font-family: "Source Code Pro", monospace;
 }
 
 .progger-theme select::before,
 .progger-theme input[type="text"]::before,
 .progger-theme input[type="number"]::before,
 .progger-theme textarea::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border: 2px solid transparent;
-  border-image: repeating-linear-gradient(
-    0deg,
-    hsl(var(--color-primary) / 0.5) 0px,
-    hsl(var(--color-primary) / 0.5) 2px,
-    transparent 2px,
-    transparent 4px
-  ) 2;
-  pointer-events: none;
-  z-index: -1;
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border: 2px solid transparent;
+    border-image: repeating-linear-gradient(
+            0deg,
+            hsl(var(--color-primary) / 0.5) 0px,
+            hsl(var(--color-primary) / 0.5) 2px,
+            transparent 2px,
+            transparent 4px
+        )
+        2;
+    pointer-events: none;
+    z-index: -1;
 }
 
 .progger-theme select:focus,
 .progger-theme input:focus,
 .progger-theme textarea:focus {
-  outline: none;
-  border-color: hsl(var(--color-accent));
-  box-shadow: 
-    0 0 0 2px hsl(var(--color-accent) / 0.2),
-    0 2px 0 0 hsl(var(--color-accent) / 0.3);
+    outline: none;
+    border-color: hsl(var(--color-accent));
+    box-shadow:
+        0 0 0 2px hsl(var(--color-accent) / 0.2),
+        0 2px 0 0 hsl(var(--color-accent) / 0.3);
 }
 
 .progger-theme select:focus::before,
 .progger-theme input:focus::before,
 .progger-theme textarea:focus::before {
-  border-image: repeating-linear-gradient(
-    0deg,
-    hsl(var(--color-accent) / 0.7) 0px,
-    hsl(var(--color-accent) / 0.7) 2px,
-    transparent 2px,
-    transparent 4px
-  ) 2;
+    border-image: repeating-linear-gradient(
+            0deg,
+            hsl(var(--color-accent) / 0.7) 0px,
+            hsl(var(--color-accent) / 0.7) 2px,
+            transparent 2px,
+            transparent 4px
+        )
+        2;
 }
 
 .progger-theme [role="listbox"],
 .progger-theme .absolute.bg-surface {
-  position: relative;
-  border-radius: 0 !important;
-  border: 2px solid hsl(var(--color-border));
-  background: hsl(var(--color-surface));
-  box-shadow: 
-    0 2px 0 0 hsl(var(--color-primary) / 0.2),
-    0 4px 0 0 hsl(var(--color-primary) / 0.1);
+    position: relative;
+    border-radius: 0 !important;
+    border: 2px solid hsl(var(--color-border));
+    background: hsl(var(--color-surface));
+    box-shadow:
+        0 2px 0 0 hsl(var(--color-primary) / 0.2),
+        0 4px 0 0 hsl(var(--color-primary) / 0.1);
 }
 
 .progger-theme [role="listbox"]::before,
 .progger-theme .absolute.bg-surface::before {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border: 2px solid transparent;
-  border-image: repeating-linear-gradient(
-    0deg,
-    hsl(var(--color-primary) / 0.6) 0px,
-    hsl(var(--color-primary) / 0.6) 2px,
-    transparent 2px,
-    transparent 4px
-  ) 2;
-  pointer-events: none;
-  z-index: -1;
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border: 2px solid transparent;
+    border-image: repeating-linear-gradient(
+            0deg,
+            hsl(var(--color-primary) / 0.6) 0px,
+            hsl(var(--color-primary) / 0.6) 2px,
+            transparent 2px,
+            transparent 4px
+        )
+        2;
+    pointer-events: none;
+    z-index: -1;
 }
 
 /* ============================================================================
@@ -353,13 +374,13 @@
    ============================================================================ */
 
 .progger-theme img {
-  image-rendering: pixelated;
-  image-rendering: -moz-crisp-edges;
-  image-rendering: crisp-edges;
-  border: 2px solid hsl(var(--color-border));
-  box-shadow: 
-    0 2px 0 0 hsl(var(--color-primary) / 0.2),
-    0 4px 0 0 hsl(var(--color-primary) / 0.1);
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+    border: 2px solid hsl(var(--color-border));
+    box-shadow:
+        0 2px 0 0 hsl(var(--color-primary) / 0.2),
+        0 4px 0 0 hsl(var(--color-primary) / 0.1);
 }
 
 /* ============================================================================
@@ -369,11 +390,11 @@
 .progger-theme .bg-red-400\/20,
 .progger-theme .dark\:bg-red-900\/30,
 .progger-theme [class*="bg-red"] {
-  border: 2px solid hsl(0 68% 54% / 0.7) !important;
-  background: hsl(0 70% 50% / 0.12) !important;
-  box-shadow: 
-    0 2px 0 0 hsl(0 68% 54% / 0.3),
-    0 4px 0 0 hsl(0 68% 54% / 0.15);
+    border: 2px solid hsl(0 68% 54% / 0.7) !important;
+    background: hsl(0 70% 50% / 0.12) !important;
+    box-shadow:
+        0 2px 0 0 hsl(0 68% 54% / 0.3),
+        0 4px 0 0 hsl(0 68% 54% / 0.15);
 }
 
 /* ============================================================================
@@ -381,39 +402,63 @@
    ============================================================================ */
 
 .progger-theme ::-webkit-scrollbar {
-  width: 12px;
-  height: 12px;
+    width: 12px;
+    height: 12px;
 }
 
 .progger-theme ::-webkit-scrollbar-track {
-  background: hsl(var(--color-background));
-  border: 1px solid hsl(var(--color-border));
+    background: hsl(var(--color-background));
+    border: 1px solid hsl(var(--color-border));
 }
 
 .progger-theme ::-webkit-scrollbar-thumb {
-  background: hsl(var(--color-primary));
-  border: 1px solid hsl(var(--color-background));
-  box-shadow: 
-    inset 0 1px 0 0 hsl(var(--color-accent) / 0.3),
-    0 1px 0 0 hsl(var(--color-secondary) / 0.2);
+    background: hsl(var(--color-primary));
+    border: 1px solid hsl(var(--color-background));
+    box-shadow:
+        inset 0 1px 0 0 hsl(var(--color-accent) / 0.3),
+        0 1px 0 0 hsl(var(--color-secondary) / 0.2);
 }
 
 .progger-theme ::-webkit-scrollbar-thumb:hover {
-  background: hsl(var(--color-accent));
+    background: hsl(var(--color-accent));
 }
 
 .progger-theme ::-webkit-scrollbar-corner {
-  background: hsl(var(--color-surface));
+    background: hsl(var(--color-surface));
 }
 
 /* ============================================================================
-   FOCUS STATES - Clean pixel focus
+   FOCUS STATES - High-contrast pixel focus
    ============================================================================ */
 
 .progger-theme *:focus-visible {
-  outline: 2px solid hsl(var(--color-accent)) !important;
-  outline-offset: 2px;
-  box-shadow: 0 0 0 2px hsl(var(--color-accent) / 0.2);
+    outline: 3px solid hsl(var(--color-accent)) !important;
+    outline-offset: 3px;
+    box-shadow:
+        0 0 0 3px hsl(var(--color-background)),
+        0 0 0 6px hsl(var(--color-accent) / 0.4);
+}
+
+/* Enhanced focus for buttons - pixel stepped shadow */
+.progger-theme button:focus-visible {
+    outline: 3px solid hsl(var(--color-accent)) !important;
+    outline-offset: 0;
+    box-shadow:
+        0 0 0 3px hsl(var(--color-accent)),
+        0 0 0 6px hsl(var(--color-background)),
+        0 0 0 8px hsl(var(--color-accent) / 0.5),
+        0 3px 0 0 hsl(var(--color-secondary) / 0.4) !important;
+}
+
+/* Enhanced focus for inputs */
+.progger-theme input:focus-visible,
+.progger-theme select:focus-visible,
+.progger-theme textarea:focus-visible {
+    outline: 3px solid hsl(var(--color-accent)) !important;
+    outline-offset: 0;
+    box-shadow:
+        0 0 0 3px hsl(var(--color-accent)),
+        0 0 0 6px hsl(var(--color-accent) / 0.3);
 }
 
 /* ============================================================================
@@ -421,14 +466,16 @@
    ============================================================================ */
 
 .progger-theme a {
-  text-decoration: none;
-  border-bottom: 1px solid hsl(var(--color-accent) / 0.4);
-  transition: border-color 0.15s ease, color 0.15s ease;
+    text-decoration: none;
+    border-bottom: 1px solid hsl(var(--color-accent) / 0.4);
+    transition:
+        border-color 0.15s ease,
+        color 0.15s ease;
 }
 
 .progger-theme a:hover {
-  border-bottom-color: hsl(var(--color-accent));
-  color: hsl(var(--color-accent));
+    border-bottom-color: hsl(var(--color-accent));
+    color: hsl(var(--color-accent));
 }
 
 /* ============================================================================
@@ -437,14 +484,14 @@
 
 .progger-theme [role="tooltip"],
 .progger-theme .tooltip {
-  border-radius: 0 !important;
-  border: 2px solid hsl(var(--color-primary)) !important;
-  background: hsl(var(--color-surface)) !important;
-  box-shadow: 
-    0 2px 0 0 hsl(var(--color-primary) / 0.3),
-    0 4px 0 0 hsl(var(--color-primary) / 0.15);
-  font-family: 'Source Code Pro', monospace;
-  padding: 0.5rem;
+    border-radius: 0 !important;
+    border: 2px solid hsl(var(--color-primary)) !important;
+    background: hsl(var(--color-surface)) !important;
+    box-shadow:
+        0 2px 0 0 hsl(var(--color-primary) / 0.3),
+        0 4px 0 0 hsl(var(--color-primary) / 0.15);
+    font-family: "Source Code Pro", monospace;
+    padding: 0.5rem;
 }
 
 /* ============================================================================
@@ -452,11 +499,11 @@
    ============================================================================ */
 
 .progger-theme hr {
-  border: none;
-  height: 2px;
-  background: hsl(var(--color-border));
-  margin: 1.5rem 0;
-  box-shadow: 0 1px 0 0 hsl(var(--color-primary) / 0.2);
+    border: none;
+    height: 2px;
+    background: hsl(var(--color-border));
+    margin: 1.5rem 0;
+    box-shadow: 0 1px 0 0 hsl(var(--color-primary) / 0.2);
 }
 
 /* ============================================================================
@@ -464,27 +511,27 @@
    ============================================================================ */
 
 .progger-theme table {
-  border-collapse: separate;
-  border-spacing: 0;
-  border: 2px solid hsl(var(--color-border));
-  background: hsl(var(--color-surface));
+    border-collapse: separate;
+    border-spacing: 0;
+    border: 2px solid hsl(var(--color-border));
+    background: hsl(var(--color-surface));
 }
 
 .progger-theme th,
 .progger-theme td {
-  border: 1px solid hsl(var(--color-border));
-  padding: 0.5rem;
-  background: hsl(var(--color-surface));
+    border: 1px solid hsl(var(--color-border));
+    padding: 0.5rem;
+    background: hsl(var(--color-surface));
 }
 
 .progger-theme th {
-  background: hsl(var(--color-primary) / 0.2);
-  font-family: 'Source Code Pro', monospace;
-  font-weight: 700;
+    background: hsl(var(--color-primary) / 0.2);
+    font-family: "Source Code Pro", monospace;
+    font-weight: 700;
 }
 
 .progger-theme tr:hover td {
-  background: hsl(var(--color-accent) / 0.1);
+    background: hsl(var(--color-accent) / 0.1);
 }
 
 /* ============================================================================
@@ -493,13 +540,13 @@
 
 .progger-theme [role="dialog"],
 .progger-theme .modal {
-  border-radius: 0 !important;
-  border: 2px solid hsl(var(--color-primary)) !important;
-  background: hsl(var(--color-background)) !important;
-  box-shadow: 
-    0 4px 0 0 hsl(var(--color-primary) / 0.3),
-    0 8px 0 0 hsl(var(--color-primary) / 0.15),
-    0 12px 24px -8px hsl(var(--color-primary) / 0.4);
+    border-radius: 0 !important;
+    border: 2px solid hsl(var(--color-primary)) !important;
+    background: hsl(var(--color-background)) !important;
+    box-shadow:
+        0 4px 0 0 hsl(var(--color-primary) / 0.3),
+        0 8px 0 0 hsl(var(--color-primary) / 0.15),
+        0 12px 24px -8px hsl(var(--color-primary) / 0.4);
 }
 
 /* ============================================================================
@@ -508,17 +555,17 @@
 
 .progger-theme pre,
 .progger-theme code {
-  border-radius: 0 !important;
-  border: 1px solid hsl(var(--color-border));
-  background: hsl(var(--color-surface)) !important;
-  font-family: 'Source Code Pro', monospace;
-  padding: 0.25rem 0.5rem;
+    border-radius: 0 !important;
+    border: 1px solid hsl(var(--color-border));
+    background: hsl(var(--color-surface)) !important;
+    font-family: "Source Code Pro", monospace;
+    padding: 0.25rem 0.5rem;
 }
 
 .progger-theme pre {
-  padding: 1rem;
-  overflow-x: auto;
-  box-shadow: inset 0 2px 0 0 hsl(var(--color-primary) / 0.1);
+    padding: 1rem;
+    overflow-x: auto;
+    box-shadow: inset 0 2px 0 0 hsl(var(--color-primary) / 0.1);
 }
 
 /* ============================================================================
@@ -526,55 +573,69 @@
    ============================================================================ */
 
 .progger-theme .animate-slide-in {
-  animation: progger-slide-in 0.2s ease-out forwards !important;
+    animation: progger-slide-in 0.2s ease-out forwards !important;
 }
 
 @keyframes progger-slide-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .progger-theme .animate-fade-scale-in {
-  animation: progger-fade-scale-in 0.25s ease-out forwards !important;
+    animation: progger-fade-scale-in 0.25s ease-out forwards !important;
 }
 
 @keyframes progger-fade-scale-in {
-  from {
-    opacity: 0;
-    transform: scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+    from {
+        opacity: 0;
+        transform: scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 .progger-theme .animate-cross-fade-in {
-  animation: progger-cross-fade-in 0.15s ease-in-out forwards !important;
+    animation: progger-cross-fade-in 0.15s ease-in-out forwards !important;
 }
 
 @keyframes progger-cross-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 /* Loading spinner - minimal pixel steps */
 .progger-theme .animate-spin {
-  animation: progger-spin 0.8s steps(4) infinite !important;
+    animation: progger-spin 0.8s steps(4) infinite !important;
 }
 
 @keyframes progger-spin {
-  0% { transform: rotate(0deg); }
-  25% { transform: rotate(90deg); }
-  50% { transform: rotate(180deg); }
-  75% { transform: rotate(270deg); }
-  100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+    25% {
+        transform: rotate(90deg);
+    }
+    50% {
+        transform: rotate(180deg);
+    }
+    75% {
+        transform: rotate(270deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 /* ============================================================================
@@ -585,12 +646,12 @@
 .progger-theme .tag,
 .progger-theme [class*="badge"],
 .progger-theme [class*="tag"] {
-  border-radius: 0 !important;
-  border: 1px solid hsl(var(--color-primary));
-  padding: 0.25rem 0.5rem;
-  font-family: 'Source Code Pro', monospace;
-  font-size: 0.75rem;
-  font-weight: 600;
-  background: hsl(var(--color-surface));
-  box-shadow: 0 1px 0 0 hsl(var(--color-primary) / 0.2);
+    border-radius: 0 !important;
+    border: 1px solid hsl(var(--color-primary));
+    padding: 0.25rem 0.5rem;
+    font-family: "Source Code Pro", monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: hsl(var(--color-surface));
+    box-shadow: 0 1px 0 0 hsl(var(--color-primary) / 0.2);
 }

@@ -1,8 +1,13 @@
-import React, { useState } from 'react';
-import { useStash, useSaveToStash, useDeleteFromStash } from '../hooks/useStash';
-import type { ProgressionResult, StashItemData } from '../types';
-import { PixelCard } from './PixelCard';
-import { PixelButton } from './PixelButton';
+import React, { useState, useRef, useEffect } from "react";
+import {
+  useStash,
+  useSaveToStash,
+  useDeleteFromStash,
+} from "../hooks/useStash";
+import type { ProgressionResult, StashItemData } from "../types";
+import { PixelCard } from "./PixelCard";
+import { PixelButton } from "./PixelButton";
+import { Z_INDEX } from "@/constants/zIndex";
 
 interface StashSidebarProps {
   isOpen: boolean;
@@ -11,7 +16,11 @@ interface StashSidebarProps {
   currentKey?: string;
   currentMode?: string;
   currentProgression?: ProgressionResult | null;
-  onLoadProgression?: (key: string, mode: string, progression: ProgressionResult) => void;
+  onLoadProgression?: (
+    key: string,
+    mode: string,
+    progression: ProgressionResult,
+  ) => void;
 }
 
 export const StashSidebar: React.FC<StashSidebarProps> = ({
@@ -26,12 +35,23 @@ export const StashSidebar: React.FC<StashSidebarProps> = ({
   const { data: stashItems = [], isLoading } = useStash();
   const saveToStash = useSaveToStash();
   const deleteFromStash = useDeleteFromStash();
-  const [saveName, setSaveName] = useState('');
+  const [saveName, setSaveName] = useState("");
   const [showSaveForm, setShowSaveForm] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
 
+  // Touch gesture state for swipe-to-close
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchCurrent, setTouchCurrent] = useState<number | null>(null);
+  const [isSwiping, setIsSwiping] = useState(false);
+
   const handleSave = async () => {
-    if (!saveName.trim() || !currentProgression || !currentKey || !currentMode) {
+    if (
+      !saveName.trim() ||
+      !currentProgression ||
+      !currentKey ||
+      !currentMode
+    ) {
       return;
     }
 
@@ -45,23 +65,30 @@ export const StashSidebar: React.FC<StashSidebarProps> = ({
         mode: currentMode,
         progressionData: currentProgression,
       });
-      setSaveName('');
+      setSaveName("");
       setShowSaveForm(false);
       setSaveError(null);
     } catch (error) {
-      console.error('Failed to save to stash:', error);
+      console.error("Failed to save to stash:", error);
       // Extract error message from the error object
-      const errorMessage = error instanceof Error ? error.message : 'Failed to save to stash. Please try again.';
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Failed to save to stash. Please try again.";
       setSaveError(errorMessage);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this item from your stash?')) {
+    if (
+      window.confirm(
+        "Are you sure you want to delete this item from your stash?",
+      )
+    ) {
       try {
         await deleteFromStash.mutateAsync(id);
       } catch (error) {
-        console.error('Failed to delete from stash:', error);
+        console.error("Failed to delete from stash:", error);
       }
     }
   };
@@ -73,19 +100,76 @@ export const StashSidebar: React.FC<StashSidebarProps> = ({
     }
   };
 
+  // Touch gesture handlers for swipe-to-close
+  const handleTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.touches[0].clientX);
+    setIsSwiping(true);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStart) return;
+    setTouchCurrent(e.touches[0].clientX);
+  };
+
+  const handleTouchEnd = () => {
+    if (!touchStart || !touchCurrent) {
+      setIsSwiping(false);
+      setTouchStart(null);
+      setTouchCurrent(null);
+      return;
+    }
+
+    const swipeDistance = touchCurrent - touchStart;
+    const swipeThreshold = 100; // Minimum swipe distance to close (in pixels)
+
+    // Swipe right to close (positive distance)
+    if (swipeDistance > swipeThreshold) {
+      onClose();
+    }
+
+    // Reset state
+    setIsSwiping(false);
+    setTouchStart(null);
+    setTouchCurrent(null);
+  };
+
+  // Calculate dynamic transform for visual feedback during swipe
+  const getSwipeTransform = () => {
+    if (!isSwiping || !touchStart || !touchCurrent) return "translateX(0)";
+
+    const swipeDistance = touchCurrent - touchStart;
+    // Only allow positive (right) swipes, clamp to max 100% width
+    const clampedDistance = Math.max(
+      0,
+      Math.min(swipeDistance, window.innerWidth),
+    );
+    return `translateX(${clampedDistance}px)`;
+  };
+
   return (
     <>
       {/* Overlay */}
       <div
-        className={`fixed inset-0 bg-black/30 transition-opacity duration-300 z-40 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
-          }`}
+        className={`fixed inset-0 bg-black/30 transition-opacity duration-300 ${
+          isOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
+        style={{ zIndex: Z_INDEX.overlay }}
         onClick={onClose}
       />
 
       {/* Sidebar */}
       <div
-        className={`fixed top-0 right-0 h-full w-full sm:w-96 z-50 transition-transform duration-300 ease-in-out bg-surface border-l-2 border-border shadow-[-4px_0_0_0_rgba(0,0,0,0.2)] ${isOpen ? 'translate-x-0' : 'translate-x-full'
-          }`}
+        ref={sidebarRef}
+        className={`fixed top-0 right-0 h-full w-full sm:w-96 bg-surface border-l-2 border-border shadow-[-4px_0_0_0_rgba(0,0,0,0.2)] ${
+          isOpen ? "translate-x-0" : "translate-x-full"
+        } ${isSwiping ? "" : "transition-transform duration-300 ease-in-out"}`}
+        style={{
+          transform: isOpen && isSwiping ? getSwipeTransform() : undefined,
+          zIndex: Z_INDEX.sidebar,
+        }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         <div className="h-full flex flex-col">
           {/* Header */}
@@ -152,12 +236,13 @@ export const StashSidebar: React.FC<StashSidebarProps> = ({
                       }
                     }}
                     placeholder="Enter a name..."
-                    className={`w-full px-4 py-2 bg-surface/50 border-2 text-text placeholder-text/50 focus:outline-none ${saveError
-                        ? 'border-red-500/50'
-                        : 'border-border focus:border-primary'
-                      }`}
+                    className={`w-full px-4 py-2 bg-surface/50 border-2 text-text placeholder-text/50 focus:outline-none ${
+                      saveError
+                        ? "border-red-500/50"
+                        : "border-border focus:border-primary"
+                    }`}
                     onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
+                      if (e.key === "Enter") {
                         handleSave();
                       }
                     }}
@@ -173,13 +258,13 @@ export const StashSidebar: React.FC<StashSidebarProps> = ({
                       disabled={!saveName.trim() || saveToStash.isPending}
                       className="flex-1"
                     >
-                      {saveToStash.isPending ? 'Saving...' : 'Save'}
+                      {saveToStash.isPending ? "Saving..." : "Save"}
                     </PixelButton>
                     <PixelButton
                       variant="secondary"
                       onClick={() => {
                         setShowSaveForm(false);
-                        setSaveName('');
+                        setSaveName("");
                         setSaveError(null);
                       }}
                       className="flex-1"
@@ -201,7 +286,9 @@ export const StashSidebar: React.FC<StashSidebarProps> = ({
             ) : stashItems.length === 0 ? (
               <div className="text-center text-text/60 py-8">
                 <p className="mb-2">Your stash is empty</p>
-                <p className="text-sm">Generate a progression and save it here!</p>
+                <p className="text-sm">
+                  Generate a progression and save it here!
+                </p>
               </div>
             ) : (
               stashItems.map((item, index) => (
@@ -244,13 +331,15 @@ export const StashSidebar: React.FC<StashSidebarProps> = ({
                     <span>•</span>
                     <span>{item.mode}</span>
                     <span>•</span>
-                    <span>{item.progressionData.progression.length} chords</span>
+                    <span>
+                      {item.progressionData.progression.length} chords
+                    </span>
                   </div>
                   <div className="mt-2 text-xs text-text/50">
                     {new Date(item.createdAt).toLocaleDateString(undefined, {
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric',
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
                     })}
                   </div>
                 </PixelCard>

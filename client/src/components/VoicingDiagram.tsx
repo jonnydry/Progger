@@ -1,6 +1,18 @@
 import React, { useMemo } from "react";
 import type { ChordVoicing } from "@/types";
 
+// Constants - defined outside component to prevent re-creation on every render
+const FRET_COUNT = 5;
+const STRING_COUNT = 6;
+const FRET_HEIGHT = 30;
+const STRING_WIDTH = 25;
+const DOT_RADIUS = 7;
+const PADDING = 20;
+const LEFT_MARGIN = 18;
+
+// String stroke widths - thicker strings (lower index) are visually thicker
+const STRING_STROKE_WIDTHS = [1.5, 1.4, 1.3, 1.2, 1.1, 1.0] as const;
+
 interface VoicingDiagramProps {
   chordName: string;
   voicing: ChordVoicing;
@@ -43,17 +55,6 @@ export const VoicingDiagram: React.FC<VoicingDiagramProps> = ({
   className,
 }) => {
   const { frets, firstFret = 1 } = voicing;
-
-  const FRET_COUNT = 5;
-  const STRING_COUNT = 6;
-  const FRET_HEIGHT = 30;
-  const STRING_WIDTH = 25;
-  const DOT_RADIUS = 7;
-  const PADDING = 20;
-  const LEFT_MARGIN = 18;
-
-  // String stroke widths - thicker strings (lower index) are visually thicker
-  const STRING_STROKE_WIDTHS = [1.5, 1.4, 1.3, 1.2, 1.1, 1.0] as const;
 
   const width = LEFT_MARGIN + (STRING_COUNT - 1) * STRING_WIDTH + PADDING * 2;
   const height = FRET_COUNT * FRET_HEIGHT + PADDING * 2.5;

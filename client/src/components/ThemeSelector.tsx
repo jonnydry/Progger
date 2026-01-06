@@ -1,6 +1,5 @@
-
-import React, { useState, useRef, useEffect } from 'react';
-import type { ThemeOption } from '@/constants';
+import React, { useState, useRef, useEffect } from "react";
+import type { ThemeOption } from "@/constants";
 
 interface ThemeSelectorProps {
   themes: ThemeOption[];
@@ -8,7 +7,11 @@ interface ThemeSelectorProps {
   onSelect: (index: number) => void;
 }
 
-export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIndex, onSelect }) => {
+export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
+  themes,
+  selectedIndex,
+  onSelect,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -18,10 +21,15 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
   const handleClose = () => {
     setIsClosing(true);
     // Wait for animation to complete before hiding
+    // Total animation time: 0.12s base + (11 themes * 0.02s delay) = 0.34s
+    const animationDuration = 120; // Base animation duration in ms
+    const maxDelay = (themes.length - 1) * 20; // Max delay for cascade effect in ms
+    const totalTime = animationDuration + maxDelay + 50; // Add 50ms buffer
+
     setTimeout(() => {
       setIsOpen(false);
       setIsClosing(false);
-    }, 300); // Total animation time: 0.12s base + (11 themes * 0.02s) = ~0.34s, using 300ms to be safe
+    }, totalTime); // Dynamically calculated based on number of themes
   };
 
   const handleSelect = (index: number) => {
@@ -39,68 +47,74 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (selectRef.current && !selectRef.current.contains(event.target as Node)) {
+      if (
+        selectRef.current &&
+        !selectRef.current.contains(event.target as Node)
+      ) {
         if (isOpen && !isClosing) {
           handleClose();
         }
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [isOpen, isClosing]);
 
   return (
     <div className="relative flex items-center" ref={selectRef}>
       {/* Theme dots - single horizontal row with scroll on mobile only */}
-      <div className="flex flex-row-reverse items-center gap-1.5 overflow-x-auto sm:overflow-x-visible overflow-y-visible scrollbar-hide max-w-[280px] sm:max-w-none py-2">
-        {(isOpen || isClosing) && themes.map((theme, index) => {
-          // Opening: cascade right to left (index 0, 1, 2...)
-          // Closing: cascade left to right (reverse order for mirror effect)
-          const delay = isClosing ? (themes.length - 1 - index) * 0.02 : index * 0.02;
-          
-          return (
-          <div
-            key={theme.name}
-            className="relative"
-            style={{
-              animation: `${isClosing ? 'slideOutToLeft' : 'slideInFromRight'} 0.12s ease-out forwards`,
-              animationDelay: `${delay}s`,
-              opacity: isClosing ? 1 : 0,
-            }}
-            onMouseEnter={() => !isClosing && setHoveredIndex(index)}
-            onMouseLeave={() => setHoveredIndex(null)}
-          >
-            {/* Tooltip with theme name - positioned above on mobile, below on desktop */}
-            {hoveredIndex === index && !isClosing && (
+      <div className="flex flex-row-reverse items-center gap-1.5 overflow-x-auto sm:overflow-x-visible overflow-y-visible scrollbar-hide max-w-[280px] sm:max-w-none py-2 snap-x snap-mandatory">
+        {(isOpen || isClosing) &&
+          themes.map((theme, index) => {
+            // Opening: cascade right to left (index 0, 1, 2...)
+            // Closing: cascade left to right (reverse order for mirror effect)
+            const delay = isClosing
+              ? (themes.length - 1 - index) * 0.02
+              : index * 0.02;
+
+            return (
               <div
-                className="absolute bottom-full mb-2 sm:bottom-auto sm:top-full sm:mb-0 sm:mt-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-surface text-text text-xs rounded shadow-lg border border-border whitespace-nowrap z-20 pointer-events-none"
+                key={theme.name}
+                className="relative snap-center"
                 style={{
-                  animation: 'fadeIn 0.08s ease-out',
+                  animation: `${isClosing ? "slideOutToLeft" : "slideInFromRight"} 0.12s ease-out forwards`,
+                  animationDelay: `${delay}s`,
+                  opacity: isClosing ? 1 : 0,
                 }}
+                onMouseEnter={() => !isClosing && setHoveredIndex(index)}
+                onMouseLeave={() => setHoveredIndex(null)}
               >
-                {theme.name}
+                {/* Tooltip with theme name - positioned above on mobile, below on desktop */}
+                {hoveredIndex === index && !isClosing && (
+                  <div
+                    className="absolute bottom-full mb-2 sm:bottom-auto sm:top-full sm:mb-0 sm:mt-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-surface text-text text-xs rounded shadow-lg border border-border whitespace-nowrap z-20 pointer-events-none"
+                    style={{
+                      animation: "fadeIn 0.08s ease-out",
+                    }}
+                  >
+                    {theme.name}
+                  </div>
+                )}
+
+                {/* Color dot - compact size across all screens */}
+                <button
+                  onClick={() => handleSelect(index)}
+                  disabled={isClosing}
+                  className={`w-6 h-6 rounded-full border transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-primary focus:ring-offset-background ${
+                    selectedIndex === index
+                      ? "border-primary shadow-md scale-110 ring-1 ring-primary ring-offset-1 ring-offset-background"
+                      : "border-border hover:border-primary"
+                  } ${isClosing ? "cursor-default" : ""}`}
+                  style={{
+                    backgroundColor: `hsl(${theme.light.primary})`,
+                  }}
+                  aria-label={`Select ${theme.name} theme`}
+                />
               </div>
-            )}
-            
-            {/* Color dot - compact size across all screens */}
-            <button
-              onClick={() => handleSelect(index)}
-              disabled={isClosing}
-              className={`w-6 h-6 rounded-full border transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-primary focus:ring-offset-background ${
-                selectedIndex === index 
-                  ? 'border-primary shadow-md scale-110 ring-1 ring-primary ring-offset-1 ring-offset-background' 
-                  : 'border-border hover:border-primary'
-              } ${isClosing ? 'cursor-default' : ''}`}
-              style={{ 
-                backgroundColor: `hsl(${theme.light.primary})`,
-              }}
-              aria-label={`Select ${theme.name} theme`}
-            />
-          </div>
-          );
-        })}
+            );
+          })}
       </div>
 
       {/* Theme picker icon button */}
@@ -111,8 +125,19 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
         aria-haspopup="menu"
         aria-expanded={isOpen}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-6 w-6"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
+          />
         </svg>
       </button>
 
@@ -128,7 +153,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
             transform: translateX(0);
           }
         }
-        
+
         @keyframes slideOutToLeft {
           from {
             opacity: 1;
@@ -139,7 +164,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
             transform: translateX(-20px);
           }
         }
-        
+
         @keyframes fadeIn {
           from {
             opacity: 0;
@@ -150,7 +175,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ themes, selectedIn
             transform: translateX(-50%) translateY(0);
           }
         }
-        
+
         /* Hide scrollbar but keep functionality */
         .scrollbar-hide {
           -ms-overflow-style: none;
