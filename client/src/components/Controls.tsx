@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { KEYS, CHORD_COUNTS, COMMON_PROGRESSIONS } from '@/constants';
 import { CustomSelect } from './CustomSelect';
 import { ModeSelect } from './ModeSelect';
@@ -55,14 +55,25 @@ export const Controls: React.FC<ControlsProps> = ({
   detectedMode,
 }) => {
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const timersRef = useRef<NodeJS.Timeout[]>([]);
+
+  // Cleanup timers on unmount
+  useEffect(() => {
+    return () => {
+      timersRef.current.forEach(timer => clearTimeout(timer));
+      timersRef.current = [];
+    };
+  }, []);
 
   const handleCustomToggle = (enabled: boolean) => {
     if (onCustomChange) {
       setIsTransitioning(true);
-      setTimeout(() => {
+      const timer1 = setTimeout(() => {
         onCustomChange(enabled);
-        setTimeout(() => setIsTransitioning(false), 300);
+        const timer2 = setTimeout(() => setIsTransitioning(false), 300);
+        timersRef.current.push(timer2);
       }, 50);
+      timersRef.current.push(timer1);
     }
   };
 

@@ -23,6 +23,17 @@ export async function getSharedRedisClient(): Promise<RedisClientType | null> {
     return sharedRedisClient;
   }
 
+  // Clean up existing client if it exists but is disconnected
+  if (sharedRedisClient) {
+    try {
+      sharedRedisClient.removeAllListeners();
+      await sharedRedisClient.quit().catch(() => {});
+    } catch {
+      // Ignore cleanup errors
+    }
+    sharedRedisClient = null;
+  }
+
   try {
     sharedRedisClient = createClient({
       url: process.env.REDIS_URL || 'redis://localhost:6379',
@@ -48,6 +59,9 @@ export async function getSharedRedisClient(): Promise<RedisClientType | null> {
     return sharedRedisClient;
   } catch (error) {
     logger.warn('Failed to connect to shared Redis client', { error });
+    if (sharedRedisClient) {
+      sharedRedisClient.removeAllListeners();
+    }
     sharedRedisClient = null;
     isRedisConnected = false;
     return null;

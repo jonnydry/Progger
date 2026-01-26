@@ -41,6 +41,7 @@ const MINOR_SCALE_CHORDS = [
 /**
  * Detect the most likely key from a set of chords
  * Uses a scoring system based on how well chords fit major/minor scale patterns
+ * Includes tiebreakers: prefers keys where the first chord is the tonic
  */
 export function detectKey(chords: ChordInput[]): { key: string; mode: 'major' | 'minor' } | null {
   if (chords.length === 0) return null;
@@ -75,7 +76,45 @@ export function detectKey(chords: ChordInput[]): { key: string; mode: 'major' | 
 }
 
 /**
+ * Calculate tiebreaker bonus for key detection
+ * Prefers keys where:
+ * 1. The first chord is the tonic (strongest indicator)
+ * 2. The first chord with matching quality is the tonic
+ */
+function calculateTiebreakerBonus(
+  chords: ChordInput[],
+  keyRoot: string,
+  keyRootValue: number,
+  mode: 'major' | 'minor'
+): number {
+  let bonus = 0;
+
+  if (chords.length === 0) return 0;
+
+  const firstChord = chords[0];
+  const firstChordRootValue = noteToValue(firstChord.root);
+  const firstChordInterval = (firstChordRootValue - keyRootValue + 12) % 12;
+
+  // Strong bonus if first chord is the tonic
+  if (firstChordInterval === 0) {
+    // Extra bonus if quality matches expected tonic quality
+    const expectedTonicQualities = mode === 'major'
+      ? ['major', 'maj7', '6', 'maj9', 'maj13', 'add9']
+      : ['minor', 'min7', 'min9', 'min11', 'min/maj7'];
+
+    if (expectedTonicQualities.includes(firstChord.quality)) {
+      bonus += 0.5; // Strong match - first chord is proper tonic
+    } else {
+      bonus += 0.3; // Partial match - first chord is on tonic but different quality
+    }
+  }
+
+  return bonus;
+}
+
+/**
  * Score how well a set of chords fits a particular key
+ * Includes tiebreaker bonus for first-chord-as-tonic
  */
 function scoreKeyFit(
   chords: ChordInput[],
@@ -114,6 +153,9 @@ function scoreKeyFit(
       score -= 0.5;
     }
   }
+
+  // Add tiebreaker bonus to help distinguish between equally-fitting keys
+  score += calculateTiebreakerBonus(chords, keyRoot, keyRootValue, mode);
 
   return score;
 }

@@ -114,15 +114,17 @@ describe('Smart Chord Suggestions', () => {
       expect(result.quality).toBeTruthy();
     });
 
-    it('should remember last chord quality', () => {
+    it('should suggest dominant chord when key is detected from single chord', () => {
       const chords: ChordInput[] = [
         { root: 'A', quality: 'min7' },
       ];
 
       const result = getSmartDefaultChord(chords);
 
-      // Should use min7 quality from the last chord
-      expect(result.quality).toContain('min'); // Should be some minor variant
+      // A min7 suggests A minor key, so the function should suggest the dominant (E7)
+      // This is musically correct - the V chord naturally follows the i chord
+      expect(result.root).toBe('E');
+      expect(result.quality).toBe('7'); // Dominant 7th
     });
   });
 });

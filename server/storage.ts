@@ -14,6 +14,31 @@ import { redisCache } from "./cache";
 // In-memory cache for frequently accessed user data (short TTL)
 const userCache = new Map<string, { user: User; expires: number }>();
 const USER_CACHE_TTL = 60 * 1000; // 60 seconds
+const USER_CACHE_MAX_SIZE = 1000; // Maximum number of users to cache in memory
+
+/**
+ * Add an entry to the user cache with size limit enforcement
+ */
+function setUserCache(id: string, user: User): void {
+  // If cache is at max size, remove oldest/expired entries
+  if (userCache.size >= USER_CACHE_MAX_SIZE) {
+    const now = Date.now();
+    // First, remove expired entries
+    for (const [key, value] of userCache) {
+      if (value.expires <= now) {
+        userCache.delete(key);
+      }
+    }
+    // If still at max, remove oldest entry (first in Map)
+    if (userCache.size >= USER_CACHE_MAX_SIZE) {
+      const oldestKey = userCache.keys().next().value;
+      if (oldestKey) {
+        userCache.delete(oldestKey);
+      }
+    }
+  }
+  userCache.set(id, { user, expires: Date.now() + USER_CACHE_TTL });
+}
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -39,7 +64,7 @@ export class DatabaseStorage implements IStorage {
       if (cachedUser) {
         logger.debug("User Redis cache hit", { userId: id });
         // Update in-memory cache
-        userCache.set(id, { user: cachedUser, expires: Date.now() + USER_CACHE_TTL });
+        setUserCache(id, cachedUser);
         return cachedUser;
       }
 
@@ -49,7 +74,7 @@ export class DatabaseStorage implements IStorage {
       if (user) {
         // Cache in both Redis (longer TTL) and memory (shorter TTL)
         await redisCache.set(cacheKey, user, 300); // 5 minutes in Redis
-        userCache.set(id, { user, expires: Date.now() + USER_CACHE_TTL });
+        setUserCache(id, user);
       }
       
       return user;

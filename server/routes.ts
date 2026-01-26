@@ -292,6 +292,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next(err);
   });
 
+  // Global error handling middleware - catches all unhandled errors
+  app.use((err: any, req: any, res: any, _next: any) => {
+    const requestId = req.id || 'unknown';
+    logger.error('Unhandled error', {
+      requestId,
+      error: err.message || 'Unknown error',
+      stack: process.env.NODE_ENV === 'development' ? err.stack : undefined,
+      path: req.path,
+      method: req.method,
+    });
+
+    // Don't leak error details in production
+    const message = process.env.NODE_ENV === 'development'
+      ? err.message
+      : 'An unexpected error occurred';
+
+    res.status(err.status || 500).json({
+      error: message,
+      requestId,
+    });
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

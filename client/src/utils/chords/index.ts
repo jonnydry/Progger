@@ -168,7 +168,7 @@ export async function getChordVoicingsAsync(
 export function extractVoicingNotes(voicing: ChordVoicing): Set<number> {
   const noteValues = new Set<number>();
   const usesRelativeFormat =
-    voicing.firstFret !== undefined && voicing.firstFret > 1;
+    voicing.firstFret !== undefined && voicing.firstFret >= 1;
 
   voicing.frets.forEach((fret, stringIndex) => {
     if (typeof fret === "number") {

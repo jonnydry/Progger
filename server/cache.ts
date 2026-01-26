@@ -9,7 +9,11 @@ class RedisCache {
 
   constructor() {
     // Initialize connection asynchronously using shared Redis client
-    this.connect();
+    this.connect().catch(err => {
+      logger.error('Unexpected error during Redis cache initialization', { error: err });
+      this.isConnected = false;
+      this.client = null;
+    });
   }
 
   private async connect() {

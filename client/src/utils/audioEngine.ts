@@ -136,12 +136,16 @@ export function playChord(root: string, quality: string, duration: number = 1.5,
  * @param progression - Array of chords to play
  * @param onChordStart - Callback called when each chord starts playing (with index)
  * @param onComplete - Callback called when the entire progression finishes
+ * @returns Cleanup function to cancel playback and clear all scheduled timeouts
  */
 export function playProgression(
     progression: Array<{ root: string; quality: string }>,
     onChordStart?: (index: number) => void,
     onComplete?: () => void
-) {
+): () => void {
+    const timeoutIds: NodeJS.Timeout[] = [];
+    let isCancelled = false;
+
     try {
         const context = getAudioContext();
         const now = context.currentTime;
@@ -160,19 +164,27 @@ export function playProgression(
             // if we calculate the delay from now.
             const delayMs = (startTime - now) * 1000;
 
-            setTimeout(() => {
-                if (onChordStart) onChordStart(index);
+            const timeoutId = setTimeout(() => {
+                if (!isCancelled && onChordStart) onChordStart(index);
             }, delayMs);
+            timeoutIds.push(timeoutId);
         });
 
         // Schedule completion callback
         const totalDurationMs = (progression.length * (chordDuration + gap)) * 1000;
-        setTimeout(() => {
-            if (onComplete) onComplete();
+        const completionTimeoutId = setTimeout(() => {
+            if (!isCancelled && onComplete) onComplete();
         }, totalDurationMs);
+        timeoutIds.push(completionTimeoutId);
 
     } catch (error) {
         console.error("Failed to play progression:", error);
         if (onComplete) onComplete();
     }
+
+    // Return cleanup function
+    return () => {
+        isCancelled = true;
+        timeoutIds.forEach(id => clearTimeout(id));
+    };
 }

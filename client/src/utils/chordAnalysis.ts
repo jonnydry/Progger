@@ -90,7 +90,8 @@ const INTERVAL_NAMES = [
   'b9', // 13: Minor 9th
   '9', // 14: Major 9th
   '#9', // 15: Augmented 9th
-  'b11', // 17: Minor 11th
+  'b11', // 16: Minor 11th / Augmented 10th
+  '11', // 17: Perfect 11th
   '#11', // 18: Augmented 11th
   '12', // 19: Perfect 12th
   'b13', // 20: Minor 13th
@@ -213,19 +214,22 @@ export function getChordNotes(chordName: string, rootOverride?: string): string[
  * Get scale degrees for a chord relative to a key
  * @param chordName - Full chord name
  * @param key - Musical key (e.g., "C", "F#")
- * @returns Array of scale degrees and interval descriptions
+ * @returns Array of scale degrees for each note in the chord
  */
 export function getChordScaleDegrees(chordName: string, key: string): string[] {
-  const { root } = parseChordName(chordName);
-  const formulaData = CHORD_FORMULAS[parseChordName(chordName).quality];
+  const { root, quality } = parseChordName(chordName);
+  const formulaData = CHORD_FORMULAS[quality];
 
   if (!formulaData) return ['Unknown'];
 
   const rootValue = noteToValue(root);
   const keyValue = noteToValue(key);
-  const rootInKeyContext = (rootValue - keyValue + 12) % 12;
 
-  return [SCALE_DEGREES[rootInKeyContext] || `Unknown (${rootInKeyContext})`];
+  // Return scale degrees for all notes in the chord
+  return formulaData.intervals.map(interval => {
+    const noteInKeyContext = (rootValue + interval - keyValue + 12) % 12;
+    return SCALE_DEGREES[noteInKeyContext] || `Unknown (${noteInKeyContext})`;
+  });
 }
 
 /**

@@ -345,9 +345,10 @@ export async function generateChordProgression(key: string, mode: string, includ
     console.error("Error generating chord progression:", createErrorLog(error, { key, mode, cacheKey }));
 
     // Handle API response validation errors
-    if (error instanceof Error && error.message.includes("Invalid data structure") ||
+    if (error instanceof Error && (
+        error.message.includes("Invalid data structure") ||
         error.message.includes("incomplete chord data") ||
-        error.message.includes("incomplete scale data")) {
+        error.message.includes("incomplete scale data"))) {
       throw new InvalidAPIResponseError(
         'ProgressionResult { progression: SimpleChord[], scales: SimpleScale[] }',
         error.message
@@ -593,9 +594,10 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
     console.error("Error analyzing custom progression:", createErrorLog(error, { chords, cacheKey }));
 
     // Handle API response validation errors
-    if (error instanceof Error && error.message.includes("Invalid data structure") ||
+    if (error instanceof Error && (
+        error.message.includes("Invalid data structure") ||
         error.message.includes("incomplete chord data") ||
-        error.message.includes("incomplete scale data")) {
+        error.message.includes("incomplete scale data"))) {
       throw new InvalidAPIResponseError(
         'ProgressionResult { progression: SimpleChord[], scales: SimpleScale[] }',
         error.message
