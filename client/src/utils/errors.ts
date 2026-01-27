@@ -234,48 +234,38 @@ function formatKeyToken(raw: string): string {
   return first + rest.toLowerCase();
 }
 
-async function buildLocalFallbackProgression(key: string, numChords: number, mode: string = 'major') {
-  // Extended fallback progressions with up to 7 chords each
-  // Pattern: I - vi - IV - V - ii - iii - I (for major)
-  // Pattern: i - iv - VII - III - VI - v - i (for minor)
-  const majorProgressions: Record<string, string[]> = {
-    'C': ['Cmaj7', 'Am7', 'Fmaj7', 'G7', 'Dm7', 'Em7', 'Cmaj7'],
-    'Db': ['Dbmaj7', 'Bbm7', 'Gbmaj7', 'Ab7', 'Ebm7', 'Fm7', 'Dbmaj7'],
-    'D': ['Dmaj7', 'Bm7', 'Gmaj7', 'A7', 'Em7', 'F#m7', 'Dmaj7'],
-    'Eb': ['Ebmaj7', 'Cm7', 'Abmaj7', 'Bb7', 'Fm7', 'Gm7', 'Ebmaj7'],
-    'E': ['Emaj7', 'C#m7', 'Amaj7', 'B7', 'F#m7', 'G#m7', 'Emaj7'],
-    'F': ['Fmaj7', 'Dm7', 'Bbmaj7', 'C7', 'Gm7', 'Am7', 'Fmaj7'],
-    'Gb': ['Gbmaj7', 'Ebm7', 'Cbmaj7', 'Db7', 'Abm7', 'Bbm7', 'Gbmaj7'],
-    'G': ['Gmaj7', 'Em7', 'Cmaj7', 'D7', 'Am7', 'Bm7', 'Gmaj7'],
-    'Ab': ['Abmaj7', 'Fm7', 'Dbmaj7', 'Eb7', 'Bbm7', 'Cm7', 'Abmaj7'],
-    'A': ['Amaj7', 'F#m7', 'Dmaj7', 'E7', 'Bm7', 'C#m7', 'Amaj7'],
-    'Bb': ['Bbmaj7', 'Gm7', 'Ebmaj7', 'F7', 'Cm7', 'Dm7', 'Bbmaj7'],
-    'B': ['Bmaj7', 'G#m7', 'Emaj7', 'F#7', 'C#m7', 'D#m7', 'Bmaj7']
+async function buildLocalFallbackProgression(key: string, numChords: number, mode: string = 'ionian') {
+  // Mode-specific chord progressions using diatonic chords
+  // Each mode has characteristic chord movements that highlight its unique intervals
+  const modeProgressions: Record<string, (key: string) => string[]> = {
+    'ionian': (k) => [`${k}maj7`, `${getRelativeNote(k, 9)}m7`, `${getRelativeNote(k, 5)}maj7`, `${getRelativeNote(k, 7)}7`, `${getRelativeNote(k, 2)}m7`, `${getRelativeNote(k, 4)}m7`, `${k}maj7`],
+    'dorian': (k) => [`${k}m7`, `${getRelativeNote(k, 2)}m7`, `${getRelativeNote(k, 3)}maj7`, `${getRelativeNote(k, 5)}7`, `${getRelativeNote(k, 7)}m7`, `${getRelativeNote(k, 10)}maj7`, `${k}m7`],
+    'phrygian': (k) => [`${k}m7`, `${getRelativeNote(k, 1)}maj7`, `${getRelativeNote(k, 3)}7`, `${getRelativeNote(k, 5)}m7`, `${getRelativeNote(k, 8)}maj7`, `${getRelativeNote(k, 10)}m7`, `${k}m7`],
+    'lydian': (k) => [`${k}maj7`, `${getRelativeNote(k, 2)}7`, `${getRelativeNote(k, 4)}m7`, `${getRelativeNote(k, 6)}m7b5`, `${getRelativeNote(k, 7)}maj7`, `${getRelativeNote(k, 9)}m7`, `${k}maj7`],
+    'mixolydian': (k) => [`${k}7`, `${getRelativeNote(k, 2)}m7`, `${getRelativeNote(k, 4)}m7b5`, `${getRelativeNote(k, 5)}maj7`, `${getRelativeNote(k, 7)}m7`, `${getRelativeNote(k, 10)}maj7`, `${k}7`],
+    'aeolian': (k) => [`${k}m7`, `${getRelativeNote(k, 2)}m7b5`, `${getRelativeNote(k, 3)}maj7`, `${getRelativeNote(k, 5)}m7`, `${getRelativeNote(k, 7)}m7`, `${getRelativeNote(k, 8)}maj7`, `${k}m7`],
+    'locrian': (k) => [`${k}m7b5`, `${getRelativeNote(k, 1)}maj7`, `${getRelativeNote(k, 3)}m7`, `${getRelativeNote(k, 5)}m7`, `${getRelativeNote(k, 6)}maj7`, `${getRelativeNote(k, 8)}7`, `${k}m7b5`]
+  };
+  
+  // Map mode names to scale library names
+  const scaleNameMap: Record<string, string> = {
+    'ionian': 'major',
+    'dorian': 'dorian',
+    'phrygian': 'phrygian',
+    'lydian': 'lydian',
+    'mixolydian': 'mixolydian',
+    'aeolian': 'minor',
+    'locrian': 'locrian'
   };
 
-  const minorProgressions: Record<string, string[]> = {
-    'C': ['Cm7', 'Fm7', 'Bbmaj7', 'Ebmaj7', 'Abmaj7', 'Gm7', 'Cm7'],
-    'C#': ['C#m7', 'F#m7', 'Bmaj7', 'Emaj7', 'Amaj7', 'G#m7', 'C#m7'],
-    'Db': ['Dbm7', 'Gbm7', 'Cbmaj7', 'Fbmaj7', 'Bbbmaj7', 'Abm7', 'Dbm7'],
-    'D': ['Dm7', 'Gm7', 'Cmaj7', 'Fmaj7', 'Bbmaj7', 'Am7', 'Dm7'],
-    'Eb': ['Ebm7', 'Abm7', 'Dbmaj7', 'Gbmaj7', 'Cbmaj7', 'Bbm7', 'Ebm7'],
-    'E': ['Em7', 'Am7', 'Dmaj7', 'Gmaj7', 'Cmaj7', 'Bm7', 'Em7'],
-    'F': ['Fm7', 'Bbm7', 'Ebmaj7', 'Abmaj7', 'Dbmaj7', 'Cm7', 'Fm7'],
-    'F#': ['F#m7', 'Bm7', 'Emaj7', 'Amaj7', 'Dmaj7', 'C#m7', 'F#m7'],
-    'G': ['Gm7', 'Cm7', 'Fmaj7', 'Bbmaj7', 'Ebmaj7', 'Dm7', 'Gm7'],
-    'Ab': ['Abm7', 'Dbm7', 'Gbmaj7', 'Cbmaj7', 'Fbmaj7', 'Ebm7', 'Abm7'],
-    'A': ['Am7', 'Dm7', 'Gmaj7', 'Cmaj7', 'Fmaj7', 'Em7', 'Am7'],
-    'Bb': ['Bbm7', 'Ebm7', 'Abmaj7', 'Dbmaj7', 'Gbmaj7', 'Fm7', 'Bbm7'],
-    'B': ['Bm7', 'Em7', 'Amaj7', 'Dmaj7', 'Gmaj7', 'F#m7', 'Bm7']
-  };
-
-  const source = mode === 'minor' ? minorProgressions : majorProgressions;
-  const normalizedKey = resolveEnharmonicKey(key, source);
-  const chordNames = source[normalizedKey];
+  const normalizedMode = mode.toLowerCase();
+  const progressionGenerator = modeProgressions[normalizedMode] || modeProgressions['ionian'];
+  const chordNames = progressionGenerator(key);
+  
   const { getChordVoicingsAsync } = await import('./chords/index');
   const { getScaleFingering, getScaleNotes } = await import('./scaleLibrary');
 
-  const scaleMode = mode === 'minor' ? 'minor' : 'major';
+  const scaleName = scaleNameMap[normalizedMode] || 'major';
 
   // Load voicings for all chords in parallel
   const voicingsPromises = chordNames.slice(0, numChords).map(chordName => 
@@ -291,43 +281,54 @@ async function buildLocalFallbackProgression(key: string, numChords: number, mod
       voicings: voicingsArrays[index]
     })),
     scales: [{
-      name: `${normalizedKey} ${scaleMode}`,
-      rootNote: normalizedKey,
-      notes: getScaleNotes(normalizedKey, scaleMode),
-      fingering: getScaleFingering(scaleMode, normalizedKey)
+      name: `${key} ${scaleName}`,
+      rootNote: key,
+      notes: getScaleNotes(key, scaleName),
+      fingering: getScaleFingering(scaleName, key)
     }]
   };
 }
 
+// Helper to get a note relative to root by semitones
+function getRelativeNote(root: string, semitones: number): string {
+  const noteOrder = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  const flatToSharp: Record<string, string> = {
+    'Db': 'C#', 'Eb': 'D#', 'Fb': 'E', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#', 'Cb': 'B'
+  };
+  
+  const normalizedRoot = flatToSharp[root] || root;
+  const rootIndex = noteOrder.indexOf(normalizedRoot);
+  if (rootIndex === -1) return root;
+  
+  const targetIndex = (rootIndex + semitones) % 12;
+  return noteOrder[targetIndex];
+}
+
 function normalizeMode(mode: string): string {
   const normalized = mode.toLowerCase();
-  if (normalized.includes('min')) {
-    return 'minor';
-  }
-  return 'major';
-}
-
-function resolveEnharmonicKey(key: string, source: Record<string, string[]>): string {
-  if (source[key]) {
-    return key;
-  }
-
-  const enharmonicMap: Record<string, string> = {
-    'C#': 'Db',
-    'D#': 'Eb',
-    'F#': 'Gb',
-    'G#': 'Ab',
-    'A#': 'Bb',
-    'Cb': 'B',
-    'B#': 'C',
-    'E#': 'F',
-    'Fb': 'E'
+  
+  // Handle full mode names (e.g., "Ionian (Major)" -> "ionian")
+  const modeMap: Record<string, string> = {
+    'ionian': 'ionian',
+    'dorian': 'dorian',
+    'phrygian': 'phrygian',
+    'lydian': 'lydian',
+    'mixolydian': 'mixolydian',
+    'aeolian': 'aeolian',
+    'locrian': 'locrian',
+    'major': 'ionian',
+    'minor': 'aeolian',
+    'natural minor': 'aeolian'
   };
-
-  const mapped = enharmonicMap[key];
-  if (mapped && source[mapped]) {
-    return mapped;
+  
+  // Check for mode keywords in the string
+  for (const [keyword, modeName] of Object.entries(modeMap)) {
+    if (normalized.includes(keyword)) {
+      return modeName;
+    }
   }
-
-  return 'C';
+  
+  // Default to ionian/major if no match
+  return 'ionian';
 }
+
