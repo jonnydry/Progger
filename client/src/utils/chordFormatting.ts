@@ -3,7 +3,7 @@
  * Handles all 40+ chord qualities with proper Unicode symbols
  */
 
-import { displayNote, noteToValue, getKeyAccidentalType } from './musicTheory';
+import { displayNote } from './musicTheory';
 
 /**
  * Format a chord name for display from root and quality
@@ -99,18 +99,6 @@ export function formatChordDisplayName(root: string, quality: string): string {
 }
 
 /**
- * Format root note for display (convert # and b to Unicode symbols)
- *
- * @param root - Root note (e.g., "C#", "Bb")
- * @returns Formatted root note (e.g., "C♯", "B♭")
- */
-export function formatRootNote(root: string): string {
-  return root
-    .replace(/#/g, '♯')
-    .replace(/b/g, '♭');
-}
-
-/**
  * Format a full chord name with Unicode symbols
  *
  * @param chordName - Full chord name (e.g., "C#maj7", "Bbm7b5")
@@ -156,15 +144,3 @@ export function formatChordDisplayNameForKey(
   return formatChordDisplayName(contextualRoot, quality);
 }
 
-/**
- * Get the appropriate root note spelling for a given key context
- * In flat keys (F, Bb, Eb, Ab, Db, Gb), use flat notation
- * In sharp keys (G, D, A, E, B, F#, C#), use sharp notation
- *
- * @param root - Root note (can be sharp or flat notation)
- * @param key - Musical key context
- * @returns Root note with context-appropriate spelling
- */
-export function getRootForKey(root: string, key: string): string {
-  return displayNote(root, key);
-}

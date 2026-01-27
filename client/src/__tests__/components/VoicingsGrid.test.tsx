@@ -48,7 +48,7 @@ describe('VoicingsGrid', () => {
   };
 
   it('should render loading skeleton when isLoading is true', () => {
-    render(
+    const { container } = render(
       <VoicingsGrid
         progression={[]}
         isLoading={true}
@@ -58,8 +58,8 @@ describe('VoicingsGrid', () => {
       />
     );
 
-    // Should show skeleton loaders
-    const skeletons = screen.queryAllByRole('status');
+    // Should show skeleton loaders (they have animate-pulse class)
+    const skeletons = container.querySelectorAll('.animate-pulse');
     expect(skeletons.length).toBeGreaterThan(0);
   });
 
@@ -74,9 +74,10 @@ describe('VoicingsGrid', () => {
       />
     );
 
-    // Should display chord names
-    expect(screen.getByText(/C/i)).toBeInTheDocument();
-    expect(screen.getByText(/Am/i)).toBeInTheDocument();
+    // Should display the progression heading
+    expect(screen.getByText(/Generated Progression/i)).toBeInTheDocument();
+    // The progression text (C - Am) should be visible
+    expect(screen.getByText(/C - Am/i)).toBeInTheDocument();
   });
 
   it('should display empty state when no progression', () => {
@@ -89,8 +90,9 @@ describe('VoicingsGrid', () => {
       />
     );
 
-    // Component should render without errors
-    expect(screen.getByRole('main') || document.body).toBeTruthy();
+    // Should display empty state message
+    expect(screen.getByText(/Your generated progression will appear here/i)).toBeInTheDocument();
+    expect(screen.getByText(/Select a key and mode/i)).toBeInTheDocument();
   });
 });
 

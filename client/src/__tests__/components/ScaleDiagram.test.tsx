@@ -34,12 +34,26 @@ describe("ScaleDiagram", () => {
   });
 
   it("renders modal toggle and view buttons", async () => {
+    // Mock mobile viewport for expand button to be visible
+    Object.defineProperty(window, "innerWidth", {
+      writable: true,
+      configurable: true,
+      value: 500,
+    });
+    window.dispatchEvent(new Event("resize"));
+
     render(<ScaleDiagram scaleInfo={mockScaleInfo()} musicalKey="C" />);
 
     expect(
       screen.getByRole("button", { name: /pattern/i }),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /map/i })).toBeInTheDocument();
+
+    // Wait for mobile detection effect to run
+    await vi.waitFor(() => {
+      const expandButton = screen.queryByLabelText(/expand to full view/i);
+      expect(expandButton).toBeInTheDocument();
+    });
 
     const expandButton = screen.getByLabelText(/expand to full view/i);
     fireEvent.click(expandButton);
@@ -48,6 +62,13 @@ describe("ScaleDiagram", () => {
     ).toBeInTheDocument();
     fireEvent.click(screen.getByText(/close/i));
     expect(screen.queryByTestId("scale-diagram-modal")).not.toBeInTheDocument();
+
+    // Restore window width
+    Object.defineProperty(window, "innerWidth", {
+      writable: true,
+      configurable: true,
+      value: 1024,
+    });
   });
 
   it("displays position selector when multiple positions exist", () => {

@@ -111,12 +111,6 @@ const App: React.FC = () => {
   }, [isLoading, progressionResult]);
 
   useEffect(() => {
-    (window as any).clearProgCache = () =>
-      console.log("Cache clearing is now handled by React Query");
-    console.log("💡 Debug: Cache is now handled by React Query");
-  }, []);
-
-  useEffect(() => {
     if (isCustomMode && customProgression.length > 0) {
       const detected = detectKey(customProgression);
       if (detected) {

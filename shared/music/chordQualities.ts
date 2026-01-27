@@ -187,9 +187,6 @@ export function resolveChordQuality(quality: string): {
     return { normalized: sanitized, recognized: true };
   }
 
-  console.warn(
-    `Unknown chord quality: "${quality}" - defaulting to major (sanitized = "${sanitized}")`
-  );
   return { normalized: 'major', recognized: false };
 }
 
