@@ -35,7 +35,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // CSRF token endpoint - provides token for client-side requests
   app.get('/api/csrf-token', (req, res) => {
     const token = generateToken(req);
-    res.json({ token });
+    // Explicitly save session to ensure token persists with saveUninitialized: false
+    req.session.save((err) => {
+      if (err) {
+        logger.error('Failed to save session for CSRF token', { error: err.message });
+        return res.status(500).json({ error: 'Failed to generate CSRF token' });
+      }
+      res.json({ token });
+    });
   });
 
   // Health check endpoint
