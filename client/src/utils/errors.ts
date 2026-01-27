@@ -235,16 +235,48 @@ function formatKeyToken(raw: string): string {
 }
 
 async function buildLocalFallbackProgression(key: string, numChords: number, mode: string = 'ionian') {
-  // Mode-specific chord progressions using diatonic chords
-  // Each mode has characteristic chord movements that highlight its unique intervals
-  const modeProgressions: Record<string, (key: string) => string[]> = {
-    'ionian': (k) => [`${k}maj7`, `${getRelativeNote(k, 9)}m7`, `${getRelativeNote(k, 5)}maj7`, `${getRelativeNote(k, 7)}7`, `${getRelativeNote(k, 2)}m7`, `${getRelativeNote(k, 4)}m7`, `${k}maj7`],
-    'dorian': (k) => [`${k}m7`, `${getRelativeNote(k, 2)}m7`, `${getRelativeNote(k, 3)}maj7`, `${getRelativeNote(k, 5)}7`, `${getRelativeNote(k, 7)}m7`, `${getRelativeNote(k, 10)}maj7`, `${k}m7`],
-    'phrygian': (k) => [`${k}m7`, `${getRelativeNote(k, 1)}maj7`, `${getRelativeNote(k, 3)}7`, `${getRelativeNote(k, 5)}m7`, `${getRelativeNote(k, 8)}maj7`, `${getRelativeNote(k, 10)}m7`, `${k}m7`],
-    'lydian': (k) => [`${k}maj7`, `${getRelativeNote(k, 2)}7`, `${getRelativeNote(k, 4)}m7`, `${getRelativeNote(k, 6)}m7b5`, `${getRelativeNote(k, 7)}maj7`, `${getRelativeNote(k, 9)}m7`, `${k}maj7`],
-    'mixolydian': (k) => [`${k}7`, `${getRelativeNote(k, 2)}m7`, `${getRelativeNote(k, 4)}m7b5`, `${getRelativeNote(k, 5)}maj7`, `${getRelativeNote(k, 7)}m7`, `${getRelativeNote(k, 10)}maj7`, `${k}7`],
-    'aeolian': (k) => [`${k}m7`, `${getRelativeNote(k, 2)}m7b5`, `${getRelativeNote(k, 3)}maj7`, `${getRelativeNote(k, 5)}m7`, `${getRelativeNote(k, 7)}m7`, `${getRelativeNote(k, 8)}maj7`, `${k}m7`],
-    'locrian': (k) => [`${k}m7b5`, `${getRelativeNote(k, 1)}maj7`, `${getRelativeNote(k, 3)}m7`, `${getRelativeNote(k, 5)}m7`, `${getRelativeNote(k, 6)}maj7`, `${getRelativeNote(k, 8)}7`, `${k}m7b5`]
+  // Diatonic chord qualities for each mode (I through VII)
+  // Each mode uses specific chord qualities based on its scale degrees
+  // All seven modes share the same diatonic 7th chord pattern (rotated from Ionian):
+  // Ionian chord pattern: maj7, m7, m7, maj7, 7, m7, m7b5
+  // Each mode is the same pattern starting from a different degree
+  const modeChordQualities: Record<string, string[]> = {
+    // Ionian (I): maj7-m7-m7-maj7-7-m7-m7b5
+    'ionian': ['maj7', 'm7', 'm7', 'maj7', '7', 'm7', 'm7b5'],
+    // Dorian (II): m7-m7-maj7-7-m7-m7b5-maj7
+    'dorian': ['m7', 'm7', 'maj7', '7', 'm7', 'm7b5', 'maj7'],
+    // Phrygian (III): m7-maj7-7-m7-m7b5-maj7-m7
+    'phrygian': ['m7', 'maj7', '7', 'm7', 'm7b5', 'maj7', 'm7'],
+    // Lydian (IV): maj7-7-m7-m7b5-maj7-m7-m7
+    'lydian': ['maj7', '7', 'm7', 'm7b5', 'maj7', 'm7', 'm7'],
+    // Mixolydian (V): 7-m7-m7b5-maj7-m7-m7-maj7
+    'mixolydian': ['7', 'm7', 'm7b5', 'maj7', 'm7', 'm7', 'maj7'],
+    // Aeolian (VI): m7-m7b5-maj7-m7-m7-maj7-7
+    'aeolian': ['m7', 'm7b5', 'maj7', 'm7', 'm7', 'maj7', '7'],
+    // Locrian (VII): m7b5-maj7-m7-m7-maj7-7-m7
+    'locrian': ['m7b5', 'maj7', 'm7', 'm7', 'maj7', '7', 'm7']
+  };
+
+  // Mode scale intervals (semitones from root for each degree)
+  const modeIntervals: Record<string, number[]> = {
+    'ionian': [0, 2, 4, 5, 7, 9, 11],
+    'dorian': [0, 2, 3, 5, 7, 9, 10],
+    'phrygian': [0, 1, 3, 5, 7, 8, 10],
+    'lydian': [0, 2, 4, 6, 7, 9, 11],
+    'mixolydian': [0, 2, 4, 5, 7, 9, 10],
+    'aeolian': [0, 2, 3, 5, 7, 8, 10],
+    'locrian': [0, 1, 3, 5, 6, 8, 10]
+  };
+
+  // Characteristic progression patterns for each mode (scale degree indices 0-6)
+  const modeProgressionPatterns: Record<string, number[]> = {
+    'ionian': [0, 5, 3, 4, 1, 2, 0],      // I-vi-IV-V-ii-iii-I
+    'dorian': [0, 3, 6, 4, 0, 3, 0],      // i-IV-bVII-v-i-IV-i (highlight major IV)
+    'phrygian': [0, 1, 0, 3, 5, 1, 0],    // i-bII-i-iv-bVI-bII-i (highlight bII)
+    'lydian': [0, 1, 4, 5, 0, 1, 0],      // I-II-V-vi-I-II-I (highlight II major)
+    'mixolydian': [0, 6, 3, 4, 0, 6, 0],  // I-bVII-IV-v-I-bVII-I (highlight bVII)
+    'aeolian': [0, 3, 6, 5, 4, 0, 3],     // i-iv-bVII-bVI-v-i-iv
+    'locrian': [0, 1, 4, 5, 1, 0, 1]      // i°-bII-bV-bVI-bII-i°-bII
   };
   
   // Map mode names to scale library names
@@ -259,8 +291,17 @@ async function buildLocalFallbackProgression(key: string, numChords: number, mod
   };
 
   const normalizedMode = mode.toLowerCase();
-  const progressionGenerator = modeProgressions[normalizedMode] || modeProgressions['ionian'];
-  const chordNames = progressionGenerator(key);
+  const qualities = modeChordQualities[normalizedMode] || modeChordQualities['ionian'];
+  const intervals = modeIntervals[normalizedMode] || modeIntervals['ionian'];
+  const pattern = modeProgressionPatterns[normalizedMode] || modeProgressionPatterns['ionian'];
+  
+  // Build chord names from pattern
+  const chordNames = pattern.map(degreeIndex => {
+    const semitones = intervals[degreeIndex];
+    const root = getRelativeNote(key, semitones);
+    const quality = qualities[degreeIndex];
+    return `${root}${quality}`;
+  });
   
   const { getChordVoicingsAsync } = await import('./chords/index');
   const { getScaleFingering, getScaleNotes } = await import('./scaleLibrary');
@@ -289,15 +330,27 @@ async function buildLocalFallbackProgression(key: string, numChords: number, mod
   };
 }
 
-// Helper to get a note relative to root by semitones
+// Helper to get a note relative to root by semitones (with enharmonic normalization)
 function getRelativeNote(root: string, semitones: number): string {
-  const noteOrder = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-  const flatToSharp: Record<string, string> = {
-    'Db': 'C#', 'Eb': 'D#', 'Fb': 'E', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#', 'Cb': 'B'
+  // Use sharps for sharp keys, flats for flat keys
+  const sharpNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  const flatNotes = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+  
+  // Determine if root is a flat key
+  const flatKeys = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb'];
+  const useFlats = flatKeys.includes(root) || root.includes('b');
+  
+  const noteOrder = useFlats ? flatNotes : sharpNotes;
+  
+  // Normalize root for lookup
+  const enharmonicMap: Record<string, string> = {
+    'Db': 'C#', 'Eb': 'D#', 'Fb': 'E', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#', 'Cb': 'B',
+    'C#': 'C#', 'D#': 'D#', 'F#': 'F#', 'G#': 'G#', 'A#': 'A#'
   };
   
-  const normalizedRoot = flatToSharp[root] || root;
-  const rootIndex = noteOrder.indexOf(normalizedRoot);
+  const normalizedRoot = enharmonicMap[root] || root;
+  const lookupNotes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  const rootIndex = lookupNotes.indexOf(normalizedRoot);
   if (rootIndex === -1) return root;
   
   const targetIndex = (rootIndex + semitones) % 12;
