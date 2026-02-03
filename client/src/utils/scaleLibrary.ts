@@ -471,6 +471,30 @@ const A_MELODIC_MINOR_3NPS: number[][][] = [
 ];
 
 /**
+ * Generated 3NPS patterns for additional 7-note scales
+ * Uses the same 3NPS system as major/minor modes with 7 positions.
+ */
+const F_LYDIAN_DOMINANT_3NPS = generate3NPSPositions(
+  [0, 2, 4, 6, 7, 9, 10],
+  noteToValue("F"),
+);
+
+const E_PHRYGIAN_DOMINANT_3NPS = generate3NPSPositions(
+  [0, 1, 4, 5, 7, 8, 10],
+  noteToValue("E"),
+);
+
+const C_ALTERED_3NPS = generate3NPSPositions(
+  [0, 1, 3, 4, 6, 8, 10],
+  noteToValue("C"),
+);
+
+const A_HUNGARIAN_MINOR_3NPS = generate3NPSPositions(
+  [0, 2, 3, 6, 7, 8, 11],
+  noteToValue("A"),
+);
+
+/**
  * A Minor Pentatonic patterns (5 boxes)
  * A Minor Pentatonic notes: A(9), C(0), D(2), E(4), G(7)
  * Intervals: 0, 3, 5, 7, 10
@@ -952,27 +976,16 @@ export const SCALE_LIBRARY: ScaleLibrary = {
    */
   altered: {
     intervals: [0, 1, 3, 4, 6, 8, 10],
-    fingerings: [
-      // Position 1 - around frets 7-10
-      [
-        [7, 8, 10], // Low E
-        [7, 9, 10], // A
-        [6, 8, 10], // D
-        [7, 9, 11], // G
-        [7, 9, 10], // B
-        [7, 8, 10], // High E
-      ],
-      // Position 2 - around frets 10-13
-      [
-        [8, 10, 12],
-        [9, 10, 12],
-        [8, 10, 12],
-        [9, 11, 12],
-        [9, 10, 12],
-        [8, 10, 12],
-      ],
+    fingerings: C_ALTERED_3NPS,
+    positions: [
+      "Position 1",
+      "Position 2",
+      "Position 3",
+      "Position 4",
+      "Position 5",
+      "Position 6",
+      "Position 7",
     ],
-    positions: ["Position 1", "Position 2"],
   },
 
   /**
@@ -983,28 +996,16 @@ export const SCALE_LIBRARY: ScaleLibrary = {
    */
   "phrygian dominant": {
     intervals: [0, 1, 4, 5, 7, 8, 10],
-    fingerings: [
-      // Position 1 - open position for E Phrygian Dominant
-      // E Phrygian Dom: E(4), F(5), G#(8), A(9), B(11), C(0), D(2)
-      [
-        [0, 1, 4], // Low E: E(4), F(5), G#(8) ✓
-        [0, 2, 3], // A: A(9), B(11), C(0) ✓
-        [0, 2, 3], // D: D(2), E(4), F(5) ✓
-        [1, 2, 4], // G: G#(8), A(9), B(11) ✓
-        [0, 1, 3], // B: B(11), C(0), D(2) ✓
-        [0, 1, 4], // High E: E(4), F(5), G#(8) ✓
-      ],
-      // Position 2
-      [
-        [1, 4, 5],
-        [2, 3, 5],
-        [2, 3, 6],
-        [2, 4, 5],
-        [1, 3, 5],
-        [1, 4, 5],
-      ],
+    fingerings: E_PHRYGIAN_DOMINANT_3NPS,
+    positions: [
+      "Position 1",
+      "Position 2",
+      "Position 3",
+      "Position 4",
+      "Position 5",
+      "Position 6",
+      "Position 7",
     ],
-    positions: ["Position 1", "Position 2"],
   },
 
   /**
@@ -1015,36 +1016,16 @@ export const SCALE_LIBRARY: ScaleLibrary = {
    */
   "lydian dominant": {
     intervals: [0, 2, 4, 6, 7, 9, 10],
-    fingerings: [
-      // Position 1
-      [
-        [1, 3, 5], // Low E: F(5), G(7), A(9)
-        [2, 4, 5], // A: B(11), C#→wait, Lydian dom of F has: F G A B C D Eb
-        [2, 3, 5], // Let me recalc: F(5), G(7), A(9), B(11), C(0), D(2), Eb(3)
-        [2, 4, 5],
-        [1, 3, 5],
-        [1, 3, 5],
-      ],
-      // Recalculating F Lydian Dominant: F(5), G(7), A(9), B(11), C(0), D(2), Eb(3)
-      [
-        [1, 3, 5], // Low E: F(5), G(7), A(9) ✓
-        [2, 4, 5], // A: B(11), C(0), D(2) - A+2=11=B✓, A+3=0=C✓, A+5=2=D✓
-        [1, 3, 5], // D: Eb(3), F(5), G(7) - D+1=3=Eb✓, D+3=5=F✓, D+5=7=G✓
-        [2, 4, 5], // G: A(9), B(11), C(0) ✓
-        [1, 3, 4], // B: C(0), D(2), Eb(3) - B+1=0=C✓, B+3=2=D✓, B+4=3=Eb✓
-        [1, 3, 5], // High E: F(5), G(7), A(9) ✓
-      ],
-      // Position 2
-      [
-        [5, 7, 8],
-        [5, 7, 9],
-        [5, 7, 8],
-        [5, 7, 9],
-        [5, 7, 8],
-        [5, 7, 8],
-      ],
+    fingerings: F_LYDIAN_DOMINANT_3NPS,
+    positions: [
+      "Position 1",
+      "Position 2",
+      "Position 3",
+      "Position 4",
+      "Position 5",
+      "Position 6",
+      "Position 7",
     ],
-    positions: ["Position 1", "Position 2"],
   },
 
   /**
@@ -1056,26 +1037,16 @@ export const SCALE_LIBRARY: ScaleLibrary = {
   "bebop dominant": {
     intervals: [0, 2, 4, 5, 7, 9, 10, 11],
     fingerings: [
-      // Position 1 - C bebop dominant around frets 7-10
       [
-        [7, 8, 9, 10], // Low E: B(11), C(0), Db→no. B(7), C(8), D(10)...
-        [7, 8, 10], // Let me recalc. C bebop dom: C D E F G A Bb B
-        [7, 9, 10], // Chromatic: 0, 2, 4, 5, 7, 9, 10, 11
-        [7, 9, 10],
-        [8, 9, 10],
-        [7, 8, 9, 10],
-      ],
-      // Proper position 1 for C bebop dominant
-      [
-        [7, 8, 10], // Low E: B(11), C(0), D(2) ✓
-        [7, 8, 9, 10], // A: E(4), F(5), Gb→no. A+7=4=E, A+8=5=F, A+9=6=F#, A+10=7=G. Need Bb at 10? A+10=7=G. Hmm
-        [7, 9, 10], // The 8-note bebop scale is tricky for 3NPS
-        [7, 9, 10],
-        [8, 10, 11],
-        [7, 8, 10],
+        [7, 8, 10], // Low E: B(11), C(0), D(2)
+        [7, 8, 10, 12], // A: E(4), F(5), G(7), A(9)
+        [7, 9, 10], // D: A(9), B(11), C(0)
+        [7, 9, 10], // G: D(2), E(4), F(5)
+        [8, 10, 11], // B: G(7), A(9), Bb(10)
+        [7, 8, 10], // High E: B(11), C(0), D(2)
       ],
     ],
-    positions: ["Position 1", "Position 2"],
+    positions: ["Position 1"],
   },
 
   /**
@@ -1087,26 +1058,16 @@ export const SCALE_LIBRARY: ScaleLibrary = {
   "bebop major": {
     intervals: [0, 2, 4, 5, 7, 8, 9, 11],
     fingerings: [
-      // Position 1
       [
-        [7, 8, 9, 10],
-        [7, 8, 10],
-        [7, 9, 10],
-        [7, 9, 10],
-        [8, 10],
-        [7, 8, 9, 10],
-      ],
-      // Position 2
-      [
-        [8, 9, 10, 12],
-        [8, 10, 12],
-        [9, 10, 12],
-        [9, 10, 12],
-        [10, 12],
-        [8, 9, 10, 12],
+        [7, 8, 10], // Low E: B(11), C(0), D(2)
+        [7, 8, 10, 11], // A: E(4), F(5), G(7), G#(8)
+        [7, 9, 10], // D: A(9), B(11), C(0)
+        [7, 9, 10], // G: D(2), E(4), F(5)
+        [8, 9, 10], // B: G(7), G#(8), A(9)
+        [7, 8, 10], // High E: B(11), C(0), D(2)
       ],
     ],
-    positions: ["Position 1", "Position 2"],
+    positions: ["Position 1"],
   },
 
   /**
@@ -1116,28 +1077,16 @@ export const SCALE_LIBRARY: ScaleLibrary = {
    */
   "hungarian minor": {
     intervals: [0, 2, 3, 6, 7, 8, 11],
-    fingerings: [
-      // A Hungarian Minor: A(9), B(11), C(0), D#(3), E(4), F(5), G#(8)
-      // Position 1 - around fret 5
-      [
-        [4, 5, 7], // Low E: G#(8), A(9), B(11) ✓
-        [3, 5, 7], // A: C(0), D#(3), E(4) - A+3=0=C✓, A+6=3=D#✓, A+7=4=E✓
-        [5, 6, 9], // D: G#(8), A(9), B(11) - D+6=8=G#✓, D+7=9=A✓, D+9=11=B✓
-        [5, 7, 8], // G: C(0), D#(3), E(4) - G+5=0=C✓, G+8=3=D#✓, G+9=4=E✓
-        [5, 6, 8], // B: E(4), F(5), G#(8) ✓
-        [4, 5, 7], // High E: G#(8), A(9), B(11) ✓
-      ],
-      // Position 2 - around fret 12
-      [
-        [11, 12, 14],
-        [10, 12, 14],
-        [11, 12, 14],
-        [12, 14, 15],
-        [12, 13, 15],
-        [11, 12, 14],
-      ],
+    fingerings: A_HUNGARIAN_MINOR_3NPS,
+    positions: [
+      "Position 1",
+      "Position 2",
+      "Position 3",
+      "Position 4",
+      "Position 5",
+      "Position 6",
+      "Position 7",
     ],
-    positions: ["Position 1", "Position 2"],
   },
 
   /**
@@ -1145,25 +1094,16 @@ export const SCALE_LIBRARY: ScaleLibrary = {
    */
   gypsy: {
     intervals: [0, 2, 3, 6, 7, 8, 11],
-    fingerings: [
-      [
-        [4, 5, 7],
-        [3, 5, 7],
-        [5, 6, 9],
-        [5, 7, 8],
-        [5, 6, 8],
-        [4, 5, 7],
-      ],
-      [
-        [11, 12, 14],
-        [10, 12, 14],
-        [11, 12, 14],
-        [12, 14, 15],
-        [12, 13, 15],
-        [11, 12, 14],
-      ],
+    fingerings: A_HUNGARIAN_MINOR_3NPS,
+    positions: [
+      "Position 1",
+      "Position 2",
+      "Position 3",
+      "Position 4",
+      "Position 5",
+      "Position 6",
+      "Position 7",
     ],
-    positions: ["Position 1", "Position 2"],
   },
 
   /**
@@ -1171,25 +1111,16 @@ export const SCALE_LIBRARY: ScaleLibrary = {
    */
   "super locrian": {
     intervals: [0, 1, 3, 4, 6, 8, 10],
-    fingerings: [
-      [
-        [7, 8, 10],
-        [7, 9, 10],
-        [6, 8, 10],
-        [7, 9, 11],
-        [7, 9, 10],
-        [7, 8, 10],
-      ],
-      [
-        [8, 10, 12],
-        [9, 10, 12],
-        [8, 10, 12],
-        [9, 11, 12],
-        [9, 10, 12],
-        [8, 10, 12],
-      ],
+    fingerings: C_ALTERED_3NPS,
+    positions: [
+      "Position 1",
+      "Position 2",
+      "Position 3",
+      "Position 4",
+      "Position 5",
+      "Position 6",
+      "Position 7",
     ],
-    positions: ["Position 1", "Position 2"],
   },
 };
 

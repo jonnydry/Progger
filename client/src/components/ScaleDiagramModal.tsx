@@ -132,6 +132,11 @@ const PositionSelector: React.FC<{
   );
 });
 
+const extractScaleDescriptor = (scaleName: string): string | null => {
+  const match = scaleName.trim().match(/^([A-G][#b]?)(?:\s+)(.+)$/i);
+  return match ? match[2] : null;
+};
+
 const ScaleDiagramModal: React.FC<ScaleDiagramModalProps> = ({ scaleInfo, musicalKey, isOpen, onClose }) => {
   const { name, rootNote, notes } = scaleInfo;
   const [viewMode, setViewMode] = useState<'pattern' | 'map'>('pattern');
@@ -170,10 +175,22 @@ const ScaleDiagramModal: React.FC<ScaleDiagramModalProps> = ({ scaleInfo, musica
     return getSortedPositions(scaleData);
   }, [name]);
 
+  // Reset or clamp position when scale changes
+  React.useEffect(() => {
+    if (availablePositions.length === 0) {
+      setCurrentPosition(0);
+      return;
+    }
+    setCurrentPosition((prev) =>
+      prev >= availablePositions.length ? availablePositions.length - 1 : prev
+    );
+  }, [availablePositions]);
+
   // Display scale name
   const displayedScaleName = useMemo(() => {
     const displayRootNote = displayNote(rootNote, musicalKey);
-    return name.replace(rootNote, displayRootNote);
+    const descriptor = extractScaleDescriptor(name);
+    return descriptor ? `${displayRootNote} ${descriptor}` : name;
   }, [name, rootNote, musicalKey]);
 
   const visibleInlays = useMemo(() => [...INLAY_FRETS, ...DOUBLE_INLAY_FRETS], []);
@@ -344,4 +361,3 @@ const ScaleDiagramModal: React.FC<ScaleDiagramModalProps> = ({ scaleInfo, musica
 };
 
 export default React.memo(ScaleDiagramModal);
-

@@ -66,7 +66,7 @@ function getFromCache(cacheKey: string): ProgressionResult | null {
 function enforceCacheLimits(): void {
   try {
     const keys = Object.keys(localStorage).filter(k => 
-      k.startsWith('progression:') || k.startsWith('progression-')
+      k.startsWith('progression:') || k.startsWith('progression-') || k.startsWith('custom:')
     );
     
     if (keys.length > MAX_CACHE_ENTRIES) {
@@ -140,7 +140,7 @@ function clearExpiredCache(): void {
 
     keys.forEach(key => {
       // Check for both old format (progression-) and new format (progression:)
-      if (key.startsWith('progression-') || key.startsWith('progression:')) {
+      if (key.startsWith('progression-') || key.startsWith('progression:') || key.startsWith('custom:')) {
         try {
           const entry: CacheEntry = JSON.parse(localStorage.getItem(key)!);
           if (now - entry.timestamp >= entry.ttl) {
@@ -164,7 +164,7 @@ export function clearAllProgressionCache(): void {
     let cleared = 0;
     
     keys.forEach(key => {
-      if (key.startsWith('progression-') || key.startsWith('progression:')) {
+      if (key.startsWith('progression-') || key.startsWith('progression:') || key.startsWith('custom:')) {
         localStorage.removeItem(key);
         cleared++;
       }
@@ -189,10 +189,8 @@ export async function generateChordProgression(key: string, mode: string, includ
   try {
     console.log("Fetching from backend API:", cacheKey);
 
-    // Create a timeout promise that rejects after 30 seconds
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Request timed out after 30 seconds')), 30000);
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
 
     // Race between the fetch and the timeout
     let response: Response;
@@ -201,23 +199,23 @@ export async function generateChordProgression(key: string, mode: string, includ
         'Content-Type': 'application/json',
       });
       
-      response = await Promise.race([
-        fetch('/api/generate-progression', {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            key,
-            mode,
-            includeTensions,
-            numChords,
-            selectedProgression,
-          }),
+      response = await fetch('/api/generate-progression', {
+        method: 'POST',
+        headers,
+        signal: controller.signal,
+        body: JSON.stringify({
+          key,
+          mode,
+          includeTensions,
+          numChords,
+          selectedProgression,
         }),
-        timeoutPromise
-      ]) as Response;
+      });
     } catch (error) {
       // Network-level failure
       throw new APIUnavailableError('/api/generate-progression', undefined);
+    } finally {
+      clearTimeout(timeoutId);
     }
 
     if (!response.ok) {
@@ -416,9 +414,16 @@ async function fetchWithRetry(
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
+      if (options.signal?.aborted) {
+        throw new DOMException('Request aborted', 'AbortError');
+      }
       return await fetch(url, options);
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
+
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        throw error;
+      }
 
       // Only retry on network errors (TypeError), not on other errors
       if (!(error instanceof TypeError)) {
@@ -449,10 +454,8 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
   try {
     console.log("Analyzing custom progression:", chords);
 
-    // Create a timeout promise that rejects after 30 seconds
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Request timed out after 30 seconds')), 30000);
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
 
     // Race between the fetch (with retries) and the timeout
     let response: Response;
@@ -461,17 +464,17 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
         'Content-Type': 'application/json',
       });
 
-      response = await Promise.race([
-        fetchWithRetry('/api/analyze-custom-progression', {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({ chords }),
-        }, 3, 1000), // 3 retries with 1s initial delay
-        timeoutPromise
-      ]) as Response;
+      response = await fetchWithRetry('/api/analyze-custom-progression', {
+        method: 'POST',
+        headers,
+        signal: controller.signal,
+        body: JSON.stringify({ chords }),
+      }, 3, 1000); // 3 retries with 1s initial delay
     } catch (error) {
       // Network-level failure after retries
       throw new APIUnavailableError('/api/analyze-custom-progression', undefined);
+    } finally {
+      clearTimeout(timeoutId);
     }
 
     if (!response.ok) {

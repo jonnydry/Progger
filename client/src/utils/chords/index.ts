@@ -12,13 +12,16 @@
 import type { ChordVoicing } from "../../types";
 import type { ChordKey } from "./types";
 import { loadChordsByRoot } from "./loader";
-import { normalizeChordQuality } from "@shared/music/chordQualities";
+import { splitChordName } from "@shared/music/chordQualities";
 import {
   STANDARD_TUNING_VALUES,
   noteToValue,
   valueToNote,
 } from "../musicTheory";
 import { getChordNotes } from "../chordAnalysis";
+
+const isDevEnv =
+  typeof import.meta !== "undefined" && Boolean(import.meta.env?.DEV);
 
 // Re-export loader utilities
 export { preloadCommonKeys, getCacheStats, clearChordCache } from "./loader";
@@ -63,30 +66,19 @@ function extractRootAndQuality(chordName: string): {
   quality: string;
   bassNote?: string;
 } {
-  const match = chordName.match(/^([A-G][#b]?)(.*)/i);
-  if (!match) return { root: "C", quality: "major" };
-
-  const [, rawRoot, rawSuffix] = match;
-
-  // Check for slash chord (e.g., "maj7/E")
-  const slashIndex = rawSuffix.indexOf("/");
-  const qualitySegment =
-    slashIndex >= 0 ? rawSuffix.substring(0, slashIndex) : rawSuffix;
-  const bassNote =
-    slashIndex >= 0 ? rawSuffix.substring(slashIndex + 1) : undefined;
+  const parsed = splitChordName(chordName);
+  const root = normalizeRoot(parsed.root);
+  const quality = parsed.quality;
+  const bassNote = parsed.bass;
 
   // Log warning if bass note is present (currently not used in voicing selection)
   if (bassNote) {
     console.info(
-      `Slash chord detected: "${chordName}". Showing voicings for ${rawRoot}${qualitySegment} (bass note /${bassNote} not enforced)`,
+      `Slash chord detected: "${chordName}". Showing voicings for ${parsed.root}${quality} (bass note /${bassNote} not enforced)`,
     );
   }
 
-  return {
-    root: normalizeRoot(rawRoot),
-    quality: normalizeChordQuality(qualitySegment),
-    bassNote,
-  };
+  return { root, quality, bassNote };
 }
 
 /**
@@ -218,7 +210,7 @@ function validateVoicingNotesWithExpected(
   const isValid = matchRatio >= 0.5;
 
   // Development mode warning for invalid voicings
-  if (!isValid && import.meta.env.DEV) {
+  if (!isValid && isDevEnv) {
     const voicingNoteNames = Array.from(voicingNotes).map((v) =>
       valueToNote(v),
     );
@@ -380,7 +372,7 @@ async function findVoicingsByTransposition(
           );
 
         if (transposedVoicings.length > 0) {
-          if (import.meta.env.DEV) {
+          if (isDevEnv) {
             console.log(
               `✓ Transposed ${sourceRoot}${targetQuality === "major" ? "" : targetQuality} → ${targetChordName} (${semitoneOffset} semitones)`,
             );

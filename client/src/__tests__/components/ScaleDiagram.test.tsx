@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { ScaleDiagram } from "@/components/ScaleDiagram";
 import { SkeletonScaleDiagram } from "@/components/SkeletonScaleDiagram";
 import type { ScaleInfo } from "@/types";
@@ -87,5 +87,57 @@ describe("ScaleDiagram", () => {
     render(<ScaleDiagram scaleInfo={multiPositionScale} musicalKey="C" />);
 
     expect(screen.getByText(/Pos:/)).toBeInTheDocument();
+  });
+
+  it("clamps selected position when scale changes to fewer positions", async () => {
+    const { rerender } = render(
+      <ScaleDiagram scaleInfo={mockScaleInfo()} musicalKey="C" />,
+    );
+
+    fireEvent.click(screen.getByRole("tab", { name: /position 7/i }));
+
+    const wholeTone: ScaleInfo = {
+      name: "C Whole Tone",
+      rootNote: "C",
+      notes: ["C", "D", "E", "F#", "G#", "A#"],
+      fingering: [
+        [2, 4, 6],
+        [3, 5, 7],
+        [4, 6, 8],
+        [5, 7, 9],
+        [5, 7, 9],
+        [2, 4, 6],
+      ],
+    };
+
+    rerender(<ScaleDiagram scaleInfo={wholeTone} musicalKey="C" />);
+
+    await waitFor(() => {
+      const position2 = screen.getByRole("tab", { name: /position 2/i });
+      expect(position2).toHaveAttribute("aria-pressed", "true");
+    });
+  });
+
+  it("uses rootNote for displayed scale name when enharmonic differs", () => {
+    render(
+      <ScaleDiagram
+        scaleInfo={{
+          name: "A# Major",
+          rootNote: "Bb",
+          notes: ["Bb", "C", "D", "Eb", "F", "G", "A"],
+          fingering: [
+            [6, 8, 10],
+            [6, 8, 10],
+            [7, 8, 10],
+            [7, 8, 10],
+            [8, 10, 11],
+            [6, 8, 10],
+          ],
+        }}
+        musicalKey="Bb"
+      />,
+    );
+
+    expect(screen.getByText("Bb Major")).toBeInTheDocument();
   });
 });

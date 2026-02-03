@@ -170,6 +170,11 @@ const PositionSelector: React.FC<{
   );
 });
 
+const extractScaleDescriptor = (scaleName: string): string | null => {
+  const match = scaleName.trim().match(/^([A-G][#b]?)(?:\s+)(.+)$/i);
+  return match ? match[2] : null;
+};
+
 const ScaleDiagram: React.FC<ScaleDiagramProps> = ({
   scaleInfo,
   musicalKey,
@@ -267,6 +272,17 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({
     setCurrentPosition(bestMobilePosition ?? 0);
   }, [bestMobilePosition]);
 
+  // Clamp current position if the available positions change (e.g., new scale)
+  React.useEffect(() => {
+    if (availablePositions.length === 0) {
+      setCurrentPosition(0);
+      return;
+    }
+    if (currentPosition >= availablePositions.length) {
+      setCurrentPosition(availablePositions.length - 1);
+    }
+  }, [availablePositions, currentPosition]);
+
   // Generate position-aware fingering
   const currentFingering = useMemo(() => {
     return getScaleFingering(name, rootNote, currentPosition);
@@ -280,7 +296,8 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({
   // Display scale name with context-aware root note
   const displayedScaleName = useMemo(() => {
     const displayRootNote = displayNote(rootNote, musicalKey);
-    return name.replace(rootNote, displayRootNote);
+    const descriptor = extractScaleDescriptor(name);
+    return descriptor ? `${displayRootNote} ${descriptor}` : name;
   }, [name, rootNote, musicalKey]);
 
   return (

@@ -160,9 +160,9 @@ export const C_CHORDS: ChordVoicingsMap = {
   ],
   'C_min/maj7': [
     { frets: ['x', 3, 1, 0, 0, 3], position: 'Open' },
-    { frets: ['x', 'x', 1, 4, 4, 3], firstFret: 3, position: 'Partial 5th' },
+    { frets: ['x', 3, 5, 4, 4, 3], position: 'Partial 5th' },
     { frets: ['x', 1, 3, 2, 2, 1], firstFret: 3, position: 'Barre 3rd' },
-    { frets: ['x', 'x', 1, 1, 2, 3], firstFret: 10, position: 'Rootless 10th' },
+    { frets: [1, 3, 2, 1, 1, 1], firstFret: 8, position: 'Barre 8th' },
   ],
   'C_min11': [
     { frets: ['x', 3, 1, 3, 3, 1], position: 'Open' },

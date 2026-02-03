@@ -33,6 +33,7 @@ const CHORD_FORMULAS: Record<string, { formula: string; intervals: number[] }> =
   '7': { formula: '1-3-5-♭7', intervals: [0, 4, 7, 10] },
   'maj7': { formula: '1-3-5-7', intervals: [0, 4, 7, 11] },
   'min7': { formula: '1-♭3-5-♭7', intervals: [0, 3, 7, 10] },
+  'min/maj7': { formula: '1-♭3-5-7', intervals: [0, 3, 7, 11] },
   'dim7': { formula: '1-♭3-♭5-♭♭7', intervals: [0, 3, 6, 9] },
   'min7b5': { formula: '1-♭3-♭5-♭7', intervals: [0, 3, 6, 10] },
 
@@ -141,7 +142,7 @@ const COMMON_SCALES: Record<string, number[]> = {
   'pentatonic minor': [0, 3, 5, 7, 10],
   'blues': [0, 3, 5, 6, 7, 10],
   'whole tone': [0, 2, 4, 6, 8, 10],
-  'diminished': [0, 2, 3, 5, 6, 8, 9, 11],
+  'diminished': [0, 1, 3, 4, 6, 7, 9, 10],
   'altered': [0, 1, 3, 4, 6, 8, 10],
   'bebop dominant': [0, 2, 4, 5, 7, 9, 10, 11],
 };

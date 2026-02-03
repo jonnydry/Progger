@@ -274,6 +274,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       logger.info("Stash item deleted", { requestId: req.id, userId, itemId: id });
       res.status(204).send();
     } catch (error) {
+      if (error instanceof Error && error.message.includes('not found or unauthorized')) {
+        logger.warn("Stash item not found or unauthorized", {
+          requestId: req.id,
+          userId: (req.user as AuthenticatedUser)?.claims?.sub,
+          itemId: req.params.id,
+        });
+        return res.status(404).json({ message: "Stash item not found" });
+      }
       logger.error("Error deleting stash item", error, {
         requestId: req.id,
         userId: (req.user as AuthenticatedUser)?.claims?.sub,

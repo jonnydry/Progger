@@ -384,4 +384,3 @@ function normalizeMode(mode: string): string {
   // Default to ionian/major if no match
   return 'ionian';
 }
-
