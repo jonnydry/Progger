@@ -18,7 +18,7 @@ export const NoteDot: React.FC<NoteDotProps> = React.memo(({
     onMouseLeave
 }) => {
     // Swapped colors: Root gets Primary (Vibrant), Others get Secondary (Less vibrant)
-    const rootClasses = "bg-primary text-background shadow-[0_0_10px_rgba(var(--color-primary),0.5)] scale-110";
+    const rootClasses = "bg-primary text-background shadow-[0_0_10px_hsl(var(--color-primary)_/_0.5)] scale-110";
     const noteClasses = "bg-secondary text-background opacity-90";
 
     return (

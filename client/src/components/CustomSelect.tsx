@@ -114,7 +114,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
     <div className="flex flex-col" ref={selectRef}>
       <label
         htmlFor={label}
-        className={`mb-2 text-sm font-semibold ${disabled ? "text-text/40" : "text-text/70"}`}
+        className={`mb-1.5 text-[11px] sm:text-xs font-semibold uppercase tracking-wide ${disabled ? "text-text/40" : "text-text/70"}`}
       >
         {label}
       </label>
@@ -123,7 +123,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         id={label}
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
-        className={`relative text-left bg-background border-2 border-border rounded-md px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary transition w-full flex justify-between items-center shadow-inner ${disabled ? "bg-text/5 text-text/50 cursor-not-allowed" : "hover:border-primary/50"}`}
+        className={`relative min-h-[44px] text-left bg-background border-2 border-border rounded-md px-3 py-2.5 text-sm sm:text-base text-text focus:outline-none focus:ring-2 focus:ring-primary transition w-full flex justify-between items-center shadow-inner ${disabled ? "bg-text/5 text-text/50 cursor-not-allowed" : "hover:border-primary/50"}`}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         disabled={disabled}
@@ -150,7 +150,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         createPortal(
           <ul
             ref={dropdownRef}
-            className="fixed bg-surface rounded-md shadow-lg border border-border max-h-60 overflow-y-auto"
+            className="fixed bg-surface rounded-md shadow-lg border border-border max-h-72 overflow-y-auto text-sm sm:text-base"
             style={{
               top: `${dropdownPosition.top}px`,
               left: `${dropdownPosition.left}px`,
@@ -170,7 +170,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                 <li
                   key={optionValue}
                   onClick={() => handleSelect(optionValue)}
-                  className={`px-3 py-2 cursor-pointer text-text hover:bg-primary/80 hover:text-background transition-colors ${isSelected ? "bg-primary text-background font-semibold" : ""}`}
+                  className={`px-3 py-2.5 cursor-pointer text-text hover:bg-primary/80 hover:text-background transition-colors ${isSelected ? "bg-primary text-background font-semibold" : ""}`}
                   role="option"
                   aria-selected={isSelected}
                 >

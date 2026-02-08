@@ -75,7 +75,7 @@ export const ChordInputCard: React.FC<ChordInputCardProps> = ({
       className={`
         p-3 md:p-4 space-y-3 transition-all duration-300
         ${isPlaying
-          ? 'border-accent shadow-[0_0_15px_rgba(var(--accent),0.3)] scale-[1.02] z-10'
+          ? 'border-accent shadow-[0_0_15px_hsl(var(--color-accent)_/_0.3)] scale-[1.02] z-10'
           : 'hover:border-primary/30'
         }
       `}

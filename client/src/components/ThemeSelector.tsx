@@ -15,6 +15,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [isTouchInput, setIsTouchInput] = useState(false);
   const selectRef = useRef<HTMLDivElement>(null);
   const currentTheme = themes[selectedIndex];
 
@@ -62,65 +63,95 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
     };
   }, [isOpen, isClosing]);
 
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(hover: none), (pointer: coarse)");
+    const updateTouchInput = () => setIsTouchInput(mediaQuery.matches);
+    updateTouchInput();
+
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", updateTouchInput);
+      return () => mediaQuery.removeEventListener("change", updateTouchInput);
+    }
+
+    mediaQuery.addListener(updateTouchInput);
+    return () => mediaQuery.removeListener(updateTouchInput);
+  }, []);
+
   return (
     <div className="relative flex items-center" ref={selectRef}>
-      {/* Theme dots - single horizontal row with scroll on mobile only */}
-      <div className="flex flex-row-reverse items-center gap-1.5 overflow-x-auto sm:overflow-x-visible overflow-y-visible scrollbar-hide max-w-[280px] sm:max-w-none py-2 snap-x snap-mandatory">
-        {(isOpen || isClosing) &&
-          themes.map((theme, index) => {
-            // Opening: cascade right to left (index 0, 1, 2...)
-            // Closing: cascade left to right (reverse order for mirror effect)
-            const delay = isClosing
-              ? (themes.length - 1 - index) * 0.02
-              : index * 0.02;
+      {(isOpen || isClosing) && (
+        <div className="absolute right-0 top-full mt-2 z-30 w-[min(80vw,22rem)] rounded-lg border border-border bg-surface/95 backdrop-blur-sm shadow-lg px-2 py-2">
+          <div className="flex items-start gap-2 overflow-x-auto overflow-y-visible scrollbar-hide snap-x snap-mandatory">
+            {themes.map((theme, index) => {
+              // Opening: cascade right to left (index 0, 1, 2...)
+              // Closing: cascade left to right (reverse order for mirror effect)
+              const delay = isClosing
+                ? (themes.length - 1 - index) * 0.02
+                : index * 0.02;
 
-            return (
-              <div
-                key={theme.name}
-                className="relative snap-center"
-                style={{
-                  animation: `${isClosing ? "slideOutToLeft" : "slideInFromRight"} 0.12s ease-out forwards`,
-                  animationDelay: `${delay}s`,
-                  opacity: isClosing ? 1 : 0,
-                }}
-                onMouseEnter={() => !isClosing && setHoveredIndex(index)}
-                onMouseLeave={() => setHoveredIndex(null)}
-              >
-                {/* Tooltip with theme name - positioned above on mobile, below on desktop */}
-                {hoveredIndex === index && !isClosing && (
-                  <div
-                    className="absolute bottom-full mb-2 sm:bottom-auto sm:top-full sm:mb-0 sm:mt-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-surface text-text text-xs rounded shadow-lg border border-border whitespace-nowrap z-20 pointer-events-none"
-                    style={{
-                      animation: "fadeIn 0.08s ease-out",
-                    }}
-                  >
-                    {theme.name}
-                  </div>
-                )}
-
-                {/* Color dot - compact size across all screens */}
-                <button
-                  onClick={() => handleSelect(index)}
-                  disabled={isClosing}
-                  className={`w-6 h-6 rounded-full border transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-primary focus:ring-offset-background ${
-                    selectedIndex === index
-                      ? "border-primary shadow-md scale-110 ring-1 ring-primary ring-offset-1 ring-offset-background"
-                      : "border-border hover:border-primary"
-                  } ${isClosing ? "cursor-default" : ""}`}
+              return (
+                <div
+                  key={theme.name}
+                  className="relative snap-center shrink-0 flex flex-col items-center min-w-[2.25rem]"
                   style={{
-                    backgroundColor: `hsl(${theme.light.primary})`,
+                    animation: `${isClosing ? "slideOutToLeft" : "slideInFromRight"} 0.12s ease-out forwards`,
+                    animationDelay: `${delay}s`,
+                    opacity: isClosing ? 1 : 0,
                   }}
-                  aria-label={`Select ${theme.name} theme`}
-                />
-              </div>
-            );
-          })}
-      </div>
+                  onMouseEnter={() => !isClosing && setHoveredIndex(index)}
+                  onMouseLeave={() => setHoveredIndex(null)}
+                >
+                  {/* Tooltip for mouse/keyboard users */}
+                  {!isTouchInput && hoveredIndex === index && !isClosing && (
+                    <div
+                      className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-surface text-text text-xs rounded shadow-lg border border-border whitespace-nowrap z-20 pointer-events-none"
+                      style={{
+                        animation: "fadeIn 0.08s ease-out",
+                      }}
+                    >
+                      {theme.name}
+                    </div>
+                  )}
+
+                  {/* Color dot - compact size across all screens */}
+                  <button
+                    onClick={() => handleSelect(index)}
+                    onFocus={() => setHoveredIndex(index)}
+                    onBlur={() => setHoveredIndex(null)}
+                    disabled={isClosing}
+                    className={`w-6 h-6 rounded-full border transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-primary focus:ring-offset-background ${
+                      selectedIndex === index
+                        ? "border-primary shadow-md scale-110 ring-1 ring-primary ring-offset-1 ring-offset-background"
+                        : "border-border hover:border-primary"
+                    } ${isClosing ? "cursor-default" : ""}`}
+                    style={{
+                      backgroundColor: `hsl(${theme.light.primary})`,
+                    }}
+                    aria-label={`Select ${theme.name} theme`}
+                  />
+
+                  {isTouchInput && (
+                    <span
+                      className={`mt-1 text-[10px] leading-none whitespace-nowrap ${
+                        selectedIndex === index
+                          ? "text-text font-semibold"
+                          : "text-text/70"
+                      }`}
+                    >
+                      {theme.name}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Theme picker icon button */}
       <button
         onClick={handleToggle}
-        className="flex items-center space-x-2 p-2 rounded-full text-text/70 hover:bg-surface hover:text-text focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-background transition-all duration-300 ml-2"
+        className="flex items-center space-x-2 p-1.5 sm:p-2 rounded-full text-text/70 hover:bg-surface hover:text-text focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-background transition-all duration-300"
         aria-label={`Change theme color. Current is ${currentTheme.name}`}
         aria-haspopup="menu"
         aria-expanded={isOpen}

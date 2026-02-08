@@ -125,7 +125,7 @@ export const ModeSelect: React.FC<ModeSelectProps> = ({ label, value, onChange }
 
   return (
     <div className="flex flex-col" ref={selectRef}>
-      <label htmlFor={label} className="mb-2 text-sm font-semibold text-text/70">
+      <label htmlFor={label} className="mb-1.5 text-[11px] sm:text-xs font-semibold uppercase tracking-wide text-text/70">
         {label}
       </label>
       <button
@@ -133,7 +133,7 @@ export const ModeSelect: React.FC<ModeSelectProps> = ({ label, value, onChange }
         id={label}
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative text-left bg-background border-2 border-border rounded-md px-3 py-2 text-text focus:outline-none focus:ring-2 focus:ring-primary transition w-full flex justify-between items-center shadow-inner hover:border-primary/50"
+        className="relative min-h-[44px] text-left bg-background border-2 border-border rounded-md px-3 py-2.5 text-sm sm:text-base text-text focus:outline-none focus:ring-2 focus:ring-primary transition w-full flex justify-between items-center shadow-inner hover:border-primary/50"
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >
@@ -146,7 +146,7 @@ export const ModeSelect: React.FC<ModeSelectProps> = ({ label, value, onChange }
       {isOpen && createPortal(
         <ul
           ref={dropdownRef}
-          className="fixed z-50 bg-surface rounded-md shadow-lg border border-border max-h-80 overflow-y-auto"
+          className="fixed z-50 bg-surface rounded-md shadow-lg border border-border max-h-80 overflow-y-auto text-sm sm:text-base"
           style={{
             top: `${dropdownPosition.top}px`,
             left: `${dropdownPosition.left}px`,

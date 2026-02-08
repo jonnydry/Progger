@@ -93,10 +93,10 @@ const ViewToggle: React.FC<{
   setViewMode: (mode: "pattern" | "map") => void;
 }> = React.memo(({ viewMode, setViewMode }) => {
   return (
-    <div className="flex items-center space-x-2 bg-text/10 p-1 rounded-md">
+    <div className="flex items-center gap-1 sm:gap-2 bg-text/10 p-1 rounded-md">
       <button
         onClick={() => setViewMode("pattern")}
-        className={`px-3 py-1 text-sm font-semibold rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background ${
+        className={`px-2 sm:px-3 py-1 text-xs sm:text-sm font-semibold rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background ${
           viewMode === "pattern"
             ? "bg-surface shadow"
             : "text-text/60 hover:text-text"
@@ -108,7 +108,7 @@ const ViewToggle: React.FC<{
       </button>
       <button
         onClick={() => setViewMode("map")}
-        className={`px-3 py-1 text-sm font-semibold rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background ${
+        className={`px-2 sm:px-3 py-1 text-xs sm:text-sm font-semibold rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background ${
           viewMode === "map"
             ? "bg-surface shadow"
             : "text-text/60 hover:text-text"
@@ -146,14 +146,14 @@ const PositionSelector: React.FC<{
   };
 
   return (
-    <div className="flex items-center space-x-1 bg-text/10 p-1 rounded-md">
-      <span className="text-sm text-text/70 px-2">Pos:</span>
+    <div className="flex items-center gap-1 bg-text/10 p-1 rounded-md">
+      <span className="hidden sm:inline text-sm text-text/70 px-2">Pos:</span>
       {positions.map((position, index) => (
         <button
           key={index}
           onClick={() => setCurrentPosition(index)}
           onKeyDown={handleKeyDown}
-          className={`px-2 py-1 text-sm font-semibold rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background ${
+          className={`px-1.5 sm:px-2 py-1 text-xs sm:text-sm font-semibold rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background ${
             currentPosition === index
               ? "bg-secondary text-background shadow"
               : "text-text/60 hover:text-text hover:bg-surface/50"
@@ -303,11 +303,11 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({
   return (
     <>
       <div className="flex flex-col items-center w-full max-w-4xl mx-auto">
-        <div className="w-full flex justify-between items-center mb-3 px-1">
-          <h2 className="text-lg md:text-xl font-semibold text-text/90">
+        <div className="w-full flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-3 px-1">
+          <h2 className="text-base sm:text-lg md:text-xl leading-tight font-semibold text-text/90">
             {displayedScaleName}
           </h2>
-          <div className="flex items-center space-x-2">
+          <div className="w-full sm:w-auto flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-0">
             <PositionSelector
               positions={availablePositions}
               currentPosition={currentPosition}
@@ -317,7 +317,7 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({
             {isMobile && (
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="p-2 rounded-md bg-text/10 hover:bg-text/20 text-text/70 hover:text-text transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
+                className="p-1.5 sm:p-2 rounded-md bg-text/10 hover:bg-text/20 text-text/70 hover:text-text transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
                 aria-label="Expand to full view"
                 title="View full fretboard"
               >

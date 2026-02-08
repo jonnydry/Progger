@@ -77,23 +77,27 @@ export const GlassmorphicHeader: React.FC<GlassmorphicHeaderProps> = ({
       className="sticky top-0 w-full"
       style={{ ...headerStyle, zIndex: Z_INDEX.stickyHeader }}
     >
-      <div className="container mx-auto px-4 py-3">
-        <div className="flex items-center justify-between">
+      <div className="container mx-auto px-3 sm:px-4 py-3">
+        <div className="flex items-center justify-between gap-2">
           {/* Logo / Brand */}
-          <div className="flex items-center space-x-2">
-            <img src={proggerLogo} alt="Progger mascot" className="h-12 w-12" />
-            <h1 className="font-grotesk text-lg sm:text-2xl font-bold text-text/90 tracking-tight">
+          <div className="flex items-center space-x-2 min-w-0">
+            <img
+              src={proggerLogo}
+              alt="Progger mascot"
+              className="h-10 w-10 sm:h-12 sm:w-12 shrink-0"
+            />
+            <h1 className="font-grotesk text-base sm:text-2xl font-bold text-text/90 tracking-tight truncate">
               PROGGER
             </h1>
           </div>
 
           {/* Right Side Controls */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0 min-w-0">
             {/* Stash Button - Only show for logged in users */}
             {userProfile && onStashClick && (
               <button
                 onClick={onStashClick}
-                className="p-2 rounded-full text-text/70 hover:bg-surface/50 hover:text-text transition-all duration-300"
+                className="p-1.5 sm:p-2 rounded-full text-text/70 hover:bg-surface/50 hover:text-text transition-all duration-300"
                 aria-label="Open stash"
               >
                 <svg
@@ -123,7 +127,7 @@ export const GlassmorphicHeader: React.FC<GlassmorphicHeaderProps> = ({
             {/* Dark/Light Mode Toggle */}
             <button
               onClick={toggleTheme}
-              className="p-2 rounded-full text-text/70 hover:bg-surface/50 hover:text-text transition-all duration-300"
+              className="p-1.5 sm:p-2 rounded-full text-text/70 hover:bg-surface/50 hover:text-text transition-all duration-300"
               aria-label="Toggle theme"
             >
               {theme === "dark" ? (
@@ -164,7 +168,7 @@ export const GlassmorphicHeader: React.FC<GlassmorphicHeaderProps> = ({
               <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                  className="flex items-center space-x-2 p-2 rounded-full text-text/70 hover:bg-surface/50 hover:text-text transition-all duration-300"
+                  className="flex items-center space-x-2 p-1.5 sm:p-2 rounded-full text-text/70 hover:bg-surface/50 hover:text-text transition-all duration-300"
                   aria-label="User menu"
                   aria-expanded={isUserMenuOpen}
                   aria-haspopup="true"
@@ -213,7 +217,7 @@ export const GlassmorphicHeader: React.FC<GlassmorphicHeaderProps> = ({
                     <button
                       onClick={() => {
                         setIsUserMenuOpen(false);
-                        onLogout();
+                        onLogout?.();
                       }}
                       className="w-full text-left px-4 py-2 text-sm text-text/80 hover:bg-primary/20 hover:text-primary transition-colors"
                     >
@@ -225,7 +229,7 @@ export const GlassmorphicHeader: React.FC<GlassmorphicHeaderProps> = ({
             ) : (
               <button
                 onClick={onLogin}
-                className="px-4 py-2 rounded-full bg-primary/90 hover:bg-primary text-background font-medium transition-all duration-300 shadow-md hover:shadow-lg"
+                className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-primary/90 hover:bg-primary text-background text-sm sm:text-base font-medium transition-all duration-300 shadow-md hover:shadow-lg whitespace-nowrap"
               >
                 Sign In
               </button>

@@ -81,9 +81,9 @@ export const Controls: React.FC<ControlsProps> = ({
     <div className="relative overflow-hidden">
       {/* Standard Controls */}
       <div
-        className={`space-y-4 md:space-y-6 transition-all duration-500 ease-in-out ${isCustomMode ? 'translate-x-[-100%] opacity-0 pointer-events-none absolute inset-0' : 'translate-x-0 opacity-100'}`}
+        className={`space-y-5 md:space-y-6 transition-all duration-500 ease-in-out ${isCustomMode ? 'translate-x-[-100%] opacity-0 pointer-events-none absolute inset-0' : 'translate-x-0 opacity-100'}`}
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
           <CustomSelect
             label="Key"
             value={selectedKey}
@@ -96,7 +96,7 @@ export const Controls: React.FC<ControlsProps> = ({
             onChange={onModeChange}
           />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
           <CustomSelect
             label="Progression"
             value={selectedProgression}
@@ -112,8 +112,8 @@ export const Controls: React.FC<ControlsProps> = ({
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 pt-2">
-          <div className="flex items-center justify-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6 pt-1 sm:pt-2">
+          <div className="flex items-center justify-start md:justify-center">
             <ToggleSwitch
               id="advanced-chords-toggle"
               label="Advanced Chords"
@@ -123,7 +123,7 @@ export const Controls: React.FC<ControlsProps> = ({
             />
           </div>
 
-          <div className="flex items-center justify-center">
+          <div className="flex items-center justify-start md:justify-center">
             {onCustomChange && (
               <ToggleSwitch
                 id="custom-toggle"
@@ -139,7 +139,7 @@ export const Controls: React.FC<ControlsProps> = ({
           <PixelButton
             onClick={onGenerate}
             isLoading={isLoading}
-            className="w-full py-3 px-4 text-base"
+            className="w-full py-3 px-4 text-sm sm:text-base"
           >
             {isLoading ? 'Generating...' : 'Generate Progression'}
           </PixelButton>
@@ -149,9 +149,9 @@ export const Controls: React.FC<ControlsProps> = ({
       {/* Custom Progression Input */}
       {onCustomProgressionChange && onNumCustomChordsChange && onAnalyzeCustom && (
         <div
-          className={`space-y-4 md:space-y-6 transition-all duration-500 ease-in-out ${!isCustomMode ? 'translate-x-[100%] opacity-0 pointer-events-none absolute inset-0' : 'translate-x-0 opacity-100'}`}
+          className={`space-y-5 md:space-y-6 transition-all duration-500 ease-in-out ${!isCustomMode ? 'translate-x-[100%] opacity-0 pointer-events-none absolute inset-0' : 'translate-x-0 opacity-100'}`}
         >
-          <div className="flex items-center justify-center gap-4 md:gap-6 pt-2">
+          <div className="flex items-center justify-start md:justify-center gap-4 md:gap-6 pt-1 sm:pt-2">
             {onCustomChange && (
               <ToggleSwitch
                 id="custom-toggle-back"

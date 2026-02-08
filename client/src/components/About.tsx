@@ -15,7 +15,8 @@ export const About: React.FC<AboutProps> = ({ onBackClick }) => {
           <img
             src={proggerMascot}
             alt="Progger Mascot"
-            className="w-24 h-auto mx-auto mb-4 pixelated"
+            className="w-24 h-auto mx-auto mb-4"
+            style={{ imageRendering: "pixelated" }}
           />
           <h1 className="font-grotesk text-4xl font-bold text-text mb-2 tracking-wider">
             ABOUT PROGGER

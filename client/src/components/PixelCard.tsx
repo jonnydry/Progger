@@ -1,8 +1,7 @@
 import React from "react";
 
-interface PixelCardProps {
+interface PixelCardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
-  className?: string;
   noAnimate?: boolean;
   cornerColor?: "primary" | "accent" | "secondary"; // Themeable corner color
 }
@@ -12,11 +11,13 @@ export const PixelCard: React.FC<PixelCardProps> = ({
   className = "",
   noAnimate = false,
   cornerColor = "primary",
+  ...props
 }) => {
   const cornerClass = `bg-${cornerColor}`;
 
   return (
     <div
+      {...props}
       className={`bg-surface border-2 border-border p-4 md:p-8 shadow-lg relative ${!noAnimate ? "animate-fade-scale-in" : ""} ${className}`}
     >
       {/* Pixel corners decoration - positioned inside border to prevent clipping */}
