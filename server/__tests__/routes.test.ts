@@ -1,27 +1,69 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import express from "express";
 import request from "supertest";
-import { registerRoutes } from "../routes";
-import * as xaiService from "../xaiService";
-import * as storage from "../storage";
-import * as replitAuth from "../replitAuth";
+
+const mockGenerateChordProgression = vi.hoisted(() => vi.fn());
+const mockAnalyzeCustomProgression = vi.hoisted(() => vi.fn());
+const mockCreateAIGenerationLimiter = vi.hoisted(() =>
+  vi.fn(async () => (req: any, _res: any, next: any) => next()),
+);
+const mockCsrfProtection = vi.hoisted(() =>
+  vi.fn((req: any, _res: any, next: any) => next()),
+);
+const mockGenerateCsrfToken = vi.hoisted(() => vi.fn(() => "test-csrf-token"));
+const mockGetRateLimitStatus = vi.hoisted(() =>
+  vi.fn(() => ({
+    storeType: "memory",
+    connected: true,
+  })),
+);
+const mockStorage = vi.hoisted(() => ({
+  getUserStashItems: vi.fn(),
+  createStashItem: vi.fn(),
+  deleteStashItem: vi.fn(),
+}));
+const mockSetupAuth = vi.hoisted(() => vi.fn());
+const mockIsAuthenticated = vi.hoisted(
+  () => vi.fn((req: any, _res: any, next: any) => next()),
+);
 
 // Mock dependencies
-vi.mock("../xaiService");
-vi.mock("../storage");
-vi.mock("../replitAuth");
+vi.mock("../xaiService", () => ({
+  generateChordProgression: mockGenerateChordProgression,
+  analyzeCustomProgression: mockAnalyzeCustomProgression,
+}));
+vi.mock("../storage", () => ({
+  storage: mockStorage,
+}));
+vi.mock("../replitAuth", () => ({
+  setupAuth: mockSetupAuth,
+  isAuthenticated: mockIsAuthenticated,
+}));
+vi.mock("../rateLimit", () => ({
+  createAIGenerationLimiter: mockCreateAIGenerationLimiter,
+  getRateLimitStatus: mockGetRateLimitStatus,
+}));
+vi.mock("csrf-sync", () => ({
+  csrfSync: () => ({
+    csrfSynchronisedProtection: mockCsrfProtection,
+    generateToken: mockGenerateCsrfToken,
+  }),
+}));
 
 describe("API Routes", () => {
   let app: express.Express;
-  let server: any;
+  let registerRoutes: typeof import("../routes").registerRoutes;
 
   beforeEach(async () => {
+    vi.clearAllMocks();
     app = express();
     app.use(express.json());
 
+    ({ registerRoutes } = await import("../routes"));
+
     // Mock authentication middleware
-    vi.mocked(replitAuth.setupAuth).mockResolvedValue(undefined);
-    vi.mocked(replitAuth.isAuthenticated).mockImplementation(
+    mockSetupAuth.mockResolvedValue(undefined);
+    mockIsAuthenticated.mockImplementation(
       (req, res, next) => {
         // Mock authenticated user for stash routes
         if (req.path.includes("/stash")) {
@@ -33,7 +75,7 @@ describe("API Routes", () => {
       },
     );
 
-    server = await registerRoutes(app);
+    await registerRoutes(app);
   });
 
   describe("POST /api/generate-progression", () => {
@@ -53,9 +95,7 @@ describe("API Routes", () => {
         scales: [{ name: "C Major", rootNote: "C" }],
       };
 
-      vi.mocked(xaiService.generateChordProgression).mockResolvedValue(
-        mockResult as any,
-      );
+      mockGenerateChordProgression.mockResolvedValue(mockResult as any);
 
       const response = await request(app)
         .post("/api/generate-progression")
@@ -94,9 +134,7 @@ describe("API Routes", () => {
         scales: [{ name: "C Major", rootNote: "C" }],
       };
 
-      vi.mocked(xaiService.analyzeCustomProgression).mockResolvedValue(
-        mockResult as any,
-      );
+      mockAnalyzeCustomProgression.mockResolvedValue(mockResult as any);
 
       const response = await request(app)
         .post("/api/analyze-custom-progression")
@@ -110,7 +148,7 @@ describe("API Routes", () => {
   describe("GET /api/stash", () => {
     it("should require authentication", async () => {
       // Without authentication, should return 401
-      vi.mocked(replitAuth.isAuthenticated).mockImplementation((req, res) => {
+      mockIsAuthenticated.mockImplementation((req, res) => {
         res.status(401).json({ message: "Unauthorized" });
         return;
       });
@@ -132,13 +170,13 @@ describe("API Routes", () => {
         },
       ];
 
-      vi.mocked(storage.storage.getUserStashItems).mockResolvedValue(
-        mockItems as any,
-      );
+      mockStorage.getUserStashItems.mockResolvedValue(mockItems as any);
 
       const response = await request(app).get("/api/stash");
       expect(response.status).toBe(200);
-      expect(response.body).toEqual(mockItems);
+      expect(response.body).toEqual([
+        { ...mockItems[0], createdAt: mockItems[0].createdAt.toISOString() },
+      ]);
     });
   });
 
@@ -165,9 +203,7 @@ describe("API Routes", () => {
         createdAt: new Date(),
       };
 
-      vi.mocked(storage.storage.createStashItem).mockResolvedValue(
-        mockItem as any,
-      );
+      mockStorage.createStashItem.mockResolvedValue(mockItem as any);
 
       const response = await request(app)
         .post("/api/stash")

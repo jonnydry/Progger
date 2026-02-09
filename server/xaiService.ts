@@ -155,29 +155,30 @@ export async function generateChordProgression(
     });
   };
 
-  // Step 5: Register pending request for deduplication
-  pendingRequests.set(cacheKey, generateWithOptimizations());
+  // Step 5: Create request promise once and share it for deduplication
+  const requestPromise = withRetry(
+    generateWithOptimizations,
+    {
+      maxRetries: 3,
+      initialDelay: 2000, // Start with 2 seconds
+      maxDelay: 15000,    // Max 15 seconds
+      backoffMultiplier: 1.5,
+      jitterFactor: 0.2
+    },
+    (stats) => {
+      logger.warn("Retrying chord progression generation", {
+        attempt: stats.attemptNumber,
+        totalRetries: stats.totalRetries,
+        delayMs: stats.totalDelay,
+        cacheKey,
+      });
+    }
+  );
+  pendingRequests.set(cacheKey, requestPromise);
 
   try {
-    // Step 6: Execute with intelligent retry logic
-    const result = await withRetry(
-      generateWithOptimizations,
-      {
-        maxRetries: 3,
-        initialDelay: 2000, // Start with 2 seconds
-        maxDelay: 15000,    // Max 15 seconds
-        backoffMultiplier: 1.5,
-        jitterFactor: 0.2
-      },
-      (stats) => {
-        logger.warn("Retrying chord progression generation", {
-          attempt: stats.attemptNumber,
-          totalRetries: stats.totalRetries,
-          delayMs: stats.totalDelay,
-          cacheKey,
-        });
-      }
-    );
+    // Step 6: Await shared request promise
+    const result = await requestPromise;
 
     // Step 7: Cache successful result (24 hour TTL)
     await redisCache.set(cacheKey, result, 86400);
@@ -346,29 +347,30 @@ IMPORTANT: Return ONLY valid JSON, no additional text or markdown formatting.`;
     });
   };
 
-  // Step 5: Register pending request for deduplication
-  pendingRequests.set(cacheKey, analyzeWithOptimizations());
+  // Step 5: Create request promise once and share it for deduplication
+  const requestPromise = withRetry(
+    analyzeWithOptimizations,
+    {
+      maxRetries: 3,
+      initialDelay: 2000,
+      maxDelay: 15000,
+      backoffMultiplier: 1.5,
+      jitterFactor: 0.2
+    },
+    (stats) => {
+      logger.warn("Retrying custom progression analysis", {
+        attempt: stats.attemptNumber,
+        totalRetries: stats.totalRetries,
+        delayMs: stats.totalDelay,
+        cacheKey,
+      });
+    }
+  );
+  pendingRequests.set(cacheKey, requestPromise);
 
   try {
-    // Step 6: Execute with intelligent retry logic
-    const result = await withRetry(
-      analyzeWithOptimizations,
-      {
-        maxRetries: 3,
-        initialDelay: 2000,
-        maxDelay: 15000,
-        backoffMultiplier: 1.5,
-        jitterFactor: 0.2
-      },
-      (stats) => {
-        logger.warn("Retrying custom progression analysis", {
-          attempt: stats.attemptNumber,
-          totalRetries: stats.totalRetries,
-          delayMs: stats.totalDelay,
-          cacheKey,
-        });
-      }
-    );
+    // Step 6: Await shared request promise
+    const result = await requestPromise;
 
     // Step 7: Cache successful result (24 hour TTL)
     await redisCache.set(cacheKey, result, 86400);

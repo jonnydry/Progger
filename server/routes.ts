@@ -12,7 +12,6 @@ import { db } from "./db";
 import { redisCache } from "./cache";
 import { createAIGenerationLimiter, getRateLimitStatus } from "./rateLimit";
 import { requestIdMiddleware } from "./middleware/requestId";
-import { validateRequestSize } from "./index";
 
 // CSRF protection for session-based endpoints
 const { csrfSynchronisedProtection, generateToken } = csrfSync({

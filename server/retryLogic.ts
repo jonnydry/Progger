@@ -98,7 +98,8 @@ export async function withRetry<T>(
   onRetry?: (stats: RetryStats) => void
 ): Promise<T> {
   const cfg = { ...DEFAULT_CONFIG, ...config };
-  let lastError: Error;
+  let lastError: Error | undefined;
+  let accumulatedDelay = 0;
 
   for (let attempt = 1; attempt <= cfg.maxRetries + 1; attempt++) {
     try {
@@ -131,17 +132,26 @@ export async function withRetry<T>(
           attemptNumber: attempt,
           totalRetries: cfg.maxRetries,
           lastError,
-          totalDelay: cfg.initialDelay
+          totalDelay: accumulatedDelay + delay
         });
       }
 
       // Wait for the delay
+      accumulatedDelay += delay;
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
 
-  // All retries failed
-  throw new Error(`Operation failed after ${cfg.maxRetries + 1} attempts. Last error: ${lastError.message}`);
+  // All retries failed: preserve original error type/message for upstream handling
+  if (lastError) {
+    (lastError as Error & { retryAttempts?: number; totalRetryDelayMs?: number }).retryAttempts =
+      cfg.maxRetries + 1;
+    (lastError as Error & { retryAttempts?: number; totalRetryDelayMs?: number }).totalRetryDelayMs =
+      accumulatedDelay;
+    throw lastError;
+  }
+
+  throw new Error('Operation failed after retries with no captured error');
 }
 
 /**

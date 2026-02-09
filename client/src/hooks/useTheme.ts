@@ -44,14 +44,11 @@ export const useTheme = () => {
         setTheme(prevTheme => prevTheme === 'dark' ? 'light' : 'dark');
     };
 
-    const isProggerTheme = THEMES[themeIndex].name === 'PROGGER';
-
     return {
         theme,
         themeIndex,
         setThemeIndex,
         toggleTheme,
-        isProggerTheme,
         themes: THEMES
     };
 };

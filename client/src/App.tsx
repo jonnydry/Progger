@@ -39,7 +39,6 @@ const App: React.FC = () => {
     themeIndex,
     setThemeIndex,
     toggleTheme,
-    isProggerTheme,
   } = useTheme();
 
   const generateMutation = useGenerateProgression();
@@ -224,7 +223,6 @@ const App: React.FC = () => {
       setIsStashOpen={setIsStashOpen}
       currentView={currentView}
       setCurrentView={setCurrentView}
-      isProggerTheme={isProggerTheme}
       currentKey={isCustomMode ? customKey : key}
       currentMode={isCustomMode ? customMode : mode}
       currentProgression={progressionResult}

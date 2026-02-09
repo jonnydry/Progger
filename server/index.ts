@@ -47,19 +47,6 @@ app.use(helmet({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
-// Per-route size validation middleware for specific endpoints
-export function validateRequestSize(maxSizeBytes: number) {
-  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    const contentLength = req.get('content-length');
-    if (contentLength && parseInt(contentLength, 10) > maxSizeBytes) {
-      return res.status(413).json({
-        error: `Request body too large. Maximum size: ${Math.round(maxSizeBytes / 1024)}KB`
-      });
-    }
-    next();
-  };
-}
-
 async function main() {
   // Validate required environment variables
   // Note: SESSION_SECRET, DATABASE_URL, REPL_ID, REPLIT_DOMAINS are auto-provided by Replit

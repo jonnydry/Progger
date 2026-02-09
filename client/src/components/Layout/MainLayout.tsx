@@ -19,7 +19,6 @@ interface MainLayoutProps {
   setIsStashOpen: (isOpen: boolean) => void;
   currentView: "home" | "about";
   setCurrentView: (view: "home" | "about") => void;
-  isProggerTheme: boolean;
   // Stash props
   currentKey: string;
   currentMode: string;
@@ -45,16 +44,13 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   setIsStashOpen,
   currentView,
   setCurrentView,
-  isProggerTheme,
   currentKey,
   currentMode,
   currentProgression,
   onLoadProgression,
 }) => {
   return (
-    <div
-      className={`min-h-screen bg-background flex flex-col ${isProggerTheme ? "progger-theme" : ""}`}
-    >
+    <div className="min-h-screen bg-background flex flex-col">
       <GlassmorphicHeader
         theme={theme}
         toggleTheme={toggleTheme}

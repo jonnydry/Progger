@@ -36,7 +36,13 @@ PROGGER uses xAI's Grok to generate intelligent chord progressions with multiple
    ```
    XAI_API_KEY=your_xai_api_key_here
    DATABASE_URL=your_postgres_connection_string
+   SESSION_SECRET=your_session_secret_here
+   REPLIT_DOMAINS=your-replit-domain.replit.dev
+   REPL_ID=your_replit_app_id
    ```
+   Notes:
+   - `XAI_API_KEY` is expected to come from Replit Secrets/integration in production.
+   - If Replit auth variables are missing, the server starts with authentication disabled and auth-protected routes return `503`.
 
 3. **Push database schema:**
    ```bash
@@ -97,7 +103,8 @@ PROGGER uses xAI's Grok to generate intelligent chord progressions with multiple
 
 - `XAI_API_KEY` - Your xAI Grok API key
 - `DATABASE_URL` - PostgreSQL connection string (auto-provided by Replit)
-- `REPL_ID`, `REPLIT_DOMAINS` - Replit environment variables (auto-provided)
+- `SESSION_SECRET` - Session encryption key for auth sessions
+- `REPL_ID`, `REPLIT_DOMAINS` - Replit Auth identifiers/domains (auto-provided in Replit)
 
 ## Production Deployment
 

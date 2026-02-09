@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as xaiService from '../xaiService';
-import { redisCache } from '../cache';
+import { redisCache, getProgressionCacheKey } from '../cache';
 import { pendingRequests } from '../pendingRequests';
 import { xaiCircuitBreaker } from '../retryLogic';
 import OpenAI from 'openai';
@@ -12,10 +12,12 @@ vi.mock('openai');
 
 describe('xaiService', () => {
   let mockOpenAI: any;
+  const originalApiKey = process.env.XAI_API_KEY;
 
   beforeEach(() => {
     // Reset all mocks
     vi.clearAllMocks();
+    process.env.XAI_API_KEY = 'xai-test-key';
 
     // Setup OpenAI mock
     mockOpenAI = {
@@ -27,11 +29,14 @@ describe('xaiService', () => {
     };
 
     // Mock OpenAI constructor
-    vi.mocked(OpenAI).mockImplementation(() => mockOpenAI);
+    vi.mocked(OpenAI).mockImplementation((function () {
+      return mockOpenAI;
+    }) as any);
 
     // Mock cache methods
     vi.mocked(redisCache.get).mockResolvedValue(null);
     vi.mocked(redisCache.set).mockResolvedValue(undefined);
+    vi.mocked(getProgressionCacheKey).mockReturnValue('progression:test-key');
 
     // Mock pending requests
     vi.mocked(pendingRequests.get).mockReturnValue(undefined);
@@ -47,6 +52,7 @@ describe('xaiService', () => {
   });
 
   afterEach(() => {
+    process.env.XAI_API_KEY = originalApiKey;
     vi.restoreAllMocks();
   });
 
@@ -159,7 +165,7 @@ describe('xaiService', () => {
           model: 'grok-4-1-fast-non-reasoning',
           response_format: { type: 'json_object' },
           temperature: 0.7,
-          max_tokens: 1000,
+          max_tokens: 1500,
           messages: expect.arrayContaining([
             expect.objectContaining({ role: 'system' }),
             expect.objectContaining({ role: 'user' }),
@@ -455,13 +461,19 @@ describe('xaiService', () => {
 
   describe('Error handling', () => {
     it('should provide user-friendly error for timeout', async () => {
-      mockOpenAI.chat.completions.create.mockRejectedValueOnce(
-        new Error('Request timed out')
-      );
+      vi.useFakeTimers();
+      try {
+        mockOpenAI.chat.completions.create.mockRejectedValue(
+          new Error('Request timed out')
+        );
 
-      await expect(
-        xaiService.generateChordProgression('C', 'major', false, 4, 'auto')
-      ).rejects.toThrow('XAI API request timed out');
+        const pending = xaiService.generateChordProgression('C', 'major', false, 4, 'auto');
+        const assertion = expect(pending).rejects.toThrow('XAI API request timed out');
+        await vi.runAllTimersAsync();
+        await assertion;
+      } finally {
+        vi.useRealTimers();
+      }
     });
 
     it('should provide user-friendly error for validation failure', async () => {

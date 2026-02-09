@@ -25,10 +25,6 @@ export interface AuthenticatedUser {
   expires_at?: number;
 }
 
-if (!process.env.REPLIT_DOMAINS) {
-  throw new Error("Environment variable REPLIT_DOMAINS not provided");
-}
-
 // Timeout helper for network calls
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number, errorMessage: string): Promise<T> {
   return Promise.race([
@@ -113,6 +109,20 @@ const registeredDomains = new Set<string>();
 let authEnabled = false;
 
 export async function setupAuth(app: Express) {
+  const domainsEnv = process.env.REPLIT_DOMAINS;
+  const replitId = process.env.REPL_ID;
+
+  if (!domainsEnv || !replitId || !process.env.SESSION_SECRET || !process.env.DATABASE_URL) {
+    authEnabled = false;
+    logger.warn('Auth prerequisites missing; authentication disabled for this runtime', {
+      hasReplitDomains: !!domainsEnv,
+      hasReplitId: !!replitId,
+      hasSessionSecret: !!process.env.SESSION_SECRET,
+      hasDatabaseUrl: !!process.env.DATABASE_URL,
+    });
+    return;
+  }
+
   app.set("trust proxy", 1);
   app.use(getSession());
   app.use(passport.initialize());
@@ -149,7 +159,7 @@ export async function setupAuth(app: Express) {
     verified(null, user);
   };
 
-  for (const domain of process.env.REPLIT_DOMAINS!.split(",")) {
+  for (const domain of domainsEnv.split(",")) {
     const normalizedDomain = domain.trim().toLowerCase();
     if (!normalizedDomain) {
       logger.warn('Empty domain found in REPLIT_DOMAINS');
@@ -215,7 +225,7 @@ export async function setupAuth(app: Express) {
     req.logout(() => {
       res.redirect(
         client.buildEndSessionUrl(config, {
-          client_id: process.env.REPL_ID!,
+          client_id: replitId,
           post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
         }).href
       );
