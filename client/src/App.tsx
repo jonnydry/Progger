@@ -18,18 +18,23 @@ import {
   useAnalyzeCustomProgression,
 } from "./hooks/useProgression";
 import { validateChordLibrary, preloadAllChords } from "./utils/chordLibrary";
-import { formatChordDisplayName } from "./utils/chordFormatting";
 import {
   splitChordName,
   isSupportedChordQuality,
 } from "@shared/music/chordQualities";
 import { detectKey } from "./utils/smartChordSuggestions";
-import type { ProgressionResult } from "./types";
-import { KEYS, MODES, COMMON_PROGRESSIONS } from "./constants";
+import type { CustomChordInput, ProgressionResult } from "./types";
+import { KEYS, MODES, COMMON_PROGRESSIONS, MAX_CUSTOM_CHORDS } from "./constants";
 import proggerMascot from "./assets/progger-logo.webp";
 import { PixelCard } from "./components/PixelCard";
+import { createChordId, toCanonicalChordNames } from "./utils/customProgression";
 
 const LazyScaleDiagram = lazy(() => import("./components/ScaleDiagram"));
+
+interface ResultContext {
+  key: string;
+  mode: string;
+}
 
 const App: React.FC = () => {
   const { user, isLoading: authLoading, isAuthenticated } = useAuth();
@@ -57,18 +62,18 @@ const App: React.FC = () => {
 
   const [isStashOpen, setIsStashOpen] = useState(false);
   const [isCustomMode, setIsCustomMode] = useState(false);
-  const [customProgression, setCustomProgression] = useState<
-    Array<{ root: string; quality: string }>
-  >([
-    { root: "C", quality: "major" },
-    { root: "A", quality: "minor" },
-    { root: "F", quality: "major" },
-    { root: "G", quality: "major" },
-  ]);
-  const [numCustomChords, setNumCustomChords] = useState<number>(4);
+  const [customProgression, setCustomProgression] = useState<CustomChordInput[]>(
+    () => [
+      { id: createChordId(), root: "C", quality: "major" },
+      { id: createChordId(), root: "A", quality: "minor" },
+      { id: createChordId(), root: "F", quality: "major" },
+      { id: createChordId(), root: "G", quality: "major" },
+    ],
+  );
   const [customKey, setCustomKey] = useState<string>("C");
   const [customMode, setCustomMode] = useState<string>("Major");
   const [currentView, setCurrentView] = useState<"home" | "about">("home");
+  const [resultContext, setResultContext] = useState<ResultContext | null>(null);
   const resultsRef = useRef<HTMLElement>(null);
 
   const isLoading = generateMutation.isPending || analyzeMutation.isPending;
@@ -110,6 +115,12 @@ const App: React.FC = () => {
   }, [isLoading, progressionResult]);
 
   useEffect(() => {
+    if (!isLoading && !progressionResult && resultContext) {
+      setResultContext(null);
+    }
+  }, [isLoading, progressionResult, resultContext]);
+
+  useEffect(() => {
     if (isCustomMode && customProgression.length > 0) {
       const detected = detectKey(customProgression);
       if (detected) {
@@ -124,6 +135,7 @@ const App: React.FC = () => {
       setKey(loadedKey);
       setMode(loadedMode);
       setProgressionResult(progression);
+      setResultContext({ key: loadedKey, mode: loadedMode });
 
       setTimeout(() => {
         if (resultsRef.current) {
@@ -148,6 +160,7 @@ const App: React.FC = () => {
   const handleGenerate = useCallback(() => {
     setError(null);
     setProgressionResult(null);
+    setResultContext({ key, mode });
     generateMutation.mutate(
       {
         key,
@@ -173,10 +186,16 @@ const App: React.FC = () => {
   const handleAnalyzeCustom = useCallback(() => {
     setError(null);
     setProgressionResult(null);
+    setResultContext({ key: customKey, mode: customMode });
 
-    const formattedChords = customProgression.map((chord) =>
-      formatChordDisplayName(chord.root, chord.quality),
-    );
+    if (customProgression.length > MAX_CUSTOM_CHORDS) {
+      setError(
+        `Custom progressions support up to ${MAX_CUSTOM_CHORDS} chords.`,
+      );
+      return;
+    }
+
+    const formattedChords = toCanonicalChordNames(customProgression);
     const invalidChords: string[] = [];
     for (const chordName of formattedChords) {
       const parsed = splitChordName(chordName);
@@ -195,19 +214,27 @@ const App: React.FC = () => {
     analyzeMutation.mutate(formattedChords, {
       onSuccess: (result) => {
         setProgressionResult(result);
+        let nextKey = customKey;
+        let nextMode = customMode;
         if (result.detectedKey && result.detectedMode) {
           const normalizedKey = result.detectedKey.replace(/m$/i, "");
           setCustomKey(normalizedKey);
           setCustomMode(result.detectedMode);
+          nextKey = normalizedKey;
+          nextMode = result.detectedMode;
         }
+        setResultContext({ key: nextKey, mode: nextMode });
       },
       onError: (err) => setError(err.message),
     });
-  }, [customProgression, analyzeMutation]);
+  }, [customProgression, customKey, customMode, analyzeMutation]);
 
   const skeletonCount = useMemo(() => {
-    return isCustomMode ? numCustomChords : progressionLength;
-  }, [isCustomMode, numCustomChords, progressionLength]);
+    return isCustomMode ? customProgression.length : progressionLength;
+  }, [isCustomMode, customProgression.length, progressionLength]);
+
+  const activeKey = resultContext?.key ?? (isCustomMode ? customKey : key);
+  const activeMode = resultContext?.mode ?? (isCustomMode ? customMode : mode);
 
   return (
     <MainLayout
@@ -223,8 +250,8 @@ const App: React.FC = () => {
       setIsStashOpen={setIsStashOpen}
       currentView={currentView}
       setCurrentView={setCurrentView}
-      currentKey={isCustomMode ? customKey : key}
-      currentMode={isCustomMode ? customMode : mode}
+      currentKey={activeKey}
+      currentMode={activeMode}
       currentProgression={progressionResult}
       onLoadProgression={handleLoadProgression}
     >
@@ -260,8 +287,6 @@ const App: React.FC = () => {
           onCustomChange={setIsCustomMode}
           customProgression={customProgression}
           onCustomProgressionChange={setCustomProgression}
-          numCustomChords={numCustomChords}
-          onNumCustomChordsChange={setNumCustomChords}
           onAnalyzeCustom={handleAnalyzeCustom}
           detectedKey={customKey}
           detectedMode={customMode}
@@ -283,8 +308,8 @@ const App: React.FC = () => {
               progression={[]}
               isLoading={true}
               skeletonCount={skeletonCount}
-              musicalKey={key}
-              currentMode={mode}
+              musicalKey={activeKey}
+              currentMode={activeMode}
               progressionResult={progressionResult}
             />
             <SkeletonScaleDiagram />
@@ -297,8 +322,8 @@ const App: React.FC = () => {
             <VoicingsGrid
               progression={progressionResult.progression}
               isLoading={false}
-              musicalKey={key}
-              currentMode={mode}
+              musicalKey={activeKey}
+              currentMode={activeMode}
               progressionResult={progressionResult}
             />
 
@@ -318,7 +343,7 @@ const App: React.FC = () => {
                       animationFillMode: "backwards",
                     }}
                   >
-                    <LazyScaleDiagram scaleInfo={scale} musicalKey={key} />
+                    <LazyScaleDiagram scaleInfo={scale} musicalKey={activeKey} />
                   </div>
                 ))}
               </Suspense>
@@ -331,8 +356,8 @@ const App: React.FC = () => {
           <VoicingsGrid
             progression={[]}
             isLoading={false}
-            musicalKey={key}
-            currentMode={mode}
+            musicalKey={activeKey}
+            currentMode={activeMode}
             progressionResult={progressionResult}
           />
         )}

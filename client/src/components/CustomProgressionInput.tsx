@@ -1,15 +1,15 @@
-import React, { useEffect } from 'react';
-import { CHORD_COUNTS } from '@/constants';
+import React from 'react';
+import { MAX_CUSTOM_CHORDS } from '@/constants';
 import { getSmartDefaultChord } from '@/utils/smartChordSuggestions';
 import { ChordInputCard } from './ChordInputCard';
 import { playProgression } from '@/utils/audioEngine';
 import { PixelButton } from './PixelButton';
+import type { CustomChordInput } from '@/types';
+import { createChordId } from '@/utils/customProgression';
 
 interface CustomProgressionInputProps {
-  numChords: number;
-  onNumChordsChange: (count: number) => void;
-  customProgression: Array<{ root: string; quality: string }>;
-  onCustomProgressionChange: (progression: Array<{ root: string; quality: string }>) => void;
+  customProgression: CustomChordInput[];
+  onCustomProgressionChange: (progression: CustomChordInput[]) => void;
   onAnalyze: () => void;
   isLoading: boolean;
   detectedKey?: string;
@@ -34,8 +34,6 @@ interface CustomProgressionInputProps {
  * - Loading state for analyze button
  */
 export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
-  numChords,
-  onNumChordsChange,
   customProgression,
   onCustomProgressionChange,
   onAnalyze,
@@ -43,12 +41,19 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
   detectedKey,
   detectedMode,
 }) => {
-  // We no longer use numChords/onNumChordsChange directly for UI, 
-  // but we keep the props to avoid breaking the interface if it's used elsewhere.
-  // The progression length is now the source of truth.
-
   const [playingIndex, setPlayingIndex] = React.useState<number | null>(null);
   const [isPlaying, setIsPlaying] = React.useState(false);
+  const playbackCleanupRef = React.useRef<(() => void) | null>(null);
+  const canAddChord = customProgression.length < MAX_CUSTOM_CHORDS;
+
+  React.useEffect(() => {
+    return () => {
+      if (playbackCleanupRef.current) {
+        playbackCleanupRef.current();
+        playbackCleanupRef.current = null;
+      }
+    };
+  }, []);
 
   const handleRootChange = (index: number, value: string) => {
     const newProgression = [...customProgression];
@@ -63,20 +68,19 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
   };
 
   const handleAddChord = () => {
+    if (!canAddChord) return;
+
     const newProgression = [...customProgression];
     // Add a smart default based on the current progression
     const smartDefault = getSmartDefaultChord(newProgression);
-    newProgression.push(smartDefault);
+    newProgression.push({ id: createChordId(), ...smartDefault });
     onCustomProgressionChange(newProgression);
-    // Also update parent's count if needed (though we rely on array length now)
-    onNumChordsChange(newProgression.length);
   };
 
   const handleRemoveChord = (index: number) => {
     if (customProgression.length <= 1) return; // Prevent removing the last chord
     const newProgression = customProgression.filter((_, i) => i !== index);
     onCustomProgressionChange(newProgression);
-    onNumChordsChange(newProgression.length);
   };
 
   const handleMoveChord = (index: number, direction: 'up' | 'down') => {
@@ -95,13 +99,19 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
   const handlePlayProgression = () => {
     if (isPlaying) return;
 
+    if (playbackCleanupRef.current) {
+      playbackCleanupRef.current();
+      playbackCleanupRef.current = null;
+    }
+
     setIsPlaying(true);
     setPlayingIndex(null);
 
-    playProgression(
+    playbackCleanupRef.current = playProgression(
       customProgression,
       (index) => setPlayingIndex(index),
       () => {
+        playbackCleanupRef.current = null;
         setIsPlaying(false);
         setPlayingIndex(null);
       }
@@ -151,7 +161,7 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
       <div className="space-y-4">
         {customProgression.map((chord, index) => (
           <ChordInputCard
-            key={`${index}-${chord.root}-${chord.quality}`} // Use index in key to ensure stable rendering during reorders, but adding data helps uniqueness
+            key={chord.id}
             index={index}
             root={chord.root}
             quality={chord.quality}
@@ -171,6 +181,7 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
       <div className="flex justify-center pt-2 pb-2">
         <PixelButton
           onClick={handleAddChord}
+          disabled={!canAddChord}
           variant="ghost"
           className="flex items-center gap-2 px-4 py-2 border-2 border-dashed border-primary/30 hover:border-primary/60"
         >
@@ -183,6 +194,11 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
           <span className="font-semibold">Add Chord</span>
         </PixelButton>
       </div>
+      {!canAddChord && (
+        <p className="text-center text-xs text-text/60 -mt-1">
+          Maximum of {MAX_CUSTOM_CHORDS} chords reached.
+        </p>
+      )}
 
       <div className="pt-2">
         <PixelButton

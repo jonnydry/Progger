@@ -99,6 +99,26 @@ export function formatChordDisplayName(root: string, quality: string): string {
 }
 
 /**
+ * Format a canonical chord name for parsing/API transport.
+ * Always uses ASCII accidentals and canonical quality tokens.
+ *
+ * @param root - Root note (e.g., "C", "F#", "Bb", "F♯")
+ * @param quality - Canonical chord quality token (e.g., "major", "min7", "7b9")
+ * @returns Canonical chord string (e.g., "C", "F#min7", "Bb7b9")
+ */
+export function formatChordCanonicalName(root: string, quality: string): string {
+  const normalizedRoot = root
+    .replace(/♯/g, '#')
+    .replace(/♭/g, 'b');
+
+  if (quality === 'major') {
+    return normalizedRoot;
+  }
+
+  return `${normalizedRoot}${quality}`;
+}
+
+/**
  * Format a full chord name with Unicode symbols
  *
  * @param chordName - Full chord name (e.g., "C#maj7", "Bbm7b5")
@@ -143,4 +163,3 @@ export function formatChordDisplayNameForKey(
   // Use the existing formatting logic with the contextual root
   return formatChordDisplayName(contextualRoot, quality);
 }
-

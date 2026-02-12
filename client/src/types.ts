@@ -86,6 +86,12 @@ export interface ScaleInfo {
   fingering: number[][];
 }
 
+export interface CustomChordInput {
+  id: string;
+  root: string;
+  quality: string;
+}
+
 // The full result from the API
 export interface ProgressionResult {
   progression: ChordInProgression[];

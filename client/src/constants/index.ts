@@ -345,6 +345,7 @@ export const MODES: ModeOption[] = [
 export const MODE_VALUES = MODES.map((m) => m.value);
 
 export const CHORD_COUNTS = [2, 3, 4, 5, 6, 7];
+export const MAX_CUSTOM_CHORDS = 12;
 
 export const COMMON_PROGRESSIONS = [
   { name: "AI Generated", value: "auto" },

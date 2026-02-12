@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useId } from 'react';
 
 interface WheelPickerProps {
   options: string[];
@@ -13,6 +13,7 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
   onChange,
   label,
 }) => {
+  const instanceId = useId();
   const [isDragging, setIsDragging] = useState(false);
   const [startY, setStartY] = useState(0);
   const [scrollTop, setScrollTop] = useState(0);
@@ -194,13 +195,17 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
   };
 
   const centerOffset = (visibleOptions - 1) / 2 * optionHeight;
+  const listboxId = `wheel-picker-${instanceId}`;
+  const labelId = label ? `${listboxId}-label` : undefined;
+  const getOptionId = (index: number) => `${listboxId}-option-${index}`;
+  const activeOptionId = getOptionId(currentIndex);
 
   return (
     <div className="flex flex-col">
       {label && (
-        <label className="mb-2 text-sm font-semibold text-text/70">
+        <div id={labelId} className="mb-2 text-sm font-semibold text-text/70">
           {label}
-        </label>
+        </div>
       )}
       <div className="relative" style={{ touchAction: 'none', overscrollBehavior: 'contain' }}>
         {/* Selection indicator */}
@@ -215,9 +220,11 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
         {/* Scrollable container */}
         <div
           ref={containerRef}
+          id={listboxId}
           role="listbox"
-          aria-label={label || "Select option"}
-          aria-activedescendant={`${label}-option-${currentIndex}`}
+          aria-label={label ? undefined : "Select option"}
+          aria-labelledby={labelId}
+          aria-activedescendant={activeOptionId}
           tabIndex={0}
           onKeyDown={handleKeyDown}
           className="relative overflow-hidden bg-background border-2 border-border rounded-md shadow-inner focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
@@ -250,7 +257,7 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
               return (
                 <div
                   key={option}
-                  id={`${label}-option-${index}`}
+                  id={getOptionId(index)}
                   role="option"
                   aria-selected={isSelected}
                   className={`flex items-center justify-center cursor-pointer transition-all duration-150 ${isSelected ? 'font-semibold text-primary' : 'text-text/80'
@@ -275,4 +282,3 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
     </div>
   );
 };
-

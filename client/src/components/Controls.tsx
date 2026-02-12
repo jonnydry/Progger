@@ -5,6 +5,7 @@ import { ModeSelect } from './ModeSelect';
 import { CustomProgressionInput } from './CustomProgressionInput';
 import { ToggleSwitch } from './ToggleSwitch';
 import { PixelButton } from './PixelButton';
+import type { CustomChordInput } from '@/types';
 
 interface ControlsProps {
   selectedKey: string;
@@ -22,10 +23,8 @@ interface ControlsProps {
   // Custom mode props
   isCustomMode?: boolean;
   onCustomChange?: (enabled: boolean) => void;
-  customProgression?: Array<{ root: string; quality: string }>;
-  onCustomProgressionChange?: (progression: Array<{ root: string; quality: string }>) => void;
-  numCustomChords?: number;
-  onNumCustomChordsChange?: (count: number) => void;
+  customProgression?: CustomChordInput[];
+  onCustomProgressionChange?: (progression: CustomChordInput[]) => void;
   onAnalyzeCustom?: () => void;
   detectedKey?: string;
   detectedMode?: string;
@@ -48,8 +47,6 @@ export const Controls: React.FC<ControlsProps> = ({
   onCustomChange,
   customProgression = [],
   onCustomProgressionChange,
-  numCustomChords = 4,
-  onNumCustomChordsChange,
   onAnalyzeCustom,
   detectedKey,
   detectedMode,
@@ -147,7 +144,7 @@ export const Controls: React.FC<ControlsProps> = ({
       </div>
 
       {/* Custom Progression Input */}
-      {onCustomProgressionChange && onNumCustomChordsChange && onAnalyzeCustom && (
+      {onCustomProgressionChange && onAnalyzeCustom && (
         <div
           className={`space-y-5 md:space-y-6 transition-all duration-500 ease-in-out ${!isCustomMode ? 'translate-x-[100%] opacity-0 pointer-events-none absolute inset-0' : 'translate-x-0 opacity-100'}`}
         >
@@ -163,8 +160,6 @@ export const Controls: React.FC<ControlsProps> = ({
           </div>
 
           <CustomProgressionInput
-            numChords={numCustomChords}
-            onNumChordsChange={onNumCustomChordsChange}
             customProgression={customProgression}
             onCustomProgressionChange={onCustomProgressionChange}
             onAnalyze={onAnalyzeCustom}
