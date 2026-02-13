@@ -13,6 +13,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
   onSelect,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const selectRef = useRef<HTMLDivElement>(null);
   const currentTheme = themes[selectedIndex];
 
@@ -51,76 +52,117 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
 
   return (
     <div className="relative flex items-center" ref={selectRef}>
-      {isOpen && (
-        <div className="absolute right-0 top-full mt-2 z-30 w-[min(94vw,30rem)] rounded-lg border border-border bg-surface/95 backdrop-blur-sm shadow-lg p-3 sm:p-4 animate-fade-scale-in">
-          <div className="mb-2 sm:mb-3 flex items-baseline justify-between gap-3">
-            <p className="text-xs sm:text-sm font-semibold text-text/80">Pick a palette</p>
-            <p className="hidden sm:block text-[11px] text-text/60 truncate">
-              Current: {currentTheme.name}
-            </p>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-2.5 max-h-80 overflow-y-auto pr-1">
-            {themes.map((theme, index) => {
-              return (
-                <button
-                  key={theme.name}
-                  type="button"
-                  onClick={() => handleSelect(index)}
-                  className={`flex min-h-[3rem] sm:min-h-[3.25rem] items-center gap-2 rounded-md border px-2 py-2 sm:px-2.5 text-left transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary ${
-                    selectedIndex === index
-                      ? "border-primary bg-primary/10"
-                      : "border-border hover:border-primary/60 hover:bg-surface"
-                  }`}
-                  aria-label={`Select ${theme.name} theme`}
-                  title={theme.name}
-                >
-                  <span
-                    className={`h-5 w-5 sm:h-6 sm:w-6 shrink-0 rounded-full border ${
-                      selectedIndex === index ? "border-primary" : "border-border"
-                    }`}
-                    style={{
-                      backgroundColor: `hsl(${theme.light.primary})`,
-                    }}
-                  />
-                  <span className="min-w-0 text-[11px] sm:text-xs leading-tight text-text">
-                    <span className="block truncate font-medium tracking-tight">{theme.name}</span>
-                    <span className="block text-[10px] text-text/60">
-                      {selectedIndex === index ? "Selected" : "Apply"}
-                    </span>
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* Theme picker icon button */}
-      <button
-        onClick={handleToggle}
-        className="flex items-center space-x-2 p-1.5 sm:p-2 rounded-full text-text/70 hover:bg-surface hover:text-text focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-background transition-all duration-300"
-        aria-label={`Change theme color. Current is ${currentTheme.name}`}
-        aria-haspopup="menu"
-        aria-expanded={isOpen}
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-6 w-6"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
-          />
-        </svg>
-        <span className="hidden md:block max-w-[9rem] truncate text-xs">
-          {currentTheme.name}
+      <div className="hidden lg:flex items-center gap-2 rounded-full border border-border bg-surface/55 px-2 py-1">
+        <span className="hidden xl:block text-[11px] font-medium text-text/70">
+          Themes
         </span>
-      </button>
+        <div className="flex items-center gap-1">
+          {themes.map((theme, index) => (
+            <div
+              key={theme.name}
+              className="relative"
+              onMouseEnter={() => setHoveredIndex(index)}
+              onMouseLeave={() => setHoveredIndex(null)}
+            >
+              {hoveredIndex === index && (
+                <div className="absolute left-1/2 bottom-full mb-2 -translate-x-1/2 whitespace-nowrap rounded-md border border-border bg-surface px-2 py-1 text-xs font-medium text-text shadow-lg z-20 pointer-events-none">
+                  {theme.name}
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={() => onSelect(index)}
+                onFocus={() => setHoveredIndex(index)}
+                onBlur={() => setHoveredIndex(null)}
+                className={`h-5 w-5 rounded-full border transition-transform duration-150 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 focus:ring-offset-background ${
+                  selectedIndex === index
+                    ? "border-primary ring-2 ring-primary/50"
+                    : "border-border hover:border-primary/70"
+                }`}
+                style={{
+                  backgroundColor: `hsl(${theme.light.primary})`,
+                }}
+                aria-label={`Select ${theme.name} theme`}
+                aria-pressed={selectedIndex === index}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="lg:hidden">
+        {isOpen && (
+          <div className="absolute right-0 top-full mt-2 z-30 w-[min(96vw,24rem)] rounded-lg border border-border bg-surface/95 backdrop-blur-sm shadow-lg p-3 sm:p-4 animate-fade-scale-in">
+            <div className="mb-2 sm:mb-3 flex items-baseline justify-between gap-3">
+              <p className="text-xs sm:text-sm font-semibold text-text/80">Pick a palette</p>
+              <p className="text-[11px] text-text/60">
+                Current: {currentTheme.name}
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-80 overflow-y-auto pr-1">
+              {themes.map((theme, index) => {
+                return (
+                  <button
+                    key={theme.name}
+                    type="button"
+                    onClick={() => handleSelect(index)}
+                    className={`flex min-h-[3rem] items-center gap-2 rounded-md border px-2 py-2 text-left transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary ${
+                      selectedIndex === index
+                        ? "border-primary bg-primary/10"
+                        : "border-border hover:border-primary/60 hover:bg-surface"
+                    }`}
+                    aria-label={`Select ${theme.name} theme`}
+                    aria-pressed={selectedIndex === index}
+                  >
+                    <span
+                      className={`h-5 w-5 shrink-0 rounded-full border ${
+                        selectedIndex === index ? "border-primary" : "border-border"
+                      }`}
+                      style={{
+                        backgroundColor: `hsl(${theme.light.primary})`,
+                      }}
+                    />
+                    <span className="min-w-0 text-xs leading-tight text-text">
+                      <span className="block whitespace-normal break-words font-medium">
+                        {theme.name}
+                      </span>
+                      <span className="block text-[10px] text-text/60">
+                        {selectedIndex === index ? "Selected" : "Apply"}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Theme picker icon button */}
+        <button
+          onClick={handleToggle}
+          className="flex items-center space-x-2 p-1.5 sm:p-2 rounded-full text-text/70 hover:bg-surface hover:text-text focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-background transition-all duration-300"
+          aria-label={`Change theme color. Current is ${currentTheme.name}`}
+          aria-haspopup="menu"
+          aria-expanded={isOpen}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
+            />
+          </svg>
+          <span className="hidden md:block text-xs">{currentTheme.name}</span>
+        </button>
+      </div>
     </div>
   );
 };
