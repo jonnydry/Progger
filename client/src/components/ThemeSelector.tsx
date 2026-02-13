@@ -105,7 +105,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
                     onBlur={() => setHoveredIndex(null)}
                     className={`h-7 w-7 rounded-full border transition-transform duration-150 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 focus:ring-offset-background ${
                       selectedIndex === index
-                        ? "border-primary ring-2 ring-primary/50"
+                        ? "border-primary ring-2 ring-inset ring-primary/50"
                         : "border-border hover:border-primary/70"
                     }`}
                     style={{
