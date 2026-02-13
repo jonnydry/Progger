@@ -13,135 +13,82 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
   onSelect,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [isClosing, setIsClosing] = useState(false);
-  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [isTouchInput, setIsTouchInput] = useState(false);
   const selectRef = useRef<HTMLDivElement>(null);
   const currentTheme = themes[selectedIndex];
 
-  const handleClose = () => {
-    setIsClosing(true);
-    // Wait for animation to complete before hiding
-    // Total animation time: 0.12s base + (11 themes * 0.02s delay) = 0.34s
-    const animationDuration = 120; // Base animation duration in ms
-    const maxDelay = (themes.length - 1) * 20; // Max delay for cascade effect in ms
-    const totalTime = animationDuration + maxDelay + 50; // Add 50ms buffer
-
-    setTimeout(() => {
-      setIsOpen(false);
-      setIsClosing(false);
-    }, totalTime); // Dynamically calculated based on number of themes
-  };
-
   const handleSelect = (index: number) => {
     onSelect(index);
-    handleClose();
+    setIsOpen(false);
   };
 
   const handleToggle = () => {
-    if (isOpen && !isClosing) {
-      handleClose();
-    } else if (!isOpen) {
-      setIsOpen(true);
-    }
+    setIsOpen((prev) => !prev);
   };
 
   useEffect(() => {
+    if (!isOpen) return;
+
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        selectRef.current &&
-        !selectRef.current.contains(event.target as Node)
-      ) {
-        if (isOpen && !isClosing) {
-          handleClose();
-        }
+      if (selectRef.current && !selectRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
       }
     };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+
     document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleEscape);
+
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleEscape);
     };
-  }, [isOpen, isClosing]);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia("(hover: none), (pointer: coarse)");
-    const updateTouchInput = () => setIsTouchInput(mediaQuery.matches);
-    updateTouchInput();
-
-    if (typeof mediaQuery.addEventListener === "function") {
-      mediaQuery.addEventListener("change", updateTouchInput);
-      return () => mediaQuery.removeEventListener("change", updateTouchInput);
-    }
-
-    mediaQuery.addListener(updateTouchInput);
-    return () => mediaQuery.removeListener(updateTouchInput);
-  }, []);
+  }, [isOpen]);
 
   return (
     <div className="relative flex items-center" ref={selectRef}>
-      {(isOpen || isClosing) && (
-        <div className="absolute right-0 top-full mt-2 z-30 w-[min(80vw,22rem)] rounded-lg border border-border bg-surface/95 backdrop-blur-sm shadow-lg px-2 py-2">
-          <div className="flex items-start gap-2 overflow-x-auto overflow-y-visible scrollbar-hide snap-x snap-mandatory">
+      {isOpen && (
+        <div className="absolute right-0 top-full mt-2 z-30 w-[min(94vw,30rem)] rounded-lg border border-border bg-surface/95 backdrop-blur-sm shadow-lg p-3 sm:p-4 animate-fade-scale-in">
+          <div className="mb-2 sm:mb-3 flex items-baseline justify-between gap-3">
+            <p className="text-xs sm:text-sm font-semibold text-text/80">Pick a palette</p>
+            <p className="hidden sm:block text-[11px] text-text/60 truncate">
+              Current: {currentTheme.name}
+            </p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-2.5 max-h-80 overflow-y-auto pr-1">
             {themes.map((theme, index) => {
-              // Opening: cascade right to left (index 0, 1, 2...)
-              // Closing: cascade left to right (reverse order for mirror effect)
-              const delay = isClosing
-                ? (themes.length - 1 - index) * 0.02
-                : index * 0.02;
-
               return (
-                <div
+                <button
                   key={theme.name}
-                  className="relative snap-center shrink-0 flex flex-col items-center min-w-[2.25rem]"
-                  style={{
-                    animation: `${isClosing ? "slideOutToLeft" : "slideInFromRight"} 0.12s ease-out forwards`,
-                    animationDelay: `${delay}s`,
-                    opacity: isClosing ? 1 : 0,
-                  }}
-                  onMouseEnter={() => !isClosing && setHoveredIndex(index)}
-                  onMouseLeave={() => setHoveredIndex(null)}
+                  type="button"
+                  onClick={() => handleSelect(index)}
+                  className={`flex min-h-[3rem] sm:min-h-[3.25rem] items-center gap-2 rounded-md border px-2 py-2 sm:px-2.5 text-left transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-primary ${
+                    selectedIndex === index
+                      ? "border-primary bg-primary/10"
+                      : "border-border hover:border-primary/60 hover:bg-surface"
+                  }`}
+                  aria-label={`Select ${theme.name} theme`}
+                  title={theme.name}
                 >
-                  {/* Tooltip for mouse/keyboard users */}
-                  {!isTouchInput && hoveredIndex === index && !isClosing && (
-                    <div
-                      className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-2 py-1 bg-surface text-text text-xs rounded shadow-lg border border-border whitespace-nowrap z-20 pointer-events-none"
-                      style={{
-                        animation: "fadeIn 0.08s ease-out",
-                      }}
-                    >
-                      {theme.name}
-                    </div>
-                  )}
-
-                  {/* Color dot - compact size across all screens */}
-                  <button
-                    onClick={() => handleSelect(index)}
-                    onFocus={() => setHoveredIndex(index)}
-                    onBlur={() => setHoveredIndex(null)}
-                    disabled={isClosing}
-                    className={`w-6 h-6 rounded-full border transition-all duration-200 hover:scale-110 focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-primary focus:ring-offset-background ${
-                      selectedIndex === index
-                        ? "border-primary shadow-md scale-110 ring-1 ring-primary ring-offset-1 ring-offset-background"
-                        : "border-border hover:border-primary"
-                    } ${isClosing ? "cursor-default" : ""}`}
+                  <span
+                    className={`h-5 w-5 sm:h-6 sm:w-6 shrink-0 rounded-full border ${
+                      selectedIndex === index ? "border-primary" : "border-border"
+                    }`}
                     style={{
                       backgroundColor: `hsl(${theme.light.primary})`,
                     }}
-                    aria-label={`Select ${theme.name} theme`}
                   />
-
-                  {isTouchInput && (
-                    <span
-                      className={`mt-1 text-[10px] leading-none whitespace-nowrap ${
-                        selectedIndex === index
-                          ? "text-text font-semibold"
-                          : "text-text/70"
-                      }`}
-                    >
-                      {theme.name}
+                  <span className="min-w-0 text-[11px] sm:text-xs leading-tight text-text">
+                    <span className="block truncate font-medium tracking-tight">{theme.name}</span>
+                    <span className="block text-[10px] text-text/60">
+                      {selectedIndex === index ? "Selected" : "Apply"}
                     </span>
-                  )}
-                </div>
+                  </span>
+                </button>
               );
             })}
           </div>
@@ -170,52 +117,10 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
             d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
           />
         </svg>
+        <span className="hidden md:block max-w-[9rem] truncate text-xs">
+          {currentTheme.name}
+        </span>
       </button>
-
-      {/* CSS animations and scrollbar styles */}
-      <style>{`
-        @keyframes slideInFromRight {
-          from {
-            opacity: 0;
-            transform: translateX(20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-
-        @keyframes slideOutToLeft {
-          from {
-            opacity: 1;
-            transform: translateX(0);
-          }
-          to {
-            opacity: 0;
-            transform: translateX(-20px);
-          }
-        }
-
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-            transform: translateX(-50%) translateY(-4px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-          }
-        }
-
-        /* Hide scrollbar but keep functionality */
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
     </div>
   );
 };
