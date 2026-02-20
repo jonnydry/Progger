@@ -37,7 +37,7 @@ interface ResultContext {
 }
 
 const App: React.FC = () => {
-  const { user, isLoading: authLoading, isAuthenticated } = useAuth();
+  const { user } = useAuth();
   const {
     theme,
     themes,

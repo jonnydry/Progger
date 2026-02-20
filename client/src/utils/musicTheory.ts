@@ -125,13 +125,6 @@ const KEY_ACCIDENTAL_PREFERENCES: Record<string, { type: 'sharp' | 'flat' | 'nat
 };
 
 /**
- * Sharp keys use sharps in their key signature
- * Flat keys use flats in their key signature
- */
-const SHARP_KEYS = new Set(['G', 'D', 'A', 'E', 'B', 'F#', 'C#']);
-const FLAT_KEYS = new Set(['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Cb']);
-
-/**
  * Determine if a key uses sharps or flats based on music theory
  * @param key - The musical key (e.g., 'C', 'G', 'F', 'Bb')
  * @returns 'sharp' if key uses sharps, 'flat' if key uses flats, 'natural' for C

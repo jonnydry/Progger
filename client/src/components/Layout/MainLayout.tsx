@@ -66,7 +66,6 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
       <StashSidebar
         isOpen={isStashOpen}
         onClose={() => setIsStashOpen(false)}
-        theme={theme}
         currentKey={currentKey}
         currentMode={currentMode}
         currentProgression={currentProgression}

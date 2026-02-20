@@ -111,7 +111,7 @@ const PositionSelector: React.FC<{
   return (
     <div className="flex items-center space-x-1 bg-text/10 p-1 rounded-md">
       <span className="text-sm text-text/70 px-2">Pos:</span>
-      {positions.map((position, index) => (
+      {positions.map((_position, index) => (
         <button
           key={index}
           onClick={() => setCurrentPosition(index)}

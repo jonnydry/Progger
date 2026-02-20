@@ -4,10 +4,7 @@ import { VoicingDiagram } from "./VoicingDiagram";
 import { displayChordName } from "@/utils/musicTheory";
 import {
   analyzeChord,
-  getChordFormula,
-  getChordIntervals,
   getChordNotes,
-  getScalesContainingChord,
 } from "@/utils/chordAnalysis";
 import {
   getChordVoicingsAsync,

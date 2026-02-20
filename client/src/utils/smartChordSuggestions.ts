@@ -6,8 +6,8 @@
  * 3. Last chord quality memory
  */
 
-import { noteToValue, transposeNote, calculateSemitoneDistance } from './musicTheory';
-import { ROOT_NOTES, CHORD_QUALITIES } from '@/constants';
+import { noteToValue, transposeNote } from './musicTheory';
+import { ROOT_NOTES } from '@/constants';
 
 export interface ChordInput {
   root: string;
@@ -55,7 +55,7 @@ export function detectKey(chords: ChordInput[]): { key: string; mode: 'major' | 
     const rootValue = noteToValue(rootNote);
 
     // Try major mode
-    const majorScore = scoreKeyFit(chords, rootNote, rootValue, 'major');
+    const majorScore = scoreKeyFit(chords, rootValue, 'major');
     if (majorScore > bestScore) {
       bestScore = majorScore;
       bestKey = rootNote;
@@ -63,7 +63,7 @@ export function detectKey(chords: ChordInput[]): { key: string; mode: 'major' | 
     }
 
     // Try minor mode
-    const minorScore = scoreKeyFit(chords, rootNote, rootValue, 'minor');
+    const minorScore = scoreKeyFit(chords, rootValue, 'minor');
     if (minorScore > bestScore) {
       bestScore = minorScore;
       bestKey = rootNote;
@@ -83,7 +83,6 @@ export function detectKey(chords: ChordInput[]): { key: string; mode: 'major' | 
  */
 function calculateTiebreakerBonus(
   chords: ChordInput[],
-  keyRoot: string,
   keyRootValue: number,
   mode: 'major' | 'minor'
 ): number {
@@ -118,7 +117,6 @@ function calculateTiebreakerBonus(
  */
 function scoreKeyFit(
   chords: ChordInput[],
-  keyRoot: string,
   keyRootValue: number,
   mode: 'major' | 'minor'
 ): number {
@@ -155,7 +153,7 @@ function scoreKeyFit(
   }
 
   // Add tiebreaker bonus to help distinguish between equally-fitting keys
-  score += calculateTiebreakerBonus(chords, keyRoot, keyRootValue, mode);
+  score += calculateTiebreakerBonus(chords, keyRootValue, mode);
 
   return score;
 }

@@ -1,4 +1,4 @@
-import { getScaleFingering, validateFingeringNotes, SCALE_LIBRARY, normalizeScaleName } from '../client/src/utils/scaleLibrary';
+import { getScaleFingering, validateFingeringNotes, SCALE_LIBRARY } from '../client/src/utils/scaleLibrary';
 import { getScaleNotes } from '../client/src/utils/scaleLibrary';
 
 // Suppress console warnings during test
@@ -210,4 +210,3 @@ if (failedTests === 0) {
   console.log(`❌ ${failedTests} TESTS FAILED. Please review the errors above.`);
   process.exit(1);
 }
-

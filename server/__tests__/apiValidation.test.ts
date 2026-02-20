@@ -61,6 +61,36 @@ describe('validateAPIResponse', () => {
     expect(() => validateAPIResponse(payload)).toThrow(APIValidationError);
   });
 
+  it('rejects scales when name root conflicts with rootNote', () => {
+    const payload = {
+      progression: [
+        {
+          chordName: 'Cmaj7',
+          musicalFunction: 'Tonic',
+          relationToKey: 'Imaj7'
+        }
+      ],
+      scales: [{ name: 'C Major', rootNote: 'D' }]
+    };
+
+    expect(() => validateAPIResponse(payload)).toThrow(APIValidationError);
+  });
+
+  it('accepts enharmonic scale root equivalents', () => {
+    const payload = {
+      progression: [
+        {
+          chordName: 'Cmaj7',
+          musicalFunction: 'Tonic',
+          relationToKey: 'Imaj7'
+        }
+      ],
+      scales: [{ name: 'C# Major', rootNote: 'Db' }]
+    };
+
+    expect(() => validateAPIResponse(payload)).not.toThrow();
+  });
+
   it('normalizes Ionian scale names to Major', () => {
     const payload = {
       progression: [

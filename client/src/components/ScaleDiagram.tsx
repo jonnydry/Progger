@@ -148,7 +148,7 @@ const PositionSelector: React.FC<{
   return (
     <div className="flex items-center gap-1 bg-text/10 p-1 rounded-md">
       <span className="hidden sm:inline text-sm text-text/70 px-2">Pos:</span>
-      {positions.map((position, index) => (
+      {positions.map((_position, index) => (
         <button
           key={index}
           onClick={() => setCurrentPosition(index)}
@@ -244,7 +244,7 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({
     });
 
     // Find positions that fit within mobile range (0-15)
-    const fitsInMobile = positionMinFrets.map((minFret, index) => {
+    const fitsInMobile = positionMinFrets.map((_minFret, index) => {
       const fingering = getScaleFingering(name, rootNote, index);
       const maxFret = Math.max(...fingering.flat());
       return maxFret <= FRET_COUNT_MOBILE;

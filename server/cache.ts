@@ -120,9 +120,6 @@ class RedisCache {
     if (!this.isConnected || !this.client) return null;
 
     try {
-      // Look for patterns like the cache key but allowing some variation
-      const basePattern = cacheKey.replace(/progression:[^:]+:[^:]+:[^:]+:[^:]+:.*/, 'progression:*');
-
       // For now, just check exact match - we can enhance this later
       const exists = await this.exists(cacheKey);
       return exists ? cacheKey : null;

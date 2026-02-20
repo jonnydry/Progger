@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import { redisCache, getProgressionCacheKey } from './cache';
 import { pendingRequests } from './pendingRequests';
-import { buildOptimizedPrompt, createPromptFingerprint, estimateTokenUsage, type ProgressionRequest } from './promptOptimization';
+import { buildOptimizedPrompt, estimateTokenUsage, type ProgressionRequest } from './promptOptimization';
 import { withRetry, xaiCircuitBreaker } from './retryLogic';
 import { logger } from './utils/logger';
 import { validateAPIResponse, APIValidationError } from './utils/apiValidation';

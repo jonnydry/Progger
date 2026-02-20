@@ -3,8 +3,7 @@
  * Provides comprehensive chord theory analysis and scale compatibility
  */
 
-import { getScaleIntervals, getScaleNotes } from './scaleLibrary';
-import { noteToValue, valueToNote, displayNote, transposeNote } from './musicTheory';
+import { noteToValue, valueToNote } from './musicTheory';
 import { normalizeChordQuality } from '@shared/music/chordQualities';
 
 export interface ChordAnalysis {
@@ -245,7 +244,6 @@ export function getScalesContainingChord(chordName: string, key?: string): strin
 
   if (!formulaData) return [];
 
-  const chordIntervals = new Set(formulaData.intervals);
   const matchingScales: string[] = [];
 
   for (const [scaleName, scaleIntervals] of Object.entries(COMMON_SCALES)) {
@@ -299,8 +297,6 @@ export function getScalesContainingChord(chordName: string, key?: string): strin
  * @returns Complete chord analysis object
  */
 export function analyzeChord(chordName: string, key: string = 'C'): ChordAnalysis {
-  const { root } = parseChordName(chordName);
-
   return {
     formula: getChordFormula(chordName),
     intervals: getChordIntervals(chordName),

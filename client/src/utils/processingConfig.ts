@@ -68,7 +68,7 @@ export function getProcessingConfig(): ProcessingConfiguration {
 /**
  * Update specific configuration values
  */
-export function updateProcessingConfig(updates: Partial<ProcessingConfiguration>): void {
+export function updateProcessingConfig(_updates: Partial<ProcessingConfiguration>): void {
   // In a real implementation, this could persist to localStorage
   // For now, it would need to be handled at the application level
   console.warn('Configuration updates not yet implemented. Use the config object directly.');

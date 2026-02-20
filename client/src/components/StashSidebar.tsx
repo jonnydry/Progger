@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import {
   useStash,
   useSaveToStash,
@@ -12,7 +12,6 @@ import { Z_INDEX } from "@/constants/zIndex";
 interface StashSidebarProps {
   isOpen: boolean;
   onClose: () => void;
-  theme: string;
   currentKey?: string;
   currentMode?: string;
   currentProgression?: ProgressionResult | null;
@@ -26,7 +25,6 @@ interface StashSidebarProps {
 export const StashSidebar: React.FC<StashSidebarProps> = ({
   isOpen,
   onClose,
-  theme,
   currentKey,
   currentMode,
   currentProgression,
@@ -291,7 +289,7 @@ export const StashSidebar: React.FC<StashSidebarProps> = ({
                 </p>
               </div>
             ) : (
-              stashItems.map((item, index) => (
+              stashItems.map((item) => (
                 <PixelCard
                   key={item.id}
                   noAnimate

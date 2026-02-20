@@ -22,12 +22,11 @@ export const VoicingPreview: React.FC<VoicingPreviewProps> = ({ voicing, isLoadi
   const width = LEFT_MARGIN + (STRING_COUNT - 1) * STRING_WIDTH + PADDING * 2;
   const height = FRET_COUNT * FRET_HEIGHT + PADDING * 2.5;
 
-  const { frets, firstFret, highestFret, effectiveFirstFret, usesRelativeFormat } = useMemo(() => {
+  const { frets, firstFret, effectiveFirstFret, usesRelativeFormat } = useMemo(() => {
     if (!voicing) {
       return {
         frets: [],
         firstFret: 1,
-        highestFret: 0,
         effectiveFirstFret: 1,
         usesRelativeFormat: false,
       };
@@ -42,7 +41,6 @@ export const VoicingPreview: React.FC<VoicingPreviewProps> = ({ voicing, isLoadi
     return {
       frets: f,
       firstFret: ff,
-      highestFret: hf,
       effectiveFirstFret: eff,
       usesRelativeFormat: urf,
     };

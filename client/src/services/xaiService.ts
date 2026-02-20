@@ -5,11 +5,7 @@ import {
   MusicTheoryError,
   APIUnavailableError,
   InvalidAPIResponseError,
-  ProcessingPipelineError,
-  ChordNotFoundError,
-  ScaleNotSupportedError,
   isRecoverableError,
-  getErrorSeverity,
   createErrorLog
 } from '../utils/errors';
 import { getProcessingConfig } from '../utils/processingConfig';
@@ -190,7 +186,7 @@ export async function generateChordProgression(key: string, mode: string, includ
     console.log("Fetching from backend API:", cacheKey);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    const timeoutId = setTimeout(() => controller.abort(), config.apiTimeoutMs);
 
     // Race between the fetch and the timeout
     let response: Response;
@@ -360,7 +356,7 @@ export async function generateChordProgression(key: string, mode: string, includ
     }
 
     // Check if this is a recoverable error (network issues, etc.)
-    if (isRecoverableError(error)) {
+    if (config.enableAutoRecovery && isRecoverableError(error)) {
       console.log(`🔄 Attempting automatic recovery for ${error.name}`);
 
       try {
@@ -443,6 +439,7 @@ async function fetchWithRetry(
 }
 
 export async function analyzeCustomProgression(chords: string[]): Promise<ProgressionResult> {
+  const config = getProcessingConfig();
   const cacheKey = `custom:${chords.join('-')}`;
 
   // Try to get from cache first
@@ -455,7 +452,7 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
     console.log("Analyzing custom progression:", chords);
 
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000);
+    const timeoutId = setTimeout(() => controller.abort(), config.apiTimeoutMs);
 
     // Race between the fetch (with retries) and the timeout
     let response: Response;
@@ -469,7 +466,7 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
         headers,
         signal: controller.signal,
         body: JSON.stringify({ chords }),
-      }, 3, 1000); // 3 retries with 1s initial delay
+      }, config.maxRetryAttempts, 1000); // configurable retries with 1s initial delay
     } catch (error) {
       // Network-level failure after retries
       throw new APIUnavailableError('/api/analyze-custom-progression', undefined);
@@ -608,7 +605,7 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
     }
 
     // Check if this is a recoverable error
-    if (isRecoverableError(error)) {
+    if (config.enableAutoRecovery && isRecoverableError(error)) {
       console.log(`🔄 Attempting automatic recovery for ${error.name}`);
 
       try {

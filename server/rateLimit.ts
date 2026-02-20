@@ -1,7 +1,7 @@
 import rateLimit from 'express-rate-limit';
 import RedisStore from 'rate-limit-redis';
 import { logger } from './utils/logger';
-import { getSharedRedisClient, isRedisAvailable, getRedisClient } from './redisClient';
+import { getSharedRedisClient, isRedisAvailable } from './redisClient';
 
 /**
  * Create Redis-backed rate limiter with graceful fallback to in-memory

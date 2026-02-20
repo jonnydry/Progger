@@ -4078,7 +4078,7 @@ const ENHARMONIC_ROOTS: Record<string, string> = {
   'Fb': 'E'
 };
 
-import { noteToValue, STANDARD_TUNING_VALUES, valueToNote } from './musicTheory';
+import { noteToValue, STANDARD_TUNING_VALUES } from './musicTheory';
 import { getChordNotes } from './chordAnalysis';
 
 /**

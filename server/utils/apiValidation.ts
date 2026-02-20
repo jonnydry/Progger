@@ -1,4 +1,4 @@
-import { resolveChordQuality, splitChordName, isSupportedChordQuality } from '@shared/music/chordQualities';
+import { splitChordName, isSupportedChordQuality } from '@shared/music/chordQualities';
 import { normalizeScaleDescriptor, FALLBACK_SCALE_LIBRARY_KEYS } from '@shared/music/scaleModes';
 /**
  * Enhanced API response validation
@@ -34,6 +34,7 @@ export class APIValidationError extends Error {
  * Pattern to validate individual Roman numeral components (including alterations)
  */
 const ROMAN_NUMERAL_COMPONENT_PATTERN = /^[b#]?[IVXLCDMivxlcdm]+[a-zA-Z0-9#b°øΔ]*$/;
+const SCALE_NAME_PATTERN = /^([A-G][#b]?)(?:\s+)(.+)$/i;
 
 /**
  * Valid root notes
@@ -42,6 +43,26 @@ const VALID_ROOT_NOTES = [
   'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B',
   'Db', 'Eb', 'Gb', 'Ab', 'Bb'
 ];
+
+const ROOT_NOTE_TO_PITCH_CLASS: Record<string, number> = {
+  C: 0,
+  'C#': 1,
+  Db: 1,
+  D: 2,
+  'D#': 3,
+  Eb: 3,
+  E: 4,
+  F: 5,
+  'F#': 6,
+  Gb: 6,
+  G: 7,
+  'G#': 8,
+  Ab: 8,
+  A: 9,
+  'A#': 10,
+  Bb: 10,
+  B: 11,
+};
 
 /**
  * Validates a chord name format
@@ -118,7 +139,7 @@ function validateScaleName(scaleName: string): void {
   }
 
   const trimmed = scaleName.trim();
-  const match = trimmed.match(/^([A-G][#b]?)(?:\s+)(.+)$/i);
+  const match = trimmed.match(SCALE_NAME_PATTERN);
   if (!match) {
     throw new APIValidationError(
       `Invalid scale name: "${scaleName}". Expected format: root + descriptor (e.g., "C Major").`
@@ -175,6 +196,33 @@ function normalizeRootToken(token: string): string {
   return first + second.toLowerCase();
 }
 
+function extractScaleRoot(scaleName: string): string | null {
+  const match = scaleName.trim().match(SCALE_NAME_PATTERN);
+  if (!match) {
+    return null;
+  }
+  return normalizeRootToken(match[1]);
+}
+
+function getPitchClass(root: string): number | null {
+  const normalized = normalizeRootToken(root);
+  if (!Object.prototype.hasOwnProperty.call(ROOT_NOTE_TO_PITCH_CLASS, normalized)) {
+    return null;
+  }
+  return ROOT_NOTE_TO_PITCH_CLASS[normalized];
+}
+
+function rootsAreCompatible(scaleNameRoot: string, explicitRoot: string): boolean {
+  const scaleRootPitchClass = getPitchClass(scaleNameRoot);
+  const explicitRootPitchClass = getPitchClass(explicitRoot);
+
+  return (
+    scaleRootPitchClass !== null &&
+    explicitRootPitchClass !== null &&
+    scaleRootPitchClass === explicitRootPitchClass
+  );
+}
+
 /**
  * Normalizes mode names to canonical forms
  * Ionian and Major are interchangeable (normalize to Major)
@@ -200,7 +248,7 @@ function normalizeModeName(mode: string): string {
  */
 function normalizeScaleName(scaleName: string): string {
   const trimmed = scaleName.trim();
-  const match = trimmed.match(/^([A-G][#b]?)(?:\s+)(.+)$/i);
+  const match = trimmed.match(SCALE_NAME_PATTERN);
   
   if (!match) {
     return trimmed; // Return as-is if format doesn't match
@@ -322,6 +370,13 @@ export function validateAPIResponse(result: unknown, expectedChordCount?: number
       }
       throw error;
     }
+
+    const scaleNameRoot = extractScaleRoot(scale.name);
+    if (!scaleNameRoot || !rootsAreCompatible(scaleNameRoot, scale.rootNote)) {
+      throw new APIValidationError(
+        `Scales[${i}]: scale name root "${scaleNameRoot ?? 'unknown'}" does not match rootNote "${scale.rootNote.trim()}".`
+      );
+    }
     
     // Normalize scale name to use canonical forms (Major/Minor instead of Ionian/Aeolian)
     const normalizedName = normalizeScaleName(scale.name);
@@ -349,7 +404,7 @@ export function validateAPIResponse(result: unknown, expectedChordCount?: number
       );
     }
 
-    const [, rootNote, minorSuffix] = keyMatch;
+    const [, rootNote] = keyMatch;
     const normalizedRoot = normalizeRootToken(rootNote);
     if (!VALID_ROOT_NOTES.includes(normalizedRoot)) {
       throw new APIValidationError(
@@ -379,4 +434,3 @@ export function validateAPIResponse(result: unknown, expectedChordCount?: number
 
   return { progression, scales: normalizedScales, detectedKey, detectedMode };
 }
-

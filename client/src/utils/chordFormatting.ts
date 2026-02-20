@@ -125,14 +125,6 @@ export function formatChordCanonicalName(root: string, quality: string): string 
  * @returns Formatted chord name (e.g., "C♯maj7", "B♭ø7")
  */
 export function formatChordName(chordName: string): string {
-  // Extract root and quality using regex
-  const match = chordName.match(/^([A-G][#b]?)(.*)/i);
-  if (!match) {
-    return chordName;
-  }
-
-  const [, rawRoot, rawQuality] = match;
-
   // For now, just convert # and b to Unicode in the full name
   // This is a simpler approach that handles edge cases
   return chordName

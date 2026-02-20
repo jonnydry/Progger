@@ -292,7 +292,7 @@ function findSimilarChord(
   };
 
   // Find which family the target quality belongs to
-  for (const [family, qualities] of Object.entries(qualityFamilies)) {
+  for (const [, qualities] of Object.entries(qualityFamilies)) {
     if (qualities.includes(targetQuality)) {
       // Look for other chords in the same family
       for (const quality of qualities) {

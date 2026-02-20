@@ -45,7 +45,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Health check endpoint
-  app.get('/api/health', async (req, res) => {
+  app.get('/api/health', async (_req, res) => {
     const rateLimitStatus = getRateLimitStatus();
     const health = {
       status: 'healthy' as 'healthy' | 'degraded' | 'unhealthy',

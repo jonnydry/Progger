@@ -1,6 +1,5 @@
 
-import { getScaleFingering, validateFingeringNotes, SCALE_LIBRARY, normalizeScaleName } from '../client/src/utils/scaleLibrary';
-import { noteToValue, valueToNote } from '../client/src/utils/musicTheory';
+import { getScaleFingering, validateFingeringNotes, SCALE_LIBRARY } from '../client/src/utils/scaleLibrary';
 
 // Mock dependencies if needed, or rely on tsx to handle imports
 // Since we are running with tsx, we can import directly from src if paths are correct.
@@ -96,4 +95,3 @@ async function validateAll() {
 }
 
 validateAll().catch(console.error);
-
