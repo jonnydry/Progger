@@ -406,13 +406,16 @@ CRITICAL REQUIREMENTS:
    - musicalFunction: Detailed role (e.g., 'Tonic Major 7th', 'Dominant 7th with flat 9')
    - relationToKey: Roman numeral relative to detected key (e.g., 'Imaj7', 'V7', 'iim7', 'V7/ii')
 
-3. Suggest 2 to 3 compatible scales:
-   - Primary scale MUST match the detected key/mode
+3. Suggest ALL compatible scales:
+   - Include every musically plausible compatible scale (do not limit to 2-3)
+   - Primary scale MUST match the detected key/mode and MUST appear first
    - For modal progressions (Lydian, Dorian, Phrygian, Mixolydian, Locrian):
      * Include the detected mode at different root positions that appear in the progression
      * Example: For a Lydian progression, suggest Lydian scales at different chord roots
      * Prioritize modal scales at different roots over generic major/minor scales
-   - Additional scales can include pentatonic variants or related modes
+   - Include additional compatible options such as pentatonic variants or related modes when they fit
+   - Do not return duplicate scales (same root + descriptor)
+   - Order scales from strongest fit to more color/optional choices
    - name: EXACT format - root note + mode name ONLY (e.g., 'C Major', 'A Dorian', 'G Mixolydian', 'C Minor Pentatonic', 'C Lydian')
      * DO NOT add words like "Natural", "Harmonic", "Melodic", or "Scale"
      * CORRECT: "E Minor", "G Major Pentatonic", "A Dorian", "C Lydian"

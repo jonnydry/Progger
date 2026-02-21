@@ -267,13 +267,16 @@ For EACH chord in the progression, provide:
 - musicalFunction: Detailed role (e.g., 'Tonic Major 7th', 'Secondary Dominant to ii', 'Altered Dominant')
 - relationToKey: Roman numeral (e.g., 'Imaj7', 'V7', 'iim7', 'V7/ii')
 
-Additionally, suggest 2 to 3 suitable scales for improvisation over this progression:
-- Primary scale MUST be '${key} ${mode}' to match the modal character
+Additionally, suggest ALL compatible scales for improvisation over this progression:
+- Include every musically plausible compatible scale (do not limit to 2-3)
+- Primary scale MUST be '${key} ${mode}' to match the modal character and MUST appear first
 - For modal progressions (Lydian, Dorian, Phrygian, Mixolydian, Locrian):
   * Include the mode (${mode}) at different root positions that appear in the progression
-  * Example: For a Lydian progression with chords on C, D, and E, suggest "C Lydian", "D Lydian", or "E Lydian"
+  * Example: For a Lydian progression with chords on C, D, and E, suggest "C Lydian", "D Lydian", and "E Lydian" when musically valid
   * For modes, prioritize ${mode} scales at different roots over generic major/minor scales
-- Additional scales can include pentatonic variants or related modes
+- Include additional compatible options such as pentatonic variants or related modes when they fit
+- Do not return duplicate scales (same root + descriptor)
+- Order scales from strongest fit to more color/optional choices
 - name: EXACT format - root note + mode name ONLY (e.g., '${key} ${mode}', '${key} Major Pentatonic', '${key} Dorian', '${key} Lydian')
   * DO NOT add words like "Natural", "Harmonic", "Melodic", or "Scale"
   * CORRECT: "E Minor", "G Major Pentatonic", "A Dorian", "C Lydian"
