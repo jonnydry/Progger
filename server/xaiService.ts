@@ -7,16 +7,85 @@ import { logger } from './utils/logger';
 import { validateAPIResponse, APIValidationError } from './utils/apiValidation';
 import { normalizeScaleDescriptor } from '@shared/music/scaleModes';
 
+const DEFAULT_XAI_REQUEST_TIMEOUT_MS = 25000;
+const DEFAULT_XAI_MAX_CONCURRENT_REQUESTS = 8;
+
+function parsePositiveIntEnv(value: string | undefined, fallback: number): number {
+  if (!value) return fallback;
+  const parsed = Number.parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+const XAI_REQUEST_TIMEOUT_MS = parsePositiveIntEnv(
+  process.env.XAI_REQUEST_TIMEOUT_MS,
+  DEFAULT_XAI_REQUEST_TIMEOUT_MS,
+);
+const XAI_MAX_CONCURRENT_REQUESTS = parsePositiveIntEnv(
+  process.env.XAI_MAX_CONCURRENT_REQUESTS,
+  DEFAULT_XAI_MAX_CONCURRENT_REQUESTS,
+);
+
+class RequestConcurrencyLimiter {
+  private activeCount = 0;
+  private queue: Array<() => void> = [];
+
+  constructor(private readonly maxConcurrent: number) {}
+
+  async run<T>(operation: () => Promise<T>): Promise<T> {
+    if (this.activeCount >= this.maxConcurrent) {
+      await new Promise<void>((resolve) => this.queue.push(resolve));
+    }
+
+    this.activeCount += 1;
+    try {
+      return await operation();
+    } finally {
+      this.activeCount = Math.max(0, this.activeCount - 1);
+      const next = this.queue.shift();
+      if (next) {
+        next();
+      }
+    }
+  }
+}
+
+const xaiRequestLimiter = new RequestConcurrencyLimiter(XAI_MAX_CONCURRENT_REQUESTS);
+
+let openAIClient: OpenAI | null = null;
+let openAIClientApiKey: string | null = null;
+
+function createOpenAIClient(apiKey: string): OpenAI {
+  return new OpenAI({
+    baseURL: "https://api.x.ai/v1",
+    apiKey,
+    timeout: XAI_REQUEST_TIMEOUT_MS,
+    maxRetries: 0,
+  });
+}
+
 const getOpenAI = () => {
   const apiKey = process.env.XAI_API_KEY;
   if (!apiKey) {
     throw new Error("XAI_API_KEY environment variable is not set.");
   }
-  return new OpenAI({
-    baseURL: "https://api.x.ai/v1",
-    apiKey: apiKey,
-  });
+
+  const isTestRuntime = process.env.NODE_ENV === 'test' || Boolean(process.env.VITEST);
+  if (isTestRuntime) {
+    return createOpenAIClient(apiKey);
+  }
+
+  if (!openAIClient || openAIClientApiKey !== apiKey) {
+    openAIClient = createOpenAIClient(apiKey);
+    openAIClientApiKey = apiKey;
+  }
+
+  return openAIClient;
 };
+
+export function __resetXaiClientForTests(): void {
+  openAIClient = null;
+  openAIClientApiKey = null;
+}
 
 // Helper to strip markdown code blocks from API response
 function cleanJsonResponse(text: string): string {
@@ -234,65 +303,67 @@ export async function generateChordProgression(
 
     const openai = getOpenAI();
 
-    return await xaiCircuitBreaker.execute(async () => {
-      const response = await openai.chat.completions.create({
-        model: "grok-4-1-fast-non-reasoning",
-        messages: [
-          {
-            role: "system",
-            content: "You are a music theory expert. Always respond with valid JSON matching the exact schema provided."
-          },
-          {
-            role: "user",
-            content: promptComponents.fullPrompt
-          }
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.7,
-        max_tokens: 1500, // Increased to accommodate 7+ chords with detailed descriptions
-      });
+    return await xaiRequestLimiter.run(async () =>
+      xaiCircuitBreaker.execute(async () => {
+        const response = await openai.chat.completions.create({
+          model: "grok-4-1-fast-non-reasoning",
+          messages: [
+            {
+              role: "system",
+              content: "You are a music theory expert. Always respond with valid JSON matching the exact schema provided."
+            },
+            {
+              role: "user",
+              content: promptComponents.fullPrompt
+            }
+          ],
+          response_format: { type: "json_object" },
+          temperature: 0.7,
+          max_tokens: 1500, // Increased to accommodate 7+ chords with detailed descriptions
+        });
 
-      const rawText = response.choices[0].message.content?.trim();
-      if (!rawText) {
-        throw new Error("Empty response from API");
-      }
+        const rawText = response.choices[0].message.content?.trim();
+        if (!rawText) {
+          throw new Error("Empty response from API");
+        }
 
-      // Clean markdown code blocks if present
-      const jsonText = cleanJsonResponse(rawText);
-      const parsedResult = JSON.parse(jsonText);
+        // Clean markdown code blocks if present
+        const jsonText = cleanJsonResponse(rawText);
+        const parsedResult = JSON.parse(jsonText);
 
-      // Enhanced validation with format checking and chord count verification
-      logger.info("Validating API response", {
-        expectedChordCount: numChords,
-        actualChordCount: parsedResult?.progression?.length,
-        rawProgressionLength: Array.isArray(parsedResult?.progression) ? parsedResult.progression.length : 'not an array',
-      });
-      
-      const resultFromApi = validateAPIResponse(parsedResult, numChords);
-      if (!hasPrimaryScaleMatch(resultFromApi.scales, key, mode)) {
-        throw new APIValidationError(
-          `AI response is missing a primary scale that matches requested mode: ${key} ${mode}.`,
-        );
-      }
-      if (includeTensions) {
-        const minimumAdvancedChords = Math.max(1, Math.floor(numChords * 0.2));
-        const advancedChordCount = countAdvancedChords(resultFromApi.progression);
-        if (advancedChordCount < minimumAdvancedChords) {
+        // Enhanced validation with format checking and chord count verification
+        logger.info("Validating API response", {
+          expectedChordCount: numChords,
+          actualChordCount: parsedResult?.progression?.length,
+          rawProgressionLength: Array.isArray(parsedResult?.progression) ? parsedResult.progression.length : 'not an array',
+        });
+        
+        const resultFromApi = validateAPIResponse(parsedResult, numChords);
+        if (!hasPrimaryScaleMatch(resultFromApi.scales, key, mode)) {
           throw new APIValidationError(
-            `includeTensions was enabled but only ${advancedChordCount} advanced chord(s) were returned. Expected at least ${minimumAdvancedChords}.`,
+            `AI response is missing a primary scale that matches requested mode: ${key} ${mode}.`,
           );
         }
-      }
+        if (includeTensions) {
+          const minimumAdvancedChords = Math.max(1, Math.floor(numChords * 0.2));
+          const advancedChordCount = countAdvancedChords(resultFromApi.progression);
+          if (advancedChordCount < minimumAdvancedChords) {
+            throw new APIValidationError(
+              `includeTensions was enabled but only ${advancedChordCount} advanced chord(s) were returned. Expected at least ${minimumAdvancedChords}.`,
+            );
+          }
+        }
 
-      logger.info("API response validated successfully", {
-        requestedChordCount: numChords,
-        returnedChordCount: resultFromApi.progression.length,
-        scaleCount: resultFromApi.scales.length,
-        chordCountMatch: resultFromApi.progression.length === numChords,
-      });
+        logger.info("API response validated successfully", {
+          requestedChordCount: numChords,
+          returnedChordCount: resultFromApi.progression.length,
+          scaleCount: resultFromApi.scales.length,
+          chordCountMatch: resultFromApi.progression.length === numChords,
+        });
 
-      return resultFromApi;
-    });
+        return resultFromApi;
+      })
+    );
   };
 
   // Step 5: Create request promise once and share it for deduplication
@@ -451,43 +522,45 @@ IMPORTANT: Return ONLY valid JSON, no additional text or markdown formatting.`;
 
     const openai = getOpenAI();
 
-    return await xaiCircuitBreaker.execute(async () => {
-      const response = await openai.chat.completions.create({
-        model: "grok-4-1-fast-non-reasoning",
-        messages: [
-          {
-            role: "system",
-            content: "You are a music theory expert. Always respond with valid JSON matching the exact schema provided."
-          },
-          {
-            role: "user",
-            content: prompt
-          }
-        ],
-        response_format: { type: "json_object" },
-        temperature: 0.7,
-        max_tokens: 1500, // Increased for more detailed analysis
-      });
+    return await xaiRequestLimiter.run(async () =>
+      xaiCircuitBreaker.execute(async () => {
+        const response = await openai.chat.completions.create({
+          model: "grok-4-1-fast-non-reasoning",
+          messages: [
+            {
+              role: "system",
+              content: "You are a music theory expert. Always respond with valid JSON matching the exact schema provided."
+            },
+            {
+              role: "user",
+              content: prompt
+            }
+          ],
+          response_format: { type: "json_object" },
+          temperature: 0.7,
+          max_tokens: 1500, // Increased for more detailed analysis
+        });
 
-      const rawText = response.choices[0].message.content?.trim();
-      if (!rawText) {
-        throw new Error("Empty response from API");
-      }
+        const rawText = response.choices[0].message.content?.trim();
+        if (!rawText) {
+          throw new Error("Empty response from API");
+        }
 
-      // Clean markdown code blocks if present
-      const jsonText = cleanJsonResponse(rawText);
-      const parsedResult = JSON.parse(jsonText);
+        // Clean markdown code blocks if present
+        const jsonText = cleanJsonResponse(rawText);
+        const parsedResult = JSON.parse(jsonText);
 
-      // Enhanced validation with format checking
-      const resultFromApi = validateAPIResponse(parsedResult);
+        // Enhanced validation with format checking
+        const resultFromApi = validateAPIResponse(parsedResult);
 
-      logger.debug("Custom progression analysis validated successfully", {
-        chordCount: resultFromApi.progression.length,
-        scaleCount: resultFromApi.scales.length,
-      });
+        logger.debug("Custom progression analysis validated successfully", {
+          chordCount: resultFromApi.progression.length,
+          scaleCount: resultFromApi.scales.length,
+        });
 
-      return resultFromApi;
-    });
+        return resultFromApi;
+      })
+    );
   };
 
   // Step 5: Create request promise once and share it for deduplication
