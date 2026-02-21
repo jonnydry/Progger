@@ -56,6 +56,7 @@ const App: React.FC = () => {
   );
   const [numChords, setNumChords] = useState<number>(4);
   const [includeTensions, setIncludeTensions] = useState<boolean>(false);
+  const [generationStyle, setGenerationStyle] = useState<string>("balanced");
   const [progressionResult, setProgressionResult] =
     useState<ProgressionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -166,6 +167,7 @@ const App: React.FC = () => {
         key,
         mode,
         includeTensions,
+        generationStyle,
         numChords: progressionLength,
         selectedProgression,
       },
@@ -178,6 +180,7 @@ const App: React.FC = () => {
     key,
     mode,
     includeTensions,
+    generationStyle,
     progressionLength,
     selectedProgression,
     generateMutation,
@@ -281,6 +284,8 @@ const App: React.FC = () => {
           onNumChordsChange={setNumChords}
           includeTensions={includeTensions}
           onTensionsChange={setIncludeTensions}
+          generationStyle={generationStyle}
+          onGenerationStyleChange={setGenerationStyle}
           onGenerate={handleGenerate}
           isLoading={isLoading}
           isCustomMode={isCustomMode}

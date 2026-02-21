@@ -1294,9 +1294,11 @@ export function getScaleIntervals(scaleName: string): number[] {
     return scaleData.intervals;
   }
 
-  // Fuzzy match
+  // Sanitized exact fallback (avoids substring collisions like "mixolydian" -> "lydian")
+  const normalizedSanitized = normalized.replace(/\s+|-/g, "").toLowerCase();
   for (const [key, data] of Object.entries(SCALE_LIBRARY)) {
-    if (normalized.includes(key) || key.includes(normalized)) {
+    const keySanitized = key.replace(/\s+|-/g, "").toLowerCase();
+    if (keySanitized === normalizedSanitized) {
       return data.intervals;
     }
   }

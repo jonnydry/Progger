@@ -4,11 +4,11 @@ import type { ChordVoicing } from "@/types";
 // Constants - defined outside component to prevent re-creation on every render
 const FRET_COUNT = 5;
 const STRING_COUNT = 6;
-const FRET_HEIGHT = 30;
-const STRING_WIDTH = 25;
-const DOT_RADIUS = 7;
-const PADDING = 20;
-const LEFT_MARGIN = 18;
+const FRET_HEIGHT = 34;
+const STRING_WIDTH = 28;
+const DOT_RADIUS = 8;
+const PADDING = 22;
+const LEFT_MARGIN = 20;
 
 // String stroke widths - thicker strings (lower index) are visually thicker
 const STRING_STROKE_WIDTHS = [1.5, 1.4, 1.3, 1.2, 1.1, 1.0] as const;

@@ -4,6 +4,7 @@ export interface ProgressionRequest {
   key: string;
   mode: string;
   includeTensions: boolean;
+  generationStyle: "conservative" | "balanced" | "adventurous";
   numChords: number;
   selectedProgression: string;
 }
@@ -16,11 +17,61 @@ export interface PromptComponents {
   fullPrompt: string;
 }
 
+interface AutoProgressionConfig {
+  isAuto: boolean;
+  variant?: string;
+}
+
+function parseAutoProgression(selectedProgression: string): AutoProgressionConfig {
+  const normalized = selectedProgression.trim();
+  if (normalized.toLowerCase() === "auto") {
+    return { isAuto: true };
+  }
+
+  const match = normalized.match(/^auto:(.+)$/i);
+  if (match) {
+    return { isAuto: true, variant: match[1].trim().toLowerCase() };
+  }
+
+  return { isAuto: false };
+}
+
+function getAutoCreativityDirective(variant?: string): string {
+  switch (variant) {
+    case "modal-cadence":
+      return "Prioritize modal cadences and avoid generic pop loops.";
+    case "stepwise-voice-leading":
+      return "Prioritize smooth bass motion by step and semitone for voice-leading interest.";
+    case "dominant-motion":
+      return "Include stronger dominant movement with at least one secondary dominant when musically valid.";
+    case "pedal-point":
+      return "Use a brief pedal-point moment to create tension before release.";
+    case "backdoor-mix":
+      return "Include at least one backdoor or subdominant-driven dominant resolution when stylistically appropriate.";
+    case "quartal-color":
+      return "Bias toward modern color tones and quartal-like harmonic colors while preserving tonal clarity.";
+    default:
+      return "Avoid overused templates like I-V-vi-IV unless explicitly requested.";
+  }
+}
+
+function getGenerationStyleDirective(generationStyle: "conservative" | "balanced" | "adventurous"): string {
+  if (generationStyle === "conservative") {
+    return "Favor stable diatonic motion, clear cadences, and minimal chromatic substitutions.";
+  }
+  if (generationStyle === "adventurous") {
+    return "Favor surprising but musical movement, richer substitutions, and bolder color tones while preserving coherent voice leading.";
+  }
+  return "Balance familiarity and novelty with one or two tasteful harmonic surprises.";
+}
+
 /**
  * Optimizes prompt length by only including advanced chord instructions when needed
  */
 export function buildOptimizedPrompt(request: ProgressionRequest): PromptComponents {
-  const { key, mode, includeTensions, numChords, selectedProgression } = request;
+  const { key, mode, includeTensions, generationStyle, numChords, selectedProgression } = request;
+  const autoConfig = parseAutoProgression(selectedProgression);
+  const progressionLabel = autoConfig.isAuto ? "AI Generated (auto)" : selectedProgression;
 
   // Common schema description used in all prompts
   const schemaDescription = `
@@ -113,6 +164,14 @@ This is NON-NEGOTIABLE and will be strictly validated.
 TASK:
 Generate a creative ${numChords}-chord progression in the key of ${key} ${mode}.
 
+REQUEST CONTEXT (MUST HONOR EXACTLY):
+- key: ${key}
+- mode: ${mode}
+- numChords: ${numChords}
+- selectedProgression: ${progressionLabel}
+- includeTensions: ${includeTensions ? "true" : "false"}
+- generationStyle: ${generationStyle}
+
 ⚠️ CRITICAL CHORD COUNT REQUIREMENTS:
 - REQUIRED: Exactly ${numChords} chord objects
 - NOT ${numChords - 1}, NOT ${numChords + 1}, EXACTLY ${numChords}
@@ -161,17 +220,28 @@ MUSIC THEORY RULES:
 - Extended chords (9, 11, 13) work well on any function but prioritize dominants and pre-dominants
 - In ${modeInfo.isMajorMode ? 'major' : 'minor'} modes, respect the key signature
 - Use appropriate accidentals: ${key.includes('b') ? 'prefer flats' : key.includes('#') ? 'prefer sharps' : 'use standard spelling'}`;
+  } else {
+    advancedChordInstructions = `
+TENSIONS MODE: OFF
+- Prioritize diatonic 7th chord vocabulary and clean functional movement
+- Avoid overusing altered dominants and dense upper-structure tension chains
+- Keep harmonic color tasteful and moderate unless the progression pattern explicitly implies stronger chromaticism`;
   }
 
   // Progression-specific instructions
   let progressionInstructions = '';
 
-  if (selectedProgression === 'auto') {
-    progressionInstructions = `The progression should follow common harmonic movement patterns and sound pleasing on guitar.`;
+  if (autoConfig.isAuto) {
+    progressionInstructions = `The progression should sound musical and guitar-friendly, but not formulaic.
+
+AUTO-GENERATION VARIETY RULES:
+- Do NOT default to the same stock loop every time
+- Use at least one non-triadic color chord when stylistically valid
+- Keep functional coherence while varying cadence shape
+- ${getAutoCreativityDirective(autoConfig.variant)}
+- STYLE TARGET: ${getGenerationStyleDirective(generationStyle)}`;
   } else {
-    const romanNumeralInstruction = selectedProgression === 'auto'
-      ? ''
-      : `
+    const romanNumeralInstruction = `
 ROMAN NUMERAL INTERPRETATION:
 - Uppercase (I, IV, V): Major chords
 - Lowercase (ii, iii, vi): Minor chords
@@ -181,7 +251,10 @@ ROMAN NUMERAL INTERPRETATION:
 EXAMPLES:
 ${modeInfo.romanNumeralExamples}
 
-The number of chords should exactly match the progression pattern.`;
+The number of chords should exactly match the progression pattern.
+
+STYLE TARGET:
+- ${getGenerationStyleDirective(generationStyle)}`;
 
     progressionInstructions = `Generate the specific chord progression "${selectedProgression}" using Nashville Number System conventions in the key of ${key} ${mode}. ${romanNumeralInstruction}`;
   }
@@ -217,6 +290,9 @@ Before you return your response:
 1. COUNT the chord objects in your progression array
 2. Verify the count equals EXACTLY ${numChords}
 3. If count ≠ ${numChords}, ADD or REMOVE chords until count = ${numChords}
+4. Verify the primary scale includes "${key} ${mode}" exactly by mode identity
+5. Verify response follows includeTensions=${includeTensions ? "true" : "false"} behavior
+6. Verify response aligns with generationStyle=${generationStyle}
 
 REQUIRED: progression.length === ${numChords}
 Your response will be REJECTED if this requirement is not met.

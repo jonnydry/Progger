@@ -50,11 +50,11 @@ const ArrowButton: React.FC<{
         ariaLabel ||
         `Navigate to ${direction === "left" ? "previous" : "next"} voicing`
       }
-      className="p-2 md:p-1.5 rounded-full bg-surface hover:bg-background text-text/80 hover:text-text transition-all duration-200 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,0.2)] hover:translate-x-[1px] hover:translate-y-[1px] border-2 border-border active:translate-x-[2px] active:translate-y-[2px] active:shadow-none focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface"
+      className="p-1.5 md:p-1 rounded-full bg-surface hover:bg-background text-text/80 hover:text-text transition-all duration-200 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,0.2)] hover:translate-x-[1px] hover:translate-y-[1px] border-2 border-border active:translate-x-[2px] active:translate-y-[2px] active:shadow-none focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface"
     >
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        className="h-5 w-5"
+        className="h-4 w-4"
         viewBox="0 0 20 20"
         fill="currentColor"
       >
@@ -296,7 +296,7 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({
           </div>
         )}
       </PixelCard>
-      <div className="flex flex-wrap justify-center items-center w-full max-w-7xl px-4">
+      <div className="flex flex-wrap justify-center items-start gap-x-6 gap-y-10 w-full max-w-7xl px-4">
         {progression.map((chord, index) => {
           const currentVoicingIndex = voicingIndices[index] ?? 0;
           const currentVoicing = chord.voicings[currentVoicingIndex];
@@ -316,8 +316,8 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({
                 noAnimate
                 className={`
                       flex flex-col items-center transition-all duration-300 relative
-                      ${isCompact ? "w-[160px] p-1.5 gap-1" : "w-[220px] p-4 gap-2"}
-                      ${isExpanded ? "scale-105 z-10 border-primary" : "hover:scale-105"}
+                      ${isCompact ? "w-[190px] p-2 gap-2" : "w-[248px] p-4 gap-3"}
+                      ${isExpanded ? "scale-[1.03] z-10 border-primary" : "hover:scale-[1.02]"}
                   `}
               >
                 <div

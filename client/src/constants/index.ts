@@ -347,6 +347,12 @@ export const MODE_VALUES = MODES.map((m) => m.value);
 export const CHORD_COUNTS = [2, 3, 4, 5, 6, 7];
 export const MAX_CUSTOM_CHORDS = 12;
 
+export const GENERATION_STYLE_OPTIONS = [
+  { name: "Conservative", value: "conservative" },
+  { name: "Balanced", value: "balanced" },
+  { name: "Adventurous", value: "adventurous" },
+] as const;
+
 export const COMMON_PROGRESSIONS = [
   { name: "AI Generated", value: "auto" },
   // --- Major Key / Pop / Rock ---

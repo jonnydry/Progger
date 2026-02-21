@@ -1,4 +1,5 @@
 // Validation utilities for API request validation
+import { GENERATION_STYLES, type GenerationStyle } from '../../shared/cacheUtils';
 
 // Valid keys (matches client constants)
 const KEYS = [
@@ -16,6 +17,7 @@ export interface ProgressionRequest {
   key: string;
   mode: string;
   includeTensions: boolean;
+  generationStyle: GenerationStyle;
   numChords: number;
   selectedProgression: string;
 }
@@ -57,6 +59,19 @@ export function validateProgressionRequest(body: unknown): ProgressionRequest {
     throw new ValidationError('includeTensions must be a boolean');
   }
 
+  // Validate generationStyle (optional for backward compatibility)
+  const generationStyleRaw =
+    req.generationStyle === undefined ? 'balanced' : req.generationStyle;
+  if (typeof generationStyleRaw !== 'string') {
+    throw new ValidationError('generationStyle must be a string');
+  }
+  const generationStyle = generationStyleRaw.trim().toLowerCase();
+  if (!GENERATION_STYLES.includes(generationStyle as GenerationStyle)) {
+    throw new ValidationError(
+      `generationStyle must be one of: ${GENERATION_STYLES.join(', ')}`
+    );
+  }
+
   // Validate numChords
   if (typeof req.numChords !== 'number' || !Number.isInteger(req.numChords)) {
     throw new ValidationError('numChords must be an integer');
@@ -77,6 +92,7 @@ export function validateProgressionRequest(body: unknown): ProgressionRequest {
     key: req.key,
     mode: req.mode,
     includeTensions: req.includeTensions,
+    generationStyle: generationStyle as GenerationStyle,
     numChords: req.numChords,
     selectedProgression: req.selectedProgression,
   };
@@ -116,4 +132,3 @@ export function validateCustomProgressionRequest(body: unknown): { chords: strin
     chords: req.chords as string[],
   };
 }
-

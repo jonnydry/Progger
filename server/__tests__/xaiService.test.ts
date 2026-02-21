@@ -61,6 +61,7 @@ describe('xaiService', () => {
       key: 'C',
       mode: 'major',
       includeTensions: false,
+      generationStyle: 'balanced' as const,
       numChords: 4,
       selectedProgression: 'auto',
     };
@@ -86,6 +87,7 @@ describe('xaiService', () => {
         validRequest.key,
         validRequest.mode,
         validRequest.includeTensions,
+        validRequest.generationStyle,
         validRequest.numChords,
         validRequest.selectedProgression
       );
@@ -103,6 +105,7 @@ describe('xaiService', () => {
         validRequest.key,
         validRequest.mode,
         validRequest.includeTensions,
+        validRequest.generationStyle,
         validRequest.numChords,
         validRequest.selectedProgression
       );
@@ -128,6 +131,7 @@ describe('xaiService', () => {
         validRequest.key,
         validRequest.mode,
         validRequest.includeTensions,
+        validRequest.generationStyle,
         validRequest.numChords,
         validRequest.selectedProgression
       );
@@ -156,6 +160,7 @@ describe('xaiService', () => {
         validRequest.key,
         validRequest.mode,
         validRequest.includeTensions,
+        validRequest.generationStyle,
         validRequest.numChords,
         validRequest.selectedProgression
       );
@@ -190,6 +195,7 @@ describe('xaiService', () => {
           validRequest.key,
           validRequest.mode,
           validRequest.includeTensions,
+          validRequest.generationStyle,
           validRequest.numChords,
           validRequest.selectedProgression
         )
@@ -212,6 +218,7 @@ describe('xaiService', () => {
           validRequest.key,
           validRequest.mode,
           validRequest.includeTensions,
+          validRequest.generationStyle,
           validRequest.numChords,
           validRequest.selectedProgression
         )
@@ -242,6 +249,7 @@ describe('xaiService', () => {
           validRequest.key,
           validRequest.mode,
           validRequest.includeTensions,
+          validRequest.generationStyle,
           validRequest.numChords,
           validRequest.selectedProgression
         )
@@ -259,6 +267,7 @@ describe('xaiService', () => {
           validRequest.key,
           validRequest.mode,
           validRequest.includeTensions,
+          validRequest.generationStyle,
           validRequest.numChords,
           validRequest.selectedProgression
         )
@@ -280,6 +289,7 @@ describe('xaiService', () => {
         validRequest.key,
         validRequest.mode,
         validRequest.includeTensions,
+        validRequest.generationStyle,
         validRequest.numChords,
         validRequest.selectedProgression
       );
@@ -289,6 +299,36 @@ describe('xaiService', () => {
         validAPIResponse,
         86400 // 24 hours
       );
+    });
+
+    it('should enforce advanced chord density when includeTensions is true', async () => {
+      const nonAdvancedResponse = {
+        progression: [
+          { chordName: 'C', musicalFunction: 'Tonic', relationToKey: 'I' },
+          { chordName: 'Am7', musicalFunction: 'Relative Minor', relationToKey: 'vi' },
+          { chordName: 'Fmaj7', musicalFunction: 'Subdominant', relationToKey: 'IV' },
+          { chordName: 'G7', musicalFunction: 'Dominant', relationToKey: 'V' },
+        ],
+        scales: [
+          { name: 'C Major', rootNote: 'C' },
+          { name: 'A Minor', rootNote: 'A' },
+        ],
+      };
+
+      mockOpenAI.chat.completions.create.mockResolvedValue({
+        choices: [{ message: { content: JSON.stringify(nonAdvancedResponse) } }],
+      });
+
+      await expect(
+        xaiService.generateChordProgression(
+          'C',
+          'major',
+          true,
+          'balanced',
+          4,
+          'auto'
+        )
+      ).rejects.toThrow('includeTensions was enabled');
     });
 
     it('should register pending request during generation', async () => {
@@ -306,6 +346,7 @@ describe('xaiService', () => {
         validRequest.key,
         validRequest.mode,
         validRequest.includeTensions,
+        validRequest.generationStyle,
         validRequest.numChords,
         validRequest.selectedProgression
       );
@@ -467,8 +508,17 @@ describe('xaiService', () => {
           new Error('Request timed out')
         );
 
-        const pending = xaiService.generateChordProgression('C', 'major', false, 4, 'auto');
-        const assertion = expect(pending).rejects.toThrow('XAI API request timed out');
+        const pending = xaiService.generateChordProgression(
+          'C',
+          'major',
+          false,
+          'balanced',
+          4,
+          'auto'
+        );
+        const assertion = expect(pending).rejects.toThrow(
+          /XAI API request timed out|XAI API is temporarily unavailable/
+        );
         await vi.runAllTimersAsync();
         await assertion;
       } finally {
@@ -491,7 +541,14 @@ describe('xaiService', () => {
       });
 
       await expect(
-        xaiService.generateChordProgression('C', 'major', false, 4, 'auto')
+        xaiService.generateChordProgression(
+          'C',
+          'major',
+          false,
+          'balanced',
+          4,
+          'auto'
+        )
       ).rejects.toThrow();
     });
   });

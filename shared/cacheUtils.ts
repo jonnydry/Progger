@@ -3,6 +3,14 @@
  * Ensures cache keys are consistent between client and server
  */
 
+export const GENERATION_STYLES = [
+  "conservative",
+  "balanced",
+  "adventurous",
+] as const;
+
+export type GenerationStyle = (typeof GENERATION_STYLES)[number];
+
 /**
  * Normalize a progression string for consistent caching
  * Removes whitespace, converts to lowercase, and removes special characters
@@ -31,6 +39,7 @@ function normalizeProgression(progression: string): string {
  * @param includeTensions - Whether to include tension chords
  * @param numChords - Number of chords in progression
  * @param selectedProgression - Progression pattern (e.g., 'auto', 'I-IV-V')
+ * @param generationStyle - Creativity/style target for AI generation
  * @returns Cache key string
  */
 export function getProgressionCacheKey(
@@ -39,6 +48,7 @@ export function getProgressionCacheKey(
   includeTensions: boolean,
   numChords: number,
   selectedProgression: string,
+  generationStyle: GenerationStyle = "balanced",
 ): string {
   const semanticParts = [
     key.toLowerCase().trim(),
@@ -46,6 +56,7 @@ export function getProgressionCacheKey(
     includeTensions ? "tensions" : "no-tensions",
     numChords.toString(),
     normalizeProgression(selectedProgression),
+    generationStyle.toLowerCase().trim(),
   ];
 
   return `progression:${semanticParts.join(":")}`;

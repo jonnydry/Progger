@@ -110,9 +110,17 @@ class RedisCache {
     mode: string,
     includeTensions: boolean,
     numChords: number,
-    selectedProgression: string
+    selectedProgression: string,
+    generationStyle: "conservative" | "balanced" | "adventurous" = "balanced",
   ): string {
-    return getSharedCacheKey(key, mode, includeTensions, numChords, selectedProgression);
+    return getSharedCacheKey(
+      key,
+      mode,
+      includeTensions,
+      numChords,
+      selectedProgression,
+      generationStyle,
+    );
   }
 
   // Check if similar requests exist (for deduplication)

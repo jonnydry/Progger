@@ -1,6 +1,6 @@
 import type { ChordInProgression, ProgressionResult, ScaleInfo } from '../types';
 import { getChordVoicingsAsync, isMutedVoicing } from '../utils/chords/index';
-import { getScaleFingering, getScaleNotes, validateFingeringNotes } from '../utils/scaleLibrary';
+import { getScaleFingering, getScaleNotes, normalizeScaleName, validateFingeringNotes } from '../utils/scaleLibrary';
 import {
   MusicTheoryError,
   APIUnavailableError,
@@ -36,6 +36,34 @@ interface CacheEntry {
 
 const CACHE_TTL_24HOURS = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 const MAX_CACHE_ENTRIES = 50; // Maximum number of cache entries to prevent quota exceeded errors
+const AUTO_VARIANT_BUCKETS = [
+  "modal-cadence",
+  "stepwise-voice-leading",
+  "dominant-motion",
+  "pedal-point",
+  "backdoor-mix",
+  "quartal-color",
+] as const;
+
+const ROOT_TO_PITCH_CLASS: Record<string, number> = {
+  C: 0,
+  "C#": 1,
+  Db: 1,
+  D: 2,
+  "D#": 3,
+  Eb: 3,
+  E: 4,
+  F: 5,
+  "F#": 6,
+  Gb: 6,
+  G: 7,
+  "G#": 8,
+  Ab: 8,
+  A: 9,
+  "A#": 10,
+  Bb: 10,
+  B: 11,
+};
 
 function getFromCache(cacheKey: string): ProgressionResult | null {
   try {
@@ -172,14 +200,89 @@ export function clearAllProgressionCache(): void {
   }
 }
 
-export async function generateChordProgression(key: string, mode: string, includeTensions: boolean, numChords: number, selectedProgression: string): Promise<ProgressionResult> {
+function getAutoProgressionVariant(): string {
+  try {
+    const key = "auto_progression_variant_counter";
+    const currentRaw = localStorage.getItem(key);
+    const current = Number.parseInt(currentRaw ?? "0", 10);
+    const safeCurrent = Number.isFinite(current) ? current : 0;
+    const next = safeCurrent + 1;
+    localStorage.setItem(key, next.toString());
+    return AUTO_VARIANT_BUCKETS[safeCurrent % AUTO_VARIANT_BUCKETS.length];
+  } catch (error) {
+    console.warn("Could not persist auto progression variant counter", error);
+    return AUTO_VARIANT_BUCKETS[Math.floor(Math.random() * AUTO_VARIANT_BUCKETS.length)];
+  }
+}
+
+function toPitchClass(root: string): number | null {
+  const trimmed = root.trim();
+  if (!trimmed) return null;
+
+  const first = trimmed.charAt(0).toUpperCase();
+  const second = trimmed.charAt(1);
+  let normalized = first;
+
+  if (second === "#" || second === "♯") {
+    normalized = `${first}#`;
+  } else if (second === "b" || second === "♭" || second === "B") {
+    normalized = `${first}b`;
+  }
+
+  return ROOT_TO_PITCH_CLASS[normalized] ?? null;
+}
+
+function hasPrimaryScaleMatch(result: ProgressionResult, requestedKey: string, requestedMode: string): boolean {
+  const requestedPitch = toPitchClass(requestedKey);
+  const requestedModeKey = normalizeScaleName(requestedMode);
+  if (requestedPitch === null) return false;
+
+  return result.scales.some((scale) => {
+    const match = scale.name.trim().match(/^([A-G][#b]?)(?:\s+)(.+)$/i);
+    if (!match) return false;
+
+    const scalePitch = toPitchClass(match[1]);
+    if (scalePitch === null || scalePitch !== requestedPitch) {
+      return false;
+    }
+
+    return normalizeScaleName(match[2]) === requestedModeKey;
+  });
+}
+
+export async function generateChordProgression(
+  key: string,
+  mode: string,
+  includeTensions: boolean,
+  generationStyle: string = "balanced",
+  numChords: number,
+  selectedProgression: string,
+): Promise<ProgressionResult> {
+  const effectiveProgression =
+    selectedProgression === "auto"
+      ? `auto:${getAutoProgressionVariant()}`
+      : selectedProgression;
   const config = getProcessingConfig();
-  const cacheKey = getProgressionCacheKey(key, mode, includeTensions, numChords, selectedProgression);
+  const cacheKey = getProgressionCacheKey(
+    key,
+    mode,
+    includeTensions,
+    numChords,
+    effectiveProgression,
+    generationStyle as "conservative" | "balanced" | "adventurous",
+  );
 
   // Try to get from cache first
   const cachedResult = getFromCache(cacheKey);
   if (cachedResult) {
-    return cachedResult;
+    if (hasPrimaryScaleMatch(cachedResult, key, mode)) {
+      return cachedResult;
+    }
+    try {
+      localStorage.removeItem(cacheKey);
+    } catch (error) {
+      console.warn("Could not remove stale cache entry", error);
+    }
   }
   
   try {
@@ -203,8 +306,9 @@ export async function generateChordProgression(key: string, mode: string, includ
           key,
           mode,
           includeTensions,
+          generationStyle,
           numChords,
-          selectedProgression,
+          selectedProgression: effectiveProgression,
         }),
       });
     } catch (error) {

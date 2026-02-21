@@ -109,7 +109,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/generate-progression', csrfSynchronisedProtection, aiGenerationLimiter, validateProgressionRequestMiddleware, async (req, res) => {
     try {
       // Request body is already validated by middleware
-      const { key, mode, includeTensions, numChords, selectedProgression } = req.body;
+      const {
+        key,
+        mode,
+        includeTensions,
+        generationStyle,
+        numChords,
+        selectedProgression,
+      } = req.body;
 
       // Log the received parameters to trace chord count through the pipeline
       logger.info("POST /api/generate-progression - Request received", {
@@ -117,6 +124,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         key,
         mode,
         includeTensions,
+        generationStyle,
         numChords,
         selectedProgression,
         numChordsType: typeof numChords,
@@ -126,6 +134,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         key,
         mode,
         includeTensions,
+        generationStyle,
         numChords,
         selectedProgression
       );

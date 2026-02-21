@@ -1,5 +1,10 @@
 import React, { useRef, useEffect } from 'react';
-import { KEYS, CHORD_COUNTS, COMMON_PROGRESSIONS } from '@/constants';
+import {
+  KEYS,
+  CHORD_COUNTS,
+  COMMON_PROGRESSIONS,
+  GENERATION_STYLE_OPTIONS,
+} from '@/constants';
 import { CustomSelect } from './CustomSelect';
 import { ModeSelect } from './ModeSelect';
 import { CustomProgressionInput } from './CustomProgressionInput';
@@ -18,6 +23,8 @@ interface ControlsProps {
   onNumChordsChange: (count: number) => void;
   includeTensions: boolean;
   onTensionsChange: (checked: boolean) => void;
+  generationStyle: string;
+  onGenerationStyleChange: (style: string) => void;
   onGenerate: () => void;
   isLoading: boolean;
   // Custom mode props
@@ -41,6 +48,8 @@ export const Controls: React.FC<ControlsProps> = ({
   onNumChordsChange,
   includeTensions,
   onTensionsChange,
+  generationStyle,
+  onGenerationStyleChange,
   onGenerate,
   isLoading,
   isCustomMode = false,
@@ -102,6 +111,17 @@ export const Controls: React.FC<ControlsProps> = ({
             onChange={(val) => onNumChordsChange(Number(val))}
             options={CHORD_COUNTS.map(String)}
             disabled={selectedProgression !== 'auto'}
+          />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
+          <CustomSelect
+            label="Generation Style"
+            value={generationStyle}
+            onChange={onGenerationStyleChange}
+            options={GENERATION_STYLE_OPTIONS.map((option) => ({
+              name: option.name,
+              value: option.value,
+            }))}
           />
         </div>
 

@@ -81,6 +81,14 @@ describe("scaleLibrary", () => {
       expect(dorian).not.toEqual(mixolydian);
     });
 
+    it("should not confuse Mixolydian with Lydian when root note is included", () => {
+      const dMixolydian = getScaleIntervals("D Mixolydian");
+      const dLydian = getScaleIntervals("D Lydian");
+      expect(dMixolydian).toEqual([0, 2, 4, 5, 7, 9, 10]);
+      expect(dLydian).toEqual([0, 2, 4, 6, 7, 9, 11]);
+      expect(dMixolydian).not.toEqual(dLydian);
+    });
+
     it("should fallback to major intervals for unknown scales", () => {
       const unknown = getScaleIntervals("unknown");
       expect(unknown).toEqual([0, 2, 4, 5, 7, 9, 11]);

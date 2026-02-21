@@ -6,14 +6,15 @@ interface GenerateProgressionParams {
     key: string;
     mode: string;
     includeTensions: boolean;
+    generationStyle: string;
     numChords: number;
     selectedProgression: string;
 }
 
 export const useGenerateProgression = () => {
     return useMutation<ProgressionResult, Error, GenerateProgressionParams>({
-        mutationFn: ({ key, mode, includeTensions, numChords, selectedProgression }) =>
-            generateChordProgression(key, mode, includeTensions, numChords, selectedProgression),
+        mutationFn: ({ key, mode, includeTensions, generationStyle, numChords, selectedProgression }) =>
+            generateChordProgression(key, mode, includeTensions, generationStyle, numChords, selectedProgression),
     });
 };
 

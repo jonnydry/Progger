@@ -5,6 +5,7 @@ import { buildOptimizedPrompt, estimateTokenUsage, type ProgressionRequest } fro
 import { withRetry, xaiCircuitBreaker } from './retryLogic';
 import { logger } from './utils/logger';
 import { validateAPIResponse, APIValidationError } from './utils/apiValidation';
+import { normalizeScaleDescriptor } from '@shared/music/scaleModes';
 
 const getOpenAI = () => {
   const apiKey = process.env.XAI_API_KEY;
@@ -50,10 +51,117 @@ interface ProgressionResultFromAPI {
   detectedMode?: string;
 }
 
+function isAdvancedChordSymbol(chordName: string): boolean {
+  const normalized = chordName.trim();
+  if (!normalized) return false;
+
+  // Remove the root token and optional slash bass to focus on chord quality.
+  const quality = normalized
+    .replace(/^([A-G][#b]?)/i, '')
+    .replace(/\/[A-G][#b]?$/i, '')
+    .toLowerCase();
+
+  if (!quality) return false;
+
+  return /(?:alt|sus|add|\+|aug|dim7|m7b5|min7b5|maj9|maj11|maj13|min9|min11|min13|9|11|13|7b9|7#9|7b5|7#5|6\/9|#11|b13|b9)/i.test(
+    quality,
+  );
+}
+
+function countAdvancedChords(progression: SimpleChord[]): number {
+  return progression.filter((chord) => {
+    const relation = chord.relationToKey.toLowerCase();
+    const functionText = chord.musicalFunction.toLowerCase();
+
+    return (
+      isAdvancedChordSymbol(chord.chordName) ||
+      relation.includes('/') ||
+      functionText.includes('secondary dominant') ||
+      functionText.includes('tritone') ||
+      functionText.includes('altered')
+    );
+  }).length;
+}
+
+const ROOT_TO_PITCH_CLASS: Record<string, number> = {
+  C: 0,
+  'C#': 1,
+  Db: 1,
+  D: 2,
+  'D#': 3,
+  Eb: 3,
+  E: 4,
+  F: 5,
+  'F#': 6,
+  Gb: 6,
+  G: 7,
+  'G#': 8,
+  Ab: 8,
+  A: 9,
+  'A#': 10,
+  Bb: 10,
+  B: 11,
+};
+
+function normalizeRootToken(token: string): string {
+  const trimmed = token.trim();
+  if (trimmed.length <= 1) {
+    return trimmed.toUpperCase();
+  }
+  const first = trimmed.charAt(0).toUpperCase();
+  const second = trimmed.charAt(1);
+
+  if (second === '#' || second === '♯') return `${first}#`;
+  if (second === 'b' || second === '♭' || second === 'B') return `${first}b`;
+  return first + second.toLowerCase();
+}
+
+function toPitchClass(root: string): number | null {
+  const normalized = normalizeRootToken(root);
+  if (!(normalized in ROOT_TO_PITCH_CLASS)) return null;
+  return ROOT_TO_PITCH_CLASS[normalized];
+}
+
+function parseScaleName(scaleName: string): { root: string; descriptor: string } | null {
+  const match = scaleName.trim().match(/^([A-G][#b]?)(?:\s+)(.+)$/i);
+  if (!match) return null;
+  return { root: match[1], descriptor: match[2] };
+}
+
+function normalizeModeCanonical(mode: string): string {
+  const normalized = normalizeScaleDescriptor(mode);
+  return (normalized?.canonical ?? mode).trim().toLowerCase();
+}
+
+function hasPrimaryScaleMatch(
+  scales: SimpleScale[],
+  requestedKey: string,
+  requestedMode: string,
+): boolean {
+  const requestedPitchClass = toPitchClass(requestedKey);
+  const requestedModeCanonical = normalizeModeCanonical(requestedMode);
+
+  if (requestedPitchClass === null) return false;
+
+  return scales.some((scale) => {
+    const parsed = parseScaleName(scale.name);
+    if (!parsed) return false;
+
+    const scalePitchClass = toPitchClass(parsed.root);
+    if (scalePitchClass === null || scalePitchClass !== requestedPitchClass) {
+      return false;
+    }
+
+    const scaleModeCanonical = normalizeModeCanonical(parsed.descriptor);
+    return scaleModeCanonical === requestedModeCanonical;
+  });
+}
+
 export async function generateChordProgression(
   key: string,
   mode: string,
   includeTensions: boolean,
+  generationStyle: "conservative" | "balanced" | "adventurous" = "balanced",
   numChords: number,
   selectedProgression: string
 ): Promise<ProgressionResultFromAPI> {
@@ -62,12 +170,20 @@ export async function generateChordProgression(
     key,
     mode,
     includeTensions,
+    generationStyle,
     numChords,
     selectedProgression,
   });
 
   // Create cache key using semantic fingerprinting
-  const cacheKey = getProgressionCacheKey(key, mode, includeTensions, numChords, selectedProgression);
+  const cacheKey = getProgressionCacheKey(
+    key,
+    mode,
+    includeTensions,
+    numChords,
+    selectedProgression,
+    generationStyle,
+  );
   
   // Log the cache key to verify numChords is included
   logger.debug("Cache key generated", { cacheKey, numChords });
@@ -82,8 +198,17 @@ export async function generateChordProgression(
   // Step 2: Check Redis cache for existing result
   const cachedResult = await redisCache.get<ProgressionResultFromAPI>(cacheKey);
   if (cachedResult) {
-    logger.debug("Cache hit", { cacheKey });
-    return cachedResult;
+    if (!hasPrimaryScaleMatch(cachedResult.scales, key, mode)) {
+      logger.warn("Ignoring stale cache entry with mismatched primary scale", {
+        cacheKey,
+        key,
+        mode,
+      });
+      await redisCache.delete(cacheKey);
+    } else {
+      logger.debug("Cache hit", { cacheKey });
+      return cachedResult;
+    }
   }
 
   // Create request object for optimization
@@ -91,6 +216,7 @@ export async function generateChordProgression(
     key,
     mode,
     includeTensions,
+    generationStyle,
     numChords,
     selectedProgression
   };
@@ -143,6 +269,20 @@ export async function generateChordProgression(
       });
       
       const resultFromApi = validateAPIResponse(parsedResult, numChords);
+      if (!hasPrimaryScaleMatch(resultFromApi.scales, key, mode)) {
+        throw new APIValidationError(
+          `AI response is missing a primary scale that matches requested mode: ${key} ${mode}.`,
+        );
+      }
+      if (includeTensions) {
+        const minimumAdvancedChords = Math.max(1, Math.floor(numChords * 0.2));
+        const advancedChordCount = countAdvancedChords(resultFromApi.progression);
+        if (advancedChordCount < minimumAdvancedChords) {
+          throw new APIValidationError(
+            `includeTensions was enabled but only ${advancedChordCount} advanced chord(s) were returned. Expected at least ${minimumAdvancedChords}.`,
+          );
+        }
+      }
 
       logger.info("API response validated successfully", {
         requestedChordCount: numChords,
