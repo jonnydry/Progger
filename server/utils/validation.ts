@@ -1,5 +1,6 @@
 // Validation utilities for API request validation
 import { GENERATION_STYLES, type GenerationStyle } from '../../shared/cacheUtils';
+import { normalizeScaleDescriptor } from '../../shared/music/scaleModes';
 
 // Valid keys (matches client constants)
 const KEYS = [
@@ -7,11 +8,15 @@ const KEYS = [
   'Db', 'Eb', 'Gb', 'Ab', 'Bb'
 ] as const;
 
-// Valid modes (matches client constants)
-const MODES = [
-  'major', 'minor', 'dorian', 'phrygian', 'lydian', 'mixolydian', 'locrian',
-  'Major', 'Minor', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian', 'Locrian' // Case variants
-] as const;
+const SUPPORTED_GENERATION_MODE_KEYS = new Set([
+  'major',
+  'minor',
+  'dorian',
+  'phrygian',
+  'lydian',
+  'mixolydian',
+  'locrian',
+]);
 
 export interface ProgressionRequest {
   key: string;
@@ -48,9 +53,8 @@ export function validateProgressionRequest(body: unknown): ProgressionRequest {
   if (!req.mode || typeof req.mode !== 'string') {
     throw new ValidationError('Invalid or missing mode parameter');
   }
-  const modeLower = req.mode.toLowerCase();
-  const validModesLower = MODES.map(m => m.toLowerCase());
-  if (!validModesLower.includes(modeLower)) {
+  const normalizedMode = normalizeScaleDescriptor(req.mode);
+  if (!normalizedMode || !SUPPORTED_GENERATION_MODE_KEYS.has(normalizedMode.libraryKey)) {
     throw new ValidationError(`Invalid mode: ${req.mode}. Must be one of: major, minor, dorian, phrygian, lydian, mixolydian, locrian`);
   }
 

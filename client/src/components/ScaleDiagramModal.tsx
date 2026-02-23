@@ -4,6 +4,7 @@ import { noteToValue as noteToValueBase, valueToNote, displayNote, STANDARD_TUNI
 import { getScaleIntervals, getScaleFingering, SCALE_LIBRARY, normalizeScaleName, getSortedPositions } from '../utils/scaleLibrary';
 import NoteDot from './NoteDot';
 import { PixelCard } from './PixelCard';
+import ScaleModeSummary from './ScaleModeSummary';
 
 interface ScaleDiagramModalProps {
   scaleInfo: ScaleInfo;
@@ -133,7 +134,7 @@ const PositionSelector: React.FC<{
 });
 
 const extractScaleDescriptor = (scaleName: string): string | null => {
-  const match = scaleName.trim().match(/^([A-G][#b]?)(?:\s+)(.+)$/i);
+  const match = scaleName.trim().match(/^([A-G](?:[#b♯♭])?)(?:\s+)(.+)$/i);
   return match ? match[2] : null;
 };
 
@@ -237,6 +238,12 @@ const ScaleDiagramModal: React.FC<ScaleDiagramModalProps> = ({ scaleInfo, musica
 
         {/* Scrollable fretboard */}
         <div className="overflow-auto p-6">
+          <ScaleModeSummary
+            scaleName={name}
+            rootNote={rootNote}
+            musicalKey={musicalKey}
+            className="mb-4"
+          />
           <div className="min-w-[800px] w-full">
             {/* Main Fretboard Area */}
             <div

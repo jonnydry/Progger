@@ -36,6 +36,7 @@ describe('xaiService', () => {
     // Mock cache methods
     vi.mocked(redisCache.get).mockResolvedValue(null);
     vi.mocked(redisCache.set).mockResolvedValue(undefined);
+    vi.mocked(redisCache.delete).mockResolvedValue(undefined);
     vi.mocked(getProgressionCacheKey).mockReturnValue('progression:test-key');
 
     // Mock pending requests
@@ -329,6 +330,69 @@ describe('xaiService', () => {
           'auto'
         )
       ).rejects.toThrow('includeTensions was enabled');
+    });
+
+    it('should reject when matching primary scale exists but is not first', async () => {
+      const outOfOrderScalesResponse = {
+        progression: [
+          { chordName: 'C', musicalFunction: 'Tonic', relationToKey: 'I' },
+          { chordName: 'Am', musicalFunction: 'Relative Minor', relationToKey: 'vi' },
+          { chordName: 'F', musicalFunction: 'Subdominant', relationToKey: 'IV' },
+          { chordName: 'G', musicalFunction: 'Dominant', relationToKey: 'V' },
+        ],
+        scales: [
+          { name: 'A Minor', rootNote: 'A' },
+          { name: 'C Major', rootNote: 'C' },
+        ],
+      };
+
+      mockOpenAI.chat.completions.create.mockResolvedValue({
+        choices: [{ message: { content: JSON.stringify(outOfOrderScalesResponse) } }],
+      });
+
+      await expect(
+        xaiService.generateChordProgression(
+          'C',
+          'major',
+          false,
+          'balanced',
+          4,
+          'auto'
+        )
+      ).rejects.toThrow('Primary scale must be listed first');
+    });
+
+    it('should invalidate stale cache when primary scale is not first and regenerate', async () => {
+      const staleCachedResponse = {
+        progression: [
+          { chordName: 'C', musicalFunction: 'Tonic', relationToKey: 'I' },
+          { chordName: 'Am', musicalFunction: 'Relative Minor', relationToKey: 'vi' },
+          { chordName: 'F', musicalFunction: 'Subdominant', relationToKey: 'IV' },
+          { chordName: 'G', musicalFunction: 'Dominant', relationToKey: 'V' },
+        ],
+        scales: [
+          { name: 'A Minor', rootNote: 'A' },
+          { name: 'C Major', rootNote: 'C' },
+        ],
+      };
+
+      vi.mocked(redisCache.get).mockResolvedValueOnce(staleCachedResponse);
+      mockOpenAI.chat.completions.create.mockResolvedValueOnce({
+        choices: [{ message: { content: JSON.stringify(validAPIResponse) } }],
+      });
+
+      const result = await xaiService.generateChordProgression(
+        validRequest.key,
+        validRequest.mode,
+        validRequest.includeTensions,
+        validRequest.generationStyle,
+        validRequest.numChords,
+        validRequest.selectedProgression
+      );
+
+      expect(redisCache.delete).toHaveBeenCalledWith('progression:test-key');
+      expect(mockOpenAI.chat.completions.create).toHaveBeenCalledTimes(1);
+      expect(result).toEqual(validAPIResponse);
     });
 
     it('should register pending request during generation', async () => {

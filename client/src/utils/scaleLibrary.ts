@@ -1129,9 +1129,30 @@ export const SCALE_LIBRARY: ScaleLibrary = {
 /**
  * Extract root note from scale name (e.g., "C major" -> "C")
  */
+const SCALE_NAME_MATCHER = /^([A-G](?:[#b♯♭])?)(?:\s+)(.+)$/i;
+
+function normalizeRootToken(token: string): string {
+  const trimmed = token.trim();
+  if (!trimmed) return "C";
+
+  const first = trimmed.charAt(0).toUpperCase();
+  const second = trimmed.charAt(1);
+  if (second === "#" || second === "♯") {
+    return `${first}#`;
+  }
+  if (second === "b" || second === "♭" || second === "B") {
+    return `${first}b`;
+  }
+  return first;
+}
+
 function extractRootFromScaleName(scaleName: string): string {
-  const match = scaleName.match(/^([A-G][#b]?)/);
-  return match ? match[1] : "C";
+  const match = scaleName.match(SCALE_NAME_MATCHER);
+  if (match) {
+    return normalizeRootToken(match[1]);
+  }
+  const fallbackMatch = scaleName.match(/^([A-G](?:[#b♯♭])?)/i);
+  return fallbackMatch ? normalizeRootToken(fallbackMatch[1]) : "C";
 }
 
 /**
@@ -1253,9 +1274,15 @@ export function getSortedPositions(
  */
 function toScaleDescriptor(name: string): string {
   const trimmed = name.trim();
-  const match = trimmed.match(/^([A-G][#b]?)(?:\s+)(.+)$/i);
+  const match = trimmed.match(SCALE_NAME_MATCHER);
   const descriptor = match ? match[2] : trimmed;
-  return descriptor.replace(/\b(scale|mode)\b/gi, "").trim();
+  return descriptor
+    .replace(/♯/g, "#")
+    .replace(/♭/g, "b")
+    .replace(/[()]/g, " ")
+    .replace(/\b(scale|mode)\b/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 /**

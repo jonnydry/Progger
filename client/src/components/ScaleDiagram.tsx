@@ -13,6 +13,7 @@ import {
   getSortedPositions,
   getScaleIntervals,
 } from "../utils/scaleLibrary";
+import ScaleModeSummary from "./ScaleModeSummary";
 
 const LazyScaleDiagramModal = lazy(() => import("./ScaleDiagramModal"));
 import NoteDot from "./NoteDot";
@@ -171,7 +172,7 @@ const PositionSelector: React.FC<{
 });
 
 const extractScaleDescriptor = (scaleName: string): string | null => {
-  const match = scaleName.trim().match(/^([A-G][#b]?)(?:\s+)(.+)$/i);
+  const match = scaleName.trim().match(/^([A-G](?:[#b♯♭])?)(?:\s+)(.+)$/i);
   return match ? match[2] : null;
 };
 
@@ -338,6 +339,12 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({
             )}
           </div>
         </div>
+        <ScaleModeSummary
+          scaleName={name}
+          rootNote={rootNote}
+          musicalKey={musicalKey}
+          className="mb-3 px-1"
+        />
 
         <div
           className={`w-full bg-surface rounded-lg shadow-lg border border-border overflow-x-auto overflow-y-hidden transition-all duration-300 group relative ${

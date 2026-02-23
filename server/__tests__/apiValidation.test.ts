@@ -55,7 +55,7 @@ describe('validateAPIResponse', () => {
           relationToKey: 'Imaj7'
         }
       ],
-      scales: [{ name: 'C Natural Minor', rootNote: 'C' }]
+      scales: [{ name: 'C Galactic', rootNote: 'C' }]
     };
 
     expect(() => validateAPIResponse(payload)).toThrow(APIValidationError);
@@ -131,6 +131,24 @@ describe('validateAPIResponse', () => {
     expect(result.scales[1].name).toBe('D Minor');
   });
 
+  it('normalizes Natural Minor scale names to Minor', () => {
+    const payload = {
+      progression: [
+        {
+          chordName: 'Am7',
+          musicalFunction: 'Tonic',
+          relationToKey: 'im7'
+        }
+      ],
+      scales: [
+        { name: 'A Natural Minor', rootNote: 'A' }
+      ]
+    };
+
+    const result = validateAPIResponse(payload);
+    expect(result.scales[0].name).toBe('A Minor');
+  });
+
   it('normalizes detectedMode Ionian to Major', () => {
     const payload = {
       progression: [
@@ -163,5 +181,22 @@ describe('validateAPIResponse', () => {
 
     const result = validateAPIResponse(payload);
     expect(result.detectedMode).toBe('Minor');
+  });
+
+  it('normalizes lowercase detectedMode names to canonical form', () => {
+    const payload = {
+      progression: [
+        {
+          chordName: 'Dm7',
+          musicalFunction: 'Tonic modal',
+          relationToKey: 'im7'
+        }
+      ],
+      scales: [{ name: 'D Dorian', rootNote: 'D' }],
+      detectedMode: 'dorian'
+    };
+
+    const result = validateAPIResponse(payload);
+    expect(result.detectedMode).toBe('Dorian');
   });
 });

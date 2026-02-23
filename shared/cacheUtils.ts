@@ -2,6 +2,7 @@
  * Shared cache utility functions
  * Ensures cache keys are consistent between client and server
  */
+import { normalizeScaleDescriptor } from "./music/scaleModes";
 
 export const GENERATION_STYLES = [
   "conservative",
@@ -24,6 +25,14 @@ function normalizeProgression(progression: string): string {
     .trim()
     .replace(/\s+/g, "") // Remove all whitespace
     .replace(/[^a-z0-9]/g, "-"); // Replace special chars with dashes
+}
+
+function normalizeModeToken(mode: string): string {
+  const normalized = normalizeScaleDescriptor(mode);
+  if (!normalized) {
+    return mode.toLowerCase().trim();
+  }
+  return normalized.libraryKey.toLowerCase().trim();
 }
 
 /**
@@ -52,7 +61,7 @@ export function getProgressionCacheKey(
 ): string {
   const semanticParts = [
     key.toLowerCase().trim(),
-    mode.toLowerCase().trim(),
+    normalizeModeToken(mode),
     includeTensions ? "tensions" : "no-tensions",
     numChords.toString(),
     normalizeProgression(selectedProgression),

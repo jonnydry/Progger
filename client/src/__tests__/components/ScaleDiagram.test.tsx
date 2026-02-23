@@ -140,4 +140,14 @@ describe("ScaleDiagram", () => {
 
     expect(screen.getByText("Bb Major")).toBeInTheDocument();
   });
+
+  it("renders compact mode guidance chips", () => {
+    render(<ScaleDiagram scaleInfo={mockScaleInfo()} musicalKey="C" />);
+
+    expect(screen.getByText("Formula")).toBeInTheDocument();
+    expect(screen.getByText("1 2 3 4 5 6 7")).toBeInTheDocument();
+    expect(screen.getByText("Relative")).toBeInTheDocument();
+    expect(screen.getByText("C Major (I)")).toBeInTheDocument();
+    expect(screen.queryByText(/Same notes as/i)).not.toBeInTheDocument();
+  });
 });

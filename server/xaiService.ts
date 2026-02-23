@@ -5,7 +5,7 @@ import { buildOptimizedPrompt, estimateTokenUsage, type ProgressionRequest } fro
 import { withRetry, xaiCircuitBreaker } from './retryLogic';
 import { logger } from './utils/logger';
 import { validateAPIResponse, APIValidationError } from './utils/apiValidation';
-import { normalizeScaleDescriptor } from '@shared/music/scaleModes';
+import { normalizeScaleDescriptor, normalizeModeCanonical } from '@shared/music/scaleModes';
 
 const DEFAULT_XAI_REQUEST_TIMEOUT_MS = 25000;
 const DEFAULT_XAI_MAX_CONCURRENT_REQUESTS = 8;
@@ -192,38 +192,55 @@ function toPitchClass(root: string): number | null {
 }
 
 function parseScaleName(scaleName: string): { root: string; descriptor: string } | null {
-  const match = scaleName.trim().match(/^([A-G][#b]?)(?:\s+)(.+)$/i);
+  const match = scaleName.trim().match(/^([A-G](?:[#b♯♭])?)(?:\s+)(.+)$/i);
   if (!match) return null;
   return { root: match[1], descriptor: match[2] };
 }
 
-function normalizeModeCanonical(mode: string): string {
-  const normalized = normalizeScaleDescriptor(mode);
-  return (normalized?.canonical ?? mode).trim().toLowerCase();
+function scaleMatchesRequest(
+  scale: SimpleScale,
+  requestedPitchClass: number,
+  requestedModeCanonical: string,
+): boolean {
+  const parsed = parseScaleName(scale.name);
+  if (!parsed) return false;
+
+  const scalePitchClass = toPitchClass(parsed.root);
+  if (scalePitchClass === null || scalePitchClass !== requestedPitchClass) {
+    return false;
+  }
+
+  const scaleModeCanonical = normalizeModeCanonical(parsed.descriptor).toLowerCase();
+  return scaleModeCanonical === requestedModeCanonical;
 }
 
-function hasPrimaryScaleMatch(
+function getPrimaryScaleAlignment(
   scales: SimpleScale[],
   requestedKey: string,
   requestedMode: string,
-): boolean {
+): { hasAnyMatch: boolean; firstIsMatch: boolean } {
   const requestedPitchClass = toPitchClass(requestedKey);
-  const requestedModeCanonical = normalizeModeCanonical(requestedMode);
+  const requestedModeCanonical = normalizeModeCanonical(requestedMode).toLowerCase();
 
-  if (requestedPitchClass === null) return false;
+  if (requestedPitchClass === null || scales.length === 0) {
+    return { hasAnyMatch: false, firstIsMatch: false };
+  }
 
-  return scales.some((scale) => {
-    const parsed = parseScaleName(scale.name);
-    if (!parsed) return false;
+  const firstIsMatch = scaleMatchesRequest(
+    scales[0],
+    requestedPitchClass,
+    requestedModeCanonical,
+  );
 
-    const scalePitchClass = toPitchClass(parsed.root);
-    if (scalePitchClass === null || scalePitchClass !== requestedPitchClass) {
-      return false;
-    }
+  const hasAnyMatch = firstIsMatch
+    ? true
+    : scales
+        .slice(1)
+        .some((scale) =>
+          scaleMatchesRequest(scale, requestedPitchClass, requestedModeCanonical),
+        );
 
-    const scaleModeCanonical = normalizeModeCanonical(parsed.descriptor);
-    return scaleModeCanonical === requestedModeCanonical;
-  });
+  return { hasAnyMatch, firstIsMatch };
 }
 
 export async function generateChordProgression(
@@ -267,11 +284,14 @@ export async function generateChordProgression(
   // Step 2: Check Redis cache for existing result
   const cachedResult = await redisCache.get<ProgressionResultFromAPI>(cacheKey);
   if (cachedResult) {
-    if (!hasPrimaryScaleMatch(cachedResult.scales, key, mode)) {
+    const alignment = getPrimaryScaleAlignment(cachedResult.scales, key, mode);
+    if (!alignment.hasAnyMatch || !alignment.firstIsMatch) {
       logger.warn("Ignoring stale cache entry with mismatched primary scale", {
         cacheKey,
         key,
         mode,
+        hasAnyPrimaryMatch: alignment.hasAnyMatch,
+        primaryScaleFirst: alignment.firstIsMatch,
       });
       await redisCache.delete(cacheKey);
     } else {
@@ -339,9 +359,19 @@ export async function generateChordProgression(
         });
         
         const resultFromApi = validateAPIResponse(parsedResult, numChords);
-        if (!hasPrimaryScaleMatch(resultFromApi.scales, key, mode)) {
+        const primaryScaleAlignment = getPrimaryScaleAlignment(
+          resultFromApi.scales,
+          key,
+          mode,
+        );
+        if (!primaryScaleAlignment.hasAnyMatch) {
           throw new APIValidationError(
             `AI response is missing a primary scale that matches requested mode: ${key} ${mode}.`,
+          );
+        }
+        if (!primaryScaleAlignment.firstIsMatch) {
+          throw new APIValidationError(
+            `Primary scale must be listed first and match requested mode: ${key} ${mode}.`,
           );
         }
         if (includeTensions) {

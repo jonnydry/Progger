@@ -8,7 +8,7 @@ describe('music library coverage diagnostics', () => {
 
     for (const descriptor of CANONICAL_SCALE_DESCRIPTORS) {
       const normalized = normalizeScaleName(descriptor);
-      const libraryKey = FALLBACK_SCALE_LIBRARY_KEYS[normalized] ?? normalized;
+      const libraryKey = FALLBACK_SCALE_LIBRARY_KEYS.get(normalized) ?? normalized;
       if (!SCALE_LIBRARY[libraryKey]) {
         missing.push(`${descriptor} → ${libraryKey}`);
       }

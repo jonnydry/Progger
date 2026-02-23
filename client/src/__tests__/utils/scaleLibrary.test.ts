@@ -134,6 +134,11 @@ describe("scaleLibrary", () => {
       expect(normalizeScaleName("aeolian")).toBe("minor");
     });
 
+    it("should normalize Natural Minor aliases", () => {
+      expect(normalizeScaleName("Natural Minor")).toBe("minor");
+      expect(normalizeScaleName("A Natural Minor")).toBe("minor");
+    });
+
     it("should normalize advanced mode descriptors", () => {
       expect(normalizeScaleName("G Lydian Dominant")).toBe("lydian dominant");
       expect(normalizeScaleName("C Super Locrian")).toBe("super locrian");
@@ -148,6 +153,11 @@ describe("scaleLibrary", () => {
     it("should default to major for unknown scales", () => {
       expect(normalizeScaleName("unknown")).toBe("major");
       expect(normalizeScaleName("random scale")).toBe("major");
+    });
+
+    it("should handle unicode accidental notation in scale names", () => {
+      expect(normalizeScaleName("D♭ Mixolydian")).toBe("mixolydian");
+      expect(normalizeScaleName("F♯ Dorian")).toBe("dorian");
     });
   });
 

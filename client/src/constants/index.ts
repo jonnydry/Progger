@@ -296,19 +296,19 @@ export const MODES: ModeOption[] = [
   {
     name: "Ionian (Major)",
     value: "Major",
-    description: "Bright, happy - same as Major scale",
+    description: "1 2 3 4 5 6 7 (I mode)",
     group: "major",
   },
   {
     name: "Lydian",
     value: "Lydian",
-    description: "Dreamy, floating - Major with raised 4th",
+    description: "1 2 3 #4 5 6 7 (IV mode)",
     group: "major",
   },
   {
     name: "Mixolydian",
     value: "Mixolydian",
-    description: "Bluesy, rock - Major with lowered 7th",
+    description: "1 2 3 4 5 6 b7 (V mode)",
     group: "major",
   },
 
@@ -316,19 +316,19 @@ export const MODES: ModeOption[] = [
   {
     name: "Aeolian (Minor)",
     value: "Minor",
-    description: "Melancholic, sad - same as Minor scale",
+    description: "1 2 b3 4 5 b6 b7 (VI mode)",
     group: "minor",
   },
   {
     name: "Dorian",
     value: "Dorian",
-    description: "Jazzy minor - Minor with raised 6th",
+    description: "1 2 b3 4 5 6 b7 (II mode)",
     group: "minor",
   },
   {
     name: "Phrygian",
     value: "Phrygian",
-    description: "Dark, Spanish - Minor with lowered 2nd",
+    description: "1 b2 b3 4 5 b6 b7 (III mode)",
     group: "minor",
   },
 
@@ -336,7 +336,7 @@ export const MODES: ModeOption[] = [
   {
     name: "Locrian",
     value: "Locrian",
-    description: "Unstable, dissonant - rarely used",
+    description: "1 b2 b3 4 b5 b6 b7 (VII mode)",
     group: "diminished",
   },
 ];

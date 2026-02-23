@@ -1,4 +1,8 @@
 // Prompt optimization utilities for XAI API cost reduction
+import {
+  getMajorSystemModeProfile,
+  normalizeModeCanonical,
+} from "@shared/music/scaleModes";
 
 export interface ProgressionRequest {
   key: string;
@@ -72,6 +76,8 @@ export function buildOptimizedPrompt(request: ProgressionRequest): PromptCompone
   const { key, mode, includeTensions, generationStyle, numChords, selectedProgression } = request;
   const autoConfig = parseAutoProgression(selectedProgression);
   const progressionLabel = autoConfig.isAuto ? "AI Generated (auto)" : selectedProgression;
+  const canonicalMode = normalizeModeCanonical(mode);
+  const modeProfile = getMajorSystemModeProfile(mode);
 
   // Common schema description used in all prompts
   const schemaDescription = `
@@ -152,6 +158,16 @@ export function buildOptimizedPrompt(request: ProgressionRequest): PromptCompone
   };
 
   const modeInfo = getModeCharacteristics(mode);
+  const modeIdentity = modeProfile
+    ? `MODE IDENTITY:
+- Canonical mode: ${modeProfile.canonical}
+- Formula: ${modeProfile.formula}
+- Major-system degree: ${modeProfile.degreeRoman}
+- Alterations vs Major: ${modeProfile.majorDelta}
+- Step pattern: ${modeProfile.stepPattern}`
+    : `MODE IDENTITY:
+- Canonical mode: ${canonicalMode}
+- Formula: derive from requested descriptor and keep chord tones consistent with it`;
 
   // Base prompt - always included
   const basePrompt = `You are a music theory expert specializing in jazz and contemporary guitar harmony.
@@ -179,6 +195,8 @@ REQUEST CONTEXT (MUST HONOR EXACTLY):
 - If you generate ${numChords - 1} or fewer chords, your response will be REJECTED
 - If you generate ${numChords + 1} or more chords, your response will be REJECTED
 
+${modeIdentity}
+
 MODE CHARACTERISTICS:
 ${modeInfo.modeCharacteristics}
 
@@ -188,7 +206,7 @@ CRITICAL REQUIREMENTS:
 3. Respect the key signature: ${key.includes('b') ? 'use flats (Bb, Eb, Ab)' : key.includes('#') ? 'use sharps (F#, C#, G#)' : 'use standard note spelling'}
 4. Ensure smooth voice leading between chords
 5. Provide accurate Roman numeral analysis for each chord
-6. Use harmonies that highlight the characteristic notes of ${mode} mode`;
+6. Use harmonies that highlight the characteristic notes of ${canonicalMode}${modeProfile && modeProfile.majorDelta !== "none" ? ` (${modeProfile.majorDelta})` : ""}`;
 
   // Advanced chord instructions - only included when advanced chords are requested
   let advancedChordInstructions = '';

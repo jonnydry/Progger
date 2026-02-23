@@ -26,4 +26,17 @@ describe("validation", () => {
       }),
     ).toThrow(ValidationError);
   });
+
+  it("accepts Ionian as an alias for Major mode", () => {
+    const result = validateProgressionRequest({
+      key: "C",
+      mode: "Ionian",
+      includeTensions: false,
+      generationStyle: "balanced",
+      numChords: 4,
+      selectedProgression: "auto",
+    });
+
+    expect(result.mode).toBe("Ionian");
+  });
 });
