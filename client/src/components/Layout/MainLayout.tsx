@@ -3,6 +3,7 @@ import { GlassmorphicHeader } from "../GlassmorphicHeader";
 import { Footer } from "../Footer";
 import { StashSidebar } from "../StashSidebar";
 import { About } from "../About";
+import { BackgroundTexture } from "../BackgroundTexture";
 import type { ProgressionResult } from "../../types";
 
 interface MainLayoutProps {
@@ -50,7 +51,8 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
   onLoadProgression,
 }) => {
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="relative min-h-screen bg-background flex flex-col">
+      <BackgroundTexture />
       <GlassmorphicHeader
         theme={theme}
         toggleTheme={toggleTheme}
