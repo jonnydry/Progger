@@ -16,6 +16,7 @@ The application is a full-stack project with a React frontend (Vite dev server o
 - BYO Chord Selector redesigned with a horizontal button array and animations.
 - Control layout reorganized for clearer visual hierarchy.
 - Portal-based dropdowns implemented to fix clipping issues.
+- **Background Texture**: `BackgroundTexture` component renders diagonal CSS hatching (45° repeating gradient using theme text color) and three radial glow orbs (primary/accent/secondary CSS variables). Dark/light mode adapts opacity and blur values. Integrated as first child of `MainLayout`.
 
 **Technical Implementations & Feature Specifications:**
 - **AI Chord Generation**: Uses xAI's Grok API (`grok-4-1-fast-non-reasoning` model) for chord progressions and scale suggestions.

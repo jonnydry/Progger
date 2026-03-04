@@ -150,7 +150,7 @@ export const F_CHORDS: ChordVoicingsMap = {
   'F_major': [
     { frets: [1, 3, 3, 2, 1, 1], firstFret: 1, position: 'Barre 1st' },
     { frets: ['x', 'x', 3, 2, 1, 1], firstFret: 1, position: 'Partial 3rd' },
-    { frets: ['x', 'x', 1, 2, 1, 3], firstFret: 5, position: 'Partial 5th' },
+    { frets: ['x', 'x', 3, 1, 2, 1], firstFret: 5, position: 'Partial 5th' },
     { frets: ['x', 1, 3, 3, 3, 1], firstFret: 8, position: 'Barre 8th' },
     { frets: [1, 3, 3, 2, 1, 1], firstFret: 13, position: 'Barre 13th' },
   ],

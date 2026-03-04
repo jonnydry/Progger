@@ -120,32 +120,32 @@ export function buildOptimizedPrompt(request: ProgressionRequest): PromptCompone
     } else if (modeLower === 'dorian') {
       return {
         isMajorMode: false,
-        romanNumeralExamples: `In ${key} Dorian: i = ${key}min7, ii = min7, III = maj7, IV = maj7, v = min7, vi° = min7b5, VII = maj7`,
-        modeCharacteristics: 'Use Dorian mode harmony with raised 6th. Emphasize i-IV and i-VII progressions. Common in jazz and fusion.'
+        romanNumeralExamples: `In ${key} Dorian: i = ${key}min7, ii = min7, bIII = maj7, IV = 7, v = min7, vi° = min7b5, bVII = maj7`,
+        modeCharacteristics: 'Use Dorian mode harmony with raised 6th (vs natural minor). Emphasize i-IV7 and i-bVII progressions. The major IV chord (dominant 7th quality) is the characteristic Dorian sound. Common in jazz and fusion.'
       };
     } else if (modeLower === 'phrygian') {
       return {
         isMajorMode: false,
-        romanNumeralExamples: `In ${key} Phrygian: i = ${key}min7, II = maj7, III = maj7, iv = min7, v° = dim7, VI = maj7, vii = min7`,
-        modeCharacteristics: 'Use Phrygian mode harmony with lowered 2nd. Emphasize i-II progressions. Dark, Spanish flavor. Avoid dominant V7 resolution.'
+        romanNumeralExamples: `In ${key} Phrygian: i = ${key}min7, bII = maj7, bIII = 7, iv = min7, v° = min7b5, bVI = maj7, bvii = min7`,
+        modeCharacteristics: 'Use Phrygian mode harmony with lowered 2nd. Emphasize i-bII progressions. Dark, Spanish flavor. The bII major chord is the characteristic Phrygian sound. Avoid dominant V7 resolution.'
       };
     } else if (modeLower === 'lydian') {
       return {
         isMajorMode: true,
-        romanNumeralExamples: `In ${key} Lydian: I = ${key}maj7, II = maj7, iii = min7, iv° = min7b5, V = maj7, vi = min7, vii = min7`,
-        modeCharacteristics: 'Use Lydian mode harmony with raised 4th. Emphasize I-II and I-V progressions. Dreamy, floating quality. Avoid IV chord which contains the natural 4th.'
+        romanNumeralExamples: `In ${key} Lydian: I = ${key}maj7, II = 7, iii = min7, #iv° = min7b5, V = maj7, vi = min7, vii = min7`,
+        modeCharacteristics: 'Use Lydian mode harmony with raised 4th. Emphasize I-II7 and I-V progressions. The II chord has dominant 7th quality. Dreamy, floating quality. Avoid natural 4th which contradicts #4.'
       };
     } else if (modeLower === 'mixolydian') {
       return {
         isMajorMode: true,
-        romanNumeralExamples: `In ${key} Mixolydian: I = ${key}7, ii = min7, iii = min7b5, IV = maj7, v = min7, vi = min7, VII = maj7`,
-        modeCharacteristics: 'Use Mixolydian mode harmony with lowered 7th. Emphasize I-bVII and I-IV progressions. Bluesy, rock sound. Dominant I chord.'
+        romanNumeralExamples: `In ${key} Mixolydian: I = ${key}7, ii = min7, iii° = min7b5, IV = maj7, v = min7, vi = min7, bVII = maj7`,
+        modeCharacteristics: 'Use Mixolydian mode harmony with lowered 7th. Emphasize I7-bVII and I7-IV progressions. Bluesy, rock sound. The I chord is a dominant 7th, not major 7th.'
       };
     } else if (modeLower === 'locrian') {
       return {
         isMajorMode: false,
-        romanNumeralExamples: `In ${key} Locrian: i° = min7b5, II = maj7, iii = min7, IV = min7, v = min7, VI = maj7, VII = maj7`,
-        modeCharacteristics: 'Use Locrian mode harmony (rarely used). Unstable due to diminished tonic. Minimal resolution. Use sparingly for dramatic effect.'
+        romanNumeralExamples: `In ${key} Locrian: i° = ${key}min7b5, bII = maj7, biii = min7, iv = min7, bV = maj7, bVI = 7, bvii = min7`,
+        modeCharacteristics: 'Use Locrian mode harmony (rarely used). Unstable due to half-diminished tonic. The bV is major (not diminished). Minimal resolution. Use sparingly for dramatic effect.'
       };
     } else {
       // Default to major

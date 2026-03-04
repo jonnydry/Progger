@@ -154,7 +154,7 @@ export const C_CHORDS: ChordVoicingsMap = {
   'C_major': [
     { frets: ['x', 3, 2, 0, 1, 0], position: 'Open' },
     { frets: ['x', 1, 3, 3, 3, 1], firstFret: 3, position: 'Barre 3rd' },
-    { frets: ['x', 'x', 3, 2, 1, 3], firstFret: 3, position: 'Partial 5th' },
+    { frets: ['x', 'x', 3, 3, 3, 1], firstFret: 3, position: 'Partial 5th' },
     { frets: [1, 3, 3, 2, 1, 1], firstFret: 8, position: 'Barre 8th' },
     { frets: ['x', 'x', 1, 2, 1, 3], firstFret: 10, position: 'High Partial' },
   ],
