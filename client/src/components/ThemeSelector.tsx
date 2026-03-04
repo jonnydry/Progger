@@ -81,7 +81,7 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
       <div
         className={`flex items-center overflow-x-hidden overflow-y-visible transition-[max-width,opacity,margin] duration-200 ease-out ${
           isOpen
-            ? "opacity-100 max-w-[7.5rem] sm:max-w-[9rem] md:max-w-[12rem] lg:max-w-[15rem] ml-1"
+            ? "opacity-100 max-w-[22rem] ml-1"
             : "opacity-0 max-w-0 ml-0"
         }`}
         aria-hidden={!isOpen}
