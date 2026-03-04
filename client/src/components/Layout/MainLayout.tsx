@@ -52,7 +52,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
 }) => {
   return (
     <div className="relative min-h-screen bg-background flex flex-col">
-      <BackgroundTexture />
+      <BackgroundTexture isDark={theme === "dark"} />
       <GlassmorphicHeader
         theme={theme}
         toggleTheme={toggleTheme}
