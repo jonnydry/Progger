@@ -8,18 +8,15 @@ import { validateProgressionRequest, ValidationError } from '../utils/validation
 import { logger } from '../utils/logger';
 
 /**
- * Sanitize user input to prevent XSS attacks
- * Escapes HTML entities and trims whitespace
+ * Sanitize user input by trimming whitespace and stripping non-printable
+ * control characters. HTML encoding is intentionally avoided here because
+ * stash names are returned as JSON data values and rendered by React (which
+ * escapes output automatically), not injected as raw HTML.
  */
 function sanitizeString(input: string): string {
   return input
     .trim()
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-    .replace(/\//g, '&#x2F;');
+    .replace(/[\x00-\x1F\x7F]/g, '');
 }
 
 /**

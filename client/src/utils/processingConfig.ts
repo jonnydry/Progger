@@ -53,25 +53,19 @@ export const DEVELOPMENT_CONFIG: ProcessingConfiguration = {
 };
 
 /**
- * Get the current processing configuration based on environment
+ * Get the current processing configuration based on environment.
+ * Detects development mode for localhost and Replit dev preview domains.
  */
 export function getProcessingConfig(): ProcessingConfiguration {
-  // In a browser environment, we can check for development mode
-  // For now, default to production config, but this can be extended
-  const isDevelopment = process.env.NODE_ENV === 'development' ||
-                       window.location.hostname === 'localhost' ||
-                       window.location.hostname === '127.0.0.1';
+  const hostname = window.location.hostname;
+  const isDevelopment =
+    process.env.NODE_ENV === 'development' ||
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname.endsWith('.replit.dev') ||
+    hostname.endsWith('.repl.co');
 
   return isDevelopment ? DEVELOPMENT_CONFIG : DEFAULT_PROCESSING_CONFIG;
-}
-
-/**
- * Update specific configuration values
- */
-export function updateProcessingConfig(_updates: Partial<ProcessingConfiguration>): void {
-  // In a real implementation, this could persist to localStorage
-  // For now, it would need to be handled at the application level
-  console.warn('Configuration updates not yet implemented. Use the config object directly.');
 }
 
 /**

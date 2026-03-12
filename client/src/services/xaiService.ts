@@ -1,5 +1,5 @@
 import type { ChordInProgression, ProgressionResult, ScaleInfo } from '../types';
-import { getChordVoicingsAsync, isMutedVoicing } from '../utils/chords/index';
+import { getChordVoicingsAsync } from '../utils/chords/index';
 import { getScaleFingering, getScaleNotes, normalizeScaleName, validateFingeringNotes } from '../utils/scaleLibrary';
 import {
   MusicTheoryError,
@@ -75,7 +75,6 @@ function getFromCache(cacheKey: string): ProgressionResult | null {
 
     // Check if cache entry is still valid
     if (now - entry.timestamp < entry.ttl) {
-      console.log("Serving from cache:", cacheKey);
       return entry.data;
     } else {
       // Remove expired cache entry
@@ -117,8 +116,6 @@ function enforceCacheLimits(): void {
       for (let i = 0; i < toRemove; i++) {
         localStorage.removeItem(entries[i].key);
       }
-      
-      console.log(`Enforced cache limits: removed ${toRemove} oldest entries`);
     }
   } catch (error) {
     console.warn("Error enforcing cache limits", error);
@@ -193,8 +190,6 @@ export function clearAllProgressionCache(): void {
         cleared++;
       }
     });
-    
-    console.log(`🗑️ Cleared ${cleared} progression cache entries`);
   } catch (error) {
     console.warn("Error clearing progression cache", error);
   }
@@ -286,19 +281,16 @@ export async function generateChordProgression(
   }
   
   try {
-    console.log("Fetching from backend API:", cacheKey);
-
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), config.apiTimeoutMs);
 
-    // Race between the fetch and the timeout
     let response: Response;
     try {
       const headers = await addCsrfHeaders({
         'Content-Type': 'application/json',
       });
-      
-      response = await fetch('/api/generate-progression', {
+
+      response = await fetchWithRetry('/api/generate-progression', {
         method: 'POST',
         headers,
         signal: controller.signal,
@@ -310,9 +302,9 @@ export async function generateChordProgression(
           numChords,
           selectedProgression: effectiveProgression,
         }),
-      });
+      }, config.maxRetryAttempts, 1000);
     } catch (error) {
-      // Network-level failure
+      // Network-level failure after retries
       throw new APIUnavailableError('/api/generate-progression', undefined);
     } finally {
       clearTimeout(timeoutId);
@@ -345,20 +337,10 @@ export async function generateChordProgression(
       throw new InvalidAPIResponseError('Valid JSON matching API schema', `${parseError}`);
     }
 
-    // Enhanced processing: Parallel computation of voicings and scale data
-    console.log(`🎵 Processing ${resultFromApi.progression.length} chords and ${resultFromApi.scales.length} scales in parallel`);
-
     const [chordPromises, scalePromises] = await Promise.allSettled([
-      // Parallel chord processing with enhanced error handling
       Promise.allSettled(
         resultFromApi.progression.map(async (chord) => {
           const voicings = await getChordVoicingsAsync(chord.chordName);
-
-          // Enhanced validation with smart fallback detection
-          if (voicings.length === 1 && isMutedVoicing(voicings[0])) {
-            console.warn(`🧠 Smart fallback used for chord: ${chord.chordName}`);
-          }
-
           return {
             chordName: chord.chordName,
             musicalFunction: chord.musicalFunction,
@@ -367,20 +349,13 @@ export async function generateChordProgression(
           };
         })
       ),
-      // Parallel scale processing with validation
       Promise.allSettled(
         resultFromApi.scales.map(async (scale) => {
           const fingering = getScaleFingering(scale.name, scale.rootNote);
-          
-          // Validate the fingering contains correct scale notes
           const validation = validateFingeringNotes(fingering, scale.rootNote, scale.name);
           if (!validation.isValid) {
-            console.warn(`⚠️ Scale fingering validation warning for "${scale.name}":`, {
-              coverage: `${(validation.coverage * 100).toFixed(1)}%`,
-              invalidNotes: validation.invalidNotes.slice(0, 3),
-            });
+            console.warn(`Scale fingering validation warning for "${scale.name}": ${(validation.coverage * 100).toFixed(1)}% coverage`);
           }
-          
           return {
             name: scale.name,
             rootNote: scale.rootNote,
@@ -391,7 +366,6 @@ export async function generateChordProgression(
       )
     ]);
 
-    // Resilience: Handle partial failures gracefully
     const progression: ChordInProgression[] = chordPromises.status === 'fulfilled'
       ? chordPromises.value.map(result =>
           result.status === 'fulfilled'
@@ -417,8 +391,6 @@ export async function generateChordProgression(
               }
         )
       : [];
-
-    console.log(`✅ Processed ${progression.length} chords and ${scales.length} scales successfully`);
 
     // Verify that returned chord count matches what was requested
     // This is a safety check - the server should have already validated this
@@ -455,14 +427,11 @@ export async function generateChordProgression(
 
     // Check if this is a chord count mismatch - don't recover, just fail
     if (error instanceof Error && error.message.includes('Chord count mismatch')) {
-      console.warn('❌ Chord count mismatch detected - not recovering with fallback');
-      throw error; // Re-throw without recovery to show user the real error
+      throw error;
     }
 
     // Check if this is a recoverable error (network issues, etc.)
     if (config.enableAutoRecovery && isRecoverableError(error)) {
-      console.log(`🔄 Attempting automatic recovery for ${error.name}`);
-
       try {
         let recoveredResult;
         if (error instanceof APIUnavailableError) {
@@ -474,16 +443,13 @@ export async function generateChordProgression(
         }
 
         if (recoveredResult) {
-          // Verify recovered result has correct chord count
           if (recoveredResult.progression?.length !== numChords) {
-            console.warn(`⚠️ Recovery produced wrong chord count: expected ${numChords}, got ${recoveredResult.progression?.length}`);
             throw new Error(`Recovery failed: chord count mismatch`);
           }
-          console.log(`✅ Successfully recovered from ${error.name}`);
           return recoveredResult;
         }
       } catch (recoveryError) {
-        console.warn(`❌ Recovery failed for ${error.name}:`, recoveryError);
+        console.warn(`Recovery failed for ${(error as Error).name}:`, recoveryError);
       }
     }
 
@@ -553,8 +519,6 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
   }
 
   try {
-    console.log("Analyzing custom progression:", chords);
-
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), config.apiTimeoutMs);
 
@@ -605,20 +569,10 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
       throw new InvalidAPIResponseError('Valid JSON matching API schema', `${parseError}`);
     }
 
-    // Enhanced processing: Parallel computation of voicings and scale data
-    console.log(`🎵 Processing ${resultFromApi.progression.length} chords and ${resultFromApi.scales.length} scales in parallel`);
-
     const [chordPromises, scalePromises] = await Promise.allSettled([
-      // Parallel chord processing with enhanced error handling
       Promise.allSettled(
         resultFromApi.progression.map(async (chord) => {
           const voicings = await getChordVoicingsAsync(chord.chordName);
-
-          // Enhanced validation with smart fallback detection
-          if (voicings.length === 1 && isMutedVoicing(voicings[0])) {
-            console.warn(`🧠 Smart fallback used for chord: ${chord.chordName}`);
-          }
-
           return {
             chordName: chord.chordName,
             musicalFunction: chord.musicalFunction,
@@ -627,20 +581,13 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
           };
         })
       ),
-      // Parallel scale processing with validation
       Promise.allSettled(
         resultFromApi.scales.map(async (scale) => {
           const fingering = getScaleFingering(scale.name, scale.rootNote);
-          
-          // Validate the fingering contains correct scale notes
           const validation = validateFingeringNotes(fingering, scale.rootNote, scale.name);
           if (!validation.isValid) {
-            console.warn(`⚠️ Scale fingering validation warning for "${scale.name}":`, {
-              coverage: `${(validation.coverage * 100).toFixed(1)}%`,
-              invalidNotes: validation.invalidNotes.slice(0, 3),
-            });
+            console.warn(`Scale fingering validation warning for "${scale.name}": ${(validation.coverage * 100).toFixed(1)}% coverage`);
           }
-          
           return {
             name: scale.name,
             rootNote: scale.rootNote,
@@ -651,7 +598,6 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
       )
     ]);
 
-    // Resilience: Handle partial failures gracefully
     const progression: ChordInProgression[] = chordPromises.status === 'fulfilled'
       ? chordPromises.value.map(result =>
           result.status === 'fulfilled'
@@ -677,8 +623,6 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
               }
         )
       : [];
-
-    console.log(`✅ Processed ${progression.length} chords and ${scales.length} scales successfully`);
 
     const finalResult = { progression, scales };
 
@@ -710,8 +654,6 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
 
     // Check if this is a recoverable error
     if (config.enableAutoRecovery && isRecoverableError(error)) {
-      console.log(`🔄 Attempting automatic recovery for ${error.name}`);
-
       try {
         let recoveredResult;
         if (error instanceof APIUnavailableError) {
@@ -723,11 +665,10 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
         }
 
         if (recoveredResult) {
-          console.log(`✅ Successfully recovered from ${error.name}`);
           return recoveredResult;
         }
       } catch (recoveryError) {
-        console.warn(`❌ Recovery failed for ${error.name}:`, recoveryError);
+        console.warn(`Recovery failed for ${(error as Error).name}:`, recoveryError);
       }
     }
 

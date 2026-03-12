@@ -35,10 +35,21 @@ export async function getSharedRedisClient(): Promise<RedisClientType | null> {
   }
 
   try {
+    const MAX_RECONNECT_ATTEMPTS = 5;
+
     sharedRedisClient = createClient({
       url: process.env.REDIS_URL || 'redis://localhost:6379',
       socket: {
-        connectTimeout: 5000, // 5 second connection timeout
+        connectTimeout: 5000,
+        reconnectStrategy: (retries: number) => {
+          if (retries >= MAX_RECONNECT_ATTEMPTS) {
+            logger.warn('Redis max reconnect attempts reached, stopping retries', { retries });
+            return new Error('Redis max reconnect attempts reached');
+          }
+          const delay = Math.min(retries * 2000, 30000);
+          logger.debug('Redis reconnecting', { attempt: retries + 1, delayMs: delay });
+          return delay;
+        },
       },
     });
 
