@@ -43,5 +43,6 @@ export const NoteDot: React.FC<NoteDotProps> = React.memo(({
         </button>
     );
 });
+NoteDot.displayName = "NoteDot";
 
 export default NoteDot;

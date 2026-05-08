@@ -16,6 +16,7 @@ import { logger } from '../utils/logger';
 function sanitizeString(input: string): string {
   return input
     .trim()
+    // eslint-disable-next-line no-control-regex
     .replace(/[\x00-\x1F\x7F]/g, '');
 }
 

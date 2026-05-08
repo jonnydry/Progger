@@ -75,6 +75,7 @@ const ArrowButton: React.FC<{
     </button>
   );
 });
+ArrowButton.displayName = "ArrowButton";
 
 const generateAutoName = (
   key: string,
@@ -177,6 +178,14 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({
     }
   }, [progressionResult, musicalKey, currentMode]);
 
+  const progressionText = useMemo(
+    () =>
+      progression
+        .map((p) => displayChordName(p.chordName, musicalKey))
+        .join(" - "),
+    [progression, musicalKey],
+  );
+
   if (isLoading) {
     return (
       <div className="flex flex-wrap justify-center gap-6 mt-8 w-full max-w-6xl">
@@ -210,19 +219,11 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({
           Your generated progression will appear here.
         </p>
         <p className="text-text/60">
-          Select a key and mode, then click "Generate".
+          Select a key and mode, then click &quot;Generate&quot;.
         </p>
       </PixelCard>
     );
   }
-
-  const progressionText = useMemo(
-    () =>
-      progression
-        .map((p) => displayChordName(p.chordName, musicalKey))
-        .join(" - "),
-    [progression, musicalKey],
-  );
 
   const isCompact = progression.length > 4;
 

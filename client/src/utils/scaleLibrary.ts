@@ -109,9 +109,9 @@ function generate3NPSPositions(
 
         // Find this note on the current string, starting from around lastFret
         // We want notes that progress logically up the neck
-        let searchStart =
+        const searchStart =
           stringIdx === 0 ? baseFret : Math.max(0, lastFret - 2);
-        let searchEnd = searchStart + 7;
+        const searchEnd = searchStart + 7;
 
         const possibleFrets = findNoteOnString(
           stringValue,

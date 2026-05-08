@@ -20,6 +20,7 @@ import { randomUUID } from 'crypto';
 
 // Extend Express Request type to include id
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       id: string;

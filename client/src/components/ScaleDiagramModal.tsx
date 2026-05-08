@@ -55,8 +55,7 @@ const FretInlay: React.FC<{ fret: number }> = React.memo(({ fret }) => {
   }
   return <div className={inlayClasses} style={{ left, top: '50%', transform: 'translate(-50%, -50%)' }} />
 });
-
-
+FretInlay.displayName = "FretInlay";
 
 const ViewToggle: React.FC<{
   viewMode: 'pattern' | 'map';
@@ -85,6 +84,7 @@ const ViewToggle: React.FC<{
     </div>
   );
 });
+ViewToggle.displayName = "ViewToggle";
 
 const PositionSelector: React.FC<{
   positions: string[];
@@ -132,6 +132,7 @@ const PositionSelector: React.FC<{
     </div>
   );
 });
+PositionSelector.displayName = "PositionSelector";
 
 const extractScaleDescriptor = (scaleName: string): string | null => {
   const match = scaleName.trim().match(/^([A-G](?:[#b♯♭])?)(?:\s+)(.+)$/i);

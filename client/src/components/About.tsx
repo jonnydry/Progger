@@ -32,7 +32,7 @@ export const About: React.FC<AboutProps> = ({ onBackClick }) => {
           </p>
 
           <p>
-            Whether you're stuck in a creative rut or looking for the perfect
+            Whether you&apos;re stuck in a creative rut or looking for the perfect
             bridge, Progger uses advanced algorithms to suggest unique harmonic
             possibilities tailored to your selected key and mode.
           </p>

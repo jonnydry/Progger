@@ -17,7 +17,7 @@ const C4_FREQ = 261.63;
  */
 function getAudioContext(): AudioContext {
     if (!audioContext) {
-        // @ts-ignore - Handle webkit prefix for Safari
+        // @ts-expect-error - Handle webkit prefix for Safari
         const AudioContextClass = window.AudioContext || window.webkitAudioContext;
         audioContext = new AudioContextClass();
     }
