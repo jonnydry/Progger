@@ -186,6 +186,72 @@ describe("xaiService", () => {
       );
     });
 
+    it("should enforce exact chord count in response_format schema", async () => {
+      mockOpenAI.chat.completions.create.mockResolvedValueOnce({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify(validAPIResponse),
+            },
+          },
+        ],
+      });
+
+      const numChords = 4;
+      await xaiService.generateChordProgression(
+        validRequest.key,
+        validRequest.mode,
+        validRequest.includeTensions,
+        validRequest.generationStyle,
+        numChords,
+        validRequest.selectedProgression
+      );
+
+      const callArg = mockOpenAI.chat.completions.create.mock.calls[0][0];
+      const progressionSchema = callArg.response_format.json_schema.schema.properties.progression;
+      expect(progressionSchema.minItems).toBe(numChords);
+      expect(progressionSchema.maxItems).toBe(numChords);
+    });
+
+    it("should propagate varying numChords into response_format minItems/maxItems", async () => {
+      for (const numChords of [2, 6, 8]) {
+        vi.mocked(redisCache.get).mockResolvedValueOnce(null);
+        vi.mocked(pendingRequests.get).mockReturnValueOnce(null);
+        const progression = Array.from({ length: numChords }, (_, i) => ({
+          chordName: "C",
+          musicalFunction: `F${i}`,
+          relationToKey: "I",
+        }));
+        mockOpenAI.chat.completions.create.mockResolvedValueOnce({
+          choices: [
+            {
+              message: {
+                content: JSON.stringify({
+                  progression,
+                  scales: validAPIResponse.scales,
+                }),
+              },
+            },
+          ],
+        });
+
+        await xaiService.generateChordProgression(
+          validRequest.key,
+          validRequest.mode,
+          validRequest.includeTensions,
+          validRequest.generationStyle,
+          numChords,
+          validRequest.selectedProgression
+        );
+
+        const calls = mockOpenAI.chat.completions.create.mock.calls;
+        const callArg = calls[calls.length - 1][0];
+        const progressionSchema = callArg.response_format.json_schema.schema.properties.progression;
+        expect(progressionSchema.minItems).toBe(numChords);
+        expect(progressionSchema.maxItems).toBe(numChords);
+      }
+    });
+
     it("should throw error when API returns empty response", async () => {
       mockOpenAI.chat.completions.create.mockResolvedValueOnce({
         choices: [
