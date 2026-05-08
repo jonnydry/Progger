@@ -1,0 +1,48 @@
+Suggested Improvements (Prioritized)
+1. Security & Configuration (High Priority – Fix Immediately)
+
+.env is committed (127 bytes present in repo) and not in .gitignore. This is a security risk (even if currently placeholders).
+Fix: Add .env and .env.local to .gitignore. Rotate any keys that may have been exposed. Use only .env.example.
+Enable strict TypeScript (currently missing strict: true, strictNullChecks, etc. in tsconfig.json). This catches many subtle bugs in music-theory logic.
+CSP in Helmet allows 'unsafe-inline' for Tailwind CDN — move to self-hosted Tailwind (or PostCSS build) for production.
+
+2. Code Organization & Maintainability
+
+Large monolithic files:
+client/src/utils/chordLibrary.ts (227 KB) → Split into chords/ subfolder (e.g., open-voicings.ts, barre-voicings.ts) + JSON data loader or build-time generation.
+server/xaiService.ts (22 KB) and promptOptimization.ts (17 KB) → Extract prompt templates, response parsers, and cost trackers into separate modules.
+server/routes.ts (12 KB) → Move handlers to server/controllers/ or routes/ subfolder.
+
+Client structure: Consider feature-based folders (features/generator/, features/stash/) instead of flat components/ + utils/.
+Add ESLint + Prettier (no config visible) + Husky pre-commit hooks.
+Consolidate types: Move client types.ts into shared/ where possible.
+
+3. Performance & Scalability
+
+Bundle size: The giant chord/scale libraries bloat the client. Use dynamic imports + code-splitting for chord diagrams or virtualize long lists.
+Caching: Excellent Redis + HTTP cache headers, but add server-side caching for common progressions (e.g., I–V–vi–IV in C major).
+Prod build: No dedicated server build script. npm run build only does Vite client. Add build:server (tsc or esbuild) + start script for production (Replit or elsewhere).
+AI costs: promptOptimization.ts is great — add token-usage logging/metrics and a simple admin dashboard or /api/usage endpoint.
+
+4. Testing & Quality
+
+Good foundation (Vitest + Playwright), but expand coverage on:
+Music theory edge cases (enharmonics, mode detection, voicing transposition).
+Rate-limit + CSRF flows.
+
+Add GitHub Actions workflow for CI (lint, type-check, test, build, Playwright).
+Consider property-based testing (fast-check) for music utilities.
+
+5. Developer Experience & Documentation
+
+Add a proper CONTRIBUTING.md and architecture overview (the existing docs/ files are good but narrow).
+Generate OpenAPI/Swagger docs for the API routes (easy win with express-openapi or tsoa).
+Improve error messages for musicians (e.g., “No voicings found for this inversion in this key”).
+Add a production start script and Replit-specific deployment notes (the replit.md exists but could be expanded).
+
+6. Nice-to-Haves / Future Ideas
+
+Migrate to Next.js (or keep current but add API routes) for simpler deployment and better full-stack DX.
+Add Web MIDI or better audio export (MIDI file generation) using the existing audioEngine.ts.
+Dark/light theme toggle + more accessibility (ARIA for chord diagrams).
+Analytics (privacy-friendly) on most-used keys/modes to improve AI prompts.
