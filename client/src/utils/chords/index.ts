@@ -135,7 +135,7 @@ export async function getChordVoicingsAsync(
       `Chord "${chordName}" not found, using similar chord:`,
       similarChord,
     );
-    return chordData[similarChord];
+    return (chordData as Record<string, ChordVoicing[]>)[similarChord];
   }
 
   // Fallback 3: Return basic major triad

@@ -29,7 +29,7 @@ export function useAuth(): {
   });
 
   return {
-    user,
+    user: user ?? undefined,
     isLoading,
     isAuthenticated: !!user,
   };

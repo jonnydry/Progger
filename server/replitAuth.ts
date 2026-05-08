@@ -88,7 +88,7 @@ function updateUserSession(
   user: AuthenticatedUser,
   tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers
 ) {
-  user.claims = tokens.claims();
+  user.claims = tokens.claims()!;
   user.access_token = tokens.access_token;
   user.refresh_token = tokens.refresh_token;
   user.expires_at = user.claims?.exp;
@@ -143,7 +143,7 @@ export async function setupAuth(app: Express) {
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
   ) => {
-    const claims = tokens.claims();
+    const claims = tokens.claims()!;
     const user: AuthenticatedUser = {
       claims: {
         sub: claims.sub as string,

@@ -47,7 +47,7 @@ const STRING_HEIGHTS = [1, 1.4, 1.8, 2.2, 2.6, 3.0] as const;
 const FretInlay: React.FC<{ fret: number }> = React.memo(({ fret }) => {
   const left = `${((fret - 0.5) / FRET_COUNT) * 100}%`;
   const inlayClasses = "absolute w-2 h-2 rounded-full bg-text/5 dark:bg-text/10";
-  if (DOUBLE_INLAY_FRETS.includes(fret)) {
+  if (DOUBLE_INLAY_FRETS.includes(fret as 12 | 24)) {
     return <>
       <div className={inlayClasses} style={{ left, top: '33.33%', transform: 'translate(-50%, -50%)' }} />
       <div className={inlayClasses} style={{ left, top: '66.67%', transform: 'translate(-50%, -50%)' }} />

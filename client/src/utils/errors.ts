@@ -169,11 +169,11 @@ export class ProcessingPipelineError extends MusicTheoryError {
 }
 
 // Utility functions for error handling
-export function isRecoverableError(error: Error): error is MusicTheoryError & { recover: () => Promise<unknown> } {
-  return error instanceof MusicTheoryError && 'recover' in error && typeof error.recover === 'function';
+export function isRecoverableError(error: unknown): error is MusicTheoryError & { recover: () => Promise<unknown> } {
+  return error instanceof MusicTheoryError && 'recover' in error && typeof (error as Record<string, unknown>).recover === 'function';
 }
 
-export function getErrorSeverity(error: Error): 'low' | 'medium' | 'high' {
+export function getErrorSeverity(error: unknown): 'low' | 'medium' | 'high' {
   if (error instanceof APIUnavailableError || error instanceof InvalidAPIResponseError) {
     return 'high'; // System-level failures
   }
@@ -183,10 +183,11 @@ export function getErrorSeverity(error: Error): 'low' | 'medium' | 'high' {
   return 'medium'; // Other processing errors
 }
 
-export function createErrorLog(error: Error, context?: Record<string, any>): string {
+export function createErrorLog(error: unknown, context?: Record<string, unknown>): string {
+  const isErr = error instanceof Error;
   const logData = {
-    name: error.name,
-    message: error.message,
+    name: isErr ? error.name : 'UnknownError',
+    message: isErr ? error.message : String(error),
     timestamp: new Date().toISOString(),
     severity: getErrorSeverity(error),
     recoverable: isRecoverableError(error),

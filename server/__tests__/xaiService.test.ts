@@ -40,7 +40,7 @@ describe('xaiService', () => {
     vi.mocked(getProgressionCacheKey).mockReturnValue('progression:test-key');
 
     // Mock pending requests
-    vi.mocked(pendingRequests.get).mockReturnValue(undefined);
+    vi.mocked(pendingRequests.get).mockReturnValue(null);
     vi.mocked(pendingRequests.set).mockReturnValue(undefined);
 
     // Reset circuit breaker state

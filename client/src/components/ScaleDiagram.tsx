@@ -66,7 +66,7 @@ const FretInlay: React.FC<{ fret: number; fretCount: number }> = React.memo(
     const left = `${((fret - 0.5) / fretCount) * 100}%`;
     const inlayClasses =
       "absolute w-2 h-2 rounded-full bg-text/5 dark:bg-text/10";
-    if (DOUBLE_INLAY_FRETS.includes(fret)) {
+    if (DOUBLE_INLAY_FRETS.includes(fret as 12 | 24)) {
       return (
         <>
           <div
