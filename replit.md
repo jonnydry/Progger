@@ -19,7 +19,7 @@ The application is a full-stack project with a React frontend (Vite dev server o
 - **Background Texture**: `BackgroundTexture` component renders diagonal CSS hatching (45° repeating gradient using theme text color) and three radial glow orbs (primary/accent/secondary CSS variables). Dark/light mode adapts opacity and blur values. Integrated as first child of `MainLayout`.
 
 **Technical Implementations & Feature Specifications:**
-- **AI Chord Generation**: Uses xAI's Grok API (`grok-4-1-fast-non-reasoning` model) for chord progressions and scale suggestions.
+- **AI Chord Generation**: Uses xAI's Grok API (`grok-4.3` model) for chord progressions and scale suggestions.
 - **Hybrid AI + Client-Side Approach**: AI provides creative input, complemented by extensive client-side libraries (`chordLibrary.ts`, `scaleLibrary.ts`) for detailed guitar voicings and scale fingerings.
 - **Chord Voicings**: Comprehensive library of 200+ pre-defined guitar chord voicings with automatic transposition and fallback to E-form barre chord templates.
 - **Scale Suggestions**: AI-suggested scales are enriched with multiple fingering patterns from the client-side library, transposed for ergonomic playability (frets 0-12).
