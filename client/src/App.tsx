@@ -65,7 +65,9 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    validateChordLibrary();
+    void validateChordLibrary().catch((err) => {
+      console.warn("Chord library validation failed:", err);
+    });
     preloadAllChords().catch((err) => {
       console.warn("Failed to preload chord data:", err);
     });
