@@ -78,23 +78,10 @@ export function buildOptimizedPrompt(request: ProgressionRequest): PromptCompone
   const canonicalMode = normalizeModeCanonical(mode);
   const modeProfile = getMajorSystemModeProfile(mode);
 
-  // Common schema description used in all prompts
-  const schemaDescription = `
-{
-  "progression": [
-    {
-      "chordName": "string (IMPORTANT: Use exact chord notation - e.g., 'Cmaj7', 'Am7', 'G7b9', 'D7alt', 'Fmaj9')",
-      "musicalFunction": "string (e.g., 'Tonic Major 7th', 'Dominant 7th with flat 9', 'Subdominant Major 7th')",
-      "relationToKey": "string (Roman numeral like 'Imaj7', 'V7', 'iim7', 'V7/ii')"
-    }
-  ],
-  "scales": [
-    {
-      "name": "string (EXACT FORMAT: root + mode name - e.g., 'G Major', 'A Dorian', 'C Minor Pentatonic', 'G Altered'. NO qualifiers like Natural/Harmonic/Melodic)",
-      "rootNote": "string (e.g., 'G', 'A', 'C' - match the key signature accidental preference)"
-    }
-  ]
-}`;
+  // Schema is now enforced via Structured Outputs (response_format json_schema),
+  // not via in-prompt instruction. The schemaDescription field is retained for
+  // backward compatibility with the PromptComponents type and for fingerprinting.
+  const schemaDescription = "";
 
   // Get mode-specific characteristics
   const getModeCharacteristics = (
@@ -177,16 +164,11 @@ export function buildOptimizedPrompt(request: ProgressionRequest): PromptCompone
 - Canonical mode: ${canonicalMode}
 - Formula: derive from requested descriptor and keep chord tones consistent with it`;
 
-  // Base prompt - always included
-  const basePrompt = `You are a music theory expert specializing in jazz and contemporary guitar harmony.
-
-🎵 MANDATORY CHORD COUNT: ${numChords} chords 🎵
-═══════════════════════════════════════
-You MUST return EXACTLY ${numChords} chord objects in the progression array.
-This is NON-NEGOTIABLE and will be strictly validated.
-
-TASK:
-Generate a creative ${numChords}-chord progression in the key of ${key} ${mode}.
+  // Base prompt — concise and substantive. The response schema enforces shape
+  // and exact chord count, so we no longer need verbose count-enforcement
+  // blocks or "must follow JSON" warnings (the model is constrained by
+  // Structured Outputs).
+  const basePrompt = `Generate a musical ${numChords}-chord progression in ${key} ${mode}.
 
 REQUEST CONTEXT (MUST HONOR EXACTLY):
 - key: ${key}
@@ -196,25 +178,17 @@ REQUEST CONTEXT (MUST HONOR EXACTLY):
 - includeTensions: ${includeTensions ? "true" : "false"}
 - generationStyle: ${generationStyle}
 
-⚠️ CRITICAL CHORD COUNT REQUIREMENTS:
-- REQUIRED: Exactly ${numChords} chord objects
-- NOT ${numChords - 1}, NOT ${numChords + 1}, EXACTLY ${numChords}
-- Count your chords before responding: 1, 2, 3... up to ${numChords}
-- If you generate ${numChords - 1} or fewer chords, your response will be REJECTED
-- If you generate ${numChords + 1} or more chords, your response will be REJECTED
-
 ${modeIdentity}
 
 MODE CHARACTERISTICS:
 ${modeInfo.modeCharacteristics}
 
-CRITICAL REQUIREMENTS:
-1. Use EXACT chord notation that matches guitar voicing standards
-2. Chord names must include quality: maj7, min7, 7, 9, 7b9, 7#9, 7alt, etc.
-3. Respect the key signature: ${key.includes("b") ? "use flats (Bb, Eb, Ab)" : key.includes("#") ? "use sharps (F#, C#, G#)" : "use standard note spelling"}
-4. Ensure smooth voice leading between chords
-5. Provide accurate Roman numeral analysis for each chord
-6. Use harmonies that highlight the characteristic notes of ${canonicalMode}${modeProfile && modeProfile.majorDelta !== "none" ? ` (${modeProfile.majorDelta})` : ""}`;
+REQUIREMENTS:
+1. Use exact chord notation matching guitar voicing standards (maj7, min7, 7, 9, 7b9, 7#9, 7alt, m7b5, etc.).
+2. Respect key-signature accidentals: ${key.includes("b") ? "prefer flats (Bb, Eb, Ab)" : key.includes("#") ? "prefer sharps (F#, C#, G#)" : "use standard note spelling"}.
+3. Ensure smooth voice leading between chords.
+4. Provide accurate Roman-numeral analysis for each chord.
+5. Highlight the characteristic notes of ${canonicalMode}${modeProfile && modeProfile.majorDelta !== "none" ? ` (${modeProfile.majorDelta})` : ""}.`;
 
   // Advanced chord instructions - only included when advanced chords are requested
   let advancedChordInstructions = "";
@@ -285,49 +259,23 @@ STYLE TARGET:
     progressionInstructions = `Generate the specific chord progression "${selectedProgression}" using Nashville Number System conventions in the key of ${key} ${mode}. ${romanNumeralInstruction}`;
   }
 
-  // Final combined prompt
+  // Final combined prompt. JSON shape, exact chord count, and field presence
+  // are enforced by the Structured Outputs schema (response_format), so this
+  // prompt focuses on musical guidance, not format policing.
   const fullPrompt = `${basePrompt}${advancedChordInstructions}${progressionInstructions}
 
-For EACH chord in the progression, provide:
-- chordName: EXACT chord name with quality (e.g., 'Cmaj7', 'Am7', 'G7b9', 'D7alt', 'Bm7b5')
-- musicalFunction: Detailed role (e.g., 'Tonic Major 7th', 'Secondary Dominant to ii', 'Altered Dominant')
-- relationToKey: Roman numeral (e.g., 'Imaj7', 'V7', 'iim7', 'V7/ii')
-
-Additionally, suggest ALL compatible scales for improvisation over this progression:
-- Include every musically plausible compatible scale (do not limit to 2-3)
-- Primary scale MUST be '${key} ${mode}' to match the modal character and MUST appear first
+SCALE SUGGESTIONS:
+- Include every musically plausible compatible scale (do not limit to 2-3).
+- Primary scale MUST be '${key} ${mode}' and MUST appear first.
 - For modal progressions (Lydian, Dorian, Phrygian, Mixolydian, Locrian):
-  * Include the mode (${mode}) at different root positions that appear in the progression
-  * Example: For a Lydian progression with chords on C, D, and E, suggest "C Lydian", "D Lydian", and "E Lydian" when musically valid
-  * For modes, prioritize ${mode} scales at different roots over generic major/minor scales
-- Include additional compatible options such as pentatonic variants or related modes when they fit
-- Do not return duplicate scales (same root + descriptor)
-- Order scales from strongest fit to more color/optional choices
-- name: EXACT format - root note + mode name ONLY (e.g., '${key} ${mode}', '${key} Major Pentatonic', '${key} Dorian', '${key} Lydian')
-  * DO NOT add words like "Natural", "Harmonic", "Melodic", or "Scale"
-  * CORRECT: "E Minor", "G Major Pentatonic", "A Dorian", "C Lydian"
-  * WRONG: "E Natural Minor", "G Harmonic Minor", "A Dorian Scale"
-- rootNote: The root note matching key signature preference
+  * Include the mode (${mode}) at different root positions that appear in the progression.
+  * Prioritize ${mode} scales at those roots over generic major/minor scales.
+- Add compatible pentatonic variants or related modes when they fit.
+- No duplicate scales (same root + descriptor).
+- Order from strongest fit to optional color choices.
+- Scale name format: '<Root> <ModeName>' (e.g. '${key} ${mode}', '${key} Major Pentatonic', '${key} Dorian'). Do NOT add 'Natural', 'Harmonic', 'Melodic', or 'Scale'.
 
-Return ONLY valid JSON matching this schema:
-${schemaDescription}
-
-════════════════════════════════════════════════════════
-⚠️ ⚠️ ⚠️  FINAL MANDATORY VERIFICATION  ⚠️ ⚠️ ⚠️
-════════════════════════════════════════════════════════
-Before you return your response:
-1. COUNT the chord objects in your progression array
-2. Verify the count equals EXACTLY ${numChords}
-3. If count ≠ ${numChords}, ADD or REMOVE chords until count = ${numChords}
-4. Verify the primary scale includes "${key} ${mode}" exactly by mode identity
-5. Verify response follows includeTensions=${includeTensions ? "true" : "false"} behavior
-6. Verify response aligns with generationStyle=${generationStyle}
-
-REQUIRED: progression.length === ${numChords}
-Your response will be REJECTED if this requirement is not met.
-════════════════════════════════════════════════════════
-
-IMPORTANT: Return ONLY valid JSON, no additional text or markdown formatting.`;
+Each chord must include: chordName (exact notation with quality), musicalFunction (detailed role), relationToKey (Roman numeral, e.g. 'V7/ii').`;
 
   return {
     basePrompt,

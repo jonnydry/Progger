@@ -78,7 +78,113 @@ export function __resetXaiClientForTests(): void {
   openAIClientApiKey = null;
 }
 
-// Helper to strip markdown code blocks from API response
+// JSON Schema definitions for Grok-4 Structured Outputs.
+// Using strict mode guarantees the model returns valid JSON conforming to the
+// schema, eliminating most of the "EXACT FORMAT" / "Return ONLY JSON" prompt
+// boilerplate that older models needed.
+
+const CHORD_ITEM_SCHEMA = {
+  type: "object",
+  properties: {
+    chordName: {
+      type: "string",
+      description:
+        "Exact chord notation, e.g. 'Cmaj7', 'Am7', 'G7b9', 'D7alt', 'F#maj9', 'Bm7b5'",
+    },
+    musicalFunction: {
+      type: "string",
+      description: "Detailed harmonic role, e.g. 'Tonic Major 7th', 'Secondary Dominant to ii'",
+    },
+    relationToKey: {
+      type: "string",
+      description: "Roman numeral, e.g. 'Imaj7', 'V7', 'iim7', 'V7/ii'",
+    },
+  },
+  required: ["chordName", "musicalFunction", "relationToKey"],
+  additionalProperties: false,
+} as const;
+
+const SCALE_ITEM_SCHEMA = {
+  type: "object",
+  properties: {
+    name: {
+      type: "string",
+      description:
+        "Format: '<Root> <ModeName>'. Examples: 'C Major', 'A Dorian', 'G Major Pentatonic'. Do NOT include qualifiers like 'Natural', 'Harmonic', 'Melodic', or the word 'Scale'.",
+    },
+    rootNote: {
+      type: "string",
+      description:
+        "Root note matching the key signature accidental preference, e.g. 'C', 'F#', 'Bb'",
+    },
+  },
+  required: ["name", "rootNote"],
+  additionalProperties: false,
+} as const;
+
+const PROGRESSION_RESPONSE_SCHEMA = {
+  type: "object",
+  properties: {
+    progression: { type: "array", items: CHORD_ITEM_SCHEMA },
+    scales: { type: "array", items: SCALE_ITEM_SCHEMA, minItems: 1 },
+  },
+  required: ["progression", "scales"],
+  additionalProperties: false,
+} as const;
+
+const ANALYSIS_RESPONSE_SCHEMA = {
+  type: "object",
+  properties: {
+    detectedKey: {
+      type: "string",
+      description:
+        "Detected tonal center, e.g. 'C', 'F#', 'Bb'. Append 'm' for minor keys (e.g. 'Am').",
+    },
+    detectedMode: {
+      type: "string",
+      description:
+        "Canonical mode: one of 'Major', 'Minor', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian', 'Locrian'",
+    },
+    progression: { type: "array", items: CHORD_ITEM_SCHEMA, minItems: 1 },
+    scales: { type: "array", items: SCALE_ITEM_SCHEMA, minItems: 1 },
+  },
+  required: ["detectedKey", "detectedMode", "progression", "scales"],
+  additionalProperties: false,
+} as const;
+
+function buildProgressionResponseFormat(numChords: number) {
+  return {
+    type: "json_schema" as const,
+    json_schema: {
+      name: "ChordProgressionResponse",
+      strict: true,
+      schema: {
+        ...PROGRESSION_RESPONSE_SCHEMA,
+        properties: {
+          ...PROGRESSION_RESPONSE_SCHEMA.properties,
+          progression: {
+            type: "array",
+            items: CHORD_ITEM_SCHEMA,
+            minItems: numChords,
+            maxItems: numChords,
+          },
+        },
+      },
+    },
+  };
+}
+
+const ANALYSIS_RESPONSE_FORMAT = {
+  type: "json_schema" as const,
+  json_schema: {
+    name: "ProgressionAnalysisResponse",
+    strict: true,
+    schema: ANALYSIS_RESPONSE_SCHEMA,
+  },
+};
+
+// Helper to strip markdown code blocks from API response. Kept as a defensive
+// fallback even though Structured Outputs guarantee clean JSON.
 function cleanJsonResponse(text: string): string {
   let cleaned = text.trim();
   // Remove markdown code block wrapper if present
@@ -311,21 +417,24 @@ export async function generateChordProgression(
     return await xaiRequestLimiter.run(async () =>
       xaiCircuitBreaker.execute(async () => {
         const response = await openai.chat.completions.create({
-          model: "grok-4.3",
+          model: env.XAI_MODEL,
           messages: [
             {
               role: "system",
               content:
-                "You are a music theory expert. Always respond with valid JSON matching the exact schema provided.",
+                "You are a jazz and contemporary guitar music theory expert. Respond with structured JSON matching the provided schema.",
             },
             {
               role: "user",
               content: promptComponents.fullPrompt,
             },
           ],
-          response_format: { type: "json_object" },
+          // Structured Outputs: schema enforces shape AND exact chord count
+          // (minItems/maxItems = numChords). The model can no longer return the
+          // wrong number of chords or omit fields.
+          response_format: buildProgressionResponseFormat(numChords) as any,
           temperature: 0.7,
-          max_tokens: 1500, // Increased to accommodate 7+ chords with detailed descriptions
+          max_tokens: 2048,
         });
 
         const rawText = response.choices[0].message.content?.trim();
@@ -465,71 +574,33 @@ export async function analyzeCustomProgression(
     return cachedResult;
   }
 
-  // Step 3: Build prompt for custom progression analysis
-  const prompt = `You are a music theory expert specializing in jazz and contemporary guitar harmony.
-
-TASK:
-Analyze the following chord progression and provide:
-1. Key detection: Determine the most likely key and mode (Major, Minor, Dorian, Mixolydian, etc.)
-2. Musical analysis: Provide Roman numeral analysis for each chord
-3. Alternative voicings: Suggest different fingerings/positions for each chord
-4. Scale suggestions: Recommend compatible scales for improvisation
+  // Step 3: Build prompt for custom progression analysis. JSON shape and field
+  // presence are enforced by the Structured Outputs schema, so this prompt
+  // focuses on the musical analysis itself.
+  const prompt = `Analyze this chord progression and produce a key detection plus full Roman-numeral analysis with compatible scales.
 
 CHORD PROGRESSION:
 ${chords.map((chord, i) => `${i + 1}. ${chord}`).join("\n")}
 
-CRITICAL REQUIREMENTS:
-1. Detect the key and mode from the progression
-   - Look for tonal center (most common root note)
-   - Identify major vs minor characteristics
-   - Detect modal progressions if applicable
-   - Provide confidence level (high/medium/low) if ambiguous
-   - NOTE: Ionian and Major are interchangeable (use 'Major' as canonical form)
-   - NOTE: Aeolian and Minor are interchangeable (use 'Minor' as canonical form)
+KEY & MODE DETECTION:
+- Identify the tonal center and whether the music is major, minor, or modal (Dorian, Phrygian, Lydian, Mixolydian, Locrian).
+- Use canonical mode names: 'Major' (not 'Ionian'), 'Minor' (not 'Aeolian').
+- detectedKey format: root + optional 'm' for minor (e.g. 'C', 'F#', 'Am').
 
-2. For each chord in the progression:
-   - chordName: Use EXACT chord notation (e.g., 'Cmaj7', 'Am7', 'G7b9', 'D7alt', 'F#maj9')
-   - musicalFunction: Detailed role (e.g., 'Tonic Major 7th', 'Dominant 7th with flat 9')
-   - relationToKey: Roman numeral relative to detected key (e.g., 'Imaj7', 'V7', 'iim7', 'V7/ii')
+PER-CHORD ANALYSIS:
+- chordName: exact notation matching guitar voicing standards (e.g. 'Cmaj7', 'Am7', 'G7b9', 'D7alt', 'F#maj9').
+- musicalFunction: detailed role (e.g. 'Tonic Major 7th', 'Dominant 7th with flat 9', 'Secondary Dominant to ii').
+- relationToKey: Roman numeral relative to the detected key (e.g. 'Imaj7', 'V7', 'iim7', 'V7/ii').
 
-3. Suggest ALL compatible scales:
-   - Include every musically plausible compatible scale (do not limit to 2-3)
-   - Primary scale MUST match the detected key/mode and MUST appear first
-   - For modal progressions (Lydian, Dorian, Phrygian, Mixolydian, Locrian):
-     * Include the detected mode at different root positions that appear in the progression
-     * Example: For a Lydian progression, suggest Lydian scales at different chord roots
-     * Prioritize modal scales at different roots over generic major/minor scales
-   - Include additional compatible options such as pentatonic variants or related modes when they fit
-   - Do not return duplicate scales (same root + descriptor)
-   - Order scales from strongest fit to more color/optional choices
-   - name: EXACT format - root note + mode name ONLY (e.g., 'C Major', 'A Dorian', 'G Mixolydian', 'C Minor Pentatonic', 'C Lydian')
-     * DO NOT add words like "Natural", "Harmonic", "Melodic", or "Scale"
-     * CORRECT: "E Minor", "G Major Pentatonic", "A Dorian", "C Lydian"
-     * WRONG: "E Natural Minor", "G Harmonic Minor", "A Dorian Scale"
-   - rootNote: The root note matching key signature preference
+SCALE SUGGESTIONS:
+- Include every musically plausible compatible scale.
+- Primary scale MUST match the detected key/mode and MUST appear first.
+- For modal progressions, include the detected mode at the different chord-root positions that appear in the progression, and prioritize those over generic major/minor scales.
+- Add compatible pentatonic variants or related modes when they fit.
+- No duplicate scales (same root + descriptor). Order from strongest fit to optional color choices.
+- Scale name format: '<Root> <ModeName>' (e.g. 'C Major', 'A Dorian', 'G Mixolydian', 'C Minor Pentatonic'). Do NOT add 'Natural', 'Harmonic', 'Melodic', or 'Scale'.
 
-4. Ensure chord names match guitar voicing standards and respect key signature accidentals
-
-Return ONLY valid JSON matching this schema:
-{
-  "detectedKey": "string (REQUIRED: The detected key center - e.g., 'C', 'G', 'Am', 'F#'. Include 'm' suffix for minor keys)",
-  "detectedMode": "string (REQUIRED: The detected mode - must be exactly one of: 'Major', 'Minor', 'Ionian', 'Dorian', 'Phrygian', 'Lydian', 'Mixolydian', 'Locrian'. Note: Ionian and Major are interchangeable, use 'Major' as canonical form. Aeolian and Minor are interchangeable, use 'Minor' as canonical form.)",
-  "progression": [
-    {
-      "chordName": "string (IMPORTANT: Use exact chord notation - e.g., 'Cmaj7', 'Am7', 'G7b9', 'D7alt', 'F#maj9')",
-      "musicalFunction": "string (e.g., 'Tonic Major 7th', 'Dominant 7th with flat 9', 'Subdominant Major 7th')",
-      "relationToKey": "string (Roman numeral like 'Imaj7', 'V7', 'iim7', 'V7/ii')"
-    }
-  ],
-  "scales": [
-    {
-      "name": "string (EXACT FORMAT: root + mode name - e.g., 'G Major', 'A Dorian', 'C Minor Pentatonic', 'G Altered'. NO qualifiers like Natural/Harmonic/Melodic)",
-      "rootNote": "string (e.g., 'G', 'A', 'C' - match the key signature accidental preference)"
-    }
-  ]
-}
-
-IMPORTANT: Return ONLY valid JSON, no additional text or markdown formatting.`;
+Respect key-signature accidentals throughout (prefer flats vs sharps based on the detected key).`;
 
   // Step 4: Create async operation
   const analyzeWithOptimizations = async (): Promise<ProgressionResultFromAPI> => {
@@ -543,21 +614,23 @@ IMPORTANT: Return ONLY valid JSON, no additional text or markdown formatting.`;
     return await xaiRequestLimiter.run(async () =>
       xaiCircuitBreaker.execute(async () => {
         const response = await openai.chat.completions.create({
-          model: "grok-4.3",
+          model: env.XAI_MODEL,
           messages: [
             {
               role: "system",
               content:
-                "You are a music theory expert. Always respond with valid JSON matching the exact schema provided.",
+                "You are a jazz and contemporary guitar music theory expert. Respond with structured JSON matching the provided schema.",
             },
             {
               role: "user",
               content: prompt,
             },
           ],
-          response_format: { type: "json_object" },
-          temperature: 0.7,
-          max_tokens: 1500, // Increased for more detailed analysis
+          response_format: ANALYSIS_RESPONSE_FORMAT as any,
+          // Lower temperature for analysis: key/mode detection should be
+          // deterministic, not creative.
+          temperature: 0.3,
+          max_tokens: 2048,
         });
 
         const rawText = response.choices[0].message.content?.trim();

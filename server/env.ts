@@ -7,6 +7,7 @@ const envSchema = z.object({
   PORT: z.coerce.number().int().positive().default(3001),
 
   XAI_API_KEY: z.string().min(10, "XAI_API_KEY appears to be invalid (too short)"),
+  XAI_MODEL: z.string().default("grok-4.3"),
   XAI_REQUEST_TIMEOUT_MS: z.coerce.number().int().positive().default(25000),
   XAI_MAX_CONCURRENT_REQUESTS: z.coerce.number().int().positive().default(8),
 

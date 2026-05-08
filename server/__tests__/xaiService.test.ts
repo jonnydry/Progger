@@ -169,9 +169,15 @@ describe("xaiService", () => {
       expect(mockOpenAI.chat.completions.create).toHaveBeenCalledWith(
         expect.objectContaining({
           model: "grok-4.3",
-          response_format: { type: "json_object" },
+          response_format: expect.objectContaining({
+            type: "json_schema",
+            json_schema: expect.objectContaining({
+              name: "ChordProgressionResponse",
+              strict: true,
+            }),
+          }),
           temperature: 0.7,
-          max_tokens: 1500,
+          max_tokens: 2048,
           messages: expect.arrayContaining([
             expect.objectContaining({ role: "system" }),
             expect.objectContaining({ role: "user" }),
@@ -483,9 +489,15 @@ describe("xaiService", () => {
       expect(mockOpenAI.chat.completions.create).toHaveBeenCalledWith(
         expect.objectContaining({
           model: "grok-4.3",
-          response_format: { type: "json_object" },
-          temperature: 0.7,
-          max_tokens: 1500, // Higher for custom analysis
+          response_format: expect.objectContaining({
+            type: "json_schema",
+            json_schema: expect.objectContaining({
+              name: "ProgressionAnalysisResponse",
+              strict: true,
+            }),
+          }),
+          temperature: 0.3,
+          max_tokens: 2048,
           messages: expect.arrayContaining([
             expect.objectContaining({ role: "system" }),
             expect.objectContaining({
