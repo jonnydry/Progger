@@ -74,12 +74,11 @@ const App: React.FC = () => {
   };
 
   useEffect(() => {
-    void validateChordLibrary().catch((err) => {
-      console.warn("Chord library validation failed:", err);
-    });
-    preloadAllChords().catch((err) => {
-      console.warn("Failed to preload chord data:", err);
-    });
+    preloadAllChords()
+      .then(() => validateChordLibrary())
+      .catch((err) => {
+        console.warn("Chord library initialization failed:", err);
+      });
   }, []);
 
   const userProfile = useMemo(

@@ -451,13 +451,13 @@ export function validateVoicingFormat(voicing: ChordVoicing, chordName: string):
 
 /**
  * Validate all chord voicings across the full library (development only).
- * Loads all chord data first, then checks each voicing for format correctness.
+ * Validates whatever chord data is currently cached — call `preloadAllChords()`
+ * first to ensure the full library is loaded before validation.
  * Safe to call without await — returns a Promise that resolves silently.
  */
 export async function validateChordLibraryAsync(): Promise<void> {
   if (import.meta.env.PROD) return;
 
-  await preloadAllChords();
   const allChordData = getAllCachedChordData();
 
   if (isDevEnv) {
