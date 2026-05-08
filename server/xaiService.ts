@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import type { ResponseFormatJSONSchema } from "openai/resources/shared";
 import { redisCache, getProgressionCacheKey } from "./cache";
 import { pendingRequests } from "./pendingRequests";
 import {
@@ -152,9 +153,9 @@ const ANALYSIS_RESPONSE_SCHEMA = {
   additionalProperties: false,
 } as const;
 
-function buildProgressionResponseFormat(numChords: number) {
+function buildProgressionResponseFormat(numChords: number): ResponseFormatJSONSchema {
   return {
-    type: "json_schema" as const,
+    type: "json_schema",
     json_schema: {
       name: "ChordProgressionResponse",
       strict: true,
@@ -174,8 +175,8 @@ function buildProgressionResponseFormat(numChords: number) {
   };
 }
 
-const ANALYSIS_RESPONSE_FORMAT = {
-  type: "json_schema" as const,
+const ANALYSIS_RESPONSE_FORMAT: ResponseFormatJSONSchema = {
+  type: "json_schema",
   json_schema: {
     name: "ProgressionAnalysisResponse",
     strict: true,
@@ -432,7 +433,7 @@ export async function generateChordProgression(
           // Structured Outputs: schema enforces shape AND exact chord count
           // (minItems/maxItems = numChords). The model can no longer return the
           // wrong number of chords or omit fields.
-          response_format: buildProgressionResponseFormat(numChords) as any,
+          response_format: buildProgressionResponseFormat(numChords),
           temperature: 0.7,
           max_tokens: 2048,
         });
@@ -626,7 +627,7 @@ Respect key-signature accidentals throughout (prefer flats vs sharps based on th
               content: prompt,
             },
           ],
-          response_format: ANALYSIS_RESPONSE_FORMAT as any,
+          response_format: ANALYSIS_RESPONSE_FORMAT,
           // Lower temperature for analysis: key/mode detection should be
           // deterministic, not creative.
           temperature: 0.3,
