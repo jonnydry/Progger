@@ -11,30 +11,29 @@ import { eq, and, desc } from "drizzle-orm";
 import { logger } from "./utils/logger";
 import { redisCache } from "./cache";
 
-// In-memory cache for frequently accessed user data (short TTL)
+// In-memory cache for frequently accessed user data (short TTL).
+// Map insertion order gives us LRU-by-insertion eviction for free.
 const userCache = new Map<string, { user: User; expires: number }>();
 const USER_CACHE_TTL = 60 * 1000; // 60 seconds
 const USER_CACHE_MAX_SIZE = 1000; // Maximum number of users to cache in memory
 
 /**
- * Add an entry to the user cache with size limit enforcement
+ * Add an entry to the user cache with size-limit enforcement.
+ *
+ * Uses a single deterministic eviction step (drop the oldest entry) instead of
+ * scanning the whole map for expired entries. This keeps the operation O(1) and
+ * removes the small race window where the previous implementation could briefly
+ * exceed USER_CACHE_MAX_SIZE under high concurrency. Stale entries are still
+ * filtered on read via the `expires` check, so size never grows unbounded.
  */
 function setUserCache(id: string, user: User): void {
-  // If cache is at max size, remove oldest/expired entries
-  if (userCache.size >= USER_CACHE_MAX_SIZE) {
-    const now = Date.now();
-    // First, remove expired entries
-    for (const [key, value] of userCache) {
-      if (value.expires <= now) {
-        userCache.delete(key);
-      }
-    }
-    // If still at max, remove oldest entry (first in Map)
-    if (userCache.size >= USER_CACHE_MAX_SIZE) {
-      const oldestKey = userCache.keys().next().value;
-      if (oldestKey) {
-        userCache.delete(oldestKey);
-      }
+  // Re-inserting moves the key to the end (most-recent), preserving LRU order.
+  if (userCache.has(id)) {
+    userCache.delete(id);
+  } else if (userCache.size >= USER_CACHE_MAX_SIZE) {
+    const oldestKey = userCache.keys().next().value;
+    if (oldestKey !== undefined) {
+      userCache.delete(oldestKey);
     }
   }
   userCache.set(id, { user, expires: Date.now() + USER_CACHE_TTL });

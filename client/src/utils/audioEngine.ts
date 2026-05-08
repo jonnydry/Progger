@@ -50,7 +50,13 @@ function getFrequency(noteValue: number, octaveOffset: number = 0): number {
  * @param startTime - When to start playing (context time)
  * @param context - AudioContext instance
  */
-function playTone(context: AudioContext, frequency: number, duration: number, startTime: number) {
+function playTone(
+  context: AudioContext,
+  frequency: number,
+  duration: number,
+  startTime: number,
+  oscillatorRegistry?: OscillatorNode[]
+) {
   const oscillator = context.createOscillator();
   const gainNode = context.createGain();
   const filterNode = context.createBiquadFilter();
@@ -75,6 +81,15 @@ function playTone(context: AudioContext, frequency: number, duration: number, st
 
   oscillator.start(startTime);
   oscillator.stop(startTime + duration);
+
+  if (oscillatorRegistry) {
+    oscillatorRegistry.push(oscillator);
+    // Auto-deregister once the note finishes naturally so the array doesn't grow unbounded.
+    oscillator.onended = () => {
+      const idx = oscillatorRegistry.indexOf(oscillator);
+      if (idx >= 0) oscillatorRegistry.splice(idx, 1);
+    };
+  }
 }
 
 /**
@@ -89,7 +104,8 @@ export function playChord(
   root: string,
   quality: string,
   duration: number = 1.5,
-  startTime?: number
+  startTime?: number,
+  oscillatorRegistry?: OscillatorNode[]
 ): number {
   try {
     const context = getAudioContext();
@@ -125,7 +141,7 @@ export function playChord(
       previousNoteValue = noteValue;
 
       const freq = getFrequency(noteValue, currentOctaveOffset);
-      playTone(context, freq, duration, start + index * strumDelay);
+      playTone(context, freq, duration, start + index * strumDelay, oscillatorRegistry);
     });
 
     return duration;
@@ -147,7 +163,8 @@ export function playProgression(
   onChordStart?: (index: number) => void,
   onComplete?: () => void
 ): () => void {
-  const timeoutIds: NodeJS.Timeout[] = [];
+  const timeoutIds: ReturnType<typeof setTimeout>[] = [];
+  const oscillators: OscillatorNode[] = [];
   let isCancelled = false;
 
   try {
@@ -159,8 +176,8 @@ export function playProgression(
     progression.forEach((chord, index) => {
       const startTime = now + index * (chordDuration + gap);
 
-      // Schedule the audio
-      playChord(chord.root, chord.quality, chordDuration, startTime);
+      // Schedule the audio (with registry so cleanup can stop in-flight notes)
+      playChord(chord.root, chord.quality, chordDuration, startTime, oscillators);
 
       // Schedule the callback
       // setTimeout uses wall clock time (ms), AudioContext uses seconds
@@ -185,9 +202,22 @@ export function playProgression(
     if (onComplete) onComplete();
   }
 
-  // Return cleanup function
+  // Return cleanup function: cancels pending UI callbacks AND silences any
+  // currently-playing oscillators so unmount immediately stops audio.
   return () => {
     isCancelled = true;
     timeoutIds.forEach((id) => clearTimeout(id));
+    // Stop any still-playing oscillators. Wrap each in try/catch because a node
+    // that has already finished will throw on stop().
+    for (const osc of oscillators) {
+      try {
+        osc.onended = null;
+        osc.stop();
+        osc.disconnect();
+      } catch {
+        // Already stopped/disconnected — ignore.
+      }
+    }
+    oscillators.length = 0;
   };
 }

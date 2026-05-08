@@ -7,6 +7,7 @@ import {
   validateStashRequestMiddleware,
 } from "./middleware/validation";
 import { logger } from "./utils/logger";
+import { isDevelopment } from "./env";
 import { db } from "./db";
 import { redisCache } from "./cache";
 import { createAIGenerationLimiter, getRateLimitStatus } from "./rateLimit";
@@ -143,13 +144,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     logger.error("Unhandled error", {
       requestId,
       error: err.message || "Unknown error",
-      stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+      stack: isDevelopment ? err.stack : undefined,
       path: req.path,
       method: req.method,
     });
 
-    const message =
-      process.env.NODE_ENV === "development" ? err.message : "An unexpected error occurred";
+    const message = isDevelopment ? err.message : "An unexpected error occurred";
 
     res.status(err.status || 500).json({
       error: message,

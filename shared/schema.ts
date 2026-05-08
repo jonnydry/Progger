@@ -38,7 +38,13 @@ export const stash = pgTable(
     progressionData: jsonb("progression_data").notNull(), // Stores the full ProgressionResult
     createdAt: timestamp("created_at").defaultNow(),
   },
-  (table) => [index("stash_user_id_idx").on(table.userId)]
+  (table) => [
+    index("stash_user_id_idx").on(table.userId),
+    // Composite index for the common "user + key + mode" filter pattern,
+    // and for "user ordered by recency" (createdAt desc).
+    index("stash_user_key_mode_idx").on(table.userId, table.key, table.mode),
+    index("stash_user_created_at_idx").on(table.userId, table.createdAt),
+  ]
 );
 
 export type UpsertUser = typeof users.$inferInsert;

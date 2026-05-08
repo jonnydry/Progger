@@ -8,6 +8,7 @@ import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 import { logger } from "./utils/logger";
+import { env } from "./env";
 
 // Type definition for authenticated user in Express session
 export interface AuthenticatedUser {
@@ -38,10 +39,7 @@ const getOidcConfig = memoize(
     logger.info("Fetching OIDC configuration from Replit");
     try {
       const config = await withTimeout(
-        client.discovery(
-          new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
-          process.env.REPL_ID!
-        ),
+        client.discovery(new URL(env.ISSUER_URL), env.REPL_ID!),
         10000, // 10 second timeout
         "OIDC discovery timed out after 10 seconds"
       );
@@ -56,7 +54,7 @@ const getOidcConfig = memoize(
 );
 
 export function getSession() {
-  if (!process.env.SESSION_SECRET) {
+  if (!env.SESSION_SECRET) {
     throw new Error(
       "SESSION_SECRET environment variable is not set. Please set a secure random string for session encryption."
     );
@@ -65,13 +63,13 @@ export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000;
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
-    conString: process.env.DATABASE_URL,
+    conString: env.DATABASE_URL,
     createTableIfMissing: false,
     ttl: sessionTtl,
     tableName: "sessions",
   });
   return session({
-    secret: process.env.SESSION_SECRET,
+    secret: env.SESSION_SECRET,
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
@@ -109,16 +107,16 @@ const registeredDomains = new Set<string>();
 let authEnabled = false;
 
 export async function setupAuth(app: Express) {
-  const domainsEnv = process.env.REPLIT_DOMAINS;
-  const replitId = process.env.REPL_ID;
+  const domainsEnv = env.REPLIT_DOMAINS;
+  const replitId = env.REPL_ID;
 
-  if (!domainsEnv || !replitId || !process.env.SESSION_SECRET || !process.env.DATABASE_URL) {
+  if (!domainsEnv || !replitId || !env.SESSION_SECRET || !env.DATABASE_URL) {
     authEnabled = false;
     logger.warn("Auth prerequisites missing; authentication disabled for this runtime", {
       hasReplitDomains: !!domainsEnv,
       hasReplitId: !!replitId,
-      hasSessionSecret: !!process.env.SESSION_SECRET,
-      hasDatabaseUrl: !!process.env.DATABASE_URL,
+      hasSessionSecret: !!env.SESSION_SECRET,
+      hasDatabaseUrl: !!env.DATABASE_URL,
     });
     return;
   }

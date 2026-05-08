@@ -3,6 +3,7 @@ import { Controls } from "./components/Controls";
 import { VoicingsGrid } from "./components/VoicingsGrid";
 import { SkeletonScaleDiagram } from "./components/SkeletonScaleDiagram";
 import { MainLayout } from "./components/Layout/MainLayout";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { useAuth } from "./hooks/useAuth";
 import { useTheme } from "./hooks/useTheme";
 import { useGenerateProgression, useAnalyzeCustomProgression } from "./hooks/useProgression";
@@ -21,6 +22,14 @@ interface ResultContext {
   key: string;
   mode: string;
 }
+
+const SectionErrorFallback: React.FC<{ label: string }> = ({ label }) => (
+  <div className="bg-surface border border-border rounded-md p-6 text-center text-text/70">
+    <p className="text-sm">
+      Something went wrong rendering the {label}. Try regenerating or reloading the page.
+    </p>
+  </div>
+);
 
 const App: React.FC = () => {
   const { user } = useAuth();
@@ -283,14 +292,16 @@ const App: React.FC = () => {
         {/* Loading State */}
         {isLoading && (
           <div className="space-y-16">
-            <VoicingsGrid
-              progression={[]}
-              isLoading={true}
-              skeletonCount={skeletonCount}
-              musicalKey={activeKey}
-              currentMode={activeMode}
-              progressionResult={progressionResult}
-            />
+            <ErrorBoundary fallback={<SectionErrorFallback label="voicings" />}>
+              <VoicingsGrid
+                progression={[]}
+                isLoading={true}
+                skeletonCount={skeletonCount}
+                musicalKey={activeKey}
+                currentMode={activeMode}
+                progressionResult={progressionResult}
+              />
+            </ErrorBoundary>
             <SkeletonScaleDiagram />
           </div>
         )}
@@ -298,13 +309,15 @@ const App: React.FC = () => {
         {/* Result State */}
         {!isLoading && progressionResult && (
           <div className="space-y-16">
-            <VoicingsGrid
-              progression={progressionResult.progression}
-              isLoading={false}
-              musicalKey={activeKey}
-              currentMode={activeMode}
-              progressionResult={progressionResult}
-            />
+            <ErrorBoundary fallback={<SectionErrorFallback label="voicings" />}>
+              <VoicingsGrid
+                progression={progressionResult.progression}
+                isLoading={false}
+                musicalKey={activeKey}
+                currentMode={activeMode}
+                progressionResult={progressionResult}
+              />
+            </ErrorBoundary>
 
             <div className="text-center border-t border-border pt-12">
               <h2 className="font-bebas text-4xl font-semibold text-text/80 tracking-wide">
@@ -322,7 +335,9 @@ const App: React.FC = () => {
                       animationFillMode: "backwards",
                     }}
                   >
-                    <LazyScaleDiagram scaleInfo={scale} musicalKey={activeKey} />
+                    <ErrorBoundary fallback={<SectionErrorFallback label="scale diagram" />}>
+                      <LazyScaleDiagram scaleInfo={scale} musicalKey={activeKey} />
+                    </ErrorBoundary>
                   </div>
                 ))}
               </Suspense>

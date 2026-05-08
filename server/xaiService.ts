@@ -10,24 +10,10 @@ import { withRetry, xaiCircuitBreaker } from "./retryLogic";
 import { logger } from "./utils/logger";
 import { validateAPIResponse, APIValidationError } from "./utils/apiValidation";
 import { normalizeScaleDescriptor, normalizeModeCanonical } from "@shared/music/scaleModes";
+import { env, isTest } from "./env";
 
-const DEFAULT_XAI_REQUEST_TIMEOUT_MS = 25000;
-const DEFAULT_XAI_MAX_CONCURRENT_REQUESTS = 8;
-
-function parsePositiveIntEnv(value: string | undefined, fallback: number): number {
-  if (!value) return fallback;
-  const parsed = Number.parseInt(value, 10);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
-}
-
-const XAI_REQUEST_TIMEOUT_MS = parsePositiveIntEnv(
-  process.env.XAI_REQUEST_TIMEOUT_MS,
-  DEFAULT_XAI_REQUEST_TIMEOUT_MS
-);
-const XAI_MAX_CONCURRENT_REQUESTS = parsePositiveIntEnv(
-  process.env.XAI_MAX_CONCURRENT_REQUESTS,
-  DEFAULT_XAI_MAX_CONCURRENT_REQUESTS
-);
+const XAI_REQUEST_TIMEOUT_MS = env.XAI_REQUEST_TIMEOUT_MS;
+const XAI_MAX_CONCURRENT_REQUESTS = env.XAI_MAX_CONCURRENT_REQUESTS;
 
 class RequestConcurrencyLimiter {
   private activeCount = 0;
@@ -68,13 +54,14 @@ function createOpenAIClient(apiKey: string): OpenAI {
 }
 
 const getOpenAI = () => {
-  const apiKey = process.env.XAI_API_KEY;
+  // Read from process.env (not env) so test suites that mutate
+  // process.env.XAI_API_KEY mid-run still see the latest value.
+  const apiKey = process.env.XAI_API_KEY ?? env.XAI_API_KEY;
   if (!apiKey) {
     throw new Error("XAI_API_KEY environment variable is not set.");
   }
 
-  const isTestRuntime = process.env.NODE_ENV === "test" || Boolean(process.env.VITEST);
-  if (isTestRuntime) {
+  if (isTest) {
     return createOpenAIClient(apiKey);
   }
 

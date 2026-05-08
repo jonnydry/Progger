@@ -52,7 +52,8 @@ class Logger {
   }
 
   debug(message: string, context?: LogContext): void {
-    // Only log debug messages in development
+    // Only log debug messages in development or when DEBUG flag is set.
+    // Read env directly (not via ./env) so this module has no import cycles.
     if (process.env.NODE_ENV === "development" || process.env.DEBUG === "true") {
       console.log(this.formatMessage("debug", message, context));
     }

@@ -1,5 +1,6 @@
 import { createClient, RedisClientType } from "redis";
 import { logger } from "./utils/logger";
+import { env } from "./env";
 
 // Timeout helper for network calls
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
@@ -38,7 +39,7 @@ export async function getSharedRedisClient(): Promise<RedisClientType | null> {
     const MAX_RECONNECT_ATTEMPTS = 5;
 
     sharedRedisClient = createClient({
-      url: process.env.REDIS_URL || "redis://localhost:6379",
+      url: env.REDIS_URL,
       socket: {
         connectTimeout: 5000,
         reconnectStrategy: (retries: number) => {
