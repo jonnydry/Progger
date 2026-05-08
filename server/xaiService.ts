@@ -84,6 +84,12 @@ export function __resetXaiClientForTests(): void {
 // schema, eliminating most of the "EXACT FORMAT" / "Return ONLY JSON" prompt
 // boilerplate that older models needed.
 
+// Anchor every schema constant to the exact shape the SDK expects for the
+// `json_schema.schema` field. If a future SDK bump changes that contract, the
+// `satisfies` checks here will fail at compile time alongside the
+// `ResponseFormatJSONSchema` annotations on the response_format helpers below.
+type StructuredOutputSchema = NonNullable<ResponseFormatJSONSchema["json_schema"]["schema"]>;
+
 const CHORD_ITEM_SCHEMA = {
   type: "object",
   properties: {
@@ -103,7 +109,7 @@ const CHORD_ITEM_SCHEMA = {
   },
   required: ["chordName", "musicalFunction", "relationToKey"],
   additionalProperties: false,
-} as const;
+} as const satisfies StructuredOutputSchema;
 
 const SCALE_ITEM_SCHEMA = {
   type: "object",
@@ -121,7 +127,7 @@ const SCALE_ITEM_SCHEMA = {
   },
   required: ["name", "rootNote"],
   additionalProperties: false,
-} as const;
+} as const satisfies StructuredOutputSchema;
 
 const PROGRESSION_RESPONSE_SCHEMA = {
   type: "object",
@@ -131,7 +137,7 @@ const PROGRESSION_RESPONSE_SCHEMA = {
   },
   required: ["progression", "scales"],
   additionalProperties: false,
-} as const;
+} as const satisfies StructuredOutputSchema;
 
 const ANALYSIS_RESPONSE_SCHEMA = {
   type: "object",
@@ -151,7 +157,7 @@ const ANALYSIS_RESPONSE_SCHEMA = {
   },
   required: ["detectedKey", "detectedMode", "progression", "scales"],
   additionalProperties: false,
-} as const;
+} as const satisfies StructuredOutputSchema;
 
 function buildProgressionResponseFormat(numChords: number): ResponseFormatJSONSchema {
   return {
