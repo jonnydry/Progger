@@ -5,15 +5,22 @@ import { StashSidebar } from "../StashSidebar";
 import { About } from "../About";
 import { BackgroundTexture } from "../BackgroundTexture";
 import type { ProgressionResult } from "../../types";
+import type { ThemeOption } from "../../constants";
+
+export interface UserProfile {
+  name: string;
+  email: string;
+  avatar?: string;
+}
 
 interface MainLayoutProps {
   children: React.ReactNode;
   theme: string;
   toggleTheme: () => void;
-  themes: any[];
+  themes: ThemeOption[];
   selectedThemeIndex: number;
   onThemeSelect: (index: number) => void;
-  userProfile: any;
+  userProfile: UserProfile | null;
   onLogin: () => void;
   onLogout: () => void;
   isStashOpen: boolean;

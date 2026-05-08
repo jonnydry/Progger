@@ -131,8 +131,8 @@ describe("chordLibrary (Async API)", () => {
   });
 
   describe("validateChordLibrary", () => {
-    it("should validate the entire chord library without errors", () => {
-      expect(() => validateChordLibrary()).not.toThrow();
+    it("should validate the entire chord library without errors", async () => {
+      await expect(validateChordLibrary()).resolves.not.toThrow();
     });
   });
 

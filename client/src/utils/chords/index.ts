@@ -68,7 +68,7 @@ function extractRootAndQuality(chordName: string): {
   const bassNote = parsed.bass;
 
   // Log warning if bass note is present (currently not used in voicing selection)
-  if (bassNote) {
+  if (bassNote && isDevEnv) {
     console.info(
       `Slash chord detected: "${chordName}". Showing voicings for ${parsed.root}${quality} (bass note /${bassNote} not enforced)`
     );
@@ -123,14 +123,18 @@ export async function getChordVoicingsAsync(chordName: string): Promise<ChordVoi
   // Fallback 2: Try to find similar chord in the same key
   const similarChord = findSimilarChord(chordData, quality);
   if (similarChord) {
-    console.warn(`Chord "${chordName}" not found, using similar chord:`, similarChord);
+    if (isDevEnv) {
+      console.warn(`Chord "${chordName}" not found, using similar chord:`, similarChord);
+    }
     return (chordData as Record<string, ChordVoicing[]>)[similarChord];
   }
 
   // Fallback 3: Return basic major triad
   const majorKey: ChordKey = `${root}_major`;
   if (chordData[majorKey]) {
-    console.warn(`Chord "${chordName}" not found, falling back to ${root} major`);
+    if (isDevEnv) {
+      console.warn(`Chord "${chordName}" not found, falling back to ${root} major`);
+    }
     return chordData[majorKey];
   }
 
@@ -388,7 +392,9 @@ export async function loadMultipleChords(
 export async function preloadAllChords(): Promise<void> {
   const allKeys = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
   await Promise.all(allKeys.map((key) => loadChordsByRoot(key)));
-  console.log("✅ All chord data preloaded");
+  if (isDevEnv) {
+    console.log("✅ All chord data preloaded");
+  }
 }
 
 /**
@@ -454,7 +460,9 @@ export async function validateChordLibraryAsync(): Promise<void> {
   await preloadAllChords();
   const allChordData = getAllCachedChordData();
 
-  console.log("🔍 Validating chord library format...");
+  if (isDevEnv) {
+    console.log("🔍 Validating chord library format...");
+  }
   let errors = 0;
 
   for (const [key, voicings] of Object.entries(allChordData)) {
@@ -467,7 +475,7 @@ export async function validateChordLibraryAsync(): Promise<void> {
 
   if (errors > 0) {
     console.error(`❌ Found ${errors} chord format errors! See console for details.`);
-  } else {
+  } else if (isDevEnv) {
     console.log("✅ All chord voicings use correct format!");
   }
 }

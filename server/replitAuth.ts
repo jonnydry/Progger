@@ -190,11 +190,17 @@ export async function setupAuth(app: Express) {
         hostname: req.hostname,
         registeredDomains: Array.from(registeredDomains),
       });
+      const escapeHtml = (s: string) =>
+        s.replace(
+          /[&<>"']/g,
+          (c) =>
+            ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] as string
+        );
       return res.status(400).send(`
         <h1>Authentication Error</h1>
         <p>You must access this application via the Replit preview URL, not localhost or other domains.</p>
-        <p>Current hostname: <strong>${req.hostname}</strong></p>
-        <p>Expected domains: <strong>${Array.from(registeredDomains).join(", ")}</strong></p>
+        <p>Current hostname: <strong>${escapeHtml(req.hostname)}</strong></p>
+        <p>Expected domains: <strong>${escapeHtml(Array.from(registeredDomains).join(", "))}</strong></p>
         <p>Please close this tab and use the Replit webview to access the application.</p>
       `);
     }
@@ -222,13 +228,28 @@ export async function setupAuth(app: Express) {
   });
 
   app.get("/api/logout", (req, res) => {
-    req.logout(() => {
-      res.redirect(
-        client.buildEndSessionUrl(config, {
-          client_id: replitId,
-          post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
-        }).href
-      );
+    req.logout((err) => {
+      if (err) {
+        logger.error("Error during req.logout()", {
+          error: err instanceof Error ? err.message : String(err),
+        });
+      }
+      // Explicitly destroy the session to ensure server-side cleanup,
+      // even if req.logout() reported an error.
+      req.session.destroy((destroyErr) => {
+        if (destroyErr) {
+          logger.error("Error destroying session on logout", {
+            error: destroyErr instanceof Error ? destroyErr.message : String(destroyErr),
+          });
+        }
+        res.clearCookie("connect.sid");
+        res.redirect(
+          client.buildEndSessionUrl(config, {
+            client_id: replitId,
+            post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
+          }).href
+        );
+      });
     });
   });
 }

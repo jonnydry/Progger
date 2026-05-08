@@ -1,11 +1,14 @@
 import express from "express";
 import helmet from "helmet";
 import compression from "compression";
+import path from "path";
+import { fileURLToPath } from "url";
 import { registerRoutes } from "./routes";
 import { pendingRequests } from "./pendingRequests";
 import { logger } from "./utils/logger";
 
 const app = express();
+const isProduction = process.env.NODE_ENV === "production";
 
 // Response compression for JSON and text responses
 app.use(compression({ level: 6, threshold: 1024 }));
@@ -27,8 +30,9 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com"],
-        scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        scriptSrc: ["'self'"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
         imgSrc: ["'self'", "data:", "https:"],
         connectSrc: ["'self'"],
       },
@@ -83,7 +87,30 @@ async function main() {
   });
 
   const server = await registerRoutes(app);
-  const PORT = 3001;
+
+  // Serve built client in production (after API routes so /api/* takes precedence)
+  if (isProduction) {
+    const __dirname = path.dirname(fileURLToPath(import.meta.url));
+    const clientDist = path.resolve(__dirname);
+    app.use(
+      express.static(clientDist, {
+        index: false,
+        maxAge: "1y",
+        setHeaders: (res, filePath) => {
+          if (filePath.endsWith("index.html")) {
+            res.setHeader("Cache-Control", "no-cache");
+          }
+        },
+      })
+    );
+    // SPA fallback: send index.html for any non-API route
+    app.get(/^(?!\/api\/).*/, (_req, res) => {
+      res.sendFile(path.join(clientDist, "index.html"));
+    });
+    logger.info("Serving static client files", { dir: clientDist });
+  }
+
+  const PORT = isProduction ? Number(process.env.PORT) || 3001 : 3001;
 
   server.listen(PORT, "0.0.0.0", () => {
     logger.info("Server started", { port: PORT, host: "0.0.0.0" });

@@ -105,7 +105,14 @@ export class DatabaseStorage implements IStorage {
 
       return user;
     } catch (error) {
-      logger.error("Error upserting user in database", error, { userId: userData.id });
+      // Only log the user id — never the full userData (contains email/name PII).
+      logger.error(
+        "Error upserting user in database",
+        error instanceof Error ? error.message : String(error),
+        {
+          userId: userData.id,
+        }
+      );
       throw new Error("Failed to upsert user in database");
     }
   }
@@ -145,7 +152,14 @@ export class DatabaseStorage implements IStorage {
       const [newItem] = await db.insert(stash).values(item).returning();
       return newItem;
     } catch (error) {
-      logger.error("Error creating stash item in database", error, { userId: item.userId });
+      // Only log the userId — never the full item (may contain user-supplied content).
+      logger.error(
+        "Error creating stash item in database",
+        error instanceof Error ? error.message : String(error),
+        {
+          userId: item.userId,
+        }
+      );
       throw new Error("Failed to create stash item in database");
     }
   }

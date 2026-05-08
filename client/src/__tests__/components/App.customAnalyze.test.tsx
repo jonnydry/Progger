@@ -38,7 +38,7 @@ vi.mock("@/hooks/useProgression", () => ({
 }));
 
 vi.mock("@/utils/chordLibrary", () => ({
-  validateChordLibrary: vi.fn(),
+  validateChordLibrary: vi.fn().mockResolvedValue(undefined),
   preloadAllChords: vi.fn().mockResolvedValue(undefined),
 }));
 
