@@ -16,7 +16,7 @@ export class ErrorBoundary extends React.Component {
   declare setState: (
     state:
       | Partial<ErrorBoundaryState>
-      | ((prevState: ErrorBoundaryState) => Partial<ErrorBoundaryState>),
+      | ((prevState: ErrorBoundaryState) => Partial<ErrorBoundaryState>)
   ) => void;
 
   constructor(props: ErrorBoundaryProps) {
@@ -41,9 +41,7 @@ export class ErrorBoundary extends React.Component {
       return (
         <div className="min-h-screen bg-background flex items-center justify-center p-4">
           <div className="max-w-2xl w-full bg-surface rounded-lg p-8 shadow-lg border-2 border-border">
-            <h1 className="text-3xl font-bold text-text/90 mb-4">
-              Something went wrong
-            </h1>
+            <h1 className="text-3xl font-bold text-text/90 mb-4">Something went wrong</h1>
             <p className="text-text/70 mb-6">
               An unexpected error occurred. Please try refreshing the page.
             </p>

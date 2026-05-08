@@ -1,54 +1,53 @@
-import { useState, useEffect } from 'react';
-import { THEMES } from '../constants';
+import { useState, useEffect } from "react";
+import { THEMES } from "../constants";
 
 const getInitialThemeIndex = (): number => {
-    const savedIndex = localStorage.getItem('themeColorIndex');
-    if (savedIndex) {
-        const index = parseInt(savedIndex, 10);
-        if (index >= 0 && index < THEMES.length) {
-            return index;
-        }
+  const savedIndex = localStorage.getItem("themeColorIndex");
+  if (savedIndex) {
+    const index = parseInt(savedIndex, 10);
+    if (index >= 0 && index < THEMES.length) {
+      return index;
     }
-    return 5; // Default to Crimson Noir theme
+  }
+  return 5; // Default to Crimson Noir theme
 };
 
 export const useTheme = () => {
-    const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
-    const [themeIndex, setThemeIndex] = useState<number>(getInitialThemeIndex);
+  const [theme, setTheme] = useState(localStorage.getItem("theme") || "dark");
+  const [themeIndex, setThemeIndex] = useState<number>(getInitialThemeIndex);
 
-    useEffect(() => {
-        const root = window.document.documentElement;
-        if (theme === 'dark') {
-            root.classList.add('dark');
-            localStorage.setItem('theme', 'dark');
-        } else {
-            root.classList.remove('dark');
-            localStorage.setItem('theme', 'light');
-        }
-    }, [theme]);
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (theme === "dark") {
+      root.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      root.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  }, [theme]);
 
-    useEffect(() => {
-        const root = window.document.documentElement;
-        const currentTheme = THEMES[themeIndex];
-        localStorage.setItem('themeColorIndex', String(themeIndex));
+  useEffect(() => {
+    const root = window.document.documentElement;
+    const currentTheme = THEMES[themeIndex];
+    localStorage.setItem("themeColorIndex", String(themeIndex));
 
-        const colors = theme === 'dark' ? currentTheme.dark : currentTheme.light;
+    const colors = theme === "dark" ? currentTheme.dark : currentTheme.light;
 
-        Object.entries(colors).forEach(([key, value]) => {
-            root.style.setProperty(`--color-${key}`, value);
-        });
+    Object.entries(colors).forEach(([key, value]) => {
+      root.style.setProperty(`--color-${key}`, value);
+    });
+  }, [themeIndex, theme]);
 
-    }, [themeIndex, theme]);
+  const toggleTheme = () => {
+    setTheme((prevTheme) => (prevTheme === "dark" ? "light" : "dark"));
+  };
 
-    const toggleTheme = () => {
-        setTheme(prevTheme => prevTheme === 'dark' ? 'light' : 'dark');
-    };
-
-    return {
-        theme,
-        themeIndex,
-        setThemeIndex,
-        toggleTheme,
-        themes: THEMES
-    };
+  return {
+    theme,
+    themeIndex,
+    setThemeIndex,
+    toggleTheme,
+    themes: THEMES,
+  };
 };

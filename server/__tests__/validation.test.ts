@@ -23,7 +23,7 @@ describe("validation", () => {
         generationStyle: "wild",
         numChords: 4,
         selectedProgression: "auto",
-      }),
+      })
     ).toThrow(ValidationError);
   });
 

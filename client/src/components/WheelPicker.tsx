@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo, useId } from 'react';
+import React, { useState, useRef, useEffect, useMemo, useId } from "react";
 
 interface WheelPickerProps {
   options: string[];
@@ -7,12 +7,7 @@ interface WheelPickerProps {
   label?: string;
 }
 
-export const WheelPicker: React.FC<WheelPickerProps> = ({
-  options,
-  value,
-  onChange,
-  label,
-}) => {
+export const WheelPicker: React.FC<WheelPickerProps> = ({ options, value, onChange, label }) => {
   const instanceId = useId();
   const [isDragging, setIsDragging] = useState(false);
   const [startY, setStartY] = useState(0);
@@ -31,13 +26,15 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
   // Adaptive throttling based on device capabilities
   const wheelThrottleMs = useMemo(() => {
     // Check for low-end devices (limited memory)
-    const isLowEndDevice = typeof navigator !== 'undefined' &&
-      'deviceMemory' in navigator &&
+    const isLowEndDevice =
+      typeof navigator !== "undefined" &&
+      "deviceMemory" in navigator &&
       (navigator.deviceMemory as number) < 4;
 
     // Check for high refresh rate displays
-    const prefersReducedMotion = typeof window !== 'undefined' &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const prefersReducedMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     if (prefersReducedMotion) return 150; // Respect accessibility preference
     if (isLowEndDevice) return 150; // More aggressive throttling for low-end devices
@@ -86,13 +83,12 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
     };
 
     // { passive: false } is crucial to allow preventDefault()
-    container.addEventListener('wheel', handleWheel, { passive: false });
+    container.addEventListener("wheel", handleWheel, { passive: false });
 
     return () => {
-      container.removeEventListener('wheel', handleWheel);
+      container.removeEventListener("wheel", handleWheel);
     };
   }, [wheelThrottleMs]);
-
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
@@ -147,7 +143,7 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
 
     containerRef.current.scrollTo({
       top: clampedIndex * optionHeight,
-      behavior: 'smooth',
+      behavior: "smooth",
     });
 
     if (options[clampedIndex] !== value) {
@@ -160,7 +156,7 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
     if (containerRef.current) {
       containerRef.current.scrollTo({
         top: index * optionHeight,
-        behavior: 'smooth',
+        behavior: "smooth",
       });
     }
   };
@@ -169,32 +165,32 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
     const currentIdx = options.indexOf(value);
 
     switch (e.key) {
-      case 'ArrowUp':
-      case 'ArrowLeft':
+      case "ArrowUp":
+      case "ArrowLeft":
         e.preventDefault();
         if (currentIdx > 0) {
           onChange(options[currentIdx - 1]);
         }
         break;
-      case 'ArrowDown':
-      case 'ArrowRight':
+      case "ArrowDown":
+      case "ArrowRight":
         e.preventDefault();
         if (currentIdx < options.length - 1) {
           onChange(options[currentIdx + 1]);
         }
         break;
-      case 'Home':
+      case "Home":
         e.preventDefault();
         onChange(options[0]);
         break;
-      case 'End':
+      case "End":
         e.preventDefault();
         onChange(options[options.length - 1]);
         break;
     }
   };
 
-  const centerOffset = (visibleOptions - 1) / 2 * optionHeight;
+  const centerOffset = ((visibleOptions - 1) / 2) * optionHeight;
   const listboxId = `wheel-picker-${instanceId}`;
   const labelId = label ? `${listboxId}-label` : undefined;
   const getOptionId = (index: number) => `${listboxId}-option-${index}`;
@@ -207,7 +203,7 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
           {label}
         </div>
       )}
-      <div className="relative" style={{ touchAction: 'none', overscrollBehavior: 'contain' }}>
+      <div className="relative" style={{ touchAction: "none", overscrollBehavior: "contain" }}>
         {/* Selection indicator */}
         <div
           className="absolute left-0 right-0 pointer-events-none z-10 bg-primary/20 border-y-2 border-primary/50 rounded-md"
@@ -230,8 +226,8 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
           className="relative overflow-hidden bg-background border-2 border-border rounded-md shadow-inner focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
           style={{
             height: visibleOptions * optionHeight,
-            touchAction: 'none',
-            overscrollBehavior: 'contain',
+            touchAction: "none",
+            overscrollBehavior: "contain",
           }}
           onMouseLeave={() => {
             handleMouseUp();
@@ -260,8 +256,9 @@ export const WheelPicker: React.FC<WheelPickerProps> = ({
                   id={getOptionId(index)}
                   role="option"
                   aria-selected={isSelected}
-                  className={`flex items-center justify-center cursor-pointer transition-all duration-150 ${isSelected ? 'font-semibold text-primary' : 'text-text/80'
-                    }`}
+                  className={`flex items-center justify-center cursor-pointer transition-all duration-150 ${
+                    isSelected ? "font-semibold text-primary" : "text-text/80"
+                  }`}
                   style={{
                     height: optionHeight,
                     opacity,

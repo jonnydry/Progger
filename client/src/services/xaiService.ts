@@ -1,31 +1,36 @@
-import type { ChordInProgression, ProgressionResult, ScaleInfo } from '../types';
-import { getChordVoicingsAsync } from '../utils/chords/index';
-import { getScaleFingering, getScaleNotes, normalizeScaleName, validateFingeringNotes } from '../utils/scaleLibrary';
+import type { ChordInProgression, ProgressionResult, ScaleInfo } from "../types";
+import { getChordVoicingsAsync } from "../utils/chords/index";
+import {
+  getScaleFingering,
+  getScaleNotes,
+  normalizeScaleName,
+  validateFingeringNotes,
+} from "../utils/scaleLibrary";
 import {
   MusicTheoryError,
   APIUnavailableError,
   InvalidAPIResponseError,
   isRecoverableError,
-  createErrorLog
-} from '../utils/errors';
-import { getProcessingConfig } from '../utils/processingConfig';
-import { getProgressionCacheKey } from '@shared/cacheUtils';
-import { addCsrfHeaders, clearCsrfToken } from '../utils/csrf';
+  createErrorLog,
+} from "../utils/errors";
+import { getProcessingConfig } from "../utils/processingConfig";
+import { getProgressionCacheKey } from "@shared/cacheUtils";
+import { addCsrfHeaders, clearCsrfToken } from "../utils/csrf";
 
 interface SimpleChord {
-    chordName: string;
-    musicalFunction: string;
-    relationToKey: string;
+  chordName: string;
+  musicalFunction: string;
+  relationToKey: string;
 }
 
 interface SimpleScale {
-    name: string;
-    rootNote: string;
+  name: string;
+  rootNote: string;
 }
 
 interface ProgressionResultFromAPI {
-    progression: SimpleChord[];
-    scales: SimpleScale[];
+  progression: SimpleChord[];
+  scales: SimpleScale[];
 }
 
 interface CacheEntry {
@@ -88,29 +93,31 @@ function getFromCache(cacheKey: string): ProgressionResult | null {
 
 function enforceCacheLimits(): void {
   try {
-    const keys = Object.keys(localStorage).filter(k => 
-      k.startsWith('progression:') || k.startsWith('progression-') || k.startsWith('custom:')
+    const keys = Object.keys(localStorage).filter(
+      (k) => k.startsWith("progression:") || k.startsWith("progression-") || k.startsWith("custom:")
     );
-    
+
     if (keys.length > MAX_CACHE_ENTRIES) {
       // Get all entries with timestamps
-      const entries = keys.map(key => {
-        try {
-          const cachedItem = localStorage.getItem(key);
-          if (!cachedItem) return null;
-          const entry: CacheEntry = JSON.parse(cachedItem);
-          return {
-            key,
-            timestamp: entry.timestamp || 0
-          };
-        } catch {
-          return { key, timestamp: 0 };
-        }
-      }).filter((e): e is { key: string; timestamp: number } => e !== null);
-      
+      const entries = keys
+        .map((key) => {
+          try {
+            const cachedItem = localStorage.getItem(key);
+            if (!cachedItem) return null;
+            const entry: CacheEntry = JSON.parse(cachedItem);
+            return {
+              key,
+              timestamp: entry.timestamp || 0,
+            };
+          } catch {
+            return { key, timestamp: 0 };
+          }
+        })
+        .filter((e): e is { key: string; timestamp: number } => e !== null);
+
       // Sort by timestamp (oldest first)
       entries.sort((a, b) => a.timestamp - b.timestamp);
-      
+
       // Remove oldest 20% of entries
       const toRemove = Math.floor(entries.length * 0.2);
       for (let i = 0; i < toRemove; i++) {
@@ -126,23 +133,23 @@ function setCache(cacheKey: string, data: ProgressionResult): void {
   try {
     // Enforce cache limits before adding new entry
     enforceCacheLimits();
-    
+
     const entry: CacheEntry = {
       data,
       timestamp: Date.now(),
-      ttl: CACHE_TTL_24HOURS
+      ttl: CACHE_TTL_24HOURS,
     };
     localStorage.setItem(cacheKey, JSON.stringify(entry));
   } catch (error) {
     // If we hit quota, try to clean up and retry once
-    if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+    if (error instanceof DOMException && error.name === "QuotaExceededError") {
       console.warn("localStorage quota exceeded, cleaning up cache");
       enforceCacheLimits();
       try {
         const entry: CacheEntry = {
           data,
           timestamp: Date.now(),
-          ttl: CACHE_TTL_24HOURS
+          ttl: CACHE_TTL_24HOURS,
         };
         localStorage.setItem(cacheKey, JSON.stringify(entry));
       } catch (retryError) {
@@ -159,9 +166,13 @@ function clearExpiredCache(): void {
     const keys = Object.keys(localStorage);
     const now = Date.now();
 
-    keys.forEach(key => {
+    keys.forEach((key) => {
       // Check for both old format (progression-) and new format (progression:)
-      if (key.startsWith('progression-') || key.startsWith('progression:') || key.startsWith('custom:')) {
+      if (
+        key.startsWith("progression-") ||
+        key.startsWith("progression:") ||
+        key.startsWith("custom:")
+      ) {
         try {
           const entry: CacheEntry = JSON.parse(localStorage.getItem(key)!);
           if (now - entry.timestamp >= entry.ttl) {
@@ -183,9 +194,13 @@ export function clearAllProgressionCache(): void {
   try {
     const keys = Object.keys(localStorage);
     let cleared = 0;
-    
-    keys.forEach(key => {
-      if (key.startsWith('progression-') || key.startsWith('progression:') || key.startsWith('custom:')) {
+
+    keys.forEach((key) => {
+      if (
+        key.startsWith("progression-") ||
+        key.startsWith("progression:") ||
+        key.startsWith("custom:")
+      ) {
         localStorage.removeItem(key);
         cleared++;
       }
@@ -227,7 +242,11 @@ function toPitchClass(root: string): number | null {
   return ROOT_TO_PITCH_CLASS[normalized] ?? null;
 }
 
-function hasPrimaryScaleMatch(result: ProgressionResult, requestedKey: string, requestedMode: string): boolean {
+function hasPrimaryScaleMatch(
+  result: ProgressionResult,
+  requestedKey: string,
+  requestedMode: string
+): boolean {
   const requestedPitch = toPitchClass(requestedKey);
   const requestedModeKey = normalizeScaleName(requestedMode);
   if (requestedPitch === null) return false;
@@ -251,12 +270,10 @@ export async function generateChordProgression(
   includeTensions: boolean,
   generationStyle: string = "balanced",
   numChords: number,
-  selectedProgression: string,
+  selectedProgression: string
 ): Promise<ProgressionResult> {
   const effectiveProgression =
-    selectedProgression === "auto"
-      ? `auto:${getAutoProgressionVariant()}`
-      : selectedProgression;
+    selectedProgression === "auto" ? `auto:${getAutoProgressionVariant()}` : selectedProgression;
   const config = getProcessingConfig();
   const cacheKey = getProgressionCacheKey(
     key,
@@ -264,7 +281,7 @@ export async function generateChordProgression(
     includeTensions,
     numChords,
     effectiveProgression,
-    generationStyle as "conservative" | "balanced" | "adventurous",
+    generationStyle as "conservative" | "balanced" | "adventurous"
   );
 
   // Try to get from cache first
@@ -279,7 +296,7 @@ export async function generateChordProgression(
       console.warn("Could not remove stale cache entry", error);
     }
   }
-  
+
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), config.apiTimeoutMs);
@@ -287,25 +304,30 @@ export async function generateChordProgression(
     let response: Response;
     try {
       const headers = await addCsrfHeaders({
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       });
 
-      response = await fetchWithRetry('/api/generate-progression', {
-        method: 'POST',
-        headers,
-        signal: controller.signal,
-        body: JSON.stringify({
-          key,
-          mode,
-          includeTensions,
-          generationStyle,
-          numChords,
-          selectedProgression: effectiveProgression,
-        }),
-      }, config.maxRetryAttempts, 1000);
+      response = await fetchWithRetry(
+        "/api/generate-progression",
+        {
+          method: "POST",
+          headers,
+          signal: controller.signal,
+          body: JSON.stringify({
+            key,
+            mode,
+            includeTensions,
+            generationStyle,
+            numChords,
+            selectedProgression: effectiveProgression,
+          }),
+        },
+        config.maxRetryAttempts,
+        1000
+      );
     } catch (error) {
       // Network-level failure after retries
-      throw new APIUnavailableError('/api/generate-progression', undefined);
+      throw new APIUnavailableError("/api/generate-progression", undefined);
     } finally {
       clearTimeout(timeoutId);
     }
@@ -316,25 +338,36 @@ export async function generateChordProgression(
         clearCsrfToken();
       }
       // API returned error status
-      throw new APIUnavailableError('/api/generate-progression', response.status);
+      throw new APIUnavailableError("/api/generate-progression", response.status);
     }
 
     let resultFromApi: ProgressionResultFromAPI;
     try {
-      resultFromApi = await response.json() as ProgressionResultFromAPI;
+      resultFromApi = (await response.json()) as ProgressionResultFromAPI;
 
       // Validate API response structure
-      if (!resultFromApi.progression || !resultFromApi.scales || !Array.isArray(resultFromApi.progression) || !Array.isArray(resultFromApi.scales)) {
-          throw new Error("Invalid data structure received from API.");
+      if (
+        !resultFromApi.progression ||
+        !resultFromApi.scales ||
+        !Array.isArray(resultFromApi.progression) ||
+        !Array.isArray(resultFromApi.scales)
+      ) {
+        throw new Error("Invalid data structure received from API.");
       }
-      if (resultFromApi.progression.some(p => !p.chordName || !p.musicalFunction || !p.relationToKey)) {
-          throw new Error("API returned incomplete chord data (missing name, function, or relation to key).");
+      if (
+        resultFromApi.progression.some(
+          (p) => !p.chordName || !p.musicalFunction || !p.relationToKey
+        )
+      ) {
+        throw new Error(
+          "API returned incomplete chord data (missing name, function, or relation to key)."
+        );
       }
-      if (resultFromApi.scales.some(s => !s.name || !s.rootNote)) {
-          throw new Error("API returned incomplete scale data (missing name or root note).");
+      if (resultFromApi.scales.some((s) => !s.name || !s.rootNote)) {
+        throw new Error("API returned incomplete scale data (missing name or root note).");
       }
     } catch (parseError) {
-      throw new InvalidAPIResponseError('Valid JSON matching API schema', `${parseError}`);
+      throw new InvalidAPIResponseError("Valid JSON matching API schema", `${parseError}`);
     }
 
     const [chordPromises, scalePromises] = await Promise.allSettled([
@@ -345,7 +378,7 @@ export async function generateChordProgression(
             chordName: chord.chordName,
             musicalFunction: chord.musicalFunction,
             relationToKey: chord.relationToKey,
-            voicings
+            voicings,
           };
         })
       ),
@@ -354,50 +387,58 @@ export async function generateChordProgression(
           const fingering = getScaleFingering(scale.name, scale.rootNote);
           const validation = validateFingeringNotes(fingering, scale.rootNote, scale.name);
           if (!validation.isValid) {
-            console.warn(`Scale fingering validation warning for "${scale.name}": ${(validation.coverage * 100).toFixed(1)}% coverage`);
+            console.warn(
+              `Scale fingering validation warning for "${scale.name}": ${(validation.coverage * 100).toFixed(1)}% coverage`
+            );
           }
           return {
             name: scale.name,
             rootNote: scale.rootNote,
             notes: getScaleNotes(scale.rootNote, scale.name),
-            fingering
+            fingering,
           };
         })
-      )
+      ),
     ]);
 
-    const progression: ChordInProgression[] = chordPromises.status === 'fulfilled'
-      ? chordPromises.value.map(result =>
-          result.status === 'fulfilled'
-            ? result.value
-            : {
-                chordName: 'Unknown',
-                musicalFunction: 'Unknown',
-                relationToKey: 'unknown',
-                voicings: [{ frets: ['x', 'x', 'x', 'x', 'x', 'x'], position: 'Error' }]
-              }
-        )
-      : [];
+    const progression: ChordInProgression[] =
+      chordPromises.status === "fulfilled"
+        ? chordPromises.value.map((result) =>
+            result.status === "fulfilled"
+              ? result.value
+              : {
+                  chordName: "Unknown",
+                  musicalFunction: "Unknown",
+                  relationToKey: "unknown",
+                  voicings: [{ frets: ["x", "x", "x", "x", "x", "x"], position: "Error" }],
+                }
+          )
+        : [];
 
-    const scales: ScaleInfo[] = scalePromises.status === 'fulfilled'
-      ? scalePromises.value.map(result =>
-          result.status === 'fulfilled'
-            ? result.value
-            : {
-                name: 'Unknown',
-                rootNote: 'C',
-                notes: ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
-                fingering: [[0, 2, 4, 5, 7, 9, 11]]
-              }
-        )
-      : [];
+    const scales: ScaleInfo[] =
+      scalePromises.status === "fulfilled"
+        ? scalePromises.value.map((result) =>
+            result.status === "fulfilled"
+              ? result.value
+              : {
+                  name: "Unknown",
+                  rootNote: "C",
+                  notes: ["C", "D", "E", "F", "G", "A", "B"],
+                  fingering: [[0, 2, 4, 5, 7, 9, 11]],
+                }
+          )
+        : [];
 
     // Verify that returned chord count matches what was requested
     // This is a safety check - the server should have already validated this
     if (progression.length !== numChords) {
-      console.warn(`⚠️ Chord count mismatch: requested ${numChords}, received ${progression.length}`);
+      console.warn(
+        `⚠️ Chord count mismatch: requested ${numChords}, received ${progression.length}`
+      );
       // Don't cache mismatched results - throw an error to trigger retry or show user error
-      throw new Error(`Chord count mismatch: requested ${numChords} chords but received ${progression.length}. Please try again.`);
+      throw new Error(
+        `Chord count mismatch: requested ${numChords} chords but received ${progression.length}. Please try again.`
+      );
     }
 
     const finalResult = { progression, scales };
@@ -412,21 +453,26 @@ export async function generateChordProgression(
 
     return finalResult;
   } catch (error) {
-    console.error("Error generating chord progression:", createErrorLog(error, { key, mode, cacheKey }));
+    console.error(
+      "Error generating chord progression:",
+      createErrorLog(error, { key, mode, cacheKey })
+    );
 
     // Handle API response validation errors
-    if (error instanceof Error && (
-        error.message.includes("Invalid data structure") ||
+    if (
+      error instanceof Error &&
+      (error.message.includes("Invalid data structure") ||
         error.message.includes("incomplete chord data") ||
-        error.message.includes("incomplete scale data"))) {
+        error.message.includes("incomplete scale data"))
+    ) {
       throw new InvalidAPIResponseError(
-        'ProgressionResult { progression: SimpleChord[], scales: SimpleScale[] }',
+        "ProgressionResult { progression: SimpleChord[], scales: SimpleScale[] }",
         error.message
       );
     }
 
     // Check if this is a chord count mismatch - don't recover, just fail
-    if (error instanceof Error && error.message.includes('Chord count mismatch')) {
+    if (error instanceof Error && error.message.includes("Chord count mismatch")) {
       throw error;
     }
 
@@ -455,7 +501,7 @@ export async function generateChordProgression(
 
     // Re-throw the original error or create a user-friendly message
     if (error instanceof SyntaxError) {
-      throw new InvalidAPIResponseError('Valid JSON', 'SyntaxError during JSON parsing');
+      throw new InvalidAPIResponseError("Valid JSON", "SyntaxError during JSON parsing");
     }
 
     if (error instanceof MusicTheoryError) {
@@ -463,7 +509,9 @@ export async function generateChordProgression(
     }
 
     // Generic fallback for unexpected errors
-    throw new Error("Failed to generate chord progression. The service may be temporarily unavailable.");
+    throw new Error(
+      "Failed to generate chord progression. The service may be temporarily unavailable."
+    );
   }
 }
 
@@ -481,13 +529,13 @@ async function fetchWithRetry(
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
       if (options.signal?.aborted) {
-        throw new DOMException('Request aborted', 'AbortError');
+        throw new DOMException("Request aborted", "AbortError");
       }
       return await fetch(url, options);
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
 
-      if (error instanceof DOMException && error.name === 'AbortError') {
+      if (error instanceof DOMException && error.name === "AbortError") {
         throw error;
       }
 
@@ -499,18 +547,20 @@ async function fetchWithRetry(
       // Don't retry after the last attempt
       if (attempt < maxRetries) {
         const delay = initialDelay * Math.pow(2, attempt);
-        console.log(`Network error, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})...`);
-        await new Promise(resolve => setTimeout(resolve, delay));
+        console.log(
+          `Network error, retrying in ${delay}ms (attempt ${attempt + 1}/${maxRetries})...`
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
   }
 
-  throw lastError || new Error('Max retries exceeded');
+  throw lastError || new Error("Max retries exceeded");
 }
 
 export async function analyzeCustomProgression(chords: string[]): Promise<ProgressionResult> {
   const config = getProcessingConfig();
-  const cacheKey = `custom:${chords.join('-')}`;
+  const cacheKey = `custom:${chords.join("-")}`;
 
   // Try to get from cache first
   const cachedResult = getFromCache(cacheKey);
@@ -526,18 +576,23 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
     let response: Response;
     try {
       const headers = await addCsrfHeaders({
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       });
 
-      response = await fetchWithRetry('/api/analyze-custom-progression', {
-        method: 'POST',
-        headers,
-        signal: controller.signal,
-        body: JSON.stringify({ chords }),
-      }, config.maxRetryAttempts, 1000); // configurable retries with 1s initial delay
+      response = await fetchWithRetry(
+        "/api/analyze-custom-progression",
+        {
+          method: "POST",
+          headers,
+          signal: controller.signal,
+          body: JSON.stringify({ chords }),
+        },
+        config.maxRetryAttempts,
+        1000
+      ); // configurable retries with 1s initial delay
     } catch (error) {
       // Network-level failure after retries
-      throw new APIUnavailableError('/api/analyze-custom-progression', undefined);
+      throw new APIUnavailableError("/api/analyze-custom-progression", undefined);
     } finally {
       clearTimeout(timeoutId);
     }
@@ -548,25 +603,36 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
         clearCsrfToken();
       }
       // API returned error status
-      throw new APIUnavailableError('/api/analyze-custom-progression', response.status);
+      throw new APIUnavailableError("/api/analyze-custom-progression", response.status);
     }
 
     let resultFromApi: ProgressionResultFromAPI;
     try {
-      resultFromApi = await response.json() as ProgressionResultFromAPI;
+      resultFromApi = (await response.json()) as ProgressionResultFromAPI;
 
       // Validate API response structure
-      if (!resultFromApi.progression || !resultFromApi.scales || !Array.isArray(resultFromApi.progression) || !Array.isArray(resultFromApi.scales)) {
-          throw new Error("Invalid data structure received from API.");
+      if (
+        !resultFromApi.progression ||
+        !resultFromApi.scales ||
+        !Array.isArray(resultFromApi.progression) ||
+        !Array.isArray(resultFromApi.scales)
+      ) {
+        throw new Error("Invalid data structure received from API.");
       }
-      if (resultFromApi.progression.some(p => !p.chordName || !p.musicalFunction || !p.relationToKey)) {
-          throw new Error("API returned incomplete chord data (missing name, function, or relation to key).");
+      if (
+        resultFromApi.progression.some(
+          (p) => !p.chordName || !p.musicalFunction || !p.relationToKey
+        )
+      ) {
+        throw new Error(
+          "API returned incomplete chord data (missing name, function, or relation to key)."
+        );
       }
-      if (resultFromApi.scales.some(s => !s.name || !s.rootNote)) {
-          throw new Error("API returned incomplete scale data (missing name or root note).");
+      if (resultFromApi.scales.some((s) => !s.name || !s.rootNote)) {
+        throw new Error("API returned incomplete scale data (missing name or root note).");
       }
     } catch (parseError) {
-      throw new InvalidAPIResponseError('Valid JSON matching API schema', `${parseError}`);
+      throw new InvalidAPIResponseError("Valid JSON matching API schema", `${parseError}`);
     }
 
     const [chordPromises, scalePromises] = await Promise.allSettled([
@@ -577,7 +643,7 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
             chordName: chord.chordName,
             musicalFunction: chord.musicalFunction,
             relationToKey: chord.relationToKey,
-            voicings
+            voicings,
           };
         })
       ),
@@ -586,43 +652,47 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
           const fingering = getScaleFingering(scale.name, scale.rootNote);
           const validation = validateFingeringNotes(fingering, scale.rootNote, scale.name);
           if (!validation.isValid) {
-            console.warn(`Scale fingering validation warning for "${scale.name}": ${(validation.coverage * 100).toFixed(1)}% coverage`);
+            console.warn(
+              `Scale fingering validation warning for "${scale.name}": ${(validation.coverage * 100).toFixed(1)}% coverage`
+            );
           }
           return {
             name: scale.name,
             rootNote: scale.rootNote,
             notes: getScaleNotes(scale.rootNote, scale.name),
-            fingering
+            fingering,
           };
         })
-      )
+      ),
     ]);
 
-    const progression: ChordInProgression[] = chordPromises.status === 'fulfilled'
-      ? chordPromises.value.map(result =>
-          result.status === 'fulfilled'
-            ? result.value
-            : {
-                chordName: 'Unknown',
-                musicalFunction: 'Unknown',
-                relationToKey: 'unknown',
-                voicings: [{ frets: ['x', 'x', 'x', 'x', 'x', 'x'], position: 'Error' }]
-              }
-        )
-      : [];
+    const progression: ChordInProgression[] =
+      chordPromises.status === "fulfilled"
+        ? chordPromises.value.map((result) =>
+            result.status === "fulfilled"
+              ? result.value
+              : {
+                  chordName: "Unknown",
+                  musicalFunction: "Unknown",
+                  relationToKey: "unknown",
+                  voicings: [{ frets: ["x", "x", "x", "x", "x", "x"], position: "Error" }],
+                }
+          )
+        : [];
 
-    const scales: ScaleInfo[] = scalePromises.status === 'fulfilled'
-      ? scalePromises.value.map(result =>
-          result.status === 'fulfilled'
-            ? result.value
-            : {
-                name: 'Unknown',
-                rootNote: 'C',
-                notes: ['C', 'D', 'E', 'F', 'G', 'A', 'B'],
-                fingering: [[0, 2, 4, 5, 7, 9, 11]]
-              }
-        )
-      : [];
+    const scales: ScaleInfo[] =
+      scalePromises.status === "fulfilled"
+        ? scalePromises.value.map((result) =>
+            result.status === "fulfilled"
+              ? result.value
+              : {
+                  name: "Unknown",
+                  rootNote: "C",
+                  notes: ["C", "D", "E", "F", "G", "A", "B"],
+                  fingering: [[0, 2, 4, 5, 7, 9, 11]],
+                }
+          )
+        : [];
 
     const finalResult = { progression, scales };
 
@@ -630,24 +700,29 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
     setCache(cacheKey, finalResult);
 
     // Clean up expired cache entries every 10 requests
-    const requestCount = parseInt(localStorage.getItem('progression_request_count') || '0', 10) + 1;
-    localStorage.setItem('progression_request_count', requestCount.toString());
-    
+    const requestCount = parseInt(localStorage.getItem("progression_request_count") || "0", 10) + 1;
+    localStorage.setItem("progression_request_count", requestCount.toString());
+
     if (requestCount % 10 === 0) {
       clearExpiredCache();
     }
 
     return finalResult;
   } catch (error) {
-    console.error("Error analyzing custom progression:", createErrorLog(error, { chords, cacheKey }));
+    console.error(
+      "Error analyzing custom progression:",
+      createErrorLog(error, { chords, cacheKey })
+    );
 
     // Handle API response validation errors
-    if (error instanceof Error && (
-        error.message.includes("Invalid data structure") ||
+    if (
+      error instanceof Error &&
+      (error.message.includes("Invalid data structure") ||
         error.message.includes("incomplete chord data") ||
-        error.message.includes("incomplete scale data"))) {
+        error.message.includes("incomplete scale data"))
+    ) {
       throw new InvalidAPIResponseError(
-        'ProgressionResult { progression: SimpleChord[], scales: SimpleScale[] }',
+        "ProgressionResult { progression: SimpleChord[], scales: SimpleScale[] }",
         error.message
       );
     }
@@ -659,7 +734,7 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
         if (error instanceof APIUnavailableError) {
           recoveredResult = await error.recover(cacheKey);
         } else if (error instanceof InvalidAPIResponseError) {
-          recoveredResult = await error.recover('C', chords.length);
+          recoveredResult = await error.recover("C", chords.length);
         } else {
           recoveredResult = await error.recover();
         }
@@ -674,7 +749,7 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
 
     // Re-throw the original error or create a user-friendly message
     if (error instanceof SyntaxError) {
-      throw new InvalidAPIResponseError('Valid JSON', 'SyntaxError during JSON parsing');
+      throw new InvalidAPIResponseError("Valid JSON", "SyntaxError during JSON parsing");
     }
 
     if (error instanceof MusicTheoryError) {
@@ -682,6 +757,8 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
     }
 
     // Generic fallback for unexpected errors
-    throw new Error("Failed to analyze custom progression. The service may be temporarily unavailable.");
+    throw new Error(
+      "Failed to analyze custom progression. The service may be temporarily unavailable."
+    );
   }
 }

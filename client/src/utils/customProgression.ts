@@ -1,8 +1,8 @@
-import type { CustomChordInput } from '@/types';
-import { formatChordCanonicalName } from './chordFormatting';
+import type { CustomChordInput } from "@/types";
+import { formatChordCanonicalName } from "./chordFormatting";
 
 export function createChordId(): string {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return crypto.randomUUID();
   }
 
@@ -10,9 +10,7 @@ export function createChordId(): string {
 }
 
 export function toCanonicalChordNames(
-  progression: Array<Pick<CustomChordInput, 'root' | 'quality'>>
+  progression: Array<Pick<CustomChordInput, "root" | "quality">>
 ): string[] {
-  return progression.map((chord) =>
-    formatChordCanonicalName(chord.root, chord.quality)
-  );
+  return progression.map((chord) => formatChordCanonicalName(chord.root, chord.quality));
 }

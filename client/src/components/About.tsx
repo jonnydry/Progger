@@ -26,15 +26,14 @@ export const About: React.FC<AboutProps> = ({ onBackClick }) => {
 
         <div className="space-y-6 text-text/80 font-mono text-sm md:text-base leading-relaxed">
           <p>
-            <strong className="text-primary">Progger</strong> is an AI-powered
-            chord progression generator designed to help musicians discover new
-            sounds and voicings.
+            <strong className="text-primary">Progger</strong> is an AI-powered chord progression
+            generator designed to help musicians discover new sounds and voicings.
           </p>
 
           <p>
-            Whether you&apos;re stuck in a creative rut or looking for the perfect
-            bridge, Progger uses advanced algorithms to suggest unique harmonic
-            possibilities tailored to your selected key and mode.
+            Whether you&apos;re stuck in a creative rut or looking for the perfect bridge, Progger
+            uses advanced algorithms to suggest unique harmonic possibilities tailored to your
+            selected key and mode.
           </p>
 
           <div className="bg-background/50 p-4 border border-border">

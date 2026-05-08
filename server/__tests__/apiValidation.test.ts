@@ -1,202 +1,200 @@
-import { describe, it, expect } from 'vitest';
-import { validateAPIResponse, APIValidationError } from '../utils/apiValidation';
+import { describe, it, expect } from "vitest";
+import { validateAPIResponse, APIValidationError } from "../utils/apiValidation";
 
-describe('validateAPIResponse', () => {
-  it('accepts complex chord voicings and advanced scale descriptors', () => {
+describe("validateAPIResponse", () => {
+  it("accepts complex chord voicings and advanced scale descriptors", () => {
     const payload = {
       progression: [
         {
-          chordName: 'C7#9b13',
-          musicalFunction: 'Altered dominant',
-          relationToKey: 'V7b9'
+          chordName: "C7#9b13",
+          musicalFunction: "Altered dominant",
+          relationToKey: "V7b9",
         },
         {
-          chordName: 'F#m7b5/A',
-          musicalFunction: 'Secondary iiø7',
-          relationToKey: 'iiø7/V'
+          chordName: "F#m7b5/A",
+          musicalFunction: "Secondary iiø7",
+          relationToKey: "iiø7/V",
         },
         {
-          chordName: 'Cmin/maj7',
-          musicalFunction: 'Tonic minor-major',
-          relationToKey: 'iΔ7'
-        }
+          chordName: "Cmin/maj7",
+          musicalFunction: "Tonic minor-major",
+          relationToKey: "iΔ7",
+        },
       ],
       scales: [
-        { name: 'G Lydian Dominant', rootNote: 'G' },
-        { name: 'C Super Locrian', rootNote: 'C' },
-        { name: 'Bb Blues', rootNote: 'Bb' }
-      ]
+        { name: "G Lydian Dominant", rootNote: "G" },
+        { name: "C Super Locrian", rootNote: "C" },
+        { name: "Bb Blues", rootNote: "Bb" },
+      ],
     };
 
     expect(() => validateAPIResponse(payload)).not.toThrow();
   });
 
-  it('rejects chords with invalid quality', () => {
+  it("rejects chords with invalid quality", () => {
     const payload = {
       progression: [
         {
-          chordName: 'Cunknown',
-          musicalFunction: 'Invalid',
-          relationToKey: 'I'
-        }
+          chordName: "Cunknown",
+          musicalFunction: "Invalid",
+          relationToKey: "I",
+        },
       ],
-      scales: [{ name: 'C Major', rootNote: 'C' }]
+      scales: [{ name: "C Major", rootNote: "C" }],
     };
 
     expect(() => validateAPIResponse(payload)).toThrow(APIValidationError);
   });
 
-  it('rejects scales with unsupported descriptors', () => {
+  it("rejects scales with unsupported descriptors", () => {
     const payload = {
       progression: [
         {
-          chordName: 'Cmaj7',
-          musicalFunction: 'Tonic',
-          relationToKey: 'Imaj7'
-        }
+          chordName: "Cmaj7",
+          musicalFunction: "Tonic",
+          relationToKey: "Imaj7",
+        },
       ],
-      scales: [{ name: 'C Galactic', rootNote: 'C' }]
+      scales: [{ name: "C Galactic", rootNote: "C" }],
     };
 
     expect(() => validateAPIResponse(payload)).toThrow(APIValidationError);
   });
 
-  it('rejects scales when name root conflicts with rootNote', () => {
+  it("rejects scales when name root conflicts with rootNote", () => {
     const payload = {
       progression: [
         {
-          chordName: 'Cmaj7',
-          musicalFunction: 'Tonic',
-          relationToKey: 'Imaj7'
-        }
+          chordName: "Cmaj7",
+          musicalFunction: "Tonic",
+          relationToKey: "Imaj7",
+        },
       ],
-      scales: [{ name: 'C Major', rootNote: 'D' }]
+      scales: [{ name: "C Major", rootNote: "D" }],
     };
 
     expect(() => validateAPIResponse(payload)).toThrow(APIValidationError);
   });
 
-  it('accepts enharmonic scale root equivalents', () => {
+  it("accepts enharmonic scale root equivalents", () => {
     const payload = {
       progression: [
         {
-          chordName: 'Cmaj7',
-          musicalFunction: 'Tonic',
-          relationToKey: 'Imaj7'
-        }
+          chordName: "Cmaj7",
+          musicalFunction: "Tonic",
+          relationToKey: "Imaj7",
+        },
       ],
-      scales: [{ name: 'C# Major', rootNote: 'Db' }]
+      scales: [{ name: "C# Major", rootNote: "Db" }],
     };
 
     expect(() => validateAPIResponse(payload)).not.toThrow();
   });
 
-  it('normalizes Ionian scale names to Major', () => {
+  it("normalizes Ionian scale names to Major", () => {
     const payload = {
       progression: [
         {
-          chordName: 'Cmaj7',
-          musicalFunction: 'Tonic',
-          relationToKey: 'Imaj7'
-        }
+          chordName: "Cmaj7",
+          musicalFunction: "Tonic",
+          relationToKey: "Imaj7",
+        },
       ],
       scales: [
-        { name: 'C Ionian', rootNote: 'C' },
-        { name: 'G Ionian', rootNote: 'G' }
-      ]
+        { name: "C Ionian", rootNote: "C" },
+        { name: "G Ionian", rootNote: "G" },
+      ],
     };
 
     const result = validateAPIResponse(payload);
-    expect(result.scales[0].name).toBe('C Major');
-    expect(result.scales[1].name).toBe('G Major');
+    expect(result.scales[0].name).toBe("C Major");
+    expect(result.scales[1].name).toBe("G Major");
   });
 
-  it('normalizes Aeolian scale names to Minor', () => {
+  it("normalizes Aeolian scale names to Minor", () => {
     const payload = {
       progression: [
         {
-          chordName: 'Am7',
-          musicalFunction: 'Tonic',
-          relationToKey: 'im7'
-        }
+          chordName: "Am7",
+          musicalFunction: "Tonic",
+          relationToKey: "im7",
+        },
       ],
       scales: [
-        { name: 'A Aeolian', rootNote: 'A' },
-        { name: 'D Aeolian', rootNote: 'D' }
-      ]
+        { name: "A Aeolian", rootNote: "A" },
+        { name: "D Aeolian", rootNote: "D" },
+      ],
     };
 
     const result = validateAPIResponse(payload);
-    expect(result.scales[0].name).toBe('A Minor');
-    expect(result.scales[1].name).toBe('D Minor');
+    expect(result.scales[0].name).toBe("A Minor");
+    expect(result.scales[1].name).toBe("D Minor");
   });
 
-  it('normalizes Natural Minor scale names to Minor', () => {
+  it("normalizes Natural Minor scale names to Minor", () => {
     const payload = {
       progression: [
         {
-          chordName: 'Am7',
-          musicalFunction: 'Tonic',
-          relationToKey: 'im7'
-        }
+          chordName: "Am7",
+          musicalFunction: "Tonic",
+          relationToKey: "im7",
+        },
       ],
-      scales: [
-        { name: 'A Natural Minor', rootNote: 'A' }
-      ]
+      scales: [{ name: "A Natural Minor", rootNote: "A" }],
     };
 
     const result = validateAPIResponse(payload);
-    expect(result.scales[0].name).toBe('A Minor');
+    expect(result.scales[0].name).toBe("A Minor");
   });
 
-  it('normalizes detectedMode Ionian to Major', () => {
+  it("normalizes detectedMode Ionian to Major", () => {
     const payload = {
       progression: [
         {
-          chordName: 'Cmaj7',
-          musicalFunction: 'Tonic',
-          relationToKey: 'Imaj7'
-        }
+          chordName: "Cmaj7",
+          musicalFunction: "Tonic",
+          relationToKey: "Imaj7",
+        },
       ],
-      scales: [{ name: 'C Major', rootNote: 'C' }],
-      detectedMode: 'Ionian'
+      scales: [{ name: "C Major", rootNote: "C" }],
+      detectedMode: "Ionian",
     };
 
     const result = validateAPIResponse(payload);
-    expect(result.detectedMode).toBe('Major');
+    expect(result.detectedMode).toBe("Major");
   });
 
-  it('normalizes detectedMode Aeolian to Minor', () => {
+  it("normalizes detectedMode Aeolian to Minor", () => {
     const payload = {
       progression: [
         {
-          chordName: 'Am7',
-          musicalFunction: 'Tonic',
-          relationToKey: 'im7'
-        }
+          chordName: "Am7",
+          musicalFunction: "Tonic",
+          relationToKey: "im7",
+        },
       ],
-      scales: [{ name: 'A Minor', rootNote: 'A' }],
-      detectedMode: 'Aeolian'
+      scales: [{ name: "A Minor", rootNote: "A" }],
+      detectedMode: "Aeolian",
     };
 
     const result = validateAPIResponse(payload);
-    expect(result.detectedMode).toBe('Minor');
+    expect(result.detectedMode).toBe("Minor");
   });
 
-  it('normalizes lowercase detectedMode names to canonical form', () => {
+  it("normalizes lowercase detectedMode names to canonical form", () => {
     const payload = {
       progression: [
         {
-          chordName: 'Dm7',
-          musicalFunction: 'Tonic modal',
-          relationToKey: 'im7'
-        }
+          chordName: "Dm7",
+          musicalFunction: "Tonic modal",
+          relationToKey: "im7",
+        },
       ],
-      scales: [{ name: 'D Dorian', rootNote: 'D' }],
-      detectedMode: 'dorian'
+      scales: [{ name: "D Dorian", rootNote: "D" }],
+      detectedMode: "dorian",
     };
 
     const result = validateAPIResponse(payload);
-    expect(result.detectedMode).toBe('Dorian');
+    expect(result.detectedMode).toBe("Dorian");
   });
 });

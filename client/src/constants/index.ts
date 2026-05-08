@@ -269,20 +269,7 @@ export const THEMES: ThemeOption[] = [
   },
 ];
 
-export const KEYS = [
-  "C",
-  "Db",
-  "D",
-  "Eb",
-  "E",
-  "F",
-  "F#",
-  "G",
-  "Ab",
-  "A",
-  "Bb",
-  "B",
-];
+export const KEYS = ["C", "Db", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
 
 export interface ModeOption {
   name: string;
@@ -380,20 +367,7 @@ export const COMMON_PROGRESSIONS = [
 
 // Root notes for wheel picker - 12 chromatic notes with sharp notation
 // Backend normalization handles enharmonic equivalents (C#/Db, etc.)
-export const ROOT_NOTES = [
-  "C",
-  "C#",
-  "D",
-  "D#",
-  "E",
-  "F",
-  "F#",
-  "G",
-  "G#",
-  "A",
-  "A#",
-  "B",
-];
+export const ROOT_NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 
 // Chord qualities for wheel picker (based on chordLibrary.ts normalization)
 // These are the qualities that get normalized and used in the system

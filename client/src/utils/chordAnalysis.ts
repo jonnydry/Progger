@@ -3,8 +3,8 @@
  * Provides comprehensive chord theory analysis and scale compatibility
  */
 
-import { noteToValue, valueToNote } from './musicTheory';
-import { normalizeChordQuality } from '@shared/music/chordQualities';
+import { noteToValue, valueToNote } from "./musicTheory";
+import { normalizeChordQuality } from "@shared/music/chordQualities";
 
 export interface ChordAnalysis {
   formula: string;
@@ -20,130 +20,130 @@ export interface ChordAnalysis {
  */
 const CHORD_FORMULAS: Record<string, { formula: string; intervals: number[] }> = {
   // Triads
-  'major': { formula: '1-3-5', intervals: [0, 4, 7] },
-  'minor': { formula: '1-♭3-5', intervals: [0, 3, 7] },
-  'dim': { formula: '1-♭3-♭5', intervals: [0, 3, 6] },
-  'aug': { formula: '1-3-#5', intervals: [0, 4, 8] },
-  'sus2': { formula: '1-2-5', intervals: [0, 2, 7] },
-  'sus4': { formula: '1-4-5', intervals: [0, 5, 7] },
-  '5': { formula: '1-5', intervals: [0, 7] },
+  major: { formula: "1-3-5", intervals: [0, 4, 7] },
+  minor: { formula: "1-♭3-5", intervals: [0, 3, 7] },
+  dim: { formula: "1-♭3-♭5", intervals: [0, 3, 6] },
+  aug: { formula: "1-3-#5", intervals: [0, 4, 8] },
+  sus2: { formula: "1-2-5", intervals: [0, 2, 7] },
+  sus4: { formula: "1-4-5", intervals: [0, 5, 7] },
+  "5": { formula: "1-5", intervals: [0, 7] },
 
   // Seventh chords
-  '7': { formula: '1-3-5-♭7', intervals: [0, 4, 7, 10] },
-  'maj7': { formula: '1-3-5-7', intervals: [0, 4, 7, 11] },
-  'min7': { formula: '1-♭3-5-♭7', intervals: [0, 3, 7, 10] },
-  'min/maj7': { formula: '1-♭3-5-7', intervals: [0, 3, 7, 11] },
-  'dim7': { formula: '1-♭3-♭5-♭♭7', intervals: [0, 3, 6, 9] },
-  'min7b5': { formula: '1-♭3-♭5-♭7', intervals: [0, 3, 6, 10] },
+  "7": { formula: "1-3-5-♭7", intervals: [0, 4, 7, 10] },
+  maj7: { formula: "1-3-5-7", intervals: [0, 4, 7, 11] },
+  min7: { formula: "1-♭3-5-♭7", intervals: [0, 3, 7, 10] },
+  "min/maj7": { formula: "1-♭3-5-7", intervals: [0, 3, 7, 11] },
+  dim7: { formula: "1-♭3-♭5-♭♭7", intervals: [0, 3, 6, 9] },
+  min7b5: { formula: "1-♭3-♭5-♭7", intervals: [0, 3, 6, 10] },
 
   // Extended chords
-  '9': { formula: '1-3-5-♭7-9', intervals: [0, 4, 7, 10, 14] },
-  'maj9': { formula: '1-3-5-7-9', intervals: [0, 4, 7, 11, 14] },
-  'min9': { formula: '1-♭3-5-♭7-9', intervals: [0, 3, 7, 10, 14] },
-  '11': { formula: '1-3-5-♭7-9-11', intervals: [0, 4, 7, 10, 14, 17] },
-  'maj11': { formula: '1-3-5-7-9-11', intervals: [0, 4, 7, 11, 14, 17] },
-  'min11': { formula: '1-♭3-5-♭7-9-11', intervals: [0, 3, 7, 10, 14, 17] },
-  '13': { formula: '1-3-5-♭7-9-11-13', intervals: [0, 4, 7, 10, 14, 17, 21] },
-  'maj13': { formula: '1-3-5-7-9-11-13', intervals: [0, 4, 7, 11, 14, 17, 21] },
-  'min13': { formula: '1-♭3-5-♭7-9-11-13', intervals: [0, 3, 7, 10, 14, 17, 21] },
+  "9": { formula: "1-3-5-♭7-9", intervals: [0, 4, 7, 10, 14] },
+  maj9: { formula: "1-3-5-7-9", intervals: [0, 4, 7, 11, 14] },
+  min9: { formula: "1-♭3-5-♭7-9", intervals: [0, 3, 7, 10, 14] },
+  "11": { formula: "1-3-5-♭7-9-11", intervals: [0, 4, 7, 10, 14, 17] },
+  maj11: { formula: "1-3-5-7-9-11", intervals: [0, 4, 7, 11, 14, 17] },
+  min11: { formula: "1-♭3-5-♭7-9-11", intervals: [0, 3, 7, 10, 14, 17] },
+  "13": { formula: "1-3-5-♭7-9-11-13", intervals: [0, 4, 7, 10, 14, 17, 21] },
+  maj13: { formula: "1-3-5-7-9-11-13", intervals: [0, 4, 7, 11, 14, 17, 21] },
+  min13: { formula: "1-♭3-5-♭7-9-11-13", intervals: [0, 3, 7, 10, 14, 17, 21] },
 
   // Altered chords
-  '7b9': { formula: '1-3-5-♭7-♭9', intervals: [0, 4, 7, 10, 13] },
-  '7#9': { formula: '1-3-5-♭7-#9', intervals: [0, 4, 7, 10, 15] },
-  '7b5': { formula: '1-3-♭5-♭7', intervals: [0, 4, 6, 10] },
-  '7#5': { formula: '1-3-#5-♭7', intervals: [0, 4, 8, 10] },
-  '7alt': { formula: '1-3-♭5-♭7-♭9-#9', intervals: [0, 4, 6, 10, 13, 15] },
+  "7b9": { formula: "1-3-5-♭7-♭9", intervals: [0, 4, 7, 10, 13] },
+  "7#9": { formula: "1-3-5-♭7-#9", intervals: [0, 4, 7, 10, 15] },
+  "7b5": { formula: "1-3-♭5-♭7", intervals: [0, 4, 6, 10] },
+  "7#5": { formula: "1-3-#5-♭7", intervals: [0, 4, 8, 10] },
+  "7alt": { formula: "1-3-♭5-♭7-♭9-#9", intervals: [0, 4, 6, 10, 13, 15] },
 
   // Add chords
-  'add9': { formula: '1-3-5-9', intervals: [0, 4, 7, 14] },
-  'add11': { formula: '1-3-5-11', intervals: [0, 4, 7, 17] },
-  'madd9': { formula: '1-♭3-5-9', intervals: [0, 3, 7, 14] },
-  '6': { formula: '1-3-5-6', intervals: [0, 4, 7, 9] },
-  'min6': { formula: '1-♭3-5-6', intervals: [0, 3, 7, 9] },
-  '6/9': { formula: '1-3-5-6-9', intervals: [0, 4, 7, 9, 14] },
-  '7sus4': { formula: '1-4-5-♭7', intervals: [0, 5, 7, 10] },
-  '9sus4': { formula: '1-4-5-♭7-9', intervals: [0, 5, 7, 10, 14] },
-  '9#11': { formula: '1-3-5-♭7-9-#11', intervals: [0, 4, 7, 10, 14, 18] },
+  add9: { formula: "1-3-5-9", intervals: [0, 4, 7, 14] },
+  add11: { formula: "1-3-5-11", intervals: [0, 4, 7, 17] },
+  madd9: { formula: "1-♭3-5-9", intervals: [0, 3, 7, 14] },
+  "6": { formula: "1-3-5-6", intervals: [0, 4, 7, 9] },
+  min6: { formula: "1-♭3-5-6", intervals: [0, 3, 7, 9] },
+  "6/9": { formula: "1-3-5-6-9", intervals: [0, 4, 7, 9, 14] },
+  "7sus4": { formula: "1-4-5-♭7", intervals: [0, 5, 7, 10] },
+  "9sus4": { formula: "1-4-5-♭7-9", intervals: [0, 5, 7, 10, 14] },
+  "9#11": { formula: "1-3-5-♭7-9-#11", intervals: [0, 4, 7, 10, 14, 18] },
 
   // Complex compound extensions
-  'maj7#11': { formula: '1-3-5-7-#11', intervals: [0, 4, 7, 11, 18] },
-  'maj7b13': { formula: '1-3-5-7-♭13', intervals: [0, 4, 7, 11, 20] },
-  'maj7#9': { formula: '1-3-5-7-#9', intervals: [0, 4, 7, 11, 15] },
-  '7b9b13': { formula: '1-3-5-♭7-♭9-♭13', intervals: [0, 4, 7, 10, 13, 20] },
-  '7#9b13': { formula: '1-3-5-♭7-#9-♭13', intervals: [0, 4, 7, 10, 15, 20] },
+  "maj7#11": { formula: "1-3-5-7-#11", intervals: [0, 4, 7, 11, 18] },
+  maj7b13: { formula: "1-3-5-7-♭13", intervals: [0, 4, 7, 11, 20] },
+  "maj7#9": { formula: "1-3-5-7-#9", intervals: [0, 4, 7, 11, 15] },
+  "7b9b13": { formula: "1-3-5-♭7-♭9-♭13", intervals: [0, 4, 7, 10, 13, 20] },
+  "7#9b13": { formula: "1-3-5-♭7-#9-♭13", intervals: [0, 4, 7, 10, 15, 20] },
 };
 
 const INTERVAL_NAMES = [
-  'R', // 0: Root
-  'b2', // 1: Minor 2nd
-  '2', // 2: Major 2nd
-  'b3', // 3: Minor 3rd
-  '3', // 4: Major 3rd
-  '4', // 5: Perfect 4th
-  'b5', // 6: Tritone/Diminished 5th
-  '5', // 7: Perfect 5th
-  '#5', // 8: Augmented 5th
-  '6', // 9: Major 6th
-  'b7', // 10: Minor 7th
-  '7', // 11: Major 7th
-  '8', // 12: Octave
-  'b9', // 13: Minor 9th
-  '9', // 14: Major 9th
-  '#9', // 15: Augmented 9th
-  'b11', // 16: Minor 11th / Augmented 10th
-  '11', // 17: Perfect 11th
-  '#11', // 18: Augmented 11th
-  '12', // 19: Perfect 12th
-  'b13', // 20: Minor 13th
-  '13', // 21: Major 13th
+  "R", // 0: Root
+  "b2", // 1: Minor 2nd
+  "2", // 2: Major 2nd
+  "b3", // 3: Minor 3rd
+  "3", // 4: Major 3rd
+  "4", // 5: Perfect 4th
+  "b5", // 6: Tritone/Diminished 5th
+  "5", // 7: Perfect 5th
+  "#5", // 8: Augmented 5th
+  "6", // 9: Major 6th
+  "b7", // 10: Minor 7th
+  "7", // 11: Major 7th
+  "8", // 12: Octave
+  "b9", // 13: Minor 9th
+  "9", // 14: Major 9th
+  "#9", // 15: Augmented 9th
+  "b11", // 16: Minor 11th / Augmented 10th
+  "11", // 17: Perfect 11th
+  "#11", // 18: Augmented 11th
+  "12", // 19: Perfect 12th
+  "b13", // 20: Minor 13th
+  "13", // 21: Major 13th
 ];
 
 const SCALE_DEGREES = [
-  '1', // 0: Root
-  'b2', // 1: Flat 2nd
-  '2', // 2: 2nd
-  'b3', // 3: Flat 3rd/minor
-  '3', // 4: 3rd/major
-  '4', // 5: 4th
-  'b5', // 6: Flat 5th/diminished
-  '5', // 7: 5th/perfect
-  '#5', // 8: Sharp 5th/augmented
-  '6', // 9: 6th
-  'b7', // 10: Flat 7th
-  '7', // 11: 7th
-  '8', // 12: Octave
-  'b9', // 13: Flat 9th
-  '9', // 14: 9th
-  '#9', // 15: Sharp 9th
-  '10', // 16: 10th
-  'b11', // 17: Flat 11th
-  '11', // 18: 11th
-  '#11', // 19: Sharp 11th
-  '12', // 20: 12th
-  'b13', // 21: Flat 13th
-  '13', // 22: 13th
+  "1", // 0: Root
+  "b2", // 1: Flat 2nd
+  "2", // 2: 2nd
+  "b3", // 3: Flat 3rd/minor
+  "3", // 4: 3rd/major
+  "4", // 5: 4th
+  "b5", // 6: Flat 5th/diminished
+  "5", // 7: 5th/perfect
+  "#5", // 8: Sharp 5th/augmented
+  "6", // 9: 6th
+  "b7", // 10: Flat 7th
+  "7", // 11: 7th
+  "8", // 12: Octave
+  "b9", // 13: Flat 9th
+  "9", // 14: 9th
+  "#9", // 15: Sharp 9th
+  "10", // 16: 10th
+  "b11", // 17: Flat 11th
+  "11", // 18: 11th
+  "#11", // 19: Sharp 11th
+  "12", // 20: 12th
+  "b13", // 21: Flat 13th
+  "13", // 22: 13th
 ];
 
 /**
  * Common scales and their interval formulas
  */
 const COMMON_SCALES: Record<string, number[]> = {
-  'major': [0, 2, 4, 5, 7, 9, 11],
-  'minor': [0, 2, 3, 5, 7, 8, 10],
-  'harmonic minor': [0, 2, 3, 5, 7, 8, 11],
-  'melodic minor': [0, 2, 3, 5, 7, 9, 11],
-  'dorian': [0, 2, 3, 5, 7, 9, 10],
-  'phrygian': [0, 1, 3, 5, 7, 8, 10],
-  'lydian': [0, 2, 4, 6, 7, 9, 11],
-  'mixolydian': [0, 2, 4, 5, 7, 9, 10],
-  'locrian': [0, 1, 3, 5, 6, 8, 10],
-  'pentatonic major': [0, 2, 4, 7, 9],
-  'pentatonic minor': [0, 3, 5, 7, 10],
-  'blues': [0, 3, 5, 6, 7, 10],
-  'whole tone': [0, 2, 4, 6, 8, 10],
-  'diminished': [0, 1, 3, 4, 6, 7, 9, 10],
-  'altered': [0, 1, 3, 4, 6, 8, 10],
-  'bebop dominant': [0, 2, 4, 5, 7, 9, 10, 11],
+  major: [0, 2, 4, 5, 7, 9, 11],
+  minor: [0, 2, 3, 5, 7, 8, 10],
+  "harmonic minor": [0, 2, 3, 5, 7, 8, 11],
+  "melodic minor": [0, 2, 3, 5, 7, 9, 11],
+  dorian: [0, 2, 3, 5, 7, 9, 10],
+  phrygian: [0, 1, 3, 5, 7, 8, 10],
+  lydian: [0, 2, 4, 6, 7, 9, 11],
+  mixolydian: [0, 2, 4, 5, 7, 9, 10],
+  locrian: [0, 1, 3, 5, 6, 8, 10],
+  "pentatonic major": [0, 2, 4, 7, 9],
+  "pentatonic minor": [0, 3, 5, 7, 10],
+  blues: [0, 3, 5, 6, 7, 10],
+  "whole tone": [0, 2, 4, 6, 8, 10],
+  diminished: [0, 1, 3, 4, 6, 7, 9, 10],
+  altered: [0, 1, 3, 4, 6, 8, 10],
+  "bebop dominant": [0, 2, 4, 5, 7, 9, 10, 11],
 };
 
 /**
@@ -153,14 +153,14 @@ const COMMON_SCALES: Record<string, number[]> = {
  */
 function parseChordName(chordName: string): { root: string; quality: string } {
   const match = chordName.match(/^([A-G][#b]?)(.*)/i);
-  if (!match) return { root: 'C', quality: 'major' };
+  if (!match) return { root: "C", quality: "major" };
 
-  const rawQuality = match[2] || '';
+  const rawQuality = match[2] || "";
   const normalizedQuality = normalizeChordQuality(rawQuality);
 
   return {
     root: match[1],
-    quality: normalizedQuality
+    quality: normalizedQuality,
   };
 }
 
@@ -172,7 +172,7 @@ function parseChordName(chordName: string): { root: string; quality: string } {
 export function getChordFormula(chordName: string): string {
   const { quality } = parseChordName(chordName);
   const formulaData = CHORD_FORMULAS[quality];
-  return formulaData?.formula || 'Unknown';
+  return formulaData?.formula || "Unknown";
 }
 
 /**
@@ -184,9 +184,11 @@ export function getChordIntervals(chordName: string): string[] {
   const { quality } = parseChordName(chordName);
   const formulaData = CHORD_FORMULAS[quality];
 
-  if (!formulaData) return ['Unknown chord quality'];
+  if (!formulaData) return ["Unknown chord quality"];
 
-  return formulaData.intervals.map(interval => INTERVAL_NAMES[interval] || `Unknown (${interval})`);
+  return formulaData.intervals.map(
+    (interval) => INTERVAL_NAMES[interval] || `Unknown (${interval})`
+  );
 }
 
 /**
@@ -204,7 +206,7 @@ export function getChordNotes(chordName: string, rootOverride?: string): string[
   const effectiveRoot = rootOverride || root;
   const rootValue = noteToValue(effectiveRoot);
 
-  return formulaData.intervals.map(interval => {
+  return formulaData.intervals.map((interval) => {
     const noteValue = (rootValue + interval) % 12;
     return valueToNote(noteValue);
   });
@@ -220,13 +222,13 @@ export function getChordScaleDegrees(chordName: string, key: string): string[] {
   const { root, quality } = parseChordName(chordName);
   const formulaData = CHORD_FORMULAS[quality];
 
-  if (!formulaData) return ['Unknown'];
+  if (!formulaData) return ["Unknown"];
 
   const rootValue = noteToValue(root);
   const keyValue = noteToValue(key);
 
   // Return scale degrees for all notes in the chord
-  return formulaData.intervals.map(interval => {
+  return formulaData.intervals.map((interval) => {
     const noteInKeyContext = (rootValue + interval - keyValue + 12) % 12;
     return SCALE_DEGREES[noteInKeyContext] || `Unknown (${noteInKeyContext})`;
   });
@@ -248,7 +250,7 @@ export function getScalesContainingChord(chordName: string, key?: string): strin
 
   for (const [scaleName, scaleIntervals] of Object.entries(COMMON_SCALES)) {
     // Check if the scale contains all chord intervals
-    const scaleHasAllChordTones = formulaData.intervals.every(interval =>
+    const scaleHasAllChordTones = formulaData.intervals.every((interval) =>
       scaleIntervals.includes(interval % 12)
     );
 
@@ -260,21 +262,20 @@ export function getScalesContainingChord(chordName: string, key?: string): strin
   // Prioritize scales relevant to the key context
   if (key) {
     // Normalize quality to canonical form (ionian -> major, aeolian -> minor)
-    const normalizedQuality = quality === 'ionian' ? 'major' : 
-                              quality === 'aeolian' ? 'minor' : 
-                              quality;
-    
+    const normalizedQuality =
+      quality === "ionian" ? "major" : quality === "aeolian" ? "minor" : quality;
+
     const keyModes: Record<string, string[]> = {
-      'major': ['major', 'lydian', 'mixolydian'],
-      'minor': ['minor', 'dorian', 'phrygian'],
-      'dorian': ['dorian'],
-      'phrygian': ['phrygian'],
-      'lydian': ['lydian'],
-      'mixolydian': ['mixolydian'],
-      'locrian': ['locrian'],
+      major: ["major", "lydian", "mixolydian"],
+      minor: ["minor", "dorian", "phrygian"],
+      dorian: ["dorian"],
+      phrygian: ["phrygian"],
+      lydian: ["lydian"],
+      mixolydian: ["mixolydian"],
+      locrian: ["locrian"],
     };
 
-    const relevantModes = keyModes[normalizedQuality] || keyModes['major'];
+    const relevantModes = keyModes[normalizedQuality] || keyModes["major"];
 
     // Sort scales with key-relevant ones first
     matchingScales.sort((a, b) => {
@@ -296,12 +297,12 @@ export function getScalesContainingChord(chordName: string, key?: string): strin
  * @param key - Musical key context
  * @returns Complete chord analysis object
  */
-export function analyzeChord(chordName: string, key: string = 'C'): ChordAnalysis {
+export function analyzeChord(chordName: string, key: string = "C"): ChordAnalysis {
   return {
     formula: getChordFormula(chordName),
     intervals: getChordIntervals(chordName),
     notes: getChordNotes(chordName, key),
     scaleDegrees: getChordScaleDegrees(chordName, key),
-    compatibleScales: getScalesContainingChord(chordName, key).slice(0, 5) // Limit to top 5
+    compatibleScales: getScalesContainingChord(chordName, key).slice(0, 5), // Limit to top 5
   };
 }

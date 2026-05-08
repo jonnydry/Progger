@@ -9,13 +9,13 @@ export const BackgroundTexture: React.FC<BackgroundTextureProps> = ({ isDark }) 
     ? {
         hatchOpacity: 0.025,
         primary: { opacity: 0.09, blur: "140px", size: "700px" },
-        accent:  { opacity: 0.08, blur: "130px", size: "650px" },
+        accent: { opacity: 0.08, blur: "130px", size: "650px" },
         secondary: { opacity: 0.07, blur: "120px", size: "500px" },
       }
     : {
         hatchOpacity: 0.035,
         primary: { opacity: 0.06, blur: "200px", size: "800px" },
-        accent:  { opacity: 0.05, blur: "190px", size: "750px" },
+        accent: { opacity: 0.05, blur: "190px", size: "750px" },
         secondary: { opacity: 0.04, blur: "180px", size: "600px" },
       };
 

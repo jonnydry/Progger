@@ -44,9 +44,7 @@ describe("ScaleDiagram", () => {
 
     render(<ScaleDiagram scaleInfo={mockScaleInfo()} musicalKey="C" />);
 
-    expect(
-      screen.getByRole("button", { name: /pattern/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /pattern/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /map/i })).toBeInTheDocument();
 
     // Wait for mobile detection effect to run
@@ -57,9 +55,7 @@ describe("ScaleDiagram", () => {
 
     const expandButton = screen.getByLabelText(/expand to full view/i);
     fireEvent.click(expandButton);
-    expect(
-      await screen.findByTestId("scale-diagram-modal"),
-    ).toBeInTheDocument();
+    expect(await screen.findByTestId("scale-diagram-modal")).toBeInTheDocument();
     fireEvent.click(screen.getByText(/close/i));
     expect(screen.queryByTestId("scale-diagram-modal")).not.toBeInTheDocument();
 
@@ -90,9 +86,7 @@ describe("ScaleDiagram", () => {
   });
 
   it("clamps selected position when scale changes to fewer positions", async () => {
-    const { rerender } = render(
-      <ScaleDiagram scaleInfo={mockScaleInfo()} musicalKey="C" />,
-    );
+    const { rerender } = render(<ScaleDiagram scaleInfo={mockScaleInfo()} musicalKey="C" />);
 
     fireEvent.click(screen.getByRole("tab", { name: /position 7/i }));
 
@@ -135,7 +129,7 @@ describe("ScaleDiagram", () => {
           ],
         }}
         musicalKey="Bb"
-      />,
+      />
     );
 
     expect(screen.getByText("Bb Major")).toBeInTheDocument();

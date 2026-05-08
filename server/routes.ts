@@ -2,20 +2,30 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { csrfSync } from "csrf-sync";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { validateProgressionRequestMiddleware, validateStashRequestMiddleware } from "./middleware/validation";
+import {
+  validateProgressionRequestMiddleware,
+  validateStashRequestMiddleware,
+} from "./middleware/validation";
 import { logger } from "./utils/logger";
 import { db } from "./db";
 import { redisCache } from "./cache";
 import { createAIGenerationLimiter, getRateLimitStatus } from "./rateLimit";
 import { requestIdMiddleware } from "./middleware/requestId";
 import { handleGetUser } from "./controllers/authController";
-import { handleGenerateProgression, handleAnalyzeCustomProgression } from "./controllers/aiController";
-import { handleGetStash, handleCreateStashItem, handleDeleteStashItem } from "./controllers/stashController";
+import {
+  handleGenerateProgression,
+  handleAnalyzeCustomProgression,
+} from "./controllers/aiController";
+import {
+  handleGetStash,
+  handleCreateStashItem,
+  handleDeleteStashItem,
+} from "./controllers/stashController";
 
 // CSRF protection for session-based endpoints
 const { csrfSynchronisedProtection, generateToken } = csrfSync({
   getTokenFromRequest: (req) => {
-    return req.headers["x-csrf-token"] as string || req.body?._csrf;
+    return (req.headers["x-csrf-token"] as string) || req.body?._csrf;
   },
 });
 

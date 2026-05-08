@@ -1,8 +1,5 @@
 // Prompt optimization utilities for XAI API cost reduction
-import {
-  getMajorSystemModeProfile,
-  normalizeModeCanonical,
-} from "@shared/music/scaleModes";
+import { getMajorSystemModeProfile, normalizeModeCanonical } from "@shared/music/scaleModes";
 
 export interface ProgressionRequest {
   key: string;
@@ -59,7 +56,9 @@ function getAutoCreativityDirective(variant?: string): string {
   }
 }
 
-function getGenerationStyleDirective(generationStyle: "conservative" | "balanced" | "adventurous"): string {
+function getGenerationStyleDirective(
+  generationStyle: "conservative" | "balanced" | "adventurous"
+): string {
   if (generationStyle === "conservative") {
     return "Favor stable diatonic motion, clear cadences, and minimal chromatic substitutions.";
   }
@@ -98,61 +97,70 @@ export function buildOptimizedPrompt(request: ProgressionRequest): PromptCompone
 }`;
 
   // Get mode-specific characteristics
-  const getModeCharacteristics = (modeName: string): { 
-    isMajorMode: boolean; 
+  const getModeCharacteristics = (
+    modeName: string
+  ): {
+    isMajorMode: boolean;
     romanNumeralExamples: string;
     modeCharacteristics: string;
   } => {
     const modeLower = modeName.toLowerCase();
-    
-    if (modeLower === 'major' || modeLower === 'ionian') {
+
+    if (modeLower === "major" || modeLower === "ionian") {
       return {
         isMajorMode: true,
         romanNumeralExamples: `In ${key} Major: I = ${key}maj7, ii = min7, iii = min7, IV = maj7, V = 7, vi = min7, vii° = min7b5`,
-        modeCharacteristics: 'Use major scale harmony. I, IV, V are major chords. Emphasize tonic stability and clear resolutions.'
+        modeCharacteristics:
+          "Use major scale harmony. I, IV, V are major chords. Emphasize tonic stability and clear resolutions.",
       };
-    } else if (modeLower === 'minor' || modeLower === 'aeolian') {
+    } else if (modeLower === "minor" || modeLower === "aeolian") {
       return {
         isMajorMode: false,
         romanNumeralExamples: `In ${key} Minor: i = ${key}min7, ii° = min7b5, III = maj7, iv = min7, v = min7, VI = maj7, VII = 7`,
-        modeCharacteristics: 'Use natural minor scale harmony. i, iv, v are minor chords. May use harmonic minor (V7) for stronger resolution.'
+        modeCharacteristics:
+          "Use natural minor scale harmony. i, iv, v are minor chords. May use harmonic minor (V7) for stronger resolution.",
       };
-    } else if (modeLower === 'dorian') {
+    } else if (modeLower === "dorian") {
       return {
         isMajorMode: false,
         romanNumeralExamples: `In ${key} Dorian: i = ${key}min7, ii = min7, bIII = maj7, IV = 7, v = min7, vi° = min7b5, bVII = maj7`,
-        modeCharacteristics: 'Use Dorian mode harmony with raised 6th (vs natural minor). Emphasize i-IV7 and i-bVII progressions. The major IV chord (dominant 7th quality) is the characteristic Dorian sound. Common in jazz and fusion.'
+        modeCharacteristics:
+          "Use Dorian mode harmony with raised 6th (vs natural minor). Emphasize i-IV7 and i-bVII progressions. The major IV chord (dominant 7th quality) is the characteristic Dorian sound. Common in jazz and fusion.",
       };
-    } else if (modeLower === 'phrygian') {
+    } else if (modeLower === "phrygian") {
       return {
         isMajorMode: false,
         romanNumeralExamples: `In ${key} Phrygian: i = ${key}min7, bII = maj7, bIII = 7, iv = min7, v° = min7b5, bVI = maj7, bvii = min7`,
-        modeCharacteristics: 'Use Phrygian mode harmony with lowered 2nd. Emphasize i-bII progressions. Dark, Spanish flavor. The bII major chord is the characteristic Phrygian sound. Avoid dominant V7 resolution.'
+        modeCharacteristics:
+          "Use Phrygian mode harmony with lowered 2nd. Emphasize i-bII progressions. Dark, Spanish flavor. The bII major chord is the characteristic Phrygian sound. Avoid dominant V7 resolution.",
       };
-    } else if (modeLower === 'lydian') {
+    } else if (modeLower === "lydian") {
       return {
         isMajorMode: true,
         romanNumeralExamples: `In ${key} Lydian: I = ${key}maj7, II = 7, iii = min7, #iv° = min7b5, V = maj7, vi = min7, vii = min7`,
-        modeCharacteristics: 'Use Lydian mode harmony with raised 4th. Emphasize I-II7 and I-V progressions. The II chord has dominant 7th quality. Dreamy, floating quality. Avoid natural 4th which contradicts #4.'
+        modeCharacteristics:
+          "Use Lydian mode harmony with raised 4th. Emphasize I-II7 and I-V progressions. The II chord has dominant 7th quality. Dreamy, floating quality. Avoid natural 4th which contradicts #4.",
       };
-    } else if (modeLower === 'mixolydian') {
+    } else if (modeLower === "mixolydian") {
       return {
         isMajorMode: true,
         romanNumeralExamples: `In ${key} Mixolydian: I = ${key}7, ii = min7, iii° = min7b5, IV = maj7, v = min7, vi = min7, bVII = maj7`,
-        modeCharacteristics: 'Use Mixolydian mode harmony with lowered 7th. Emphasize I7-bVII and I7-IV progressions. Bluesy, rock sound. The I chord is a dominant 7th, not major 7th.'
+        modeCharacteristics:
+          "Use Mixolydian mode harmony with lowered 7th. Emphasize I7-bVII and I7-IV progressions. Bluesy, rock sound. The I chord is a dominant 7th, not major 7th.",
       };
-    } else if (modeLower === 'locrian') {
+    } else if (modeLower === "locrian") {
       return {
         isMajorMode: false,
         romanNumeralExamples: `In ${key} Locrian: i° = ${key}min7b5, bII = maj7, biii = min7, iv = min7, bV = maj7, bVI = 7, bvii = min7`,
-        modeCharacteristics: 'Use Locrian mode harmony (rarely used). Unstable due to half-diminished tonic. The bV is major (not diminished). Minimal resolution. Use sparingly for dramatic effect.'
+        modeCharacteristics:
+          "Use Locrian mode harmony (rarely used). Unstable due to half-diminished tonic. The bV is major (not diminished). Minimal resolution. Use sparingly for dramatic effect.",
       };
     } else {
       // Default to major
       return {
         isMajorMode: true,
         romanNumeralExamples: `In ${key} Major: I = ${key}maj7, ii = min7, iii = min7, IV = maj7, V = 7, vi = min7, vii° = min7b5`,
-        modeCharacteristics: 'Use major scale harmony.'
+        modeCharacteristics: "Use major scale harmony.",
       };
     }
   };
@@ -203,13 +211,13 @@ ${modeInfo.modeCharacteristics}
 CRITICAL REQUIREMENTS:
 1. Use EXACT chord notation that matches guitar voicing standards
 2. Chord names must include quality: maj7, min7, 7, 9, 7b9, 7#9, 7alt, etc.
-3. Respect the key signature: ${key.includes('b') ? 'use flats (Bb, Eb, Ab)' : key.includes('#') ? 'use sharps (F#, C#, G#)' : 'use standard note spelling'}
+3. Respect the key signature: ${key.includes("b") ? "use flats (Bb, Eb, Ab)" : key.includes("#") ? "use sharps (F#, C#, G#)" : "use standard note spelling"}
 4. Ensure smooth voice leading between chords
 5. Provide accurate Roman numeral analysis for each chord
 6. Use harmonies that highlight the characteristic notes of ${canonicalMode}${modeProfile && modeProfile.majorDelta !== "none" ? ` (${modeProfile.majorDelta})` : ""}`;
 
   // Advanced chord instructions - only included when advanced chords are requested
-  let advancedChordInstructions = '';
+  let advancedChordInstructions = "";
   if (includeTensions) {
     // Calculate appropriate number of advanced chords based on progression length
     const minAdvancedChords = Math.max(1, Math.floor(numChords * 0.2)); // At least 20%
@@ -236,8 +244,8 @@ MUSIC THEORY RULES:
 - Advanced chords should have clear voice leading and resolution
 - Altered dominants (7b9, 7#9, 7alt) work best on V7 chords or secondary dominants
 - Extended chords (9, 11, 13) work well on any function but prioritize dominants and pre-dominants
-- In ${modeInfo.isMajorMode ? 'major' : 'minor'} modes, respect the key signature
-- Use appropriate accidentals: ${key.includes('b') ? 'prefer flats' : key.includes('#') ? 'prefer sharps' : 'use standard spelling'}`;
+- In ${modeInfo.isMajorMode ? "major" : "minor"} modes, respect the key signature
+- Use appropriate accidentals: ${key.includes("b") ? "prefer flats" : key.includes("#") ? "prefer sharps" : "use standard spelling"}`;
   } else {
     advancedChordInstructions = `
 TENSIONS MODE: OFF
@@ -247,7 +255,7 @@ TENSIONS MODE: OFF
   }
 
   // Progression-specific instructions
-  let progressionInstructions = '';
+  let progressionInstructions = "";
 
   if (autoConfig.isAuto) {
     progressionInstructions = `The progression should sound musical and guitar-friendly, but not formulaic.
@@ -326,7 +334,7 @@ IMPORTANT: Return ONLY valid JSON, no additional text or markdown formatting.`;
     advancedChordInstructions,
     progressionInstructions,
     schemaDescription,
-    fullPrompt
+    fullPrompt,
   };
 }
 
@@ -338,14 +346,14 @@ export function createPromptFingerprint(components: PromptComponents): string {
   const content = [
     components.basePrompt,
     components.advancedChordInstructions,
-    components.progressionInstructions
-  ].join('|');
+    components.progressionInstructions,
+  ].join("|");
 
   // Simple hash for cache key (we could use a real hash function later)
   let hash = 0;
   for (let i = 0; i < content.length; i++) {
     const char = content.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
+    hash = (hash << 5) - hash + char;
     hash = hash & hash; // Convert to 32-bit integer
   }
 

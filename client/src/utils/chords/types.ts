@@ -2,7 +2,7 @@
  * Shared types for chord library
  */
 
-import type { ChordVoicing } from '../../types';
+import type { ChordVoicing } from "../../types";
 
 export type { ChordVoicing };
 

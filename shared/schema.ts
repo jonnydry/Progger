@@ -1,11 +1,5 @@
-import { sql } from 'drizzle-orm';
-import {
-  index,
-  jsonb,
-  pgTable,
-  timestamp,
-  varchar,
-} from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { index, jsonb, pgTable, timestamp, varchar } from "drizzle-orm/pg-core";
 
 export const sessions = pgTable(
   "sessions",
@@ -14,11 +8,13 @@ export const sessions = pgTable(
     sess: jsonb("sess").notNull(),
     expire: timestamp("expire").notNull(),
   },
-  (table) => [index("IDX_session_expire").on(table.expire)],
+  (table) => [index("IDX_session_expire").on(table.expire)]
 );
 
 export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
   email: varchar("email").unique(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
@@ -27,17 +23,23 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const stash = pgTable("stash", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
-  name: varchar("name").notNull(),
-  key: varchar("key").notNull(),
-  mode: varchar("mode").notNull(),
-  progressionData: jsonb("progression_data").notNull(), // Stores the full ProgressionResult
-  createdAt: timestamp("created_at").defaultNow(),
-}, (table) => [
-  index("stash_user_id_idx").on(table.userId),
-]);
+export const stash = pgTable(
+  "stash",
+  {
+    id: varchar("id")
+      .primaryKey()
+      .default(sql`gen_random_uuid()`),
+    userId: varchar("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    name: varchar("name").notNull(),
+    key: varchar("key").notNull(),
+    mode: varchar("mode").notNull(),
+    progressionData: jsonb("progression_data").notNull(), // Stores the full ProgressionResult
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [index("stash_user_id_idx").on(table.userId)]
+);
 
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;

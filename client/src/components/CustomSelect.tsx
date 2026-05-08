@@ -93,11 +93,8 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   }, [isOpen]);
 
   const selectedOption = useMemo(
-    () =>
-      options.find(
-        (opt) => (typeof opt === "string" ? opt : opt.value) === value,
-      ),
-    [options, value],
+    () => options.find((opt) => (typeof opt === "string" ? opt : opt.value) === value),
+    [options, value]
   );
 
   const displayValue = useMemo(
@@ -107,7 +104,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
           ? selectedOption
           : selectedOption.name
         : value,
-    [selectedOption, value],
+    [selectedOption, value]
   );
 
   return (
@@ -136,12 +133,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
           viewBox="0 0 24 24"
           stroke="currentColor"
         >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 9l-7 7-7-7"
-          />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
         </svg>
       </button>
 
@@ -160,10 +152,8 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
             role="listbox"
           >
             {options.map((option) => {
-              const optionValue =
-                typeof option === "string" ? option : option.value;
-              const optionName =
-                typeof option === "string" ? option : option.name;
+              const optionValue = typeof option === "string" ? option : option.value;
+              const optionName = typeof option === "string" ? option : option.name;
               const isSelected = value === optionValue;
 
               return (
@@ -179,7 +169,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
               );
             })}
           </ul>,
-          document.body,
+          document.body
         )}
     </div>
   );

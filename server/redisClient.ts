@@ -1,5 +1,5 @@
-import { createClient, RedisClientType } from 'redis';
-import { logger } from './utils/logger';
+import { createClient, RedisClientType } from "redis";
+import { logger } from "./utils/logger";
 
 // Timeout helper for network calls
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
@@ -38,38 +38,38 @@ export async function getSharedRedisClient(): Promise<RedisClientType | null> {
     const MAX_RECONNECT_ATTEMPTS = 5;
 
     sharedRedisClient = createClient({
-      url: process.env.REDIS_URL || 'redis://localhost:6379',
+      url: process.env.REDIS_URL || "redis://localhost:6379",
       socket: {
         connectTimeout: 5000,
         reconnectStrategy: (retries: number) => {
           if (retries >= MAX_RECONNECT_ATTEMPTS) {
-            logger.warn('Redis max reconnect attempts reached, stopping retries', { retries });
-            return new Error('Redis max reconnect attempts reached');
+            logger.warn("Redis max reconnect attempts reached, stopping retries", { retries });
+            return new Error("Redis max reconnect attempts reached");
           }
           const delay = Math.min(retries * 2000, 30000);
-          logger.debug('Redis reconnecting', { attempt: retries + 1, delayMs: delay });
+          logger.debug("Redis reconnecting", { attempt: retries + 1, delayMs: delay });
           return delay;
         },
       },
     });
 
-    sharedRedisClient.on('connect', () => {
+    sharedRedisClient.on("connect", () => {
       isRedisConnected = true;
-      logger.info('Shared Redis client connected');
+      logger.info("Shared Redis client connected");
     });
 
-    sharedRedisClient.on('error', (err) => {
-      logger.warn('Shared Redis client connection error', { error: err.message });
+    sharedRedisClient.on("error", (err) => {
+      logger.warn("Shared Redis client connection error", { error: err.message });
       isRedisConnected = false;
     });
 
     // Connect with timeout
     await withTimeout(sharedRedisClient.connect(), 5000);
     isRedisConnected = true;
-    logger.info('Shared Redis client initialized successfully');
+    logger.info("Shared Redis client initialized successfully");
     return sharedRedisClient;
   } catch (error) {
-    logger.warn('Failed to connect to shared Redis client', { error });
+    logger.warn("Failed to connect to shared Redis client", { error });
     if (sharedRedisClient) {
       sharedRedisClient.removeAllListeners();
     }
@@ -92,6 +92,3 @@ export function isRedisAvailable(): boolean {
 export function getRedisClient(): RedisClientType | null {
   return sharedRedisClient;
 }
-
-
-

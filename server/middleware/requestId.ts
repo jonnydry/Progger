@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express';
-import { randomUUID } from 'crypto';
+import { Request, Response, NextFunction } from "express";
+import { randomUUID } from "crypto";
 
 /**
  * Request ID middleware for request tracing and debugging
@@ -30,13 +30,13 @@ declare global {
 
 export function requestIdMiddleware(req: Request, res: Response, next: NextFunction): void {
   // Check if request already has an ID (from proxy or load balancer)
-  const existingId = req.headers['x-request-id'] as string;
+  const existingId = req.headers["x-request-id"] as string;
 
   // Use existing ID or generate new one
   req.id = existingId || randomUUID();
 
   // Add ID to response headers for client-side correlation
-  res.setHeader('X-Request-ID', req.id);
+  res.setHeader("X-Request-ID", req.id);
 
   next();
 }
@@ -46,5 +46,5 @@ export function requestIdMiddleware(req: Request, res: Response, next: NextFunct
  * Safe accessor that returns a default if ID is not set
  */
 export function getRequestId(req: Request): string {
-  return req.id || 'unknown';
+  return req.id || "unknown";
 }

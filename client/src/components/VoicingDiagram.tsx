@@ -60,11 +60,8 @@ export const VoicingDiagram: React.FC<VoicingDiagramProps> = ({
   const height = FRET_COUNT * FRET_HEIGHT + PADDING * 2.5;
 
   const highestFret = useMemo(
-    () =>
-      Math.max(
-        ...frets.filter((f) => typeof f === "number").map((f) => f as number),
-      ),
-    [frets],
+    () => Math.max(...frets.filter((f) => typeof f === "number").map((f) => f as number)),
+    [frets]
   );
 
   // Determine if this voicing uses relative positioning to firstFret (barre chords)
@@ -75,13 +72,8 @@ export const VoicingDiagram: React.FC<VoicingDiagramProps> = ({
   }, [firstFret]);
 
   const effectiveFirstFret = useMemo(
-    () =>
-      firstFret > 1
-        ? firstFret
-        : highestFret > FRET_COUNT
-          ? highestFret - FRET_COUNT + 1
-          : 1,
-    [firstFret, highestFret],
+    () => (firstFret > 1 ? firstFret : highestFret > FRET_COUNT ? highestFret - FRET_COUNT + 1 : 1),
+    [firstFret, highestFret]
   );
 
   const containerClass =
@@ -122,11 +114,7 @@ export const VoicingDiagram: React.FC<VoicingDiagramProps> = ({
             x2={LEFT_MARGIN + PADDING + (STRING_COUNT - 1) * STRING_WIDTH}
             y2={PADDING + i * FRET_HEIGHT}
             strokeWidth={i === 0 && effectiveFirstFret === 1 ? 3 : 1}
-            className={
-              i === 0 && effectiveFirstFret === 1
-                ? "stroke-text/60"
-                : "stroke-text/20"
-            }
+            className={i === 0 && effectiveFirstFret === 1 ? "stroke-text/60" : "stroke-text/20"}
           />
         ))}
 

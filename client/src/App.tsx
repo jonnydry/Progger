@@ -1,27 +1,13 @@
-import React, {
-  useState,
-  useCallback,
-  useEffect,
-  useMemo,
-  lazy,
-  Suspense,
-  useRef,
-} from "react";
+import React, { useState, useCallback, useEffect, useMemo, lazy, Suspense, useRef } from "react";
 import { Controls } from "./components/Controls";
 import { VoicingsGrid } from "./components/VoicingsGrid";
 import { SkeletonScaleDiagram } from "./components/SkeletonScaleDiagram";
 import { MainLayout } from "./components/Layout/MainLayout";
 import { useAuth } from "./hooks/useAuth";
 import { useTheme } from "./hooks/useTheme";
-import {
-  useGenerateProgression,
-  useAnalyzeCustomProgression,
-} from "./hooks/useProgression";
+import { useGenerateProgression, useAnalyzeCustomProgression } from "./hooks/useProgression";
 import { validateChordLibrary, preloadAllChords } from "./utils/chordLibrary";
-import {
-  splitChordName,
-  isSupportedChordQuality,
-} from "@shared/music/chordQualities";
+import { splitChordName, isSupportedChordQuality } from "@shared/music/chordQualities";
 import { detectKey } from "./utils/smartChordSuggestions";
 import type { CustomChordInput, ProgressionResult } from "./types";
 import { KEYS, MODES, COMMON_PROGRESSIONS, MAX_CUSTOM_CHORDS } from "./constants";
@@ -38,13 +24,7 @@ interface ResultContext {
 
 const App: React.FC = () => {
   const { user } = useAuth();
-  const {
-    theme,
-    themes,
-    themeIndex,
-    setThemeIndex,
-    toggleTheme,
-  } = useTheme();
+  const { theme, themes, themeIndex, setThemeIndex, toggleTheme } = useTheme();
 
   const generateMutation = useGenerateProgression();
   const analyzeMutation = useAnalyzeCustomProgression();
@@ -52,25 +32,22 @@ const App: React.FC = () => {
   const [key, setKey] = useState<string>(KEYS[0]);
   const [mode, setMode] = useState<string>(MODES[0].value);
   const [selectedProgression, setSelectedProgression] = useState<string>(
-    COMMON_PROGRESSIONS[0].value,
+    COMMON_PROGRESSIONS[0].value
   );
   const [numChords, setNumChords] = useState<number>(4);
   const [includeTensions, setIncludeTensions] = useState<boolean>(false);
   const [generationStyle, setGenerationStyle] = useState<string>("balanced");
-  const [progressionResult, setProgressionResult] =
-    useState<ProgressionResult | null>(null);
+  const [progressionResult, setProgressionResult] = useState<ProgressionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const [isStashOpen, setIsStashOpen] = useState(false);
   const [isCustomMode, setIsCustomMode] = useState(false);
-  const [customProgression, setCustomProgression] = useState<CustomChordInput[]>(
-    () => [
-      { id: createChordId(), root: "C", quality: "major" },
-      { id: createChordId(), root: "A", quality: "minor" },
-      { id: createChordId(), root: "F", quality: "major" },
-      { id: createChordId(), root: "G", quality: "major" },
-    ],
-  );
+  const [customProgression, setCustomProgression] = useState<CustomChordInput[]>(() => [
+    { id: createChordId(), root: "C", quality: "major" },
+    { id: createChordId(), root: "A", quality: "minor" },
+    { id: createChordId(), root: "F", quality: "major" },
+    { id: createChordId(), root: "G", quality: "major" },
+  ]);
   const [customKey, setCustomKey] = useState<string>("C");
   const [customMode, setCustomMode] = useState<string>("Major");
   const [currentView, setCurrentView] = useState<"home" | "about">("home");
@@ -106,7 +83,7 @@ const App: React.FC = () => {
             avatar: user.profileImageUrl || undefined,
           }
         : null,
-    [user],
+    [user]
   );
 
   useEffect(() => {
@@ -147,15 +124,12 @@ const App: React.FC = () => {
         }
       }, 100);
     },
-    [],
+    []
   );
 
   const progressionLength = useMemo(
-    () =>
-      selectedProgression === "auto"
-        ? numChords
-        : selectedProgression.split("-").length,
-    [selectedProgression, numChords],
+    () => (selectedProgression === "auto" ? numChords : selectedProgression.split("-").length),
+    [selectedProgression, numChords]
   );
 
   const handleGenerate = useCallback(() => {
@@ -174,7 +148,7 @@ const App: React.FC = () => {
       {
         onSuccess: (data) => setProgressionResult(data),
         onError: (err) => setError(err.message),
-      },
+      }
     );
   }, [
     key,
@@ -192,9 +166,7 @@ const App: React.FC = () => {
     setResultContext({ key: customKey, mode: customMode });
 
     if (customProgression.length > MAX_CUSTOM_CHORDS) {
-      setError(
-        `Custom progressions support up to ${MAX_CUSTOM_CHORDS} chords.`,
-      );
+      setError(`Custom progressions support up to ${MAX_CUSTOM_CHORDS} chords.`);
       return;
     }
 
@@ -209,7 +181,7 @@ const App: React.FC = () => {
 
     if (invalidChords.length > 0) {
       setError(
-        `Invalid chord${invalidChords.length > 1 ? "s" : ""}: ${invalidChords.join(", ")}. Please check your chord selections.`,
+        `Invalid chord${invalidChords.length > 1 ? "s" : ""}: ${invalidChords.join(", ")}. Please check your chord selections.`
       );
       return;
     }

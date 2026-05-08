@@ -23,10 +23,7 @@
  */
 
 import { noteToValue, valueToNote } from "./musicTheory";
-import {
-  normalizeScaleDescriptor,
-  FALLBACK_SCALE_LIBRARY_KEYS,
-} from "@shared/music/scaleModes";
+import { normalizeScaleDescriptor, FALLBACK_SCALE_LIBRARY_KEYS } from "@shared/music/scaleModes";
 
 export interface ScalePattern {
   intervals: number[];
@@ -48,7 +45,7 @@ function findNoteOnString(
   stringValue: number,
   noteValue: number,
   minFret: number,
-  maxFret: number,
+  maxFret: number
 ): number[] {
   const frets: number[] = [];
   for (let fret = minFret; fret <= maxFret; fret++) {
@@ -67,10 +64,7 @@ function findNoteOnString(
  * @param rootValue - Chromatic value of the root (C=0)
  * @returns Array of 7 fingering patterns, each with 6 strings of 3 frets each
  */
-function generate3NPSPositions(
-  intervals: number[],
-  rootValue: number,
-): number[][][] {
+function generate3NPSPositions(intervals: number[], rootValue: number): number[][][] {
   const scaleNoteValues = intervals.map((i) => (rootValue + i) % 12);
   const positions: number[][][] = [];
 
@@ -109,15 +103,14 @@ function generate3NPSPositions(
 
         // Find this note on the current string, starting from around lastFret
         // We want notes that progress logically up the neck
-        const searchStart =
-          stringIdx === 0 ? baseFret : Math.max(0, lastFret - 2);
+        const searchStart = stringIdx === 0 ? baseFret : Math.max(0, lastFret - 2);
         const searchEnd = searchStart + 7;
 
         const possibleFrets = findNoteOnString(
           stringValue,
           noteValue,
           searchStart,
-          Math.min(24, searchEnd),
+          Math.min(24, searchEnd)
         );
 
         if (possibleFrets.length > 0) {
@@ -141,10 +134,7 @@ function generate3NPSPositions(
           }
 
           // Ensure ascending order within string
-          if (
-            stringFrets.length === 0 ||
-            chosenFret > stringFrets[stringFrets.length - 1]
-          ) {
+          if (stringFrets.length === 0 || chosenFret > stringFrets[stringFrets.length - 1]) {
             stringFrets.push(chosenFret);
           } else {
             // Need to search higher
@@ -152,7 +142,7 @@ function generate3NPSPositions(
               stringValue,
               noteValue,
               stringFrets[stringFrets.length - 1] + 1,
-              24,
+              24
             );
             if (higherFrets.length > 0) {
               stringFrets.push(higherFrets[0]);
@@ -474,25 +464,13 @@ const A_MELODIC_MINOR_3NPS: number[][][] = [
  * Generated 3NPS patterns for additional 7-note scales
  * Uses the same 3NPS system as major/minor modes with 7 positions.
  */
-const F_LYDIAN_DOMINANT_3NPS = generate3NPSPositions(
-  [0, 2, 4, 6, 7, 9, 10],
-  noteToValue("F"),
-);
+const F_LYDIAN_DOMINANT_3NPS = generate3NPSPositions([0, 2, 4, 6, 7, 9, 10], noteToValue("F"));
 
-const E_PHRYGIAN_DOMINANT_3NPS = generate3NPSPositions(
-  [0, 1, 4, 5, 7, 8, 10],
-  noteToValue("E"),
-);
+const E_PHRYGIAN_DOMINANT_3NPS = generate3NPSPositions([0, 1, 4, 5, 7, 8, 10], noteToValue("E"));
 
-const C_ALTERED_3NPS = generate3NPSPositions(
-  [0, 1, 3, 4, 6, 8, 10],
-  noteToValue("C"),
-);
+const C_ALTERED_3NPS = generate3NPSPositions([0, 1, 3, 4, 6, 8, 10], noteToValue("C"));
 
-const A_HUNGARIAN_MINOR_3NPS = generate3NPSPositions(
-  [0, 2, 3, 6, 7, 8, 11],
-  noteToValue("A"),
-);
+const A_HUNGARIAN_MINOR_3NPS = generate3NPSPositions([0, 2, 3, 6, 7, 8, 11], noteToValue("A"));
 
 /**
  * A Minor Pentatonic patterns (5 boxes)
@@ -1190,10 +1168,7 @@ function getStoredPatternRoot(scaleKey: string): string {
  * Transpose a fingering pattern by semitones
  * Handles octave wrapping to keep patterns in playable range
  */
-function transposeFingering(
-  fingering: number[][],
-  semitones: number,
-): number[][] {
+function transposeFingering(fingering: number[][], semitones: number): number[][] {
   if (semitones === 0) {
     return fingering.map((stringFrets) => [...stringFrets]);
   }
@@ -1226,7 +1201,7 @@ function transposeFingering(
     stringFrets.map((fret) => {
       const newFret = fret + adjustedSemitones;
       return Math.max(0, Math.min(newFret, 24));
-    }),
+    })
   );
 }
 
@@ -1251,10 +1226,7 @@ function getSortedPatternIndices(fingerings: number[][][]): number[] {
 /**
  * Get positions array sorted by fingering location
  */
-export function getSortedPositions(
-  scaleData: ScalePattern,
-  _scaleKey?: string,
-): string[] {
+export function getSortedPositions(scaleData: ScalePattern, _scaleKey?: string): string[] {
   if (!scaleData.positions || scaleData.positions.length === 0) {
     return ["Position 1"];
   }
@@ -1264,9 +1236,7 @@ export function getSortedPositions(
   }
 
   const sortedIndices = getSortedPatternIndices(scaleData.fingerings);
-  return sortedIndices.map(
-    (index) => scaleData.positions![index] || `Position ${index + 1}`,
-  );
+  return sortedIndices.map((index) => scaleData.positions![index] || `Position ${index + 1}`);
 }
 
 /**
@@ -1339,7 +1309,7 @@ export function getScaleIntervals(scaleName: string): number[] {
 function generateFingeringAlgorithmically(
   scaleName: string,
   rootNote: string,
-  positionIndex: number,
+  positionIndex: number
 ): number[][] {
   const intervals = getScaleIntervals(scaleName);
   const rootValue = noteToValue(rootNote);
@@ -1347,10 +1317,7 @@ function generateFingeringAlgorithmically(
 
   // Position starting frets
   const startFrets = [0, 3, 5, 7, 10, 12, 15];
-  const safePositionIndex = Math.max(
-    0,
-    Math.min(positionIndex, startFrets.length - 1),
-  );
+  const safePositionIndex = Math.max(0, Math.min(positionIndex, startFrets.length - 1));
   const baseFret = startFrets[safePositionIndex];
 
   // Generate fingering for each string
@@ -1389,31 +1356,23 @@ function generateFingeringAlgorithmically(
 export function getScaleFingering(
   scaleName: string,
   rootNote?: string,
-  positionIndex: number = 0,
+  positionIndex: number = 0
 ): number[][] {
   const root = rootNote || extractRootFromScaleName(scaleName);
   const normalized = normalizeScaleName(scaleName);
   const scaleData = SCALE_LIBRARY[normalized];
 
   // Fall back to algorithmic generation if no stored patterns
-  if (
-    !scaleData ||
-    !scaleData.fingerings ||
-    scaleData.fingerings.length === 0
-  ) {
+  if (!scaleData || !scaleData.fingerings || scaleData.fingerings.length === 0) {
     return generateFingeringAlgorithmically(scaleName, root, positionIndex);
   }
 
   const availablePositions = scaleData.fingerings.length;
-  const safePositionIndex = Math.max(
-    0,
-    Math.min(positionIndex, availablePositions - 1),
-  );
+  const safePositionIndex = Math.max(0, Math.min(positionIndex, availablePositions - 1));
 
   // Get sorted indices so position 0 is always lowest on neck
   const sortedIndices = getSortedPatternIndices(scaleData.fingerings);
-  const storedPatternIndex =
-    sortedIndices[safePositionIndex] ?? safePositionIndex;
+  const storedPatternIndex = sortedIndices[safePositionIndex] ?? safePositionIndex;
   const storedPattern = scaleData.fingerings[storedPatternIndex];
 
   if (!storedPattern || storedPattern.length !== 6) {
@@ -1452,13 +1411,11 @@ export function getScaleNotes(rootNote: string, scaleName: string): string[] {
 export function validateFingeringNotes(
   fingering: number[][],
   rootNote: string,
-  scaleName: string,
+  scaleName: string
 ): { isValid: boolean; invalidNotes: string[]; coverage: number } {
   const intervals = getScaleIntervals(scaleName);
   const rootValue = noteToValue(rootNote);
-  const expectedNoteValues = new Set(
-    intervals.map((i) => (rootValue + i) % 12),
-  );
+  const expectedNoteValues = new Set(intervals.map((i) => (rootValue + i) % 12));
 
   const invalidNotes: string[] = [];
   let totalNotes = 0;
@@ -1476,9 +1433,7 @@ export function validateFingeringNotes(
           correctNotes++;
         } else {
           const noteName = valueToNote(noteValue);
-          invalidNotes.push(
-            `String ${stringIndex + 1}, fret ${fret}: ${noteName}`,
-          );
+          invalidNotes.push(`String ${stringIndex + 1}, fret ${fret}: ${noteName}`);
         }
       }
     });
@@ -1499,7 +1454,7 @@ export function validateFingeringNotes(
 export function getValidatedScaleFingering(
   scaleName: string,
   rootNote?: string,
-  positionIndex: number = 0,
+  positionIndex: number = 0
 ): number[][] {
   const root = rootNote || extractRootFromScaleName(scaleName);
   const fingering = getScaleFingering(scaleName, root, positionIndex);
@@ -1510,7 +1465,7 @@ export function getValidatedScaleFingering(
     console.warn(
       `Scale fingering validation failed for "${scaleName}" (root: ${root}, position: ${positionIndex}):`,
       `\n  Coverage: ${(validation.coverage * 100).toFixed(1)}%`,
-      `\n  Invalid notes: ${validation.invalidNotes.slice(0, 5).join(", ")}${validation.invalidNotes.length > 5 ? "..." : ""}`,
+      `\n  Invalid notes: ${validation.invalidNotes.slice(0, 5).join(", ")}${validation.invalidNotes.length > 5 ? "..." : ""}`
     );
   }
 

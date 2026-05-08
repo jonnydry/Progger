@@ -70,17 +70,17 @@ export class DatabaseStorage implements IStorage {
 
       // Fetch from database
       const [user] = await db.select().from(users).where(eq(users.id, id));
-      
+
       if (user) {
         // Cache in both Redis (longer TTL) and memory (shorter TTL)
         await redisCache.set(cacheKey, user, 300); // 5 minutes in Redis
         setUserCache(id, user);
       }
-      
+
       return user;
     } catch (error) {
       logger.error("Error fetching user from database", error, { userId: id });
-      throw new Error('Failed to fetch user from database');
+      throw new Error("Failed to fetch user from database");
     }
   }
 
@@ -97,16 +97,16 @@ export class DatabaseStorage implements IStorage {
           },
         })
         .returning();
-      
+
       // Invalidate caches after update
       const cacheKey = `user:${user.id}`;
       userCache.delete(user.id);
       await redisCache.delete(cacheKey);
-      
+
       return user;
     } catch (error) {
       logger.error("Error upserting user in database", error, { userId: userData.id });
-      throw new Error('Failed to upsert user in database');
+      throw new Error("Failed to upsert user in database");
     }
   }
 
@@ -114,7 +114,7 @@ export class DatabaseStorage implements IStorage {
     try {
       // Validate pagination parameters: offset requires limit
       if (offset !== undefined && offset > 0 && (limit === undefined || limit <= 0)) {
-        throw new Error('Offset requires a valid limit to be specified');
+        throw new Error("Offset requires a valid limit to be specified");
       }
 
       let query = db
@@ -136,20 +136,17 @@ export class DatabaseStorage implements IStorage {
       return items;
     } catch (error) {
       logger.error("Error fetching stash items from database", error, { userId, limit, offset });
-      throw error instanceof Error ? error : new Error('Failed to fetch stash items from database');
+      throw error instanceof Error ? error : new Error("Failed to fetch stash items from database");
     }
   }
 
   async createStashItem(item: InsertStashItem): Promise<StashItem> {
     try {
-      const [newItem] = await db
-        .insert(stash)
-        .values(item)
-        .returning();
+      const [newItem] = await db.insert(stash).values(item).returning();
       return newItem;
     } catch (error) {
       logger.error("Error creating stash item in database", error, { userId: item.userId });
-      throw new Error('Failed to create stash item in database');
+      throw new Error("Failed to create stash item in database");
     }
   }
 
@@ -162,14 +159,17 @@ export class DatabaseStorage implements IStorage {
 
       // Check if any rows were deleted
       if (result.length === 0) {
-        logger.warn("Attempted to delete non-existent or unauthorized stash item", { itemId: id, userId });
-        throw new Error('Stash item not found or unauthorized');
+        logger.warn("Attempted to delete non-existent or unauthorized stash item", {
+          itemId: id,
+          userId,
+        });
+        throw new Error("Stash item not found or unauthorized");
       }
 
       logger.debug("Stash item deleted successfully", { itemId: id, userId });
     } catch (error) {
       logger.error("Error deleting stash item from database", error, { itemId: id, userId });
-      throw error instanceof Error ? error : new Error('Failed to delete stash item from database');
+      throw error instanceof Error ? error : new Error("Failed to delete stash item from database");
     }
   }
 }

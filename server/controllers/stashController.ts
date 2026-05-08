@@ -25,7 +25,13 @@ export async function handleGetStash(req: Request, res: Response): Promise<void>
     }
 
     const items = await storage.getUserStashItems(userId, limit, offset);
-    logger.debug("Fetched stash items", { requestId: req.id, userId, itemCount: items.length, limit, offset });
+    logger.debug("Fetched stash items", {
+      requestId: req.id,
+      userId,
+      itemCount: items.length,
+      limit,
+      offset,
+    });
     res.set("Cache-Control", "private, max-age=60, must-revalidate");
     res.json(items);
   } catch (error) {

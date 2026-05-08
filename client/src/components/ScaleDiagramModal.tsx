@@ -1,10 +1,21 @@
-import React, { useState, useMemo } from 'react';
-import type { ScaleInfo } from '../types';
-import { noteToValue as noteToValueBase, valueToNote, displayNote, STANDARD_TUNING_NAMES } from '../utils/musicTheory';
-import { getScaleIntervals, getScaleFingering, SCALE_LIBRARY, normalizeScaleName, getSortedPositions } from '../utils/scaleLibrary';
-import NoteDot from './NoteDot';
-import { PixelCard } from './PixelCard';
-import ScaleModeSummary from './ScaleModeSummary';
+import React, { useState, useMemo } from "react";
+import type { ScaleInfo } from "../types";
+import {
+  noteToValue as noteToValueBase,
+  valueToNote,
+  displayNote,
+  STANDARD_TUNING_NAMES,
+} from "../utils/musicTheory";
+import {
+  getScaleIntervals,
+  getScaleFingering,
+  SCALE_LIBRARY,
+  normalizeScaleName,
+  getSortedPositions,
+} from "../utils/scaleLibrary";
+import NoteDot from "./NoteDot";
+import { PixelCard } from "./PixelCard";
+import ScaleModeSummary from "./ScaleModeSummary";
 
 interface ScaleDiagramModalProps {
   scaleInfo: ScaleInfo;
@@ -33,7 +44,7 @@ const getScaleNotes = (rootNote: string, scaleName: string): number[] => {
     return [];
   }
 
-  return intervals.map(interval => (rootValue + interval) % 12);
+  return intervals.map((interval) => (rootValue + interval) % 12);
 };
 
 const STANDARD_TUNING = STANDARD_TUNING_NAMES;
@@ -48,36 +59,51 @@ const FretInlay: React.FC<{ fret: number }> = React.memo(({ fret }) => {
   const left = `${((fret - 0.5) / FRET_COUNT) * 100}%`;
   const inlayClasses = "absolute w-2 h-2 rounded-full bg-text/5 dark:bg-text/10";
   if (DOUBLE_INLAY_FRETS.includes(fret as 12 | 24)) {
-    return <>
-      <div className={inlayClasses} style={{ left, top: '33.33%', transform: 'translate(-50%, -50%)' }} />
-      <div className={inlayClasses} style={{ left, top: '66.67%', transform: 'translate(-50%, -50%)' }} />
-    </>
+    return (
+      <>
+        <div
+          className={inlayClasses}
+          style={{ left, top: "33.33%", transform: "translate(-50%, -50%)" }}
+        />
+        <div
+          className={inlayClasses}
+          style={{ left, top: "66.67%", transform: "translate(-50%, -50%)" }}
+        />
+      </>
+    );
   }
-  return <div className={inlayClasses} style={{ left, top: '50%', transform: 'translate(-50%, -50%)' }} />
+  return (
+    <div
+      className={inlayClasses}
+      style={{ left, top: "50%", transform: "translate(-50%, -50%)" }}
+    />
+  );
 });
 FretInlay.displayName = "FretInlay";
 
 const ViewToggle: React.FC<{
-  viewMode: 'pattern' | 'map';
-  setViewMode: (mode: 'pattern' | 'map') => void;
+  viewMode: "pattern" | "map";
+  setViewMode: (mode: "pattern" | "map") => void;
 }> = React.memo(({ viewMode, setViewMode }) => {
   return (
     <div className="flex items-center space-x-2 bg-text/10 p-1 rounded-md">
       <button
-        onClick={() => setViewMode('pattern')}
-        className={`px-3 py-1 text-sm font-semibold rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background ${viewMode === 'pattern' ? 'bg-surface shadow' : 'text-text/60 hover:text-text'
-          }`}
+        onClick={() => setViewMode("pattern")}
+        className={`px-3 py-1 text-sm font-semibold rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background ${
+          viewMode === "pattern" ? "bg-surface shadow" : "text-text/60 hover:text-text"
+        }`}
         aria-label="Pattern view"
-        aria-pressed={viewMode === 'pattern'}
+        aria-pressed={viewMode === "pattern"}
       >
         Pattern
       </button>
       <button
-        onClick={() => setViewMode('map')}
-        className={`px-3 py-1 text-sm font-semibold rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background ${viewMode === 'map' ? 'bg-surface shadow' : 'text-text/60 hover:text-text'
-          }`}
+        onClick={() => setViewMode("map")}
+        className={`px-3 py-1 text-sm font-semibold rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background ${
+          viewMode === "map" ? "bg-surface shadow" : "text-text/60 hover:text-text"
+        }`}
         aria-label="Map view"
-        aria-pressed={viewMode === 'map'}
+        aria-pressed={viewMode === "map"}
       >
         Map
       </button>
@@ -94,16 +120,16 @@ const PositionSelector: React.FC<{
   if (positions.length <= 1) return null;
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowLeft') {
+    if (e.key === "ArrowLeft") {
       e.preventDefault();
       setCurrentPosition(Math.max(0, currentPosition - 1));
-    } else if (e.key === 'ArrowRight') {
+    } else if (e.key === "ArrowRight") {
       e.preventDefault();
       setCurrentPosition(Math.min(positions.length - 1, currentPosition + 1));
-    } else if (e.key === 'Home') {
+    } else if (e.key === "Home") {
       e.preventDefault();
       setCurrentPosition(0);
-    } else if (e.key === 'End') {
+    } else if (e.key === "End") {
       e.preventDefault();
       setCurrentPosition(positions.length - 1);
     }
@@ -117,10 +143,11 @@ const PositionSelector: React.FC<{
           key={index}
           onClick={() => setCurrentPosition(index)}
           onKeyDown={handleKeyDown}
-          className={`px-2 py-1 text-sm font-semibold rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background ${currentPosition === index
-            ? 'bg-secondary text-background shadow'
-            : 'text-text/60 hover:text-text hover:bg-surface/50'
-            }`}
+          className={`px-2 py-1 text-sm font-semibold rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background ${
+            currentPosition === index
+              ? "bg-secondary text-background shadow"
+              : "text-text/60 hover:text-text hover:bg-surface/50"
+          }`}
           aria-label={`Position ${index + 1}`}
           aria-pressed={currentPosition === index}
           role="tab"
@@ -139,9 +166,14 @@ const extractScaleDescriptor = (scaleName: string): string | null => {
   return match ? match[2] : null;
 };
 
-const ScaleDiagramModal: React.FC<ScaleDiagramModalProps> = ({ scaleInfo, musicalKey, isOpen, onClose }) => {
+const ScaleDiagramModal: React.FC<ScaleDiagramModalProps> = ({
+  scaleInfo,
+  musicalKey,
+  isOpen,
+  onClose,
+}) => {
   const { name, rootNote, notes } = scaleInfo;
-  const [viewMode, setViewMode] = useState<'pattern' | 'map'>('pattern');
+  const [viewMode, setViewMode] = useState<"pattern" | "map">("pattern");
   const [currentPosition, setCurrentPosition] = useState(0);
   const [hoveredNoteId, setHoveredNoteId] = useState<string | null>(null);
 
@@ -151,7 +183,7 @@ const ScaleDiagramModal: React.FC<ScaleDiagramModalProps> = ({ scaleInfo, musica
     if (calculatedNotes.length > 0) {
       return new Set(calculatedNotes);
     }
-    return new Set(notes.map(noteToValue).filter(v => v !== -1));
+    return new Set(notes.map(noteToValue).filter((v) => v !== -1));
   }, [rootNote, name, notes]);
 
   // Generate position-aware fingering
@@ -161,7 +193,7 @@ const ScaleDiagramModal: React.FC<ScaleDiagramModalProps> = ({ scaleInfo, musica
 
   // Memoize fingering lookup for pattern view
   const fingeringLookup = useMemo(() => {
-    return currentFingering.map(frets => new Set(frets ?? []));
+    return currentFingering.map((frets) => new Set(frets ?? []));
   }, [currentFingering]);
 
   // Get available positions (sorted to match fingerings order)
@@ -171,7 +203,7 @@ const ScaleDiagramModal: React.FC<ScaleDiagramModalProps> = ({ scaleInfo, musica
     const scaleKey = normalizeScaleName(name);
     const scaleData = SCALE_LIBRARY[scaleKey];
     if (!scaleData) {
-      return ['Position 1'];
+      return ["Position 1"];
     }
     // Use getSortedPositions to ensure positions match the sorted fingerings order
     return getSortedPositions(scaleData);
@@ -198,10 +230,7 @@ const ScaleDiagramModal: React.FC<ScaleDiagramModalProps> = ({ scaleInfo, musica
   const visibleInlays = useMemo(() => [...INLAY_FRETS, ...DOUBLE_INLAY_FRETS], []);
 
   // Memoize grid template columns to avoid string interpolation on every render
-  const gridTemplateColumns = useMemo(() =>
-    `1.75rem repeat(${FRET_COUNT}, minmax(0, 1fr))`,
-    []
-  );
+  const gridTemplateColumns = useMemo(() => `1.75rem repeat(${FRET_COUNT}, minmax(0, 1fr))`, []);
 
   if (!isOpen) return null;
 
@@ -231,7 +260,12 @@ const ScaleDiagramModal: React.FC<ScaleDiagramModalProps> = ({ scaleInfo, musica
               aria-label="Close"
             >
               <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
           </div>
@@ -250,18 +284,19 @@ const ScaleDiagramModal: React.FC<ScaleDiagramModalProps> = ({ scaleInfo, musica
             <div
               className="relative px-4 py-4"
               style={{
-                background: 'linear-gradient(to bottom, hsl(var(--color-primary) / 0.03), hsl(var(--color-secondary) / 0.04), hsl(var(--color-primary) / 0.05))',
+                background:
+                  "linear-gradient(to bottom, hsl(var(--color-primary) / 0.03), hsl(var(--color-secondary) / 0.04), hsl(var(--color-primary) / 0.05))",
               }}
             >
               {/* Fret numbers row */}
-              <div
-                className="grid relative z-20"
-                style={{ gridTemplateColumns }}
-              >
+              <div className="grid relative z-20" style={{ gridTemplateColumns }}>
                 <div />
                 {Array.from({ length: FRET_COUNT }, (_, idx) => idx + 1).map((fret) => (
-                  <div key={`fret-num-${fret}`} className="text-center text-text/50 pb-1 h-5 flex items-center justify-center font-semibold text-[10px]">
-                    {[3, 5, 7, 9, 12, 15, 17, 19, 21, 24].includes(fret) ? fret : ''}
+                  <div
+                    key={`fret-num-${fret}`}
+                    className="text-center text-text/50 pb-1 h-5 flex items-center justify-center font-semibold text-[10px]"
+                  >
+                    {[3, 5, 7, 9, 12, 15, 17, 19, 21, 24].includes(fret) ? fret : ""}
                   </div>
                 ))}
               </div>
@@ -269,17 +304,21 @@ const ScaleDiagramModal: React.FC<ScaleDiagramModalProps> = ({ scaleInfo, musica
               {/* Strings and Notes */}
               <div className="relative mt-[-20px]">
                 {/* Fret Inlays */}
-                {visibleInlays.map(fret =>
+                {visibleInlays.map((fret) => (
                   <FretInlay key={`inlay-${fret}`} fret={fret} />
-                )}
+                ))}
 
                 {/* Strings */}
                 {STANDARD_TUNING.map((_, i) => (
-                  <div key={`string-line-${i}`} className="absolute left-0 right-0 bg-gradient-to-r from-text/10 via-text/40 to-text/10" style={{
-                    top: `${(i + 0.5) * (100 / 6)}%`,
-                    height: `${STRING_HEIGHTS[i]}px`,
-                    transform: 'translateY(-50%)',
-                  }} />
+                  <div
+                    key={`string-line-${i}`}
+                    className="absolute left-0 right-0 bg-gradient-to-r from-text/10 via-text/40 to-text/10"
+                    style={{
+                      top: `${(i + 0.5) * (100 / 6)}%`,
+                      height: `${STRING_HEIGHTS[i]}px`,
+                      transform: "translateY(-50%)",
+                    }}
+                  />
                 ))}
 
                 {/* Note Grid */}
@@ -291,7 +330,7 @@ const ScaleDiagramModal: React.FC<ScaleDiagramModalProps> = ({ scaleInfo, musica
                   {STANDARD_TUNING.map((stringName, stringIndex) => {
                     const openStringNoteValue = noteToValue(stringName);
                     let hasOpenNote = false;
-                    if (viewMode === 'pattern') {
+                    if (viewMode === "pattern") {
                       hasOpenNote = fingeringLookup[5 - stringIndex]?.has(0) ?? false;
                     } else {
                       hasOpenNote = scaleNoteValues.has(openStringNoteValue);
@@ -322,14 +361,14 @@ const ScaleDiagramModal: React.FC<ScaleDiagramModalProps> = ({ scaleInfo, musica
                           const currentNoteValue = (noteToValue(stringName) + fret) % 12;
 
                           let isNotePresent = false;
-                          if (viewMode === 'pattern') {
+                          if (viewMode === "pattern") {
                             isNotePresent = fingeringLookup[5 - stringIndex]?.has(fret) ?? false;
                           } else {
                             isNotePresent = scaleNoteValues.has(currentNoteValue);
                           }
 
                           let isRoot = false;
-                          let noteName = '';
+                          let noteName = "";
                           if (isNotePresent) {
                             isRoot = currentNoteValue === rootNoteValue;
                             const rawNoteName = valueToNote(currentNoteValue);
@@ -337,10 +376,19 @@ const ScaleDiagramModal: React.FC<ScaleDiagramModalProps> = ({ scaleInfo, musica
                           }
 
                           return (
-                            <div key={`fret-${stringIndex}-${fret}`} className="flex items-center justify-center relative h-8 group">
+                            <div
+                              key={`fret-${stringIndex}-${fret}`}
+                              className="flex items-center justify-center relative h-8 group"
+                            >
                               {/* Fret wire */}
-                              {fret === 1 && <div className="absolute top-0 bottom-0 left-0 w-1 bg-text/50 shadow-md"></div>}
-                              {fret > 1 && <div className={`absolute top-0 bottom-0 left-0 w-px ${fret === 12 || fret === 24 ? 'bg-text/30' : 'bg-text/15'}`}></div>}
+                              {fret === 1 && (
+                                <div className="absolute top-0 bottom-0 left-0 w-1 bg-text/50 shadow-md"></div>
+                              )}
+                              {fret > 1 && (
+                                <div
+                                  className={`absolute top-0 bottom-0 left-0 w-px ${fret === 12 || fret === 24 ? "bg-text/30" : "bg-text/15"}`}
+                                ></div>
+                              )}
 
                               {isNotePresent && (
                                 <NoteDot
@@ -348,7 +396,9 @@ const ScaleDiagramModal: React.FC<ScaleDiagramModalProps> = ({ scaleInfo, musica
                                   fret={fret}
                                   isRoot={isRoot}
                                   isHovered={hoveredNoteId === `note-${fret}-${stringIndex}`}
-                                  onMouseEnter={() => setHoveredNoteId(`note-${fret}-${stringIndex}`)}
+                                  onMouseEnter={() =>
+                                    setHoveredNoteId(`note-${fret}-${stringIndex}`)
+                                  }
                                   onMouseLeave={() => setHoveredNoteId(null)}
                                 />
                               )}

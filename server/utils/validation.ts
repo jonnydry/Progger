@@ -1,21 +1,36 @@
 // Validation utilities for API request validation
-import { GENERATION_STYLES, type GenerationStyle } from '../../shared/cacheUtils';
-import { normalizeScaleDescriptor } from '../../shared/music/scaleModes';
+import { GENERATION_STYLES, type GenerationStyle } from "../../shared/cacheUtils";
+import { normalizeScaleDescriptor } from "../../shared/music/scaleModes";
 
 // Valid keys (matches client constants)
 const KEYS = [
-  'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B',
-  'Db', 'Eb', 'Gb', 'Ab', 'Bb'
+  "C",
+  "C#",
+  "D",
+  "D#",
+  "E",
+  "F",
+  "F#",
+  "G",
+  "G#",
+  "A",
+  "A#",
+  "B",
+  "Db",
+  "Eb",
+  "Gb",
+  "Ab",
+  "Bb",
 ] as const;
 
 const SUPPORTED_GENERATION_MODE_KEYS = new Set([
-  'major',
-  'minor',
-  'dorian',
-  'phrygian',
-  'lydian',
-  'mixolydian',
-  'locrian',
+  "major",
+  "minor",
+  "dorian",
+  "phrygian",
+  "lydian",
+  "mixolydian",
+  "locrian",
 ]);
 
 export interface ProgressionRequest {
@@ -30,66 +45,65 @@ export interface ProgressionRequest {
 export class ValidationError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'ValidationError';
+    this.name = "ValidationError";
   }
 }
 
 export function validateProgressionRequest(body: unknown): ProgressionRequest {
-  if (!body || typeof body !== 'object') {
-    throw new ValidationError('Request body must be an object');
+  if (!body || typeof body !== "object") {
+    throw new ValidationError("Request body must be an object");
   }
 
   const req = body as Record<string, unknown>;
 
   // Validate key
-  if (!req.key || typeof req.key !== 'string') {
-    throw new ValidationError('Invalid or missing key parameter');
+  if (!req.key || typeof req.key !== "string") {
+    throw new ValidationError("Invalid or missing key parameter");
   }
   if (!KEYS.includes(req.key as any)) {
-    throw new ValidationError(`Invalid key: ${req.key}. Must be one of: ${KEYS.join(', ')}`);
+    throw new ValidationError(`Invalid key: ${req.key}. Must be one of: ${KEYS.join(", ")}`);
   }
 
   // Validate mode
-  if (!req.mode || typeof req.mode !== 'string') {
-    throw new ValidationError('Invalid or missing mode parameter');
+  if (!req.mode || typeof req.mode !== "string") {
+    throw new ValidationError("Invalid or missing mode parameter");
   }
   const normalizedMode = normalizeScaleDescriptor(req.mode);
   if (!normalizedMode || !SUPPORTED_GENERATION_MODE_KEYS.has(normalizedMode.libraryKey)) {
-    throw new ValidationError(`Invalid mode: ${req.mode}. Must be one of: major, minor, dorian, phrygian, lydian, mixolydian, locrian`);
-  }
-
-  // Validate includeTensions
-  if (typeof req.includeTensions !== 'boolean') {
-    throw new ValidationError('includeTensions must be a boolean');
-  }
-
-  // Validate generationStyle (optional for backward compatibility)
-  const generationStyleRaw =
-    req.generationStyle === undefined ? 'balanced' : req.generationStyle;
-  if (typeof generationStyleRaw !== 'string') {
-    throw new ValidationError('generationStyle must be a string');
-  }
-  const generationStyle = generationStyleRaw.trim().toLowerCase();
-  if (!GENERATION_STYLES.includes(generationStyle as GenerationStyle)) {
     throw new ValidationError(
-      `generationStyle must be one of: ${GENERATION_STYLES.join(', ')}`
+      `Invalid mode: ${req.mode}. Must be one of: major, minor, dorian, phrygian, lydian, mixolydian, locrian`
     );
   }
 
+  // Validate includeTensions
+  if (typeof req.includeTensions !== "boolean") {
+    throw new ValidationError("includeTensions must be a boolean");
+  }
+
+  // Validate generationStyle (optional for backward compatibility)
+  const generationStyleRaw = req.generationStyle === undefined ? "balanced" : req.generationStyle;
+  if (typeof generationStyleRaw !== "string") {
+    throw new ValidationError("generationStyle must be a string");
+  }
+  const generationStyle = generationStyleRaw.trim().toLowerCase();
+  if (!GENERATION_STYLES.includes(generationStyle as GenerationStyle)) {
+    throw new ValidationError(`generationStyle must be one of: ${GENERATION_STYLES.join(", ")}`);
+  }
+
   // Validate numChords
-  if (typeof req.numChords !== 'number' || !Number.isInteger(req.numChords)) {
-    throw new ValidationError('numChords must be an integer');
+  if (typeof req.numChords !== "number" || !Number.isInteger(req.numChords)) {
+    throw new ValidationError("numChords must be an integer");
   }
   if (req.numChords < 1 || req.numChords > 12) {
-    throw new ValidationError('numChords must be between 1 and 12');
+    throw new ValidationError("numChords must be between 1 and 12");
   }
 
   // Validate selectedProgression
-  if (!req.selectedProgression || typeof req.selectedProgression !== 'string') {
-    throw new ValidationError('Invalid or missing selectedProgression parameter');
+  if (!req.selectedProgression || typeof req.selectedProgression !== "string") {
+    throw new ValidationError("Invalid or missing selectedProgression parameter");
   }
   if (req.selectedProgression.length > 100) {
-    throw new ValidationError('selectedProgression must be 100 characters or less');
+    throw new ValidationError("selectedProgression must be 100 characters or less");
   }
 
   return {
@@ -103,25 +117,25 @@ export function validateProgressionRequest(body: unknown): ProgressionRequest {
 }
 
 export function validateCustomProgressionRequest(body: unknown): { chords: string[] } {
-  if (!body || typeof body !== 'object') {
-    throw new ValidationError('Request body must be an object');
+  if (!body || typeof body !== "object") {
+    throw new ValidationError("Request body must be an object");
   }
 
   const req = body as Record<string, unknown>;
 
   // Validate chords array
   if (!req.chords || !Array.isArray(req.chords)) {
-    throw new ValidationError('chords must be an array');
+    throw new ValidationError("chords must be an array");
   }
 
   if (req.chords.length < 1 || req.chords.length > 12) {
-    throw new ValidationError('chords array must contain between 1 and 12 chords');
+    throw new ValidationError("chords array must contain between 1 and 12 chords");
   }
 
   // Validate each chord is a string
   for (let i = 0; i < req.chords.length; i++) {
     const chord = req.chords[i];
-    if (typeof chord !== 'string') {
+    if (typeof chord !== "string") {
       throw new ValidationError(`chords[${i}] must be a string`);
     }
     if (chord.trim().length === 0) {

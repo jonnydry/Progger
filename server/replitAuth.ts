@@ -29,15 +29,13 @@ export interface AuthenticatedUser {
 function withTimeout<T>(promise: Promise<T>, timeoutMs: number, errorMessage: string): Promise<T> {
   return Promise.race([
     promise,
-    new Promise<T>((_, reject) =>
-      setTimeout(() => reject(new Error(errorMessage)), timeoutMs)
-    ),
+    new Promise<T>((_, reject) => setTimeout(() => reject(new Error(errorMessage)), timeoutMs)),
   ]);
 }
 
 const getOidcConfig = memoize(
   async () => {
-    logger.info('Fetching OIDC configuration from Replit');
+    logger.info("Fetching OIDC configuration from Replit");
     try {
       const config = await withTimeout(
         client.discovery(
@@ -45,12 +43,12 @@ const getOidcConfig = memoize(
           process.env.REPL_ID!
         ),
         10000, // 10 second timeout
-        'OIDC discovery timed out after 10 seconds'
+        "OIDC discovery timed out after 10 seconds"
       );
-      logger.info('OIDC configuration fetched successfully');
+      logger.info("OIDC configuration fetched successfully");
       return config;
     } catch (error) {
-      logger.error('Failed to fetch OIDC configuration', { error });
+      logger.error("Failed to fetch OIDC configuration", { error });
       throw error;
     }
   },
@@ -59,9 +57,11 @@ const getOidcConfig = memoize(
 
 export function getSession() {
   if (!process.env.SESSION_SECRET) {
-    throw new Error('SESSION_SECRET environment variable is not set. Please set a secure random string for session encryption.');
+    throw new Error(
+      "SESSION_SECRET environment variable is not set. Please set a secure random string for session encryption."
+    );
   }
-  
+
   const sessionTtl = 7 * 24 * 60 * 60 * 1000;
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
@@ -78,7 +78,7 @@ export function getSession() {
     cookie: {
       httpOnly: true,
       secure: true,
-      sameSite: 'lax',
+      sameSite: "lax",
       maxAge: sessionTtl,
     },
   });
@@ -114,7 +114,7 @@ export async function setupAuth(app: Express) {
 
   if (!domainsEnv || !replitId || !process.env.SESSION_SECRET || !process.env.DATABASE_URL) {
     authEnabled = false;
-    logger.warn('Auth prerequisites missing; authentication disabled for this runtime', {
+    logger.warn("Auth prerequisites missing; authentication disabled for this runtime", {
       hasReplitDomains: !!domainsEnv,
       hasReplitId: !!replitId,
       hasSessionSecret: !!process.env.SESSION_SECRET,
@@ -133,7 +133,7 @@ export async function setupAuth(app: Express) {
     config = await getOidcConfig();
     authEnabled = true;
   } catch (error) {
-    logger.error('Auth setup failed - authentication will be disabled', { error });
+    logger.error("Auth setup failed - authentication will be disabled", { error });
     authEnabled = false;
     // Continue server startup without auth - allows basic functionality
     return;
@@ -162,7 +162,7 @@ export async function setupAuth(app: Express) {
   for (const domain of domainsEnv.split(",")) {
     const normalizedDomain = domain.trim().toLowerCase();
     if (!normalizedDomain) {
-      logger.warn('Empty domain found in REPLIT_DOMAINS');
+      logger.warn("Empty domain found in REPLIT_DOMAINS");
       continue;
     }
     registeredDomains.add(normalizedDomain);
@@ -178,7 +178,7 @@ export async function setupAuth(app: Express) {
     passport.use(strategy);
   }
 
-  logger.info('Registered auth domains', { domains: Array.from(registeredDomains) });
+  logger.info("Registered auth domains", { domains: Array.from(registeredDomains) });
 
   passport.serializeUser((user: Express.User, cb) => cb(null, user));
   passport.deserializeUser((user: Express.User, cb) => cb(null, user));
@@ -186,7 +186,7 @@ export async function setupAuth(app: Express) {
   app.get("/api/login", (req, res, next) => {
     const normalizedHostname = req.hostname.toLowerCase();
     if (!registeredDomains.has(normalizedHostname)) {
-      logger.warn('Authentication error: hostname not in registered domains', {
+      logger.warn("Authentication error: hostname not in registered domains", {
         hostname: req.hostname,
         registeredDomains: Array.from(registeredDomains),
       });
@@ -194,11 +194,11 @@ export async function setupAuth(app: Express) {
         <h1>Authentication Error</h1>
         <p>You must access this application via the Replit preview URL, not localhost or other domains.</p>
         <p>Current hostname: <strong>${req.hostname}</strong></p>
-        <p>Expected domains: <strong>${Array.from(registeredDomains).join(', ')}</strong></p>
+        <p>Expected domains: <strong>${Array.from(registeredDomains).join(", ")}</strong></p>
         <p>Please close this tab and use the Replit webview to access the application.</p>
       `);
     }
-    
+
     passport.authenticate(`replitauth:${normalizedHostname}`, {
       prompt: "login consent",
       scope: ["openid", "email", "profile", "offline_access"],
@@ -208,13 +208,13 @@ export async function setupAuth(app: Express) {
   app.get("/api/callback", (req, res, next) => {
     const normalizedHostname = req.hostname.toLowerCase();
     if (!registeredDomains.has(normalizedHostname)) {
-      logger.warn('Callback error: hostname not in registered domains', {
+      logger.warn("Callback error: hostname not in registered domains", {
         hostname: req.hostname,
         registeredDomains: Array.from(registeredDomains),
       });
-      return res.redirect('/api/login');
+      return res.redirect("/api/login");
     }
-    
+
     passport.authenticate(`replitauth:${normalizedHostname}`, {
       successReturnToOrRedirect: "/",
       failureRedirect: "/api/login",
@@ -235,11 +235,11 @@ export async function setupAuth(app: Express) {
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
   if (!authEnabled) {
-    return res.status(503).json({ 
-      message: "Authentication is temporarily unavailable. Please try again later." 
+    return res.status(503).json({
+      message: "Authentication is temporarily unavailable. Please try again later.",
     });
   }
-  
+
   const user = req.user as AuthenticatedUser | undefined;
 
   if (!req.isAuthenticated() || !user || !user.expires_at) {

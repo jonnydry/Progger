@@ -6,14 +6,8 @@ import { logger } from "../utils/logger";
 
 export async function handleGenerateProgression(req: Request, res: Response): Promise<void> {
   try {
-    const {
-      key,
-      mode,
-      includeTensions,
-      generationStyle,
-      numChords,
-      selectedProgression,
-    } = req.body;
+    const { key, mode, includeTensions, generationStyle, numChords, selectedProgression } =
+      req.body;
 
     logger.info("POST /api/generate-progression - Request received", {
       requestId: req.id,

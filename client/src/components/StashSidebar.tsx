@@ -1,9 +1,5 @@
 import React, { useState, useRef } from "react";
-import {
-  useStash,
-  useSaveToStash,
-  useDeleteFromStash,
-} from "../hooks/useStash";
+import { useStash, useSaveToStash, useDeleteFromStash } from "../hooks/useStash";
 import type { ProgressionResult, StashItemData } from "../types";
 import { PixelCard } from "./PixelCard";
 import { PixelButton } from "./PixelButton";
@@ -15,11 +11,7 @@ interface StashSidebarProps {
   currentKey?: string;
   currentMode?: string;
   currentProgression?: ProgressionResult | null;
-  onLoadProgression?: (
-    key: string,
-    mode: string,
-    progression: ProgressionResult,
-  ) => void;
+  onLoadProgression?: (key: string, mode: string, progression: ProgressionResult) => void;
 }
 
 export const StashSidebar: React.FC<StashSidebarProps> = ({
@@ -44,12 +36,7 @@ export const StashSidebar: React.FC<StashSidebarProps> = ({
   const [isSwiping, setIsSwiping] = useState(false);
 
   const handleSave = async () => {
-    if (
-      !saveName.trim() ||
-      !currentProgression ||
-      !currentKey ||
-      !currentMode
-    ) {
+    if (!saveName.trim() || !currentProgression || !currentKey || !currentMode) {
       return;
     }
 
@@ -70,19 +57,13 @@ export const StashSidebar: React.FC<StashSidebarProps> = ({
       console.error("Failed to save to stash:", error);
       // Extract error message from the error object
       const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Failed to save to stash. Please try again.";
+        error instanceof Error ? error.message : "Failed to save to stash. Please try again.";
       setSaveError(errorMessage);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete this item from your stash?",
-      )
-    ) {
+    if (window.confirm("Are you sure you want to delete this item from your stash?")) {
       try {
         await deleteFromStash.mutateAsync(id);
       } catch (error) {
@@ -137,10 +118,7 @@ export const StashSidebar: React.FC<StashSidebarProps> = ({
 
     const swipeDistance = touchCurrent - touchStart;
     // Only allow positive (right) swipes, clamp to max 100% width
-    const clampedDistance = Math.max(
-      0,
-      Math.min(swipeDistance, window.innerWidth),
-    );
+    const clampedDistance = Math.max(0, Math.min(swipeDistance, window.innerWidth));
     return `translateX(${clampedDistance}px)`;
   };
 
@@ -172,9 +150,7 @@ export const StashSidebar: React.FC<StashSidebarProps> = ({
         <div className="h-full flex flex-col">
           {/* Header */}
           <div className="flex items-center justify-between p-6 border-b-2 border-border bg-background/50">
-            <h2 className="text-2xl font-bebas tracking-wide text-text/90">
-              MY STASH
-            </h2>
+            <h2 className="text-2xl font-bebas tracking-wide text-text/90">MY STASH</h2>
             <button
               onClick={onClose}
               className="p-2 rounded-full text-text/70 hover:bg-surface/50 hover:text-text transition-all duration-300"
@@ -235,9 +211,7 @@ export const StashSidebar: React.FC<StashSidebarProps> = ({
                     }}
                     placeholder="Enter a name..."
                     className={`w-full px-4 py-2 bg-surface/50 border-2 text-text placeholder-text/50 focus:outline-none ${
-                      saveError
-                        ? "border-red-500/50"
-                        : "border-border focus:border-primary"
+                      saveError ? "border-red-500/50" : "border-border focus:border-primary"
                     }`}
                     onKeyPress={(e) => {
                       if (e.key === "Enter") {
@@ -278,15 +252,11 @@ export const StashSidebar: React.FC<StashSidebarProps> = ({
           {/* Stash Items List */}
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
             {isLoading ? (
-              <div className="text-center text-text/60 py-8">
-                Loading stash...
-              </div>
+              <div className="text-center text-text/60 py-8">Loading stash...</div>
             ) : stashItems.length === 0 ? (
               <div className="text-center text-text/60 py-8">
                 <p className="mb-2">Your stash is empty</p>
-                <p className="text-sm">
-                  Generate a progression and save it here!
-                </p>
+                <p className="text-sm">Generate a progression and save it here!</p>
               </div>
             ) : (
               stashItems.map((item) => (
@@ -297,9 +267,7 @@ export const StashSidebar: React.FC<StashSidebarProps> = ({
                   onClick={() => handleLoad(item)}
                 >
                   <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-semibold text-text/90 text-lg">
-                      {item.name}
-                    </h3>
+                    <h3 className="font-semibold text-text/90 text-lg">{item.name}</h3>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -329,9 +297,7 @@ export const StashSidebar: React.FC<StashSidebarProps> = ({
                     <span>•</span>
                     <span>{item.mode}</span>
                     <span>•</span>
-                    <span>
-                      {item.progressionData.progression.length} chords
-                    </span>
+                    <span>{item.progressionData.progression.length} chords</span>
                   </div>
                   <div className="mt-2 text-xs text-text/50">
                     {new Date(item.createdAt).toLocaleDateString(undefined, {

@@ -16,7 +16,7 @@ const ScaleModeSummary: React.FC<ScaleModeSummaryProps> = ({
 }) => {
   const insight = useMemo(
     () => getScaleModeInsight(scaleName, rootNote, musicalKey),
-    [scaleName, rootNote, musicalKey],
+    [scaleName, rootNote, musicalKey]
   );
 
   const chips = useMemo(() => {
@@ -53,9 +53,7 @@ const ScaleModeSummary: React.FC<ScaleModeSummaryProps> = ({
             <p className="text-[10px] leading-tight uppercase tracking-wide text-text/60">
               {chip.label}
             </p>
-            <p className="text-xs sm:text-sm font-semibold text-text/85">
-              {chip.value}
-            </p>
+            <p className="text-xs sm:text-sm font-semibold text-text/85">{chip.value}</p>
           </div>
         ))}
       </div>

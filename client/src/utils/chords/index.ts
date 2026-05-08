@@ -13,15 +13,10 @@ import type { ChordVoicing } from "../../types";
 import type { ChordKey } from "./types";
 import { loadChordsByRoot } from "./loader";
 import { splitChordName } from "@shared/music/chordQualities";
-import {
-  STANDARD_TUNING_VALUES,
-  noteToValue,
-  valueToNote,
-} from "../musicTheory";
+import { STANDARD_TUNING_VALUES, noteToValue, valueToNote } from "../musicTheory";
 import { getChordNotes } from "../chordAnalysis";
 
-const isDevEnv =
-  typeof import.meta !== "undefined" && Boolean(import.meta.env?.DEV);
+const isDevEnv = typeof import.meta !== "undefined" && Boolean(import.meta.env?.DEV);
 
 // Re-export loader utilities
 export { preloadCommonKeys, getCacheStats, clearChordCache } from "./loader";
@@ -74,7 +69,7 @@ function extractRootAndQuality(chordName: string): {
   // Log warning if bass note is present (currently not used in voicing selection)
   if (bassNote) {
     console.info(
-      `Slash chord detected: "${chordName}". Showing voicings for ${parsed.root}${quality} (bass note /${bassNote} not enforced)`,
+      `Slash chord detected: "${chordName}". Showing voicings for ${parsed.root}${quality} (bass note /${bassNote} not enforced)`
     );
   }
 
@@ -91,9 +86,7 @@ function extractRootAndQuality(chordName: string): {
  * const voicings = await getChordVoicingsAsync('Cmaj7');
  * console.log(voicings); // [{ frets: [...], position: 'Open' }, ...]
  */
-export async function getChordVoicingsAsync(
-  chordName: string,
-): Promise<ChordVoicing[]> {
+export async function getChordVoicingsAsync(chordName: string): Promise<ChordVoicing[]> {
   const { root, quality } = extractRootAndQuality(chordName);
 
   // Load chord data for this root
@@ -106,11 +99,9 @@ export async function getChordVoicingsAsync(
   if (voicings && voicings.length > 0) {
     // Filter out invalid voicings (those where less than 50% of notes match the chord)
     // Calculate expected notes once for efficiency
-    const expectedNotes = new Set(
-      getChordNotes(chordName).map((note) => noteToValue(note)),
-    );
+    const expectedNotes = new Set(getChordNotes(chordName).map((note) => noteToValue(note)));
     const validVoicings = voicings.filter((voicing) =>
-      validateVoicingNotesWithExpected(voicing, chordName, expectedNotes),
+      validateVoicingNotesWithExpected(voicing, chordName, expectedNotes)
     );
 
     if (validVoicings.length > 0) {
@@ -131,19 +122,14 @@ export async function getChordVoicingsAsync(
   // Fallback 2: Try to find similar chord in the same key
   const similarChord = findSimilarChord(chordData, quality);
   if (similarChord) {
-    console.warn(
-      `Chord "${chordName}" not found, using similar chord:`,
-      similarChord,
-    );
+    console.warn(`Chord "${chordName}" not found, using similar chord:`, similarChord);
     return (chordData as Record<string, ChordVoicing[]>)[similarChord];
   }
 
   // Fallback 3: Return basic major triad
   const majorKey: ChordKey = `${root}_major`;
   if (chordData[majorKey]) {
-    console.warn(
-      `Chord "${chordName}" not found, falling back to ${root} major`,
-    );
+    console.warn(`Chord "${chordName}" not found, falling back to ${root} major`);
     return chordData[majorKey];
   }
 
@@ -159,16 +145,12 @@ export async function getChordVoicingsAsync(
  */
 export function extractVoicingNotes(voicing: ChordVoicing): Set<number> {
   const noteValues = new Set<number>();
-  const usesRelativeFormat =
-    voicing.firstFret !== undefined && voicing.firstFret >= 1;
+  const usesRelativeFormat = voicing.firstFret !== undefined && voicing.firstFret >= 1;
 
   voicing.frets.forEach((fret, stringIndex) => {
     if (typeof fret === "number") {
-      const absoluteFret = usesRelativeFormat
-        ? voicing.firstFret! + fret - 1
-        : fret;
-      const noteValue =
-        (STANDARD_TUNING_VALUES[stringIndex] + absoluteFret) % 12;
+      const absoluteFret = usesRelativeFormat ? voicing.firstFret! + fret - 1 : fret;
+      const noteValue = (STANDARD_TUNING_VALUES[stringIndex] + absoluteFret) % 12;
       noteValues.add(noteValue);
     }
   });
@@ -188,7 +170,7 @@ export function extractVoicingNotes(voicing: ChordVoicing): Set<number> {
 function validateVoicingNotesWithExpected(
   voicing: ChordVoicing,
   chordName: string,
-  expectedNotes: Set<number>,
+  expectedNotes: Set<number>
 ): boolean {
   const voicingNotes = extractVoicingNotes(voicing);
 
@@ -211,18 +193,14 @@ function validateVoicingNotesWithExpected(
 
   // Development mode warning for invalid voicings
   if (!isValid && isDevEnv) {
-    const voicingNoteNames = Array.from(voicingNotes).map((v) =>
-      valueToNote(v),
-    );
-    const expectedNoteNames = Array.from(expectedNotes).map((v) =>
-      valueToNote(v),
-    );
+    const voicingNoteNames = Array.from(voicingNotes).map((v) => valueToNote(v));
+    const expectedNoteNames = Array.from(expectedNotes).map((v) => valueToNote(v));
     console.warn(
       `⚠️ Voicing validation failed for "${chordName}":\n` +
         `   Expected notes: ${expectedNoteNames.join(", ")}\n` +
         `   Voicing notes: ${voicingNoteNames.join(", ")}\n` +
         `   Match ratio: ${(matchRatio * 100).toFixed(0)}% (need 50%)\n` +
-        `   Position: ${voicing.position || "Unknown"}`,
+        `   Position: ${voicing.position || "Unknown"}`
     );
   }
 
@@ -237,13 +215,8 @@ function validateVoicingNotesWithExpected(
  * @returns True if voicing matches chord, false otherwise
  * @public - Exported for validation scripts
  */
-export function validateVoicingNotes(
-  voicing: ChordVoicing,
-  chordName: string,
-): boolean {
-  const expectedNotes = new Set(
-    getChordNotes(chordName).map((note) => noteToValue(note)),
-  );
+export function validateVoicingNotes(voicing: ChordVoicing, chordName: string): boolean {
+  const expectedNotes = new Set(getChordNotes(chordName).map((note) => noteToValue(note)));
   return validateVoicingNotesWithExpected(voicing, chordName, expectedNotes);
 }
 
@@ -254,10 +227,7 @@ export function validateVoicingNotes(
  * @param semitoneOffset - Number of semitones to transpose (can be negative)
  * @returns Transposed voicing
  */
-function transposeBarreVoicing(
-  voicing: ChordVoicing,
-  semitoneOffset: number,
-): ChordVoicing {
+function transposeBarreVoicing(voicing: ChordVoicing, semitoneOffset: number): ChordVoicing {
   if (!voicing.firstFret || voicing.firstFret <= 1) {
     return voicing; // Open chords don't transpose
   }
@@ -278,7 +248,7 @@ function transposeBarreVoicing(
  */
 function findSimilarChord(
   chordData: Record<string, ChordVoicing[]>,
-  targetQuality: string,
+  targetQuality: string
 ): string | null {
   const availableChords = Object.keys(chordData);
 
@@ -296,9 +266,7 @@ function findSimilarChord(
     if (qualities.includes(targetQuality)) {
       // Look for other chords in the same family
       for (const quality of qualities) {
-        const match = availableChords.find((key) =>
-          key.endsWith(`_${quality}`),
-        );
+        const match = availableChords.find((key) => key.endsWith(`_${quality}`));
         if (match) return match;
       }
     }
@@ -317,23 +285,10 @@ function findSimilarChord(
  */
 async function findVoicingsByTransposition(
   targetRoot: string,
-  targetQuality: string,
+  targetQuality: string
 ): Promise<ChordVoicing[] | null> {
   // Try transposing from other roots (prioritize common roots)
-  const sourceRoots = [
-    "C",
-    "G",
-    "D",
-    "A",
-    "E",
-    "F",
-    "B",
-    "C#",
-    "D#",
-    "F#",
-    "G#",
-    "A#",
-  ];
+  const sourceRoots = ["C", "G", "D", "A", "E", "F", "B", "C#", "D#", "F#", "G#", "A#"];
 
   for (const sourceRoot of sourceRoots) {
     try {
@@ -353,28 +308,22 @@ async function findVoicingsByTransposition(
 
         // Construct target chord name for validation
         const targetChordName =
-          targetQuality === "major"
-            ? targetRoot
-            : `${targetRoot}${targetQuality}`;
+          targetQuality === "major" ? targetRoot : `${targetRoot}${targetQuality}`;
 
         // Transpose voicings and validate with pre-calculated expected notes
         const expectedNotes = new Set(
-          getChordNotes(targetChordName).map((note) => noteToValue(note)),
+          getChordNotes(targetChordName).map((note) => noteToValue(note))
         );
         const transposedVoicings = sourceVoicings
           .map((voicing) => transposeBarreVoicing(voicing, semitoneOffset))
           .filter((voicing) =>
-            validateVoicingNotesWithExpected(
-              voicing,
-              targetChordName,
-              expectedNotes,
-            ),
+            validateVoicingNotesWithExpected(voicing, targetChordName, expectedNotes)
           );
 
         if (transposedVoicings.length > 0) {
           if (isDevEnv) {
             console.log(
-              `✓ Transposed ${sourceRoot}${targetQuality === "major" ? "" : targetQuality} → ${targetChordName} (${semitoneOffset} semitones)`,
+              `✓ Transposed ${sourceRoot}${targetQuality === "major" ? "" : targetQuality} → ${targetChordName} (${semitoneOffset} semitones)`
             );
           }
           return transposedVoicings;
@@ -401,7 +350,7 @@ export function isMutedVoicing(voicing: ChordVoicing): boolean {
  * Groups chords by root to minimize dynamic imports
  */
 export async function loadMultipleChords(
-  chordNames: string[],
+  chordNames: string[]
 ): Promise<Map<string, ChordVoicing[]>> {
   const result = new Map<string, ChordVoicing[]>();
 
@@ -416,18 +365,16 @@ export async function loadMultipleChords(
   }
 
   // Load all roots in parallel
-  const loadPromises = Array.from(chordsByRoot.entries()).map(
-    async ([root, names]) => {
-      const chordData = await loadChordsByRoot(root);
+  const loadPromises = Array.from(chordsByRoot.entries()).map(async ([root, names]) => {
+    const chordData = await loadChordsByRoot(root);
 
-      for (const name of names) {
-        const { root: chordRoot, quality } = extractRootAndQuality(name);
-        const key: ChordKey = `${chordRoot}_${quality}`;
-        const voicings = chordData[key] || [];
-        result.set(name, voicings);
-      }
-    },
-  );
+    for (const name of names) {
+      const { root: chordRoot, quality } = extractRootAndQuality(name);
+      const key: ChordKey = `${chordRoot}_${quality}`;
+      const voicings = chordData[key] || [];
+      result.set(name, voicings);
+    }
+  });
 
   await Promise.all(loadPromises);
   return result;
@@ -438,20 +385,7 @@ export async function loadMultipleChords(
  * Call this on app init to enable synchronous access via getChordVoicingsSync
  */
 export async function preloadAllChords(): Promise<void> {
-  const allKeys = [
-    "C",
-    "C#",
-    "D",
-    "D#",
-    "E",
-    "F",
-    "F#",
-    "G",
-    "G#",
-    "A",
-    "A#",
-    "B",
-  ];
+  const allKeys = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
   await Promise.all(allKeys.map((key) => loadChordsByRoot(key)));
   console.log("✅ All chord data preloaded");
 }

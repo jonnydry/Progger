@@ -4,11 +4,7 @@
  */
 import { normalizeScaleDescriptor } from "./music/scaleModes";
 
-export const GENERATION_STYLES = [
-  "conservative",
-  "balanced",
-  "adventurous",
-] as const;
+export const GENERATION_STYLES = ["conservative", "balanced", "adventurous"] as const;
 
 export type GenerationStyle = (typeof GENERATION_STYLES)[number];
 
@@ -57,7 +53,7 @@ export function getProgressionCacheKey(
   includeTensions: boolean,
   numChords: number,
   selectedProgression: string,
-  generationStyle: GenerationStyle = "balanced",
+  generationStyle: GenerationStyle = "balanced"
 ): string {
   const semanticParts = [
     key.toLowerCase().trim(),

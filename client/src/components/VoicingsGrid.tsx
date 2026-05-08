@@ -46,10 +46,7 @@ const ArrowButton: React.FC<{
     <button
       onClick={onClick}
       onKeyDown={handleKeyDown}
-      aria-label={
-        ariaLabel ||
-        `Navigate to ${direction === "left" ? "previous" : "next"} voicing`
-      }
+      aria-label={ariaLabel || `Navigate to ${direction === "left" ? "previous" : "next"} voicing`}
       className="p-1.5 md:p-1 rounded-full bg-surface hover:bg-background text-text/80 hover:text-text transition-all duration-200 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.2)] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,0.2)] hover:translate-x-[1px] hover:translate-y-[1px] border-2 border-border active:translate-x-[2px] active:translate-y-[2px] active:shadow-none focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-surface"
     >
       <svg
@@ -77,11 +74,7 @@ const ArrowButton: React.FC<{
 });
 ArrowButton.displayName = "ArrowButton";
 
-const generateAutoName = (
-  key: string,
-  mode: string,
-  progression: ChordInProgression[],
-): string => {
+const generateAutoName = (key: string, mode: string, progression: ChordInProgression[]): string => {
   const now = new Date();
   const dateStr = now.toLocaleDateString("en-US", {
     month: "short",
@@ -93,9 +86,7 @@ const generateAutoName = (
   });
 
   // Create chord progression string (limit to first 4 chords to keep it concise)
-  const chordNames = progression
-    .slice(0, 4)
-    .map((p) => displayChordName(p.chordName, key));
+  const chordNames = progression.slice(0, 4).map((p) => displayChordName(p.chordName, key));
   const progressionStr = chordNames.join(" - ");
   const suffix = progression.length > 4 ? "..." : "";
 
@@ -111,9 +102,7 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({
   progressionResult,
 }) => {
   const [voicingIndices, setVoicingIndices] = useState<number[]>([]);
-  const [expandedChordIndex, setExpandedChordIndex] = useState<number | null>(
-    null,
-  );
+  const [expandedChordIndex, setExpandedChordIndex] = useState<number | null>(null);
   const [showSaveForm, setShowSaveForm] = useState(false);
   const [saveName, setSaveName] = useState("");
   const saveToStash = useSaveToStash();
@@ -159,7 +148,7 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({
         return newIndices;
       });
     },
-    [progression],
+    [progression]
   );
 
   const handleChordClick = useCallback((index: number) => {
@@ -168,22 +157,15 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({
 
   const handleOpenSaveForm = useCallback(() => {
     if (progressionResult && musicalKey && currentMode) {
-      const autoName = generateAutoName(
-        musicalKey,
-        currentMode,
-        progressionResult.progression,
-      );
+      const autoName = generateAutoName(musicalKey, currentMode, progressionResult.progression);
       setSaveName(autoName);
       setShowSaveForm(true);
     }
   }, [progressionResult, musicalKey, currentMode]);
 
   const progressionText = useMemo(
-    () =>
-      progression
-        .map((p) => displayChordName(p.chordName, musicalKey))
-        .join(" - "),
-    [progression, musicalKey],
+    () => progression.map((p) => displayChordName(p.chordName, musicalKey)).join(" - "),
+    [progression, musicalKey]
   );
 
   if (isLoading) {
@@ -218,9 +200,7 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({
         <p className="text-xl font-semibold text-text">
           Your generated progression will appear here.
         </p>
-        <p className="text-text/60">
-          Select a key and mode, then click &quot;Generate&quot;.
-        </p>
+        <p className="text-text/60">Select a key and mode, then click &quot;Generate&quot;.</p>
       </PixelCard>
     );
   }
@@ -304,10 +284,7 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({
 
           if (!currentVoicing) return null;
 
-          const displayedChordName = displayChordName(
-            chord.chordName,
-            musicalKey,
-          );
+          const displayedChordName = displayChordName(chord.chordName, musicalKey);
           const isExpanded = expandedChordIndex === index;
           const nextChord = progression[index + 1];
 
@@ -335,10 +312,7 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({
                   aria-label={`View details for ${displayedChordName}`}
                   aria-expanded={isExpanded}
                 >
-                  <div
-                    key={currentVoicingIndex}
-                    className="animate-cross-fade-in w-full"
-                  >
+                  <div key={currentVoicingIndex} className="animate-cross-fade-in w-full">
                     <VoicingDiagram
                       chordName={displayedChordName}
                       voicing={currentVoicing}

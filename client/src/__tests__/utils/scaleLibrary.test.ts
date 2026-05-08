@@ -238,9 +238,7 @@ describe("scaleLibrary", () => {
     });
 
     it("should have correct number of positions for each scale", () => {
-      for (const [name, requiredPositions] of Object.entries(
-        SCALE_POSITION_REQUIREMENTS,
-      )) {
+      for (const [name, requiredPositions] of Object.entries(SCALE_POSITION_REQUIREMENTS)) {
         const scaleKey = name.replace(/\s+/g, " ");
         expect(SCALE_LIBRARY[scaleKey]).toBeDefined();
         const actualPositions = SCALE_LIBRARY[scaleKey].fingerings.length;
@@ -255,9 +253,7 @@ describe("scaleLibrary", () => {
         expect(scale.fingerings).toBeDefined();
         expect(Array.isArray(scale.fingerings)).toBe(true);
         expect(scale.fingerings.length).toBeGreaterThan(0);
-        scale.fingerings.forEach((pattern) =>
-          validateFingeringStructure(pattern),
-        );
+        scale.fingerings.forEach((pattern) => validateFingeringStructure(pattern));
       }
     });
 
@@ -274,15 +270,8 @@ describe("scaleLibrary", () => {
 
         // Should fall back to the last available position when out of range
         const fallbackFingering = getScaleFingering(scale, "C", testPosition);
-        const lastAvailablePosition = Math.min(
-          availablePositions - 1,
-          testPosition,
-        );
-        const lastPositionFingering = getScaleFingering(
-          scale,
-          "C",
-          lastAvailablePosition,
-        );
+        const lastAvailablePosition = Math.min(availablePositions - 1, testPosition);
+        const lastPositionFingering = getScaleFingering(scale, "C", lastAvailablePosition);
         expect(fallbackFingering).toEqual(lastPositionFingering);
       }
     });
@@ -300,7 +289,7 @@ describe("scaleLibrary", () => {
           // Use JSON.stringify for deep comparison of arrays
           if (JSON.stringify(pos1.flat()) === JSON.stringify(pos2.flat())) {
             console.warn(
-              `Scale "${name}" positions ${i - 1} and ${i} are identical - may indicate incomplete patterns`,
+              `Scale "${name}" positions ${i - 1} and ${i} are identical - may indicate incomplete patterns`
             );
           }
         }
@@ -336,9 +325,7 @@ describe("scaleLibrary", () => {
         diminished: [0, 1, 3, 4, 6, 7, 9, 10], // Half-Whole diminished (most common)
       } as const;
 
-      for (const [scaleName, expectedIntervals] of Object.entries(
-        EXPECTED_INTERVALS,
-      )) {
+      for (const [scaleName, expectedIntervals] of Object.entries(EXPECTED_INTERVALS)) {
         const scale = SCALE_LIBRARY[scaleName];
         expect(scale).toBeDefined();
         expect(scale.intervals).toEqual(expectedIntervals);
@@ -347,9 +334,7 @@ describe("scaleLibrary", () => {
 
     it("should generate different C major positions", () => {
       // Verify that C major positions cover different parts of the neck
-      const cMajorPositions = [0, 1, 2, 3, 4].map((pos) =>
-        getScaleFingering("major", "C", pos),
-      );
+      const cMajorPositions = [0, 1, 2, 3, 4].map((pos) => getScaleFingering("major", "C", pos));
 
       // Each position should be different to avoid blank displays
       for (let i = 1; i < cMajorPositions.length; i++) {
@@ -379,11 +364,7 @@ describe("scaleLibrary", () => {
         // Verify the pattern is different from other positions
         for (let otherPos = 0; otherPos < 5; otherPos++) {
           if (pos !== otherPos) {
-            const otherFingering = getScaleFingering(
-              "pentatonic minor",
-              "A",
-              otherPos,
-            );
+            const otherFingering = getScaleFingering("pentatonic minor", "A", otherPos);
             expect(fingering).not.toEqual(otherFingering);
           }
         }
@@ -433,9 +414,7 @@ describe("scaleLibrary", () => {
       // Position 1: Each position should start with different fret ranges
       // (our algorithm ensures positions are distributed across the neck)
       const positions = [0, 1, 2, 3, 4];
-      const positionPatterns = positions.map((pos) =>
-        getScaleFingering("major", "C", pos),
-      );
+      const positionPatterns = positions.map((pos) => getScaleFingering("major", "C", pos));
 
       // Verify each position has different fret coverage
       for (let i = 0; i < positionPatterns.length - 1; i++) {
@@ -445,9 +424,7 @@ describe("scaleLibrary", () => {
 
     it("should generate different fret locations per position", () => {
       // Test that different positions provide varied fret coverage across the neck
-      const cMajor = [0, 1, 2, 3, 4].map((pos) =>
-        getScaleFingering("major", "C", pos),
-      );
+      const cMajor = [0, 1, 2, 3, 4].map((pos) => getScaleFingering("major", "C", pos));
 
       // Get the range of lowest frets for each position (excluding open strings)
       const positionMinFrets = cMajor.map((fingering) => {

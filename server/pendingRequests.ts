@@ -1,4 +1,4 @@
-import { logger } from './utils/logger';
+import { logger } from "./utils/logger";
 
 type SimpleChord = {
   chordName: string;
@@ -49,7 +49,7 @@ class PendingRequestManager {
   set(key: string, promise: Promise<ProgressionResultFromAPI>): void {
     this.pendingRequests.set(key, {
       promise,
-      created: Date.now()
+      created: Date.now(),
     });
 
     // Clean up when the promise resolves or rejects
@@ -75,7 +75,10 @@ class PendingRequestManager {
       }
     }
     if (cleaned > 0) {
-      logger.debug("Cleaned up expired pending requests", { cleaned, remaining: this.pendingRequests.size });
+      logger.debug("Cleaned up expired pending requests", {
+        cleaned,
+        remaining: this.pendingRequests.size,
+      });
     }
   }
 

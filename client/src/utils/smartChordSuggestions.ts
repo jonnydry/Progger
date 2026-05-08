@@ -6,8 +6,8 @@
  * 3. Last chord quality memory
  */
 
-import { noteToValue, transposeNote } from './musicTheory';
-import { ROOT_NOTES } from '@/constants';
+import { noteToValue, transposeNote } from "./musicTheory";
+import { ROOT_NOTES } from "@/constants";
 
 export interface ChordInput {
   root: string;
@@ -19,23 +19,23 @@ export interface ChordInput {
  * Each degree has typical chord qualities for that scale degree
  */
 const MAJOR_SCALE_CHORDS = [
-  ['major', 'maj7', '6', 'maj9', 'maj13', 'add9'], // I - tonic
-  ['minor', 'min7', 'min9', 'min11'], // ii
-  ['minor', 'min7', 'min9'], // iii
-  ['major', 'maj7', '6', 'maj9'], // IV
-  ['major', '7', '9', '13', '7sus4'], // V - dominant
-  ['minor', 'min7', 'min9'], // vi
-  ['dim', 'min7b5', 'dim7'], // vii°
+  ["major", "maj7", "6", "maj9", "maj13", "add9"], // I - tonic
+  ["minor", "min7", "min9", "min11"], // ii
+  ["minor", "min7", "min9"], // iii
+  ["major", "maj7", "6", "maj9"], // IV
+  ["major", "7", "9", "13", "7sus4"], // V - dominant
+  ["minor", "min7", "min9"], // vi
+  ["dim", "min7b5", "dim7"], // vii°
 ];
 
 const MINOR_SCALE_CHORDS = [
-  ['minor', 'min7', 'min9', 'min11', 'min/maj7'], // i - tonic
-  ['dim', 'min7b5'], // ii°
-  ['major', 'maj7', 'maj9'], // III
-  ['minor', 'min7', 'min9'], // iv
-  ['minor', 'min7', '7'], // v (or V7 in harmonic minor)
-  ['major', 'maj7'], // VI
-  ['major', '7'], // VII
+  ["minor", "min7", "min9", "min11", "min/maj7"], // i - tonic
+  ["dim", "min7b5"], // ii°
+  ["major", "maj7", "maj9"], // III
+  ["minor", "min7", "min9"], // iv
+  ["minor", "min7", "7"], // v (or V7 in harmonic minor)
+  ["major", "maj7"], // VI
+  ["major", "7"], // VII
 ];
 
 /**
@@ -43,31 +43,31 @@ const MINOR_SCALE_CHORDS = [
  * Uses a scoring system based on how well chords fit major/minor scale patterns
  * Includes tiebreakers: prefers keys where the first chord is the tonic
  */
-export function detectKey(chords: ChordInput[]): { key: string; mode: 'major' | 'minor' } | null {
+export function detectKey(chords: ChordInput[]): { key: string; mode: "major" | "minor" } | null {
   if (chords.length === 0) return null;
 
   let bestScore = -1;
-  let bestKey = 'C';
-  let bestMode: 'major' | 'minor' = 'major';
+  let bestKey = "C";
+  let bestMode: "major" | "minor" = "major";
 
   // Try each possible key (12 notes × 2 modes = 24 possibilities)
   for (const rootNote of ROOT_NOTES) {
     const rootValue = noteToValue(rootNote);
 
     // Try major mode
-    const majorScore = scoreKeyFit(chords, rootValue, 'major');
+    const majorScore = scoreKeyFit(chords, rootValue, "major");
     if (majorScore > bestScore) {
       bestScore = majorScore;
       bestKey = rootNote;
-      bestMode = 'major';
+      bestMode = "major";
     }
 
     // Try minor mode
-    const minorScore = scoreKeyFit(chords, rootValue, 'minor');
+    const minorScore = scoreKeyFit(chords, rootValue, "minor");
     if (minorScore > bestScore) {
       bestScore = minorScore;
       bestKey = rootNote;
-      bestMode = 'minor';
+      bestMode = "minor";
     }
   }
 
@@ -84,7 +84,7 @@ export function detectKey(chords: ChordInput[]): { key: string; mode: 'major' | 
 function calculateTiebreakerBonus(
   chords: ChordInput[],
   keyRootValue: number,
-  mode: 'major' | 'minor'
+  mode: "major" | "minor"
 ): number {
   let bonus = 0;
 
@@ -97,9 +97,10 @@ function calculateTiebreakerBonus(
   // Strong bonus if first chord is the tonic
   if (firstChordInterval === 0) {
     // Extra bonus if quality matches expected tonic quality
-    const expectedTonicQualities = mode === 'major'
-      ? ['major', 'maj7', '6', 'maj9', 'maj13', 'add9']
-      : ['minor', 'min7', 'min9', 'min11', 'min/maj7'];
+    const expectedTonicQualities =
+      mode === "major"
+        ? ["major", "maj7", "6", "maj9", "maj13", "add9"]
+        : ["minor", "min7", "min9", "min11", "min/maj7"];
 
     if (expectedTonicQualities.includes(firstChord.quality)) {
       bonus += 0.5; // Strong match - first chord is proper tonic
@@ -115,16 +116,13 @@ function calculateTiebreakerBonus(
  * Score how well a set of chords fits a particular key
  * Includes tiebreaker bonus for first-chord-as-tonic
  */
-function scoreKeyFit(
-  chords: ChordInput[],
-  keyRootValue: number,
-  mode: 'major' | 'minor'
-): number {
+function scoreKeyFit(chords: ChordInput[], keyRootValue: number, mode: "major" | "minor"): number {
   let score = 0;
-  const scalePattern = mode === 'major' ? MAJOR_SCALE_CHORDS : MINOR_SCALE_CHORDS;
-  const scaleIntervals = mode === 'major'
-    ? [0, 2, 4, 5, 7, 9, 11] // Major scale intervals
-    : [0, 2, 3, 5, 7, 8, 10]; // Natural minor scale intervals
+  const scalePattern = mode === "major" ? MAJOR_SCALE_CHORDS : MINOR_SCALE_CHORDS;
+  const scaleIntervals =
+    mode === "major"
+      ? [0, 2, 4, 5, 7, 9, 11] // Major scale intervals
+      : [0, 2, 3, 5, 7, 8, 10]; // Natural minor scale intervals
 
   for (const chord of chords) {
     const chordRootValue = noteToValue(chord.root);
@@ -165,17 +163,17 @@ function scoreKeyFit(
 function isCompatibleQuality(quality: string, expectedQualities: string[]): boolean {
   // Basic quality compatibility groups
   const qualityGroups = [
-    ['major', 'maj7', 'maj9', 'maj11', 'maj13', '6', '6/9', 'add9', 'maj7#11'],
-    ['minor', 'min7', 'min9', 'min11', 'min13', 'min6', 'madd9'],
-    ['7', '9', '11', '13', '7sus4', '7b9', '7#9', '7b5', '7#5', '7alt'],
-    ['dim', 'dim7', 'min7b5'],
-    ['sus2', 'sus4', '9sus4'],
-    ['aug', '7#5'],
+    ["major", "maj7", "maj9", "maj11", "maj13", "6", "6/9", "add9", "maj7#11"],
+    ["minor", "min7", "min9", "min11", "min13", "min6", "madd9"],
+    ["7", "9", "11", "13", "7sus4", "7b9", "7#9", "7b5", "7#5", "7alt"],
+    ["dim", "dim7", "min7b5"],
+    ["sus2", "sus4", "9sus4"],
+    ["aug", "7#5"],
   ];
 
   for (const group of qualityGroups) {
     if (group.includes(quality)) {
-      return expectedQualities.some(eq => group.includes(eq));
+      return expectedQualities.some((eq) => group.includes(eq));
     }
   }
 
@@ -188,17 +186,17 @@ function isCompatibleQuality(quality: string, expectedQualities: string[]): bool
  */
 const COMMON_PATTERNS = [
   // Major key patterns
-  { pattern: [0, 7, 9], next: 5, mode: 'major' as const }, // I-V-vi → IV
-  { pattern: [0, 5, 7], next: 0, mode: 'major' as const }, // I-IV-V → I
-  { pattern: [7, 5, 0], next: 7, mode: 'major' as const }, // V-IV-I → V (cycle)
-  { pattern: [9, 5, 0], next: 7, mode: 'major' as const }, // vi-IV-I → V
-  { pattern: [2, 7], next: 0, mode: 'major' as const }, // ii-V → I (jazz)
-  { pattern: [0, 9, 2], next: 7, mode: 'major' as const }, // I-vi-ii → V (rhythm changes)
+  { pattern: [0, 7, 9], next: 5, mode: "major" as const }, // I-V-vi → IV
+  { pattern: [0, 5, 7], next: 0, mode: "major" as const }, // I-IV-V → I
+  { pattern: [7, 5, 0], next: 7, mode: "major" as const }, // V-IV-I → V (cycle)
+  { pattern: [9, 5, 0], next: 7, mode: "major" as const }, // vi-IV-I → V
+  { pattern: [2, 7], next: 0, mode: "major" as const }, // ii-V → I (jazz)
+  { pattern: [0, 9, 2], next: 7, mode: "major" as const }, // I-vi-ii → V (rhythm changes)
 
   // Minor key patterns
-  { pattern: [0, 10, 8], next: 10, mode: 'minor' as const }, // i-VII-VI → VII (Andalusian)
-  { pattern: [0, 8, 10], next: 7, mode: 'minor' as const }, // i-VI-VII → V (minor descent)
-  { pattern: [2, 7], next: 0, mode: 'minor' as const }, // ii°-V → i (minor jazz)
+  { pattern: [0, 10, 8], next: 10, mode: "minor" as const }, // i-VII-VI → VII (Andalusian)
+  { pattern: [0, 8, 10], next: 7, mode: "minor" as const }, // i-VI-VII → V (minor descent)
+  { pattern: [2, 7], next: 0, mode: "minor" as const }, // ii°-V → i (minor jazz)
 ];
 
 /**
@@ -206,22 +204,22 @@ const COMMON_PATTERNS = [
  */
 export function suggestNextChord(
   existingChords: ChordInput[],
-  detectedKey?: { key: string; mode: 'major' | 'minor' } | null
+  detectedKey?: { key: string; mode: "major" | "minor" } | null
 ): ChordInput {
   if (existingChords.length === 0) {
-    return { root: 'C', quality: 'major' };
+    return { root: "C", quality: "major" };
   }
 
   // If no key detected, use last chord's quality as a starting point
   const lastChord = existingChords[existingChords.length - 1];
   if (!detectedKey) {
-    return { root: 'C', quality: lastChord.quality };
+    return { root: "C", quality: lastChord.quality };
   }
 
   const keyRootValue = noteToValue(detectedKey.key);
 
   // Convert existing chords to intervals relative to the key
-  const intervals = existingChords.map(chord => {
+  const intervals = existingChords.map((chord) => {
     const chordValue = noteToValue(chord.root);
     return (chordValue - keyRootValue + 12) % 12;
   });
@@ -242,7 +240,7 @@ export function suggestNextChord(
   // No pattern match - suggest dominant (V) chord as it commonly follows many progressions
   const dominantInterval = 7; // Perfect 5th
   const dominantRoot = transposeNote(detectedKey.key, dominantInterval);
-  const dominantQuality = detectedKey.mode === 'major' ? '7' : '7';
+  const dominantQuality = detectedKey.mode === "major" ? "7" : "7";
 
   return { root: dominantRoot, quality: dominantQuality };
 }
@@ -250,18 +248,16 @@ export function suggestNextChord(
 /**
  * Suggest appropriate chord quality for a scale degree
  */
-function suggestQualityForDegree(interval: number, mode: 'major' | 'minor'): string {
-  const scalePattern = mode === 'major' ? MAJOR_SCALE_CHORDS : MINOR_SCALE_CHORDS;
-  const scaleIntervals = mode === 'major'
-    ? [0, 2, 4, 5, 7, 9, 11]
-    : [0, 2, 3, 5, 7, 8, 10];
+function suggestQualityForDegree(interval: number, mode: "major" | "minor"): string {
+  const scalePattern = mode === "major" ? MAJOR_SCALE_CHORDS : MINOR_SCALE_CHORDS;
+  const scaleIntervals = mode === "major" ? [0, 2, 4, 5, 7, 9, 11] : [0, 2, 3, 5, 7, 8, 10];
 
   const degreeIndex = scaleIntervals.indexOf(interval);
-  if (degreeIndex === -1) return 'major'; // Fallback
+  if (degreeIndex === -1) return "major"; // Fallback
 
   // Return the most common quality for this degree
   const qualities = scalePattern[degreeIndex];
-  return qualities[0] || 'major';
+  return qualities[0] || "major";
 }
 
 /**
@@ -273,7 +269,7 @@ function suggestQualityForDegree(interval: number, mode: 'major' | 'minor'): str
  */
 export function getSmartDefaultChord(existingChords: ChordInput[]): ChordInput {
   if (existingChords.length === 0) {
-    return { root: 'C', quality: 'major' };
+    return { root: "C", quality: "major" };
   }
 
   // Detect key from existing chords

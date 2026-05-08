@@ -25,9 +25,7 @@ const titleCaseWords = (value: string): string =>
     .join(" ");
 
 const intervalsToStepPattern = (intervals: number[]): string => {
-  const unique = [...new Set(intervals.map((v) => ((v % 12) + 12) % 12))].sort(
-    (a, b) => a - b,
-  );
+  const unique = [...new Set(intervals.map((v) => ((v % 12) + 12) % 12))].sort((a, b) => a - b);
   if (unique.length === 0) return "";
   if (!unique.includes(0)) {
     unique.unshift(0);
@@ -58,9 +56,7 @@ const intervalToFormulaToken = (interval: number, intervalsSet: Set<number>): st
     case 5:
       return "4";
     case 6:
-      return intervalsSet.has(7) || (hasMajorThird && !hasMinorThird)
-        ? "#4"
-        : "b5";
+      return intervalsSet.has(7) || (hasMajorThird && !hasMinorThird) ? "#4" : "b5";
     case 7:
       return "5";
     case 8:
@@ -77,24 +73,20 @@ const intervalToFormulaToken = (interval: number, intervalsSet: Set<number>): st
 };
 
 const intervalsToFormula = (intervals: number[]): string => {
-  const unique = [...new Set(intervals.map((v) => ((v % 12) + 12) % 12))].sort(
-    (a, b) => a - b,
-  );
+  const unique = [...new Set(intervals.map((v) => ((v % 12) + 12) % 12))].sort((a, b) => a - b);
   if (unique.length === 0) return "";
   if (!unique.includes(0)) {
     unique.unshift(0);
   }
 
   const intervalsSet = new Set(unique);
-  return unique
-    .map((interval) => intervalToFormulaToken(interval, intervalsSet))
-    .join(" ");
+  return unique.map((interval) => intervalToFormulaToken(interval, intervalsSet)).join(" ");
 };
 
 export function getScaleModeInsight(
   scaleName: string,
   rootNote: string,
-  accidentalContext: string,
+  accidentalContext: string
 ): ScaleModeInsight {
   const normalizedKey = normalizeScaleName(scaleName);
   const descriptor = extractDescriptor(scaleName);
@@ -105,10 +97,7 @@ export function getScaleModeInsight(
   if (knownMode) {
     const rootValue = noteToValue(rootNote);
     const parentMajorValue = (rootValue + knownMode.parentMajorShift + 12) % 12;
-    const parentMajorRoot = displayNote(
-      valueToNote(parentMajorValue),
-      accidentalContext,
-    );
+    const parentMajorRoot = displayNote(valueToNote(parentMajorValue), accidentalContext);
     const relativeMajor = `${parentMajorRoot} Major`;
 
     return {

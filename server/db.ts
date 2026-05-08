@@ -1,12 +1,14 @@
-import { drizzle } from 'drizzle-orm/postgres-js';
-import postgres from 'postgres';
-import * as schema from '../shared/schema';
-import { logger } from './utils/logger';
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import * as schema from "../shared/schema";
+import { logger } from "./utils/logger";
 
 const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {
-  logger.warn('DATABASE_URL environment variable is not set; database-backed features are disabled');
+  logger.warn(
+    "DATABASE_URL environment variable is not set; database-backed features are disabled"
+  );
 }
 
 // Configure connection pool for better concurrent request handling when DB is configured
@@ -24,7 +26,7 @@ const unavailableDb = new Proxy(
   {},
   {
     get() {
-      throw new Error('Database is not configured. Set DATABASE_URL environment variable.');
+      throw new Error("Database is not configured. Set DATABASE_URL environment variable.");
     },
   }
 );

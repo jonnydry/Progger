@@ -5,17 +5,15 @@ import request from "supertest";
 const mockGenerateChordProgression = vi.hoisted(() => vi.fn());
 const mockAnalyzeCustomProgression = vi.hoisted(() => vi.fn());
 const mockCreateAIGenerationLimiter = vi.hoisted(() =>
-  vi.fn(async () => (req: any, _res: any, next: any) => next()),
+  vi.fn(async () => (req: any, _res: any, next: any) => next())
 );
-const mockCsrfProtection = vi.hoisted(() =>
-  vi.fn((req: any, _res: any, next: any) => next()),
-);
+const mockCsrfProtection = vi.hoisted(() => vi.fn((req: any, _res: any, next: any) => next()));
 const mockGenerateCsrfToken = vi.hoisted(() => vi.fn(() => "test-csrf-token"));
 const mockGetRateLimitStatus = vi.hoisted(() =>
   vi.fn(() => ({
     storeType: "memory",
     connected: true,
-  })),
+  }))
 );
 const mockStorage = vi.hoisted(() => ({
   getUserStashItems: vi.fn(),
@@ -23,9 +21,7 @@ const mockStorage = vi.hoisted(() => ({
   deleteStashItem: vi.fn(),
 }));
 const mockSetupAuth = vi.hoisted(() => vi.fn());
-const mockIsAuthenticated = vi.hoisted(
-  () => vi.fn((req: any, _res: any, next: any) => next()),
-);
+const mockIsAuthenticated = vi.hoisted(() => vi.fn((req: any, _res: any, next: any) => next()));
 
 // Mock dependencies
 vi.mock("../xaiService", () => ({
@@ -63,17 +59,15 @@ describe("API Routes", () => {
 
     // Mock authentication middleware
     mockSetupAuth.mockResolvedValue(undefined);
-    mockIsAuthenticated.mockImplementation(
-      (req, res, next) => {
-        // Mock authenticated user for stash routes
-        if (req.path.includes("/stash")) {
-          (req as any).user = {
-            claims: { sub: "test-user-id" },
-          };
-        }
-        next();
-      },
-    );
+    mockIsAuthenticated.mockImplementation((req, res, next) => {
+      // Mock authenticated user for stash routes
+      if (req.path.includes("/stash")) {
+        (req as any).user = {
+          claims: { sub: "test-user-id" },
+        };
+      }
+      next();
+    });
 
     await registerRoutes(app);
   });
@@ -89,23 +83,19 @@ describe("API Routes", () => {
 
     it("should accept valid progression request", async () => {
       const mockResult = {
-        progression: [
-          { chordName: "C", musicalFunction: "Tonic", relationToKey: "I" },
-        ],
+        progression: [{ chordName: "C", musicalFunction: "Tonic", relationToKey: "I" }],
         scales: [{ name: "C Major", rootNote: "C" }],
       };
 
       mockGenerateChordProgression.mockResolvedValue(mockResult as any);
 
-      const response = await request(app)
-        .post("/api/generate-progression")
-        .send({
-          key: "C",
-          mode: "major",
-          includeTensions: false,
-          numChords: 4,
-          selectedProgression: "auto",
-        });
+      const response = await request(app).post("/api/generate-progression").send({
+        key: "C",
+        mode: "major",
+        includeTensions: false,
+        numChords: 4,
+        selectedProgression: "auto",
+      });
 
       expect(response.status).toBe(200);
       expect(response.body).toEqual(mockResult);
@@ -182,9 +172,7 @@ describe("API Routes", () => {
 
   describe("POST /api/stash", () => {
     it("should validate stash item data", async () => {
-      const response = await request(app)
-        .post("/api/stash")
-        .send({ invalid: "data" });
+      const response = await request(app).post("/api/stash").send({ invalid: "data" });
 
       expect(response.status).toBe(400);
     });

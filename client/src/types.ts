@@ -21,7 +21,7 @@ export interface ChordVoicing {
    * Fret numbers for each string, or 'x' for muted strings
    * Array order: [Low E, A, D, G, B, High E]
    */
-  frets: (number | 'x')[];
+  frets: (number | "x")[];
 
   /**
    * The fret number where the diagram starts (for barre chords)

@@ -64,8 +64,7 @@ const STRING_HEIGHTS = [1, 1.4, 1.8, 2.2, 2.6, 3.0] as const;
 const FretInlay: React.FC<{ fret: number; fretCount: number }> = React.memo(
   ({ fret, fretCount }) => {
     const left = `${((fret - 0.5) / fretCount) * 100}%`;
-    const inlayClasses =
-      "absolute w-2 h-2 rounded-full bg-text/5 dark:bg-text/10";
+    const inlayClasses = "absolute w-2 h-2 rounded-full bg-text/5 dark:bg-text/10";
     if (DOUBLE_INLAY_FRETS.includes(fret as 12 | 24)) {
       return (
         <>
@@ -86,7 +85,7 @@ const FretInlay: React.FC<{ fret: number; fretCount: number }> = React.memo(
         style={{ left, top: "50%", transform: "translate(-50%, -50%)" }}
       />
     );
-  },
+  }
 );
 FretInlay.displayName = "FretInlay";
 
@@ -99,9 +98,7 @@ const ViewToggle: React.FC<{
       <button
         onClick={() => setViewMode("pattern")}
         className={`px-2 sm:px-3 py-1 text-xs sm:text-sm font-semibold rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background ${
-          viewMode === "pattern"
-            ? "bg-surface shadow"
-            : "text-text/60 hover:text-text"
+          viewMode === "pattern" ? "bg-surface shadow" : "text-text/60 hover:text-text"
         }`}
         aria-label="Pattern view"
         aria-pressed={viewMode === "pattern"}
@@ -111,9 +108,7 @@ const ViewToggle: React.FC<{
       <button
         onClick={() => setViewMode("map")}
         className={`px-2 sm:px-3 py-1 text-xs sm:text-sm font-semibold rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background ${
-          viewMode === "map"
-            ? "bg-surface shadow"
-            : "text-text/60 hover:text-text"
+          viewMode === "map" ? "bg-surface shadow" : "text-text/60 hover:text-text"
         }`}
         aria-label="Map view"
         aria-pressed={viewMode === "map"}
@@ -179,10 +174,7 @@ const extractScaleDescriptor = (scaleName: string): string | null => {
   return match ? match[2] : null;
 };
 
-const ScaleDiagram: React.FC<ScaleDiagramProps> = ({
-  scaleInfo,
-  musicalKey,
-}) => {
+const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) => {
   const { name, rootNote, notes } = scaleInfo;
   const [viewMode, setViewMode] = useState<"pattern" | "map">("pattern");
   const [isMobile, setIsMobile] = useState(false);
@@ -211,14 +203,13 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({
   // Memoize visible inlay frets to avoid array operations on every render
   const visibleInlays = useMemo(
     () => [...INLAY_FRETS, ...DOUBLE_INLAY_FRETS].filter((f) => f <= fretCount),
-    [fretCount],
+    [fretCount]
   );
 
   // Memoize grid template columns to avoid string interpolation on every render
   const gridTemplateColumns = useMemo(
-    () =>
-      `${isMobile ? "1.5rem" : "1.75rem"} repeat(${fretCount}, minmax(0, 1fr))`,
-    [isMobile, fretCount],
+    () => `${isMobile ? "1.5rem" : "1.75rem"} repeat(${fretCount}, minmax(0, 1fr))`,
+    [isMobile, fretCount]
   );
 
   // Get available positions for the current scale
@@ -261,15 +252,11 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({
     }
 
     // If no position fits completely, choose the one with the lowest minimum fret
-    const lowestMinFretIndex = positionMinFrets.indexOf(
-      Math.min(...positionMinFrets),
-    );
+    const lowestMinFretIndex = positionMinFrets.indexOf(Math.min(...positionMinFrets));
     return lowestMinFretIndex;
   }, [isMobile, name, rootNote, availablePositions]);
 
-  const [currentPosition, setCurrentPosition] = useState(
-    () => bestMobilePosition ?? 0,
-  );
+  const [currentPosition, setCurrentPosition] = useState(() => bestMobilePosition ?? 0);
 
   // Update position when mobile state changes or when best position changes
   React.useEffect(() => {
@@ -325,12 +312,7 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({
                 aria-label="Expand to full view"
                 title="View full fretboard"
               >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -351,9 +333,7 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({
 
         <div
           className={`w-full bg-surface rounded-lg shadow-lg border border-border overflow-x-auto overflow-y-hidden transition-all duration-300 group relative ${
-            isMobile
-              ? "cursor-pointer hover:shadow-xl hover:border-primary/50"
-              : ""
+            isMobile ? "cursor-pointer hover:shadow-xl hover:border-primary/50" : ""
           }`}
           onClick={isMobile ? () => setIsModalOpen(true) : undefined}
           role={isMobile ? "button" : undefined}
@@ -375,12 +355,7 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10">
               <div className="bg-background/90 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg border border-primary/50">
                 <p className="text-sm font-medium text-text/90 flex items-center gap-2">
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
@@ -418,34 +393,23 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({
               }}
             >
               {/* Fret numbers row */}
-              <div
-                className="grid relative z-20"
-                style={{ gridTemplateColumns }}
-              >
+              <div className="grid relative z-20" style={{ gridTemplateColumns }}>
                 <div />
-                {Array.from({ length: fretCount }, (_, idx) => idx + 1).map(
-                  (fret) => (
-                    <div
-                      key={`fret-num-${fret}`}
-                      className="text-center text-text/50 pb-1 h-4 md:h-5 flex items-center justify-center font-semibold text-[9px] md:text-[10px]"
-                    >
-                      {[3, 5, 7, 9, 12, 15, 17, 19, 21, 24].includes(fret)
-                        ? fret
-                        : ""}
-                    </div>
-                  ),
-                )}
+                {Array.from({ length: fretCount }, (_, idx) => idx + 1).map((fret) => (
+                  <div
+                    key={`fret-num-${fret}`}
+                    className="text-center text-text/50 pb-1 h-4 md:h-5 flex items-center justify-center font-semibold text-[9px] md:text-[10px]"
+                  >
+                    {[3, 5, 7, 9, 12, 15, 17, 19, 21, 24].includes(fret) ? fret : ""}
+                  </div>
+                ))}
               </div>
 
               {/* Strings and Notes */}
               <div className="relative mt-[-16px] md:mt-[-20px]">
                 {/* Fret Inlays */}
                 {visibleInlays.map((fret) => (
-                  <FretInlay
-                    key={`inlay-${fret}`}
-                    fret={fret}
-                    fretCount={fretCount}
-                  />
+                  <FretInlay key={`inlay-${fret}`} fret={fret} fretCount={fretCount} />
                 ))}
 
                 {/* Strings */}
@@ -472,16 +436,12 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({
                     const openStringNoteValue = noteToValue(stringName);
                     let hasOpenNote = false;
                     if (viewMode === "pattern") {
-                      hasOpenNote =
-                        fingeringLookup[5 - stringIndex]?.has(0) ?? false;
+                      hasOpenNote = fingeringLookup[5 - stringIndex]?.has(0) ?? false;
                     } else {
                       hasOpenNote = scaleNoteValues.has(openStringNoteValue);
                     }
                     const isOpenRoot = openStringNoteValue === rootNoteValue;
-                    const displayedStringName = displayNote(
-                      stringName,
-                      musicalKey,
-                    );
+                    const displayedStringName = displayNote(stringName, musicalKey);
 
                     return (
                       <React.Fragment key={`string-row-${stringIndex}`}>
@@ -492,12 +452,8 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({
                               noteName={displayedStringName}
                               fret={0}
                               isRoot={isOpenRoot}
-                              isHovered={
-                                hoveredNoteId === `note-0-${stringIndex}`
-                              }
-                              onMouseEnter={() =>
-                                setHoveredNoteId(`note-0-${stringIndex}`)
-                              }
+                              isHovered={hoveredNoteId === `note-0-${stringIndex}`}
+                              onMouseEnter={() => setHoveredNoteId(`note-0-${stringIndex}`)}
                               onMouseLeave={() => setHoveredNoteId(null)}
                             />
                           ) : (
@@ -506,21 +462,14 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({
                         </div>
 
                         {/* Fret cells */}
-                        {Array.from(
-                          { length: fretCount },
-                          (_, idx) => idx + 1,
-                        ).map((fret) => {
-                          const currentNoteValue =
-                            (noteToValue(stringName) + fret) % 12;
+                        {Array.from({ length: fretCount }, (_, idx) => idx + 1).map((fret) => {
+                          const currentNoteValue = (noteToValue(stringName) + fret) % 12;
 
                           let isNotePresent = false;
                           if (viewMode === "pattern") {
-                            isNotePresent =
-                              fingeringLookup[5 - stringIndex]?.has(fret) ??
-                              false;
+                            isNotePresent = fingeringLookup[5 - stringIndex]?.has(fret) ?? false;
                           } else {
-                            isNotePresent =
-                              scaleNoteValues.has(currentNoteValue);
+                            isNotePresent = scaleNoteValues.has(currentNoteValue);
                           }
 
                           let isRoot = false;
@@ -551,14 +500,9 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({
                                   noteName={noteName}
                                   fret={fret}
                                   isRoot={isRoot}
-                                  isHovered={
-                                    hoveredNoteId ===
-                                    `note-${fret}-${stringIndex}`
-                                  }
+                                  isHovered={hoveredNoteId === `note-${fret}-${stringIndex}`}
                                   onMouseEnter={() =>
-                                    setHoveredNoteId(
-                                      `note-${fret}-${stringIndex}`,
-                                    )
+                                    setHoveredNoteId(`note-${fret}-${stringIndex}`)
                                   }
                                   onMouseLeave={() => setHoveredNoteId(null)}
                                 />

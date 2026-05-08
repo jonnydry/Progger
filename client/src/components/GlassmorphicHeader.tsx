@@ -39,27 +39,18 @@ export const GlassmorphicHeader: React.FC<GlassmorphicHeaderProps> = ({
     () => ({
       backdropFilter: "blur(6px)",
       WebkitBackdropFilter: "blur(6px)",
-      background:
-        theme === "dark" ? "rgba(0, 0, 0, 0.75)" : "rgba(255, 255, 255, 0.75)",
+      background: theme === "dark" ? "rgba(0, 0, 0, 0.75)" : "rgba(255, 255, 255, 0.75)",
       borderBottom:
-        theme === "dark"
-          ? "1px solid rgba(255, 255, 255, 0.15)"
-          : "1px solid rgba(0, 0, 0, 0.15)",
-      boxShadow:
-        theme === "dark"
-          ? "0 1px 3px rgba(0, 0, 0, 0.2)"
-          : "0 1px 3px rgba(0, 0, 0, 0.1)",
+        theme === "dark" ? "1px solid rgba(255, 255, 255, 0.15)" : "1px solid rgba(0, 0, 0, 0.15)",
+      boxShadow: theme === "dark" ? "0 1px 3px rgba(0, 0, 0, 0.2)" : "0 1px 3px rgba(0, 0, 0, 0.1)",
     }),
-    [theme],
+    [theme]
   );
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        userMenuRef.current &&
-        !userMenuRef.current.contains(event.target as Node)
-      ) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
         setIsUserMenuOpen(false);
       }
     };
@@ -194,9 +185,7 @@ export const GlassmorphicHeader: React.FC<GlassmorphicHeaderProps> = ({
                       backdropFilter: "blur(12px)",
                       WebkitBackdropFilter: "blur(12px)",
                       background:
-                        theme === "dark"
-                          ? "rgba(20, 20, 20, 0.9)"
-                          : "rgba(255, 255, 255, 0.9)",
+                        theme === "dark" ? "rgba(20, 20, 20, 0.9)" : "rgba(255, 255, 255, 0.9)",
                       border:
                         theme === "dark"
                           ? "1px solid rgba(255, 255, 255, 0.1)"
@@ -207,12 +196,8 @@ export const GlassmorphicHeader: React.FC<GlassmorphicHeaderProps> = ({
                     }}
                   >
                     <div className="px-4 py-3 border-b border-border/30">
-                      <p className="text-sm font-medium text-text">
-                        {userProfile.name}
-                      </p>
-                      <p className="text-xs text-text/60 truncate">
-                        {userProfile.email}
-                      </p>
+                      <p className="text-sm font-medium text-text">{userProfile.name}</p>
+                      <p className="text-xs text-text/60 truncate">{userProfile.email}</p>
                     </div>
                     <button
                       onClick={() => {

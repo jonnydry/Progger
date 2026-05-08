@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface ToggleSwitchProps {
   id: string;
@@ -29,7 +29,7 @@ export const ToggleSwitch: React.FC<ToggleSwitchProps> = ({
       <span className="mr-2 md:mr-4 text-text/80 group-hover:text-text transition-colors font-semibold">
         {label}
       </span>
-      <div className={`relative ${tooltip ? 'group/tooltip' : ''}`}>
+      <div className={`relative ${tooltip ? "group/tooltip" : ""}`}>
         <input
           id={id}
           type="checkbox"

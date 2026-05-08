@@ -1,9 +1,9 @@
-import { splitChordName, isSupportedChordQuality } from '@shared/music/chordQualities';
+import { splitChordName, isSupportedChordQuality } from "@shared/music/chordQualities";
 import {
   normalizeScaleDescriptor,
   FALLBACK_SCALE_LIBRARY_KEYS,
   normalizeModeCanonical,
-} from '@shared/music/scaleModes';
+} from "@shared/music/scaleModes";
 /**
  * Enhanced API response validation
  * Validates structure and format of responses from external APIs (xAI Grok)
@@ -30,7 +30,7 @@ interface ProgressionResultFromAPI {
 export class APIValidationError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'APIValidationError';
+    this.name = "APIValidationError";
   }
 }
 
@@ -44,26 +44,41 @@ const SCALE_NAME_PATTERN = /^([A-G](?:[#b♯♭])?)(?:\s+)(.+)$/i;
  * Valid root notes
  */
 const VALID_ROOT_NOTES = [
-  'C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B',
-  'Db', 'Eb', 'Gb', 'Ab', 'Bb'
+  "C",
+  "C#",
+  "D",
+  "D#",
+  "E",
+  "F",
+  "F#",
+  "G",
+  "G#",
+  "A",
+  "A#",
+  "B",
+  "Db",
+  "Eb",
+  "Gb",
+  "Ab",
+  "Bb",
 ];
 
 const ROOT_NOTE_TO_PITCH_CLASS: Record<string, number> = {
   C: 0,
-  'C#': 1,
+  "C#": 1,
   Db: 1,
   D: 2,
-  'D#': 3,
+  "D#": 3,
   Eb: 3,
   E: 4,
   F: 5,
-  'F#': 6,
+  "F#": 6,
   Gb: 6,
   G: 7,
-  'G#': 8,
+  "G#": 8,
   Ab: 8,
   A: 9,
-  'A#': 10,
+  "A#": 10,
   Bb: 10,
   B: 11,
 };
@@ -73,8 +88,8 @@ const ROOT_NOTE_TO_PITCH_CLASS: Record<string, number> = {
  * Uses shared splitChordName function to avoid regex duplication
  */
 function validateChordName(chordName: string): void {
-  if (!chordName || typeof chordName !== 'string') {
-    throw new APIValidationError('Chord name is required and must be a string');
+  if (!chordName || typeof chordName !== "string") {
+    throw new APIValidationError("Chord name is required and must be a string");
   }
 
   // Use shared parsing logic instead of duplicating regex
@@ -82,8 +97,11 @@ function validateChordName(chordName: string): void {
 
   // splitChordName returns fallback {root: 'C', quality: 'major'} for invalid formats
   // If we get the fallback but input wasn't 'C' or 'Cmajor', it means parsing failed
-  const isFallback = parsed.root === 'C' && parsed.quality === 'major' &&
-    chordName.trim() !== 'C' && chordName.trim().toLowerCase() !== 'cmajor';
+  const isFallback =
+    parsed.root === "C" &&
+    parsed.quality === "major" &&
+    chordName.trim() !== "C" &&
+    chordName.trim().toLowerCase() !== "cmajor";
 
   if (isFallback) {
     throw new APIValidationError(
@@ -94,7 +112,7 @@ function validateChordName(chordName: string): void {
   // Validate root note
   if (!VALID_ROOT_NOTES.includes(parsed.root)) {
     throw new APIValidationError(
-      `Invalid chord root: "${parsed.root}". Must be one of: ${VALID_ROOT_NOTES.join(', ')}`
+      `Invalid chord root: "${parsed.root}". Must be one of: ${VALID_ROOT_NOTES.join(", ")}`
     );
   }
 
@@ -103,7 +121,7 @@ function validateChordName(chordName: string): void {
     const normalizedBass = normalizeRootToken(parsed.bass);
     if (!VALID_ROOT_NOTES.includes(normalizedBass)) {
       throw new APIValidationError(
-        `Invalid chord bass note: "${parsed.bass}". Must be one of: ${VALID_ROOT_NOTES.join(', ')}`
+        `Invalid chord bass note: "${parsed.bass}". Must be one of: ${VALID_ROOT_NOTES.join(", ")}`
       );
     }
   }
@@ -120,11 +138,11 @@ function validateChordName(chordName: string): void {
  * Validates a Roman numeral notation
  */
 function validateRomanNumeral(relationToKey: string): void {
-  if (!relationToKey || typeof relationToKey !== 'string') {
-    throw new APIValidationError('Relation to key is required and must be a string');
+  if (!relationToKey || typeof relationToKey !== "string") {
+    throw new APIValidationError("Relation to key is required and must be a string");
   }
 
-  const parts = relationToKey.split('/');
+  const parts = relationToKey.split("/");
   for (const part of parts) {
     if (!ROMAN_NUMERAL_COMPONENT_PATTERN.test(part)) {
       throw new APIValidationError(
@@ -138,8 +156,8 @@ function validateRomanNumeral(relationToKey: string): void {
  * Validates a scale name format
  */
 function validateScaleName(scaleName: string): void {
-  if (!scaleName || typeof scaleName !== 'string') {
-    throw new APIValidationError('Scale name is required and must be a string');
+  if (!scaleName || typeof scaleName !== "string") {
+    throw new APIValidationError("Scale name is required and must be a string");
   }
 
   const trimmed = scaleName.trim();
@@ -155,7 +173,7 @@ function validateScaleName(scaleName: string): void {
 
   const normalized = normalizeScaleDescriptor(descriptor);
   if (!normalized) {
-    const sanitized = descriptor.replace(/\s+|-/g, '').toLowerCase();
+    const sanitized = descriptor.replace(/\s+|-/g, "").toLowerCase();
     if (!FALLBACK_SCALE_LIBRARY_KEYS.has(sanitized)) {
       throw new APIValidationError(
         `Unsupported scale descriptor: "${descriptor}" in "${scaleName}".`
@@ -168,14 +186,13 @@ function validateScaleName(scaleName: string): void {
  * Validates a root note
  */
 function validateRootNote(rootNote: string): void {
-  if (!rootNote || typeof rootNote !== 'string') {
-    throw new APIValidationError('Root note is required and must be a string');
+  if (!rootNote || typeof rootNote !== "string") {
+    throw new APIValidationError("Root note is required and must be a string");
   }
 
   if (!VALID_ROOT_NOTES.includes(rootNote.trim())) {
     throw new APIValidationError(
-      `Invalid root note: "${rootNote}". ` +
-      `Must be one of: ${VALID_ROOT_NOTES.join(', ')}`
+      `Invalid root note: "${rootNote}". ` + `Must be one of: ${VALID_ROOT_NOTES.join(", ")}`
     );
   }
 }
@@ -189,11 +206,11 @@ function normalizeRootToken(token: string): string {
   const first = trimmed.charAt(0).toUpperCase();
   const second = trimmed.charAt(1);
 
-  if (second === '#' || second === '♯') {
+  if (second === "#" || second === "♯") {
     return `${first}#`;
   }
 
-  if (second === 'b' || second === '♭' || second === 'B') {
+  if (second === "b" || second === "♭" || second === "B") {
     return `${first}b`;
   }
 
@@ -234,19 +251,19 @@ function rootsAreCompatible(scaleNameRoot: string, explicitRoot: string): boolea
 function normalizeScaleName(scaleName: string): string {
   const trimmed = scaleName.trim();
   const match = trimmed.match(SCALE_NAME_PATTERN);
-  
+
   if (!match) {
     return trimmed; // Return as-is if format doesn't match
   }
-  
+
   const [, rootNote, descriptor] = match;
   const normalized = normalizeScaleDescriptor(descriptor);
-  
+
   if (normalized) {
     // Use canonical form (Major/Minor instead of Ionian/Aeolian)
     return `${normalizeRootToken(rootNote)} ${normalized.canonical}`;
   }
-  
+
   // If normalization fails, return original
   return trimmed;
 }
@@ -255,22 +272,25 @@ function normalizeScaleName(scaleName: string): string {
  * Enhanced validation for API responses
  * Validates structure, format, and data quality
  */
-export function validateAPIResponse(result: unknown, expectedChordCount?: number): ProgressionResultFromAPI {
+export function validateAPIResponse(
+  result: unknown,
+  expectedChordCount?: number
+): ProgressionResultFromAPI {
   // Basic structure validation
-  if (!result || typeof result !== 'object') {
-    throw new APIValidationError('API response must be an object');
+  if (!result || typeof result !== "object") {
+    throw new APIValidationError("API response must be an object");
   }
 
   const apiResult = result as Record<string, unknown>;
 
   // Validate progression array exists
   if (!apiResult.progression || !Array.isArray(apiResult.progression)) {
-    throw new APIValidationError('API response must contain a progression array');
+    throw new APIValidationError("API response must contain a progression array");
   }
 
   // Validate scales array exists
   if (!apiResult.scales || !Array.isArray(apiResult.scales)) {
-    throw new APIValidationError('API response must contain a scales array');
+    throw new APIValidationError("API response must contain a scales array");
   }
 
   const progression = apiResult.progression as SimpleChord[];
@@ -278,41 +298,45 @@ export function validateAPIResponse(result: unknown, expectedChordCount?: number
 
   // Validate progression is not empty
   if (progression.length === 0) {
-    throw new APIValidationError('Progression array cannot be empty');
+    throw new APIValidationError("Progression array cannot be empty");
   }
 
   // Validate progression length matches expected count
   if (expectedChordCount !== undefined && progression.length !== expectedChordCount) {
     throw new APIValidationError(
       `Expected ${expectedChordCount} chords but received ${progression.length}. ` +
-      `The AI must generate exactly ${expectedChordCount} chords.`
+        `The AI must generate exactly ${expectedChordCount} chords.`
     );
   }
 
   // Validate scales is not empty
   if (scales.length === 0) {
-    throw new APIValidationError('Scales array cannot be empty');
+    throw new APIValidationError("Scales array cannot be empty");
   }
 
   // Validate each chord in progression
   for (let i = 0; i < progression.length; i++) {
     const chord = progression[i];
 
-    if (!chord || typeof chord !== 'object') {
+    if (!chord || typeof chord !== "object") {
       throw new APIValidationError(`Progression[${i}] must be an object`);
     }
 
     // Validate required fields exist
-    if (!chord.chordName || typeof chord.chordName !== 'string') {
+    if (!chord.chordName || typeof chord.chordName !== "string") {
       throw new APIValidationError(`Progression[${i}].chordName is required and must be a string`);
     }
 
-    if (!chord.musicalFunction || typeof chord.musicalFunction !== 'string') {
-      throw new APIValidationError(`Progression[${i}].musicalFunction is required and must be a string`);
+    if (!chord.musicalFunction || typeof chord.musicalFunction !== "string") {
+      throw new APIValidationError(
+        `Progression[${i}].musicalFunction is required and must be a string`
+      );
     }
 
-    if (!chord.relationToKey || typeof chord.relationToKey !== 'string') {
-      throw new APIValidationError(`Progression[${i}].relationToKey is required and must be a string`);
+    if (!chord.relationToKey || typeof chord.relationToKey !== "string") {
+      throw new APIValidationError(
+        `Progression[${i}].relationToKey is required and must be a string`
+      );
     }
 
     // Enhanced format validation
@@ -332,16 +356,16 @@ export function validateAPIResponse(result: unknown, expectedChordCount?: number
   for (let i = 0; i < scales.length; i++) {
     const scale = scales[i];
 
-    if (!scale || typeof scale !== 'object') {
+    if (!scale || typeof scale !== "object") {
       throw new APIValidationError(`Scales[${i}] must be an object`);
     }
 
     // Validate required fields exist
-    if (!scale.name || typeof scale.name !== 'string') {
+    if (!scale.name || typeof scale.name !== "string") {
       throw new APIValidationError(`Scales[${i}].name is required and must be a string`);
     }
 
-    if (!scale.rootNote || typeof scale.rootNote !== 'string') {
+    if (!scale.rootNote || typeof scale.rootNote !== "string") {
       throw new APIValidationError(`Scales[${i}].rootNote is required and must be a string`);
     }
 
@@ -359,15 +383,15 @@ export function validateAPIResponse(result: unknown, expectedChordCount?: number
     const scaleNameRoot = extractScaleRoot(scale.name);
     if (!scaleNameRoot || !rootsAreCompatible(scaleNameRoot, scale.rootNote)) {
       throw new APIValidationError(
-        `Scales[${i}]: scale name root "${scaleNameRoot ?? 'unknown'}" does not match rootNote "${scale.rootNote.trim()}".`
+        `Scales[${i}]: scale name root "${scaleNameRoot ?? "unknown"}" does not match rootNote "${scale.rootNote.trim()}".`
       );
     }
-    
+
     // Normalize scale name to use canonical forms (Major/Minor instead of Ionian/Aeolian)
     const normalizedName = normalizeScaleName(scale.name);
     normalizedScales.push({
       name: normalizedName,
-      rootNote: scale.rootNote.trim()
+      rootNote: scale.rootNote.trim(),
     });
   }
 
@@ -376,8 +400,8 @@ export function validateAPIResponse(result: unknown, expectedChordCount?: number
   let detectedMode: string | undefined;
 
   if (apiResult.detectedKey !== undefined) {
-    if (typeof apiResult.detectedKey !== 'string') {
-      throw new APIValidationError('detectedKey must be a string if provided');
+    if (typeof apiResult.detectedKey !== "string") {
+      throw new APIValidationError("detectedKey must be a string if provided");
     }
     detectedKey = apiResult.detectedKey.trim();
 
@@ -393,14 +417,14 @@ export function validateAPIResponse(result: unknown, expectedChordCount?: number
     const normalizedRoot = normalizeRootToken(rootNote);
     if (!VALID_ROOT_NOTES.includes(normalizedRoot)) {
       throw new APIValidationError(
-        `Invalid root note in detectedKey: "${rootNote}". Must be one of: ${VALID_ROOT_NOTES.join(', ')}`
+        `Invalid root note in detectedKey: "${rootNote}". Must be one of: ${VALID_ROOT_NOTES.join(", ")}`
       );
     }
   }
 
   if (apiResult.detectedMode !== undefined) {
-    if (typeof apiResult.detectedMode !== 'string') {
-      throw new APIValidationError('detectedMode must be a string if provided');
+    if (typeof apiResult.detectedMode !== "string") {
+      throw new APIValidationError("detectedMode must be a string if provided");
     }
     const rawDetectedMode = apiResult.detectedMode.trim();
     const normalizedDetectedMode = normalizeScaleDescriptor(rawDetectedMode);

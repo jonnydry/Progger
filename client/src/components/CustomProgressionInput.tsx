@@ -1,11 +1,11 @@
-import React from 'react';
-import { MAX_CUSTOM_CHORDS } from '@/constants';
-import { getSmartDefaultChord } from '@/utils/smartChordSuggestions';
-import { ChordInputCard } from './ChordInputCard';
-import { playProgression } from '@/utils/audioEngine';
-import { PixelButton } from './PixelButton';
-import type { CustomChordInput } from '@/types';
-import { createChordId } from '@/utils/customProgression';
+import React from "react";
+import { MAX_CUSTOM_CHORDS } from "@/constants";
+import { getSmartDefaultChord } from "@/utils/smartChordSuggestions";
+import { ChordInputCard } from "./ChordInputCard";
+import { playProgression } from "@/utils/audioEngine";
+import { PixelButton } from "./PixelButton";
+import type { CustomChordInput } from "@/types";
+import { createChordId } from "@/utils/customProgression";
 
 interface CustomProgressionInputProps {
   customProgression: CustomChordInput[];
@@ -83,15 +83,18 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
     onCustomProgressionChange(newProgression);
   };
 
-  const handleMoveChord = (index: number, direction: 'up' | 'down') => {
-    if (direction === 'up' && index === 0) return;
-    if (direction === 'down' && index === customProgression.length - 1) return;
+  const handleMoveChord = (index: number, direction: "up" | "down") => {
+    if (direction === "up" && index === 0) return;
+    if (direction === "down" && index === customProgression.length - 1) return;
 
     const newProgression = [...customProgression];
-    const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    const targetIndex = direction === "up" ? index - 1 : index + 1;
 
     // Swap
-    [newProgression[index], newProgression[targetIndex]] = [newProgression[targetIndex], newProgression[index]];
+    [newProgression[index], newProgression[targetIndex]] = [
+      newProgression[targetIndex],
+      newProgression[index],
+    ];
 
     onCustomProgressionChange(newProgression);
   };
@@ -131,7 +134,9 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
               <span className="text-text/80">{detectedMode}</span>
             </div>
           </div>
-        ) : <div className="flex-1"></div>}
+        ) : (
+          <div className="flex-1"></div>
+        )}
 
         <PixelButton
           onClick={handlePlayProgression}
@@ -149,7 +154,14 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
             </>
           ) : (
             <>
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                stroke="none"
+              >
                 <polygon points="5 3 19 12 5 21 5 3"></polygon>
               </svg>
               <span>Play Progression</span>
@@ -168,8 +180,8 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
             onRootChange={(val) => handleRootChange(index, val)}
             onQualityChange={(val) => handleQualityChange(index, val)}
             onRemove={() => handleRemoveChord(index)}
-            onMoveUp={() => handleMoveChord(index, 'up')}
-            onMoveDown={() => handleMoveChord(index, 'down')}
+            onMoveUp={() => handleMoveChord(index, "up")}
+            onMoveDown={() => handleMoveChord(index, "down")}
             isFirst={index === 0}
             isLast={index === customProgression.length - 1}
             isPlaying={playingIndex === index}
@@ -186,7 +198,17 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
           className="flex items-center gap-2 px-4 py-2 border-2 border-dashed border-primary/30 hover:border-primary/60"
         >
           <div className="bg-primary/10 rounded-full p-1 group-hover:bg-primary/20 transition-colors">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <line x1="12" y1="5" x2="12" y2="19"></line>
               <line x1="5" y1="12" x2="19" y2="12"></line>
             </svg>
@@ -205,10 +227,12 @@ export const CustomProgressionInput: React.FC<CustomProgressionInputProps> = ({
           onClick={onAnalyze}
           isLoading={isLoading}
           disabled={isLoading}
-          aria-label={isLoading ? "Analyzing chord progression, please wait" : "Analyze chord progression"}
+          aria-label={
+            isLoading ? "Analyzing chord progression, please wait" : "Analyze chord progression"
+          }
           className="w-full py-3 px-4 text-base"
         >
-          {isLoading ? 'Analyzing...' : 'Analyze Progression'}
+          {isLoading ? "Analyzing..." : "Analyze Progression"}
         </PixelButton>
       </div>
     </div>

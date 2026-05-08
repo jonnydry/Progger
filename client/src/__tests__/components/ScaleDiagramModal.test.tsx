@@ -21,12 +21,7 @@ const mockScaleInfo = (overrides: Partial<ScaleInfo> = {}): ScaleInfo => ({
 describe("ScaleDiagramModal", () => {
   it("clamps selected position when scale changes to fewer positions", async () => {
     const { rerender } = render(
-      <ScaleDiagramModal
-        scaleInfo={mockScaleInfo()}
-        musicalKey="C"
-        isOpen
-        onClose={() => {}}
-      />,
+      <ScaleDiagramModal scaleInfo={mockScaleInfo()} musicalKey="C" isOpen onClose={() => {}} />
     );
 
     fireEvent.click(screen.getByRole("tab", { name: /position 7/i }));
@@ -45,14 +40,7 @@ describe("ScaleDiagramModal", () => {
       ],
     };
 
-    rerender(
-      <ScaleDiagramModal
-        scaleInfo={wholeTone}
-        musicalKey="C"
-        isOpen
-        onClose={() => {}}
-      />,
-    );
+    rerender(<ScaleDiagramModal scaleInfo={wholeTone} musicalKey="C" isOpen onClose={() => {}} />);
 
     await waitFor(() => {
       const position2 = screen.getByRole("tab", { name: /position 2/i });
@@ -79,7 +67,7 @@ describe("ScaleDiagramModal", () => {
         musicalKey="Bb"
         isOpen
         onClose={() => {}}
-      />,
+      />
     );
 
     expect(screen.getByText("Bb Major")).toBeInTheDocument();
@@ -87,12 +75,7 @@ describe("ScaleDiagramModal", () => {
 
   it("renders compact mode guidance chips in modal", () => {
     render(
-      <ScaleDiagramModal
-        scaleInfo={mockScaleInfo()}
-        musicalKey="C"
-        isOpen
-        onClose={() => {}}
-      />,
+      <ScaleDiagramModal scaleInfo={mockScaleInfo()} musicalKey="C" isOpen onClose={() => {}} />
     );
 
     expect(screen.getByText("Formula")).toBeInTheDocument();

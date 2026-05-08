@@ -1,16 +1,11 @@
-import React, { useRef, useEffect } from 'react';
-import {
-  KEYS,
-  CHORD_COUNTS,
-  COMMON_PROGRESSIONS,
-  GENERATION_STYLE_OPTIONS,
-} from '@/constants';
-import { CustomSelect } from './CustomSelect';
-import { ModeSelect } from './ModeSelect';
-import { CustomProgressionInput } from './CustomProgressionInput';
-import { ToggleSwitch } from './ToggleSwitch';
-import { PixelButton } from './PixelButton';
-import type { CustomChordInput } from '@/types';
+import React, { useRef, useEffect } from "react";
+import { KEYS, CHORD_COUNTS, COMMON_PROGRESSIONS, GENERATION_STYLE_OPTIONS } from "@/constants";
+import { CustomSelect } from "./CustomSelect";
+import { ModeSelect } from "./ModeSelect";
+import { CustomProgressionInput } from "./CustomProgressionInput";
+import { ToggleSwitch } from "./ToggleSwitch";
+import { PixelButton } from "./PixelButton";
+import type { CustomChordInput } from "@/types";
 
 interface ControlsProps {
   selectedKey: string;
@@ -65,7 +60,7 @@ export const Controls: React.FC<ControlsProps> = ({
   // Cleanup timers on unmount
   useEffect(() => {
     return () => {
-      timersRef.current.forEach(timer => clearTimeout(timer));
+      timersRef.current.forEach((timer) => clearTimeout(timer));
       timersRef.current = [];
     };
   }, []);
@@ -83,20 +78,11 @@ export const Controls: React.FC<ControlsProps> = ({
     <div className="relative overflow-hidden">
       {/* Standard Controls */}
       <div
-        className={`space-y-5 md:space-y-6 transition-all duration-500 ease-in-out ${isCustomMode ? 'translate-x-[-100%] opacity-0 pointer-events-none absolute inset-0' : 'translate-x-0 opacity-100'}`}
+        className={`space-y-5 md:space-y-6 transition-all duration-500 ease-in-out ${isCustomMode ? "translate-x-[-100%] opacity-0 pointer-events-none absolute inset-0" : "translate-x-0 opacity-100"}`}
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
-          <CustomSelect
-            label="Key"
-            value={selectedKey}
-            onChange={onKeyChange}
-            options={KEYS}
-          />
-          <ModeSelect
-            label="Mode"
-            value={selectedMode}
-            onChange={onModeChange}
-          />
+          <CustomSelect label="Key" value={selectedKey} onChange={onKeyChange} options={KEYS} />
+          <ModeSelect label="Mode" value={selectedMode} onChange={onModeChange} />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
           <CustomSelect
@@ -110,7 +96,7 @@ export const Controls: React.FC<ControlsProps> = ({
             value={String(numChords)}
             onChange={(val) => onNumChordsChange(Number(val))}
             options={CHORD_COUNTS.map(String)}
-            disabled={selectedProgression !== 'auto'}
+            disabled={selectedProgression !== "auto"}
           />
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
@@ -154,7 +140,7 @@ export const Controls: React.FC<ControlsProps> = ({
             isLoading={isLoading}
             className="w-full py-3 px-4 text-sm sm:text-base"
           >
-            {isLoading ? 'Generating...' : 'Generate Progression'}
+            {isLoading ? "Generating..." : "Generate Progression"}
           </PixelButton>
         </div>
       </div>
@@ -162,7 +148,7 @@ export const Controls: React.FC<ControlsProps> = ({
       {/* Custom Progression Input */}
       {onCustomProgressionChange && onAnalyzeCustom && (
         <div
-          className={`space-y-5 md:space-y-6 transition-all duration-500 ease-in-out ${!isCustomMode ? 'translate-x-[100%] opacity-0 pointer-events-none absolute inset-0' : 'translate-x-0 opacity-100'}`}
+          className={`space-y-5 md:space-y-6 transition-all duration-500 ease-in-out ${!isCustomMode ? "translate-x-[100%] opacity-0 pointer-events-none absolute inset-0" : "translate-x-0 opacity-100"}`}
         >
           <div className="flex items-center justify-start md:justify-center gap-4 md:gap-6 pt-1 sm:pt-2">
             {onCustomChange && (

@@ -7,13 +7,39 @@
  * Chromatic scale using sharp notation
  * C=0, C#=1, D=2, D#=3, E=4, F=5, F#=6, G=7, G#=8, A=9, A#=10, B=11
  */
-export const ALL_NOTES_SHARP = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'] as const;
+export const ALL_NOTES_SHARP = [
+  "C",
+  "C#",
+  "D",
+  "D#",
+  "E",
+  "F",
+  "F#",
+  "G",
+  "G#",
+  "A",
+  "A#",
+  "B",
+] as const;
 
 /**
  * Chromatic scale using flat notation
  * C=0, Db=1, D=2, Eb=3, E=4, F=5, Gb=6, G=7, Ab=8, A=9, Bb=10, B=11
  */
-export const ALL_NOTES_FLAT = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'] as const;
+export const ALL_NOTES_FLAT = [
+  "C",
+  "Db",
+  "D",
+  "Eb",
+  "E",
+  "F",
+  "Gb",
+  "G",
+  "Ab",
+  "A",
+  "Bb",
+  "B",
+] as const;
 
 /**
  * Standard guitar tuning note values (chromatic scale values where C=0)
@@ -25,7 +51,7 @@ export const STANDARD_TUNING_VALUES = [4, 9, 2, 7, 11, 4] as const; // E, A, D, 
  * Standard guitar tuning note names
  * Ordered from high E string to low E string (display order)
  */
-export const STANDARD_TUNING_NAMES = ['E', 'B', 'G', 'D', 'A', 'E'] as const;
+export const STANDARD_TUNING_NAMES = ["E", "B", "G", "D", "A", "E"] as const;
 
 /**
  * Convert a note name to its chromatic scale value (0-11)
@@ -67,7 +93,7 @@ export function valueToNote(value: number): string {
 export function calculateSemitoneDistance(fromNote: string, toNote: string): number {
   const fromValue = noteToValue(fromNote);
   const toValue = noteToValue(toNote);
-  return ((toValue - fromValue) + 12) % 12;
+  return (toValue - fromValue + 12) % 12;
 }
 
 /**
@@ -78,7 +104,7 @@ export function calculateSemitoneDistance(fromNote: string, toNote: string): num
  */
 export function transposeNote(note: string, semitones: number): string {
   const noteValue = noteToValue(note);
-  const transposedValue = ((noteValue + semitones) % 12 + 12) % 12;
+  const transposedValue = (((noteValue + semitones) % 12) + 12) % 12;
   return valueToNote(transposedValue);
 }
 
@@ -106,22 +132,25 @@ export function areNotesEnharmonic(note1: string, note2: string): boolean {
  * Define key signatures and their preferred accidental types
  * Sharp keys use flats when they contain fewer flats than sharps of the same key
  */
-const KEY_ACCIDENTAL_PREFERENCES: Record<string, { type: 'sharp' | 'flat' | 'natural', flats: number, sharps: number }> = {
-  'C': { type: 'natural', flats: 0, sharps: 0 },
-  'G': { type: 'sharp', flats: 6, sharps: 1 },
-  'D': { type: 'sharp', flats: 5, sharps: 2 },
-  'A': { type: 'sharp', flats: 4, sharps: 3 },
-  'E': { type: 'sharp', flats: 3, sharps: 4 },
-  'B': { type: 'sharp', flats: 2, sharps: 5 },
-  'F#': { type: 'sharp', flats: 1, sharps: 6 },
-  'C#': { type: 'sharp', flats: 0, sharps: 7 },
-  'F': { type: 'flat', flats: 1, sharps: 6 },
-  'Bb': { type: 'flat', flats: 2, sharps: 5 },
-  'Eb': { type: 'flat', flats: 3, sharps: 4 },
-  'Ab': { type: 'flat', flats: 4, sharps: 3 },
-  'Db': { type: 'flat', flats: 5, sharps: 2 },
-  'Gb': { type: 'flat', flats: 6, sharps: 1 },
-  'Cb': { type: 'flat', flats: 7, sharps: 0 }
+const KEY_ACCIDENTAL_PREFERENCES: Record<
+  string,
+  { type: "sharp" | "flat" | "natural"; flats: number; sharps: number }
+> = {
+  C: { type: "natural", flats: 0, sharps: 0 },
+  G: { type: "sharp", flats: 6, sharps: 1 },
+  D: { type: "sharp", flats: 5, sharps: 2 },
+  A: { type: "sharp", flats: 4, sharps: 3 },
+  E: { type: "sharp", flats: 3, sharps: 4 },
+  B: { type: "sharp", flats: 2, sharps: 5 },
+  "F#": { type: "sharp", flats: 1, sharps: 6 },
+  "C#": { type: "sharp", flats: 0, sharps: 7 },
+  F: { type: "flat", flats: 1, sharps: 6 },
+  Bb: { type: "flat", flats: 2, sharps: 5 },
+  Eb: { type: "flat", flats: 3, sharps: 4 },
+  Ab: { type: "flat", flats: 4, sharps: 3 },
+  Db: { type: "flat", flats: 5, sharps: 2 },
+  Gb: { type: "flat", flats: 6, sharps: 1 },
+  Cb: { type: "flat", flats: 7, sharps: 0 },
 };
 
 /**
@@ -129,7 +158,7 @@ const KEY_ACCIDENTAL_PREFERENCES: Record<string, { type: 'sharp' | 'flat' | 'nat
  * @param key - The musical key (e.g., 'C', 'G', 'F', 'Bb')
  * @returns 'sharp' if key uses sharps, 'flat' if key uses flats, 'natural' for C
  */
-export function getKeyAccidentalType(key: string): 'sharp' | 'flat' | 'natural' {
+export function getKeyAccidentalType(key: string): "sharp" | "flat" | "natural" {
   const normalizedKey = key.charAt(0).toUpperCase() + key.slice(1).toLowerCase();
 
   const keyInfo = KEY_ACCIDENTAL_PREFERENCES[normalizedKey];
@@ -138,7 +167,7 @@ export function getKeyAccidentalType(key: string): 'sharp' | 'flat' | 'natural' 
   }
 
   // Fallback for unknown keys - prefer sharps
-  return 'sharp';
+  return "sharp";
 }
 
 /**
@@ -153,13 +182,13 @@ export function displayNote(note: string, key: string): string {
 
   // For C major (natural keys), use conventional spellings:
   // C, C#, D, Eb, E, F, F#, G, Ab, A, Bb, B
-  if (accidentalType === 'natural') {
-    const cMajorSpellings = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+  if (accidentalType === "natural") {
+    const cMajorSpellings = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
     return cMajorSpellings[noteValue];
   }
 
   // For sharp keys, use sharp notation
-  if (accidentalType === 'sharp') {
+  if (accidentalType === "sharp") {
     return ALL_NOTES_SHARP[noteValue];
   }
 
@@ -177,10 +206,10 @@ export function displayChordName(chordName: string, key: string): string {
   // Extract the root note (first letter plus optional sharp/flat)
   const match = chordName.match(/^([A-G][#b]?)(.*)/i);
   if (!match) return chordName;
-  
+
   const [, root, quality] = match;
   const displayRoot = displayNote(root, key);
-  
+
   return displayRoot + quality;
 }
 
@@ -204,22 +233,22 @@ export function getIntervalBetweenChords(fromChord: string, toChord: string): st
   const fromRoot = extractChordRoot(fromChord);
   const toRoot = extractChordRoot(toChord);
   const semitones = calculateSemitoneDistance(fromRoot, toRoot);
-  
+
   const intervalNames: Record<number, string> = {
-    0: 'P1',   // Perfect unison
-    1: 'm2',   // Minor 2nd
-    2: 'M2',   // Major 2nd
-    3: 'm3',   // Minor 3rd
-    4: 'M3',   // Major 3rd
-    5: 'P4',   // Perfect 4th
-    6: 'TT',   // Tritone
-    7: 'P5',   // Perfect 5th
-    8: 'm6',   // Minor 6th
-    9: 'M6',   // Major 6th
-    10: 'm7',  // Minor 7th
-    11: 'M7',  // Major 7th
+    0: "P1", // Perfect unison
+    1: "m2", // Minor 2nd
+    2: "M2", // Major 2nd
+    3: "m3", // Minor 3rd
+    4: "M3", // Major 3rd
+    5: "P4", // Perfect 4th
+    6: "TT", // Tritone
+    7: "P5", // Perfect 5th
+    8: "m6", // Minor 6th
+    9: "M6", // Major 6th
+    10: "m7", // Minor 7th
+    11: "M7", // Major 7th
   };
-  
+
   return intervalNames[semitones] || `${semitones}`;
 }
 
@@ -233,21 +262,21 @@ export function getIntervalDescription(fromChord: string, toChord: string): stri
   const fromRoot = extractChordRoot(fromChord);
   const toRoot = extractChordRoot(toChord);
   const semitones = calculateSemitoneDistance(fromRoot, toRoot);
-  
+
   const descriptions: Record<number, string> = {
-    0: 'unison',
-    1: 'min 2nd',
-    2: 'maj 2nd',
-    3: 'min 3rd',
-    4: 'maj 3rd',
-    5: '4th',
-    6: 'tritone',
-    7: '5th',
-    8: 'min 6th',
-    9: 'maj 6th',
-    10: 'min 7th',
-    11: 'maj 7th',
+    0: "unison",
+    1: "min 2nd",
+    2: "maj 2nd",
+    3: "min 3rd",
+    4: "maj 3rd",
+    5: "4th",
+    6: "tritone",
+    7: "5th",
+    8: "min 6th",
+    9: "maj 6th",
+    10: "min 7th",
+    11: "maj 7th",
   };
-  
+
   return descriptions[semitones] || `${semitones} semitones`;
 }

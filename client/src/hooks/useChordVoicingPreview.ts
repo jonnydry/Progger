@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react';
-import type { ChordVoicing } from '@/types';
-import { getChordVoicingsAsync } from '@/utils/chords';
-import { formatChordCanonicalName } from '@/utils/chordFormatting';
+import { useState, useEffect, useRef } from "react";
+import type { ChordVoicing } from "@/types";
+import { getChordVoicingsAsync } from "@/utils/chords";
+import { formatChordCanonicalName } from "@/utils/chordFormatting";
 
 /**
  * Hook to manage live chord voicing preview with debouncing
@@ -44,7 +44,7 @@ export function useChordVoicingPreview(
         setIsLoading(false);
       } catch (error) {
         if (!isCurrentRequest) return;
-        console.error('Failed to load chord voicing preview:', error);
+        console.error("Failed to load chord voicing preview:", error);
         setVoicing(null);
         setIsLoading(false);
       }

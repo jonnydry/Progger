@@ -24,12 +24,12 @@ export async function getCsrfToken(): Promise<string> {
   // Fetch new token
   tokenPromise = (async () => {
     try {
-      const response = await fetch('/api/csrf-token', {
-        credentials: 'include',
+      const response = await fetch("/api/csrf-token", {
+        credentials: "include",
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch CSRF token');
+        throw new Error("Failed to fetch CSRF token");
       }
 
       const data = await response.json();
@@ -61,6 +61,6 @@ export async function addCsrfHeaders(headers: HeadersInit = {}): Promise<Headers
   const token = await getCsrfToken();
   return {
     ...headers,
-    'x-csrf-token': token,
+    "x-csrf-token": token,
   };
 }

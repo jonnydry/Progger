@@ -10,7 +10,7 @@
  * - 90% reduction in initial bundle size
  */
 
-import type { ChordVoicingsMap } from './types';
+import type { ChordVoicingsMap } from "./types";
 
 // In-memory cache for loaded chord data
 const chordCache = new Map<string, ChordVoicingsMap>();
@@ -24,26 +24,26 @@ const pendingImports = new Map<string, Promise<ChordVoicingsMap>>();
  */
 function normalizeRootToFileName(root: string): string {
   const enharmonicMap: Record<string, string> = {
-    'C': 'C',
-    'C#': 'C_sharp',
-    'Db': 'C_sharp',
-    'D': 'D',
-    'D#': 'D_sharp',
-    'Eb': 'D_sharp',
-    'E': 'E',
-    'F': 'F',
-    'F#': 'F_sharp',
-    'Gb': 'F_sharp',
-    'G': 'G',
-    'G#': 'G_sharp',
-    'Ab': 'G_sharp',
-    'A': 'A',
-    'A#': 'A_sharp',
-    'Bb': 'A_sharp',
-    'B': 'B',
+    C: "C",
+    "C#": "C_sharp",
+    Db: "C_sharp",
+    D: "D",
+    "D#": "D_sharp",
+    Eb: "D_sharp",
+    E: "E",
+    F: "F",
+    "F#": "F_sharp",
+    Gb: "F_sharp",
+    G: "G",
+    "G#": "G_sharp",
+    Ab: "G_sharp",
+    A: "A",
+    "A#": "A_sharp",
+    Bb: "A_sharp",
+    B: "B",
   };
 
-  return enharmonicMap[root] || 'C';
+  return enharmonicMap[root] || "C";
 }
 
 /**
@@ -68,45 +68,45 @@ async function importChordData(fileName: string): Promise<ChordVoicingsMap> {
       let chordData: ChordVoicingsMap;
 
       switch (fileName) {
-        case 'C':
-          chordData = (await import('./data/C')).C_CHORDS;
+        case "C":
+          chordData = (await import("./data/C")).C_CHORDS;
           break;
-        case 'C_sharp':
-          chordData = (await import('./data/C_sharp')).C_SHARP_CHORDS;
+        case "C_sharp":
+          chordData = (await import("./data/C_sharp")).C_SHARP_CHORDS;
           break;
-        case 'D':
-          chordData = (await import('./data/D')).D_CHORDS;
+        case "D":
+          chordData = (await import("./data/D")).D_CHORDS;
           break;
-        case 'D_sharp':
-          chordData = (await import('./data/D_sharp')).D_SHARP_CHORDS;
+        case "D_sharp":
+          chordData = (await import("./data/D_sharp")).D_SHARP_CHORDS;
           break;
-        case 'E':
-          chordData = (await import('./data/E')).E_CHORDS;
+        case "E":
+          chordData = (await import("./data/E")).E_CHORDS;
           break;
-        case 'F':
-          chordData = (await import('./data/F')).F_CHORDS;
+        case "F":
+          chordData = (await import("./data/F")).F_CHORDS;
           break;
-        case 'F_sharp':
-          chordData = (await import('./data/F_sharp')).F_SHARP_CHORDS;
+        case "F_sharp":
+          chordData = (await import("./data/F_sharp")).F_SHARP_CHORDS;
           break;
-        case 'G':
-          chordData = (await import('./data/G')).G_CHORDS;
+        case "G":
+          chordData = (await import("./data/G")).G_CHORDS;
           break;
-        case 'G_sharp':
-          chordData = (await import('./data/G_sharp')).G_SHARP_CHORDS;
+        case "G_sharp":
+          chordData = (await import("./data/G_sharp")).G_SHARP_CHORDS;
           break;
-        case 'A':
-          chordData = (await import('./data/A')).A_CHORDS;
+        case "A":
+          chordData = (await import("./data/A")).A_CHORDS;
           break;
-        case 'A_sharp':
-          chordData = (await import('./data/A_sharp')).A_SHARP_CHORDS;
+        case "A_sharp":
+          chordData = (await import("./data/A_sharp")).A_SHARP_CHORDS;
           break;
-        case 'B':
-          chordData = (await import('./data/B')).B_CHORDS;
+        case "B":
+          chordData = (await import("./data/B")).B_CHORDS;
           break;
         default:
           console.warn(`Unknown chord key: ${fileName}, falling back to C`);
-          chordData = (await import('./data/C')).C_CHORDS;
+          chordData = (await import("./data/C")).C_CHORDS;
       }
 
       // Cache the loaded data
@@ -141,20 +141,20 @@ export function preloadCommonKeys(): void {
   // Preload in background with requestIdleCallback if available
   const preload = () => {
     // Most common keys in popular music
-    const commonKeys = ['C', 'G', 'D', 'A', 'E', 'F'];
+    const commonKeys = ["C", "G", "D", "A", "E", "F"];
 
-    commonKeys.forEach(key => {
+    commonKeys.forEach((key) => {
       const fileName = normalizeRootToFileName(key);
       // Only preload if not already cached
       if (!chordCache.has(fileName) && !pendingImports.has(fileName)) {
-        importChordData(fileName).catch(err => {
+        importChordData(fileName).catch((err) => {
           console.debug(`Preload failed for ${key}:`, err);
         });
       }
     });
   };
 
-  if ('requestIdleCallback' in window) {
+  if ("requestIdleCallback" in window) {
     requestIdleCallback(preload);
   } else {
     // Fallback for browsers without requestIdleCallback

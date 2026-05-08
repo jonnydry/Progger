@@ -74,9 +74,7 @@ for (const definition of DESCRIPTIONS) {
   }
 }
 
-export const CANONICAL_SCALE_DESCRIPTORS = new Set<string>(
-  DESCRIPTIONS.map((d) => d.canonical),
-);
+export const CANONICAL_SCALE_DESCRIPTORS = new Set<string>(DESCRIPTIONS.map((d) => d.canonical));
 
 export const FALLBACK_SCALE_LIBRARY_KEYS = new Map<string, string>([
   ["harmonicminor", "harmonic minor"],
@@ -84,10 +82,7 @@ export const FALLBACK_SCALE_LIBRARY_KEYS = new Map<string, string>([
   ["naturalminor", "minor"],
 ]);
 
-export const MAJOR_SYSTEM_MODE_PROFILES: Record<
-  MajorSystemModeKey,
-  MajorSystemModeProfile
-> = {
+export const MAJOR_SYSTEM_MODE_PROFILES: Record<MajorSystemModeKey, MajorSystemModeProfile> = {
   major: {
     canonical: "Major",
     libraryKey: "major",
@@ -169,16 +164,12 @@ export function normalizeModeCanonical(mode: string): string {
   return normalized?.canonical ?? mode.trim();
 }
 
-export function getMajorSystemModeProfile(
-  descriptor: string,
-): MajorSystemModeProfile | null {
+export function getMajorSystemModeProfile(descriptor: string): MajorSystemModeProfile | null {
   const normalized = normalizeScaleDescriptor(descriptor);
   if (!normalized) {
     return null;
   }
-  const profile = MAJOR_SYSTEM_MODE_PROFILES[
-    normalized.libraryKey as MajorSystemModeKey
-  ];
+  const profile = MAJOR_SYSTEM_MODE_PROFILES[normalized.libraryKey as MajorSystemModeKey];
   return profile ?? null;
 }
 

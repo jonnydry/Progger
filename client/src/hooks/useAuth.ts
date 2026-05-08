@@ -5,15 +5,15 @@ async function fetchUser(): Promise<User | null> {
   const res = await fetch("/api/auth/user", {
     credentials: "include",
   });
-  
+
   if (res.status === 401) {
     return null;
   }
-  
+
   if (!res.ok) {
     throw new Error(`${res.status}: ${res.statusText}`);
   }
-  
+
   return res.json();
 }
 

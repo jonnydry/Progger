@@ -24,11 +24,7 @@ interface MainLayoutProps {
   currentKey: string;
   currentMode: string;
   currentProgression: ProgressionResult | null;
-  onLoadProgression: (
-    key: string,
-    mode: string,
-    progression: ProgressionResult,
-  ) => void;
+  onLoadProgression: (key: string, mode: string, progression: ProgressionResult) => void;
 }
 
 export const MainLayout: React.FC<MainLayoutProps> = ({
@@ -74,11 +70,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({
         onLoadProgression={onLoadProgression}
       />
       <main className="container mx-auto px-4 pt-6 pb-10 md:pt-8 md:pb-16 flex-grow">
-        {currentView === "home" ? (
-          children
-        ) : (
-          <About onBackClick={() => setCurrentView("home")} />
-        )}
+        {currentView === "home" ? children : <About onBackClick={() => setCurrentView("home")} />}
       </main>
       <Footer onAboutClick={() => setCurrentView("about")} />
     </div>

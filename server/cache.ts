@@ -1,7 +1,7 @@
-import { RedisClientType } from 'redis';
-import { getProgressionCacheKey as getSharedCacheKey } from '../shared/cacheUtils';
-import { logger } from './utils/logger';
-import { getSharedRedisClient, isRedisAvailable } from './redisClient';
+import { RedisClientType } from "redis";
+import { getProgressionCacheKey as getSharedCacheKey } from "../shared/cacheUtils";
+import { logger } from "./utils/logger";
+import { getSharedRedisClient, isRedisAvailable } from "./redisClient";
 
 class RedisCache {
   private client: RedisClientType | null = null;
@@ -9,8 +9,8 @@ class RedisCache {
 
   constructor() {
     // Initialize connection asynchronously using shared Redis client
-    this.connect().catch(err => {
-      logger.error('Unexpected error during Redis cache initialization', { error: err });
+    this.connect().catch((err) => {
+      logger.error("Unexpected error during Redis cache initialization", { error: err });
       this.isConnected = false;
       this.client = null;
     });
@@ -21,12 +21,12 @@ class RedisCache {
       this.client = await getSharedRedisClient();
       this.isConnected = isRedisAvailable();
       if (this.isConnected) {
-        logger.info('Redis cache using shared client');
+        logger.info("Redis cache using shared client");
       } else {
-        logger.warn('Redis cache: shared client not available, falling back to in-memory caching');
+        logger.warn("Redis cache: shared client not available, falling back to in-memory caching");
       }
     } catch (error) {
-      logger.warn('Failed to connect to Redis cache, falling back to in-memory caching', { error });
+      logger.warn("Failed to connect to Redis cache, falling back to in-memory caching", { error });
       this.isConnected = false;
       this.client = null;
     }
@@ -37,23 +37,23 @@ class RedisCache {
 
     try {
       const value = await this.client.get(key);
-      if (typeof value !== 'string' || value === '{}' || value === '') {
-        logger.debug('Redis cache miss', { key });
+      if (typeof value !== "string" || value === "{}" || value === "") {
+        logger.debug("Redis cache miss", { key });
         return null;
       }
 
       const parsed = JSON.parse(value) as T;
-      
+
       // Log cache hit with progression length if available
       const progressionLength = (parsed as any)?.progression?.length;
-      logger.debug('Redis cache hit', { 
-        key, 
-        progressionLength: progressionLength ?? 'N/A',
+      logger.debug("Redis cache hit", {
+        key,
+        progressionLength: progressionLength ?? "N/A",
       });
-      
+
       return parsed;
     } catch (error) {
-      logger.warn('Redis cache get error', { error, key });
+      logger.warn("Redis cache get error", { error, key });
       return null;
     }
   }
@@ -63,22 +63,22 @@ class RedisCache {
 
     try {
       const serialized = JSON.stringify(value);
-      
+
       // Log cache write with progression length if available
       const progressionLength = (value as any)?.progression?.length;
-      logger.debug('Redis cache set', { 
-        key, 
+      logger.debug("Redis cache set", {
+        key,
         ttlSeconds,
-        progressionLength: progressionLength ?? 'N/A',
+        progressionLength: progressionLength ?? "N/A",
       });
-      
+
       if (ttlSeconds) {
         await this.client.setEx(key, ttlSeconds, serialized);
       } else {
         await this.client.set(key, serialized);
       }
     } catch (error) {
-      logger.warn('Redis cache set error', { error, key });
+      logger.warn("Redis cache set error", { error, key });
     }
   }
 
@@ -89,7 +89,7 @@ class RedisCache {
       const result = await this.client.exists(key);
       return result === 1;
     } catch (error) {
-      logger.warn('Redis cache exists error', { error, key });
+      logger.warn("Redis cache exists error", { error, key });
       return false;
     }
   }
@@ -100,7 +100,7 @@ class RedisCache {
     try {
       await this.client.del(key);
     } catch (error) {
-      logger.warn('Redis cache delete error', { error, key });
+      logger.warn("Redis cache delete error", { error, key });
     }
   }
 
@@ -111,7 +111,7 @@ class RedisCache {
     includeTensions: boolean,
     numChords: number,
     selectedProgression: string,
-    generationStyle: "conservative" | "balanced" | "adventurous" = "balanced",
+    generationStyle: "conservative" | "balanced" | "adventurous" = "balanced"
   ): string {
     return getSharedCacheKey(
       key,
@@ -119,7 +119,7 @@ class RedisCache {
       includeTensions,
       numChords,
       selectedProgression,
-      generationStyle,
+      generationStyle
     );
   }
 
@@ -132,7 +132,7 @@ class RedisCache {
       const exists = await this.exists(cacheKey);
       return exists ? cacheKey : null;
     } catch (error) {
-      logger.warn('Redis cache similarity check error', { error, cacheKey });
+      logger.warn("Redis cache similarity check error", { error, cacheKey });
       return null;
     }
   }
@@ -143,4 +143,4 @@ export const redisCache = new RedisCache();
 export { RedisCache };
 
 // Re-export shared cache key utility for convenience
-export { getProgressionCacheKey } from '../shared/cacheUtils';
+export { getProgressionCacheKey } from "../shared/cacheUtils";

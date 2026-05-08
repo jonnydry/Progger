@@ -74,15 +74,16 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({
         </svg>
       </button>
 
-      <span className="hidden md:block text-xs text-text/80 max-w-[11rem] truncate" title={currentTheme.name}>
+      <span
+        className="hidden md:block text-xs text-text/80 max-w-[11rem] truncate"
+        title={currentTheme.name}
+      >
         {currentTheme.name}
       </span>
 
       <div
         className={`flex items-center overflow-x-hidden overflow-y-visible transition-[max-width,opacity,margin] duration-200 ease-out ${
-          isOpen
-            ? "opacity-100 max-w-[22rem] ml-1"
-            : "opacity-0 max-w-0 ml-0"
+          isOpen ? "opacity-100 max-w-[22rem] ml-1" : "opacity-0 max-w-0 ml-0"
         }`}
         aria-hidden={!isOpen}
       >

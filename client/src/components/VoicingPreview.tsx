@@ -1,5 +1,5 @@
-import React, { useMemo } from 'react';
-import type { ChordVoicing } from '@/types';
+import React, { useMemo } from "react";
+import type { ChordVoicing } from "@/types";
 
 interface VoicingPreviewProps {
   voicing: ChordVoicing | null;
@@ -34,9 +34,12 @@ export const VoicingPreview: React.FC<VoicingPreviewProps> = ({ voicing, isLoadi
 
     const f = voicing.frets;
     const ff = voicing.firstFret || 1;
-    const hf = Math.max(...f.filter(fret => typeof fret === 'number').map(fret => fret as number), 0);
+    const hf = Math.max(
+      ...f.filter((fret) => typeof fret === "number").map((fret) => fret as number),
+      0
+    );
     const urf = ff > 1;
-    const eff = ff > 1 ? ff : (hf > FRET_COUNT ? hf - FRET_COUNT + 1 : 1);
+    const eff = ff > 1 ? ff : hf > FRET_COUNT ? hf - FRET_COUNT + 1 : 1;
 
     return {
       frets: f,
@@ -48,7 +51,10 @@ export const VoicingPreview: React.FC<VoicingPreviewProps> = ({ voicing, isLoadi
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-2 rounded-md bg-background/20 border border-border/30" style={{ height: height + 10 }}>
+      <div
+        className="flex items-center justify-center p-2 rounded-md bg-background/20 border border-border/30"
+        style={{ height: height + 10 }}
+      >
         <div className="animate-pulse text-text/40 text-xs">Loading...</div>
       </div>
     );
@@ -56,7 +62,10 @@ export const VoicingPreview: React.FC<VoicingPreviewProps> = ({ voicing, isLoadi
 
   if (!voicing) {
     return (
-      <div className="flex items-center justify-center p-2 rounded-md bg-background/20 border border-border/30" style={{ height: height + 10 }}>
+      <div
+        className="flex items-center justify-center p-2 rounded-md bg-background/20 border border-border/30"
+        style={{ height: height + 10 }}
+      >
         <div className="text-text/40 text-xs">No preview</div>
       </div>
     );
@@ -94,7 +103,7 @@ export const VoicingPreview: React.FC<VoicingPreviewProps> = ({ voicing, isLoadi
             x2={LEFT_MARGIN + PADDING + (STRING_COUNT - 1) * STRING_WIDTH}
             y2={PADDING + i * FRET_HEIGHT}
             strokeWidth={i === 0 && effectiveFirstFret === 1 ? 2.5 : 1}
-            className={i === 0 && effectiveFirstFret === 1 ? 'stroke-text/50' : 'stroke-text/15'}
+            className={i === 0 && effectiveFirstFret === 1 ? "stroke-text/50" : "stroke-text/15"}
           />
         ))}
 
@@ -107,7 +116,7 @@ export const VoicingPreview: React.FC<VoicingPreviewProps> = ({ voicing, isLoadi
             x2={LEFT_MARGIN + PADDING + i * STRING_WIDTH}
             y2={PADDING + FRET_COUNT * FRET_HEIGHT}
             className="stroke-text/25"
-            strokeWidth={1.3 - (i * 0.08)}
+            strokeWidth={1.3 - i * 0.08}
           />
         ))}
 
@@ -115,14 +124,30 @@ export const VoicingPreview: React.FC<VoicingPreviewProps> = ({ voicing, isLoadi
         {frets.map((fret, i) => {
           const cx = LEFT_MARGIN + PADDING + i * STRING_WIDTH;
           const cy = PADDING - 8;
-          if (fret === 'x') {
+          if (fret === "x") {
             return (
-              <text key={`indicator-x-${i}`} x={cx} y={cy + 3} fontSize="11" className="fill-text/40" textAnchor="middle">x</text>
+              <text
+                key={`indicator-x-${i}`}
+                x={cx}
+                y={cy + 3}
+                fontSize="11"
+                className="fill-text/40"
+                textAnchor="middle"
+              >
+                x
+              </text>
             );
           }
           if (fret === 0) {
             return (
-              <circle key={`indicator-o-${i}`} cx={cx} cy={cy} r={3} strokeWidth="1.2" className="stroke-text/60 fill-none" />
+              <circle
+                key={`indicator-o-${i}`}
+                cx={cx}
+                cy={cy}
+                r={3}
+                strokeWidth="1.2"
+                className="stroke-text/60 fill-none"
+              />
             );
           }
           return null;
@@ -130,7 +155,7 @@ export const VoicingPreview: React.FC<VoicingPreviewProps> = ({ voicing, isLoadi
 
         {/* Fingering dots */}
         {frets.map((fret, stringIndex) => {
-          if (typeof fret !== 'number' || fret <= 0) return null;
+          if (typeof fret !== "number" || fret <= 0) return null;
 
           // Convert relative finger positions to absolute fret numbers if needed
           const absoluteFret = usesRelativeFormat ? fret + firstFret - 1 : fret;
@@ -140,7 +165,7 @@ export const VoicingPreview: React.FC<VoicingPreviewProps> = ({ voicing, isLoadi
           if (fretIndex < 1 || fretIndex > FRET_COUNT) return null;
 
           const cx = LEFT_MARGIN + PADDING + stringIndex * STRING_WIDTH;
-          const cy = PADDING + (fretIndex * FRET_HEIGHT) - (FRET_HEIGHT / 2);
+          const cy = PADDING + fretIndex * FRET_HEIGHT - FRET_HEIGHT / 2;
 
           return (
             <circle
@@ -156,11 +181,7 @@ export const VoicingPreview: React.FC<VoicingPreviewProps> = ({ voicing, isLoadi
       </svg>
 
       {/* Position info */}
-      {voicing.position && (
-        <div className="text-[10px] text-text/50 mt-1">
-          {voicing.position}
-        </div>
-      )}
+      {voicing.position && <div className="text-[10px] text-text/50 mt-1">{voicing.position}</div>}
     </div>
   );
 };

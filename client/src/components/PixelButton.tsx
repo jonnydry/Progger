@@ -1,7 +1,6 @@
 import React from "react";
 
-interface PixelButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface PixelButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "danger" | "ghost";
   size?: "sm" | "md" | "lg";
   isLoading?: boolean;

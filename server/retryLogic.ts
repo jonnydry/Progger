@@ -2,7 +2,7 @@
  * Intelligent retry logic with exponential backoff and circuit breaker
  */
 
-import { logger } from './utils/logger';
+import { logger } from "./utils/logger";
 
 export interface RetryConfig {
   maxRetries: number;
@@ -54,10 +54,12 @@ export function calculateRetryDelay(
  */
 export function isRetryableError(error: any): boolean {
   // Network errors
-  if (error.code === 'ENOTFOUND' ||
-      error.code === 'ECONNREFUSED' ||
-      error.code === 'ECONNRESET' ||
-      error.code === 'ETIMEDOUT') {
+  if (
+    error.code === "ENOTFOUND" ||
+    error.code === "ECONNREFUSED" ||
+    error.code === "ECONNRESET" ||
+    error.code === "ETIMEDOUT"
+  ) {
     return true;
   }
 
@@ -77,13 +79,13 @@ export function isRetryableError(error: any): boolean {
   }
 
   // Timeout errors
-  if (error.message && error.message.includes('timed out')) {
+  if (error.message && error.message.includes("timed out")) {
     return true;
   }
 
   // Parse errors (might be temporary API instability)
   if (error instanceof SyntaxError) {
-    return error.message.includes('JSON');
+    return error.message.includes("JSON");
   }
 
   return false;
@@ -114,12 +116,16 @@ export async function withRetry<T>(
 
       // Check if the error is retryable
       if (!isRetryableError(error)) {
-        logger.warn('Non-retryable error encountered', { attempt, totalRetries: cfg.maxRetries, error });
+        logger.warn("Non-retryable error encountered", {
+          attempt,
+          totalRetries: cfg.maxRetries,
+          error,
+        });
         break;
       }
 
       const delay = calculateRetryDelay(attempt, cfg);
-      logger.debug('Retrying operation', {
+      logger.debug("Retrying operation", {
         attempt,
         totalRetries: cfg.maxRetries,
         delayMs: delay,
@@ -132,13 +138,13 @@ export async function withRetry<T>(
           attemptNumber: attempt,
           totalRetries: cfg.maxRetries,
           lastError,
-          totalDelay: accumulatedDelay + delay
+          totalDelay: accumulatedDelay + delay,
         });
       }
 
       // Wait for the delay
       accumulatedDelay += delay;
-      await new Promise(resolve => setTimeout(resolve, delay));
+      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
 
@@ -146,12 +152,13 @@ export async function withRetry<T>(
   if (lastError) {
     (lastError as Error & { retryAttempts?: number; totalRetryDelayMs?: number }).retryAttempts =
       cfg.maxRetries + 1;
-    (lastError as Error & { retryAttempts?: number; totalRetryDelayMs?: number }).totalRetryDelayMs =
-      accumulatedDelay;
+    (
+      lastError as Error & { retryAttempts?: number; totalRetryDelayMs?: number }
+    ).totalRetryDelayMs = accumulatedDelay;
     throw lastError;
   }
 
-  throw new Error('Operation failed after retries with no captured error');
+  throw new Error("Operation failed after retries with no captured error");
 }
 
 /**
@@ -160,7 +167,7 @@ export async function withRetry<T>(
 export class CircuitBreaker {
   private failureCount = 0;
   private lastFailureTime = 0;
-  private state: 'closed' | 'open' | 'half-open' = 'closed';
+  private state: "closed" | "open" | "half-open" = "closed";
 
   constructor(
     private readonly failureThreshold: number = 5,
@@ -174,17 +181,17 @@ export class CircuitBreaker {
     // Reset failure count if monitoring period has passed
     if (now - this.lastFailureTime > this.monitoringPeriod) {
       this.failureCount = 0;
-      this.state = 'closed';
+      this.state = "closed";
     }
 
     // Check circuit state
-    if (this.state === 'open') {
+    if (this.state === "open") {
       // Check if we should transition to half-open
       if (now - this.lastFailureTime > this.recoveryTimeout) {
-        this.state = 'half-open';
-        logger.info('Circuit breaker transitioning to half-open');
+        this.state = "half-open";
+        logger.info("Circuit breaker transitioning to half-open");
       } else {
-        throw new Error('Circuit breaker is OPEN - operation rejected');
+        throw new Error("Circuit breaker is OPEN - operation rejected");
       }
     }
 
@@ -192,9 +199,9 @@ export class CircuitBreaker {
       const result = await operation();
 
       // Success - reset on half-open, stay closed otherwise
-      if (this.state === 'half-open') {
-        logger.info('Circuit breaker recovered to closed');
-        this.state = 'closed';
+      if (this.state === "half-open") {
+        logger.info("Circuit breaker recovered to closed");
+        this.state = "closed";
         this.failureCount = 0;
       }
 
@@ -205,8 +212,8 @@ export class CircuitBreaker {
 
       // Check if we should open the circuit
       if (this.failureCount >= this.failureThreshold) {
-        this.state = 'open';
-        logger.warn('Circuit breaker OPEN', {
+        this.state = "open";
+        logger.warn("Circuit breaker OPEN", {
           failureCount: this.failureCount,
           threshold: this.failureThreshold,
         });
@@ -220,7 +227,7 @@ export class CircuitBreaker {
     return {
       state: this.state,
       failureCount: this.failureCount,
-      lastFailureTime: this.lastFailureTime
+      lastFailureTime: this.lastFailureTime,
     };
   }
 }

@@ -26,7 +26,7 @@ export interface ProcessingConfiguration {
   maxRetryAttempts: number;
 
   /** Log level for debug information */
-  logLevel: 'error' | 'warn' | 'info' | 'debug';
+  logLevel: "error" | "warn" | "info" | "debug";
 }
 
 /**
@@ -40,7 +40,7 @@ export const DEFAULT_PROCESSING_CONFIG: ProcessingConfiguration = {
   enableAutoRecovery: true,
   apiTimeoutMs: 30000, // 30 seconds
   maxRetryAttempts: 3,
-  logLevel: 'info'
+  logLevel: "info",
 };
 
 /**
@@ -48,7 +48,7 @@ export const DEFAULT_PROCESSING_CONFIG: ProcessingConfiguration = {
  */
 export const DEVELOPMENT_CONFIG: ProcessingConfiguration = {
   ...DEFAULT_PROCESSING_CONFIG,
-  logLevel: 'debug',
+  logLevel: "debug",
   // Other settings can be overridden here
 };
 
@@ -59,11 +59,11 @@ export const DEVELOPMENT_CONFIG: ProcessingConfiguration = {
 export function getProcessingConfig(): ProcessingConfiguration {
   const hostname = window.location.hostname;
   const isDevelopment =
-    process.env.NODE_ENV === 'development' ||
-    hostname === 'localhost' ||
-    hostname === '127.0.0.1' ||
-    hostname.endsWith('.replit.dev') ||
-    hostname.endsWith('.repl.co');
+    process.env.NODE_ENV === "development" ||
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname.endsWith(".replit.dev") ||
+    hostname.endsWith(".repl.co");
 
   return isDevelopment ? DEVELOPMENT_CONFIG : DEFAULT_PROCESSING_CONFIG;
 }
@@ -71,10 +71,12 @@ export function getProcessingConfig(): ProcessingConfiguration {
 /**
  * Create a custom configuration for specific use cases
  */
-export function createCustomConfig(overrides: Partial<ProcessingConfiguration>): ProcessingConfiguration {
+export function createCustomConfig(
+  overrides: Partial<ProcessingConfiguration>
+): ProcessingConfiguration {
   return {
     ...DEFAULT_PROCESSING_CONFIG,
-    ...overrides
+    ...overrides,
   };
 }
 
@@ -83,14 +85,14 @@ export function createCustomConfig(overrides: Partial<ProcessingConfiguration>):
  */
 export function validateConfig(config: ProcessingConfiguration): boolean {
   const requiredFields: (keyof ProcessingConfiguration)[] = [
-    'enableSmartFallbacks',
-    'enableParallelProcessing',
-    'enableDetailedAnalysis',
-    'cacheIntermediateResults',
-    'enableAutoRecovery',
-    'apiTimeoutMs',
-    'maxRetryAttempts',
-    'logLevel'
+    "enableSmartFallbacks",
+    "enableParallelProcessing",
+    "enableDetailedAnalysis",
+    "cacheIntermediateResults",
+    "enableAutoRecovery",
+    "apiTimeoutMs",
+    "maxRetryAttempts",
+    "logLevel",
   ];
 
   for (const field of requiredFields) {
@@ -100,17 +102,17 @@ export function validateConfig(config: ProcessingConfiguration): boolean {
     }
 
     // Type validation for specific fields
-    if (field === 'apiTimeoutMs' && (typeof config[field] !== 'number' || config[field] <= 0)) {
+    if (field === "apiTimeoutMs" && (typeof config[field] !== "number" || config[field] <= 0)) {
       console.error(`Invalid apiTimeoutMs: must be a positive number`);
       return false;
     }
 
-    if (field === 'maxRetryAttempts' && (typeof config[field] !== 'number' || config[field] < 0)) {
+    if (field === "maxRetryAttempts" && (typeof config[field] !== "number" || config[field] < 0)) {
       console.error(`Invalid maxRetryAttempts: must be a non-negative number`);
       return false;
     }
 
-    if (field === 'logLevel' && !['error', 'warn', 'info', 'debug'].includes(config[field])) {
+    if (field === "logLevel" && !["error", "warn", "info", "debug"].includes(config[field])) {
       console.error(`Invalid logLevel: must be one of 'error', 'warn', 'info', 'debug'`);
       return false;
     }
