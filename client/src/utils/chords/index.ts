@@ -20,6 +20,7 @@ const isDevEnv = typeof import.meta !== "undefined" && Boolean(import.meta.env?.
 
 // Re-export loader utilities
 export { preloadCommonKeys, getCacheStats, clearChordCache } from "./loader";
+import { getAllCachedChordData } from "./loader";
 
 /**
  * Enharmonic root normalization
@@ -388,4 +389,85 @@ export async function preloadAllChords(): Promise<void> {
   const allKeys = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
   await Promise.all(allKeys.map((key) => loadChordsByRoot(key)));
   console.log("✅ All chord data preloaded");
+}
+
+/**
+ * Validate chord voicing format consistency.
+ *
+ * Barre chords (firstFret > 1) MUST use relative format where:
+ * - 1 = at the barre position
+ * - 2 = one fret above barre, etc.
+ *
+ * Returns false and logs an error if the voicing appears to use absolute fret numbers.
+ */
+export function validateVoicingFormat(voicing: ChordVoicing, chordName: string): boolean {
+  if (!voicing.frets || voicing.frets.length !== 6) {
+    console.error(
+      `❌ Invalid voicing format for "${chordName}": expected 6 frets, received ${voicing.frets?.length ?? 0}`
+    );
+    return false;
+  }
+
+  if (!voicing.firstFret || voicing.firstFret <= 1) {
+    return true;
+  }
+
+  const numericFrets = voicing.frets.filter((f): f is number => typeof f === "number" && f > 0);
+
+  if (numericFrets.length === 0) {
+    return true;
+  }
+
+  const minFret = Math.min(...numericFrets);
+  const maxFret = Math.max(...numericFrets);
+
+  if (minFret !== 1 && minFret >= voicing.firstFret - 1) {
+    console.error(
+      `❌ CHORD FORMAT ERROR: "${chordName}" at firstFret ${voicing.firstFret} uses ABSOLUTE format!\n` +
+        `   Frets: [${voicing.frets.join(", ")}]\n` +
+        `   Expected: Barre chords must use RELATIVE format where 1 = barre position.\n` +
+        `   Min fret value: ${minFret} (should be 1 for barre chords)\n` +
+        `   This will cause incorrect rendering. Please convert to relative format.`
+    );
+    return false;
+  }
+
+  if (maxFret > 12) {
+    console.warn(
+      `⚠️ Suspicious fret value in "${chordName}": max fret = ${maxFret}\n` +
+        `   This might indicate absolute format instead of relative.`
+    );
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Validate all chord voicings across the full library (development only).
+ * Loads all chord data first, then checks each voicing for format correctness.
+ * Safe to call without await — returns a Promise that resolves silently.
+ */
+export async function validateChordLibraryAsync(): Promise<void> {
+  if (import.meta.env.PROD) return;
+
+  await preloadAllChords();
+  const allChordData = getAllCachedChordData();
+
+  console.log("🔍 Validating chord library format...");
+  let errors = 0;
+
+  for (const [key, voicings] of Object.entries(allChordData)) {
+    for (const voicing of voicings) {
+      if (!validateVoicingFormat(voicing, key)) {
+        errors++;
+      }
+    }
+  }
+
+  if (errors > 0) {
+    console.error(`❌ Found ${errors} chord format errors! See console for details.`);
+  } else {
+    console.log("✅ All chord voicings use correct format!");
+  }
 }

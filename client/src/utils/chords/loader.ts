@@ -180,3 +180,16 @@ export function clearChordCache(): void {
   chordCache.clear();
   // Note: We don't clear pendingImports as they're in-flight
 }
+
+/**
+ * Return a merged view of all currently cached chord data.
+ * Only contains roots that have already been loaded.
+ * Call preloadAllChords() first to ensure all data is present.
+ */
+export function getAllCachedChordData(): ChordVoicingsMap {
+  const merged: Record<string, ChordVoicingsMap[keyof ChordVoicingsMap]> = {};
+  for (const data of chordCache.values()) {
+    Object.assign(merged, data);
+  }
+  return merged as ChordVoicingsMap;
+}
