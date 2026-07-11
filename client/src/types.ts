@@ -98,6 +98,10 @@ export interface ProgressionResult {
   scales: ScaleInfo[];
   detectedKey?: string;
   detectedMode?: string;
+  /** True when AI analysis failed and result is client-side voicings only */
+  analysisFailed?: boolean;
+  /** User-facing warning when analysisFailed is true */
+  analysisError?: string;
 }
 
 // Stash-related types

@@ -15,23 +15,9 @@ import {
 } from "../utils/errors";
 import { getProcessingConfig } from "../utils/processingConfig";
 import { getProgressionCacheKey } from "@shared/cacheUtils";
+import { toPitchClass } from "@shared/pitchClass";
+import type { ProgressionResultFromAPI } from "@shared/progressionTypes";
 import { addCsrfHeaders, clearCsrfToken } from "../utils/csrf";
-
-interface SimpleChord {
-  chordName: string;
-  musicalFunction: string;
-  relationToKey: string;
-}
-
-interface SimpleScale {
-  name: string;
-  rootNote: string;
-}
-
-interface ProgressionResultFromAPI {
-  progression: SimpleChord[];
-  scales: SimpleScale[];
-}
 
 interface CacheEntry {
   data: ProgressionResult;
@@ -49,26 +35,6 @@ const AUTO_VARIANT_BUCKETS = [
   "backdoor-mix",
   "quartal-color",
 ] as const;
-
-const ROOT_TO_PITCH_CLASS: Record<string, number> = {
-  C: 0,
-  "C#": 1,
-  Db: 1,
-  D: 2,
-  "D#": 3,
-  Eb: 3,
-  E: 4,
-  F: 5,
-  "F#": 6,
-  Gb: 6,
-  G: 7,
-  "G#": 8,
-  Ab: 8,
-  A: 9,
-  "A#": 10,
-  Bb: 10,
-  B: 11,
-};
 
 function getFromCache(cacheKey: string): ProgressionResult | null {
   try {
@@ -223,23 +189,6 @@ function getAutoProgressionVariant(): string {
     console.warn("Could not persist auto progression variant counter", error);
     return AUTO_VARIANT_BUCKETS[Math.floor(Math.random() * AUTO_VARIANT_BUCKETS.length)];
   }
-}
-
-function toPitchClass(root: string): number | null {
-  const trimmed = root.trim();
-  if (!trimmed) return null;
-
-  const first = trimmed.charAt(0).toUpperCase();
-  const second = trimmed.charAt(1);
-  let normalized = first;
-
-  if (second === "#" || second === "♯") {
-    normalized = `${first}#`;
-  } else if (second === "b" || second === "♭" || second === "B") {
-    normalized = `${first}b`;
-  }
-
-  return ROOT_TO_PITCH_CLASS[normalized] ?? null;
 }
 
 function hasPrimaryScaleMatch(
@@ -714,20 +663,7 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
       createErrorLog(error, { chords, cacheKey })
     );
 
-    // Handle API response validation errors
-    if (
-      error instanceof Error &&
-      (error.message.includes("Invalid data structure") ||
-        error.message.includes("incomplete chord data") ||
-        error.message.includes("incomplete scale data"))
-    ) {
-      throw new InvalidAPIResponseError(
-        "ProgressionResult { progression: SimpleChord[], scales: SimpleScale[] }",
-        error.message
-      );
-    }
-
-    // Check if this is a recoverable error
+    // Check if this is a recoverable error (cached result, etc.)
     if (config.enableAutoRecovery && isRecoverableError(error)) {
       try {
         let recoveredResult;
@@ -747,18 +683,86 @@ export async function analyzeCustomProgression(chords: string[]): Promise<Progre
       }
     }
 
-    // Re-throw the original error or create a user-friendly message
+    // Graceful BYO: still return local voicings when AI analysis fails
+    const analysisError =
+      error instanceof MusicTheoryError
+        ? error.message
+        : error instanceof Error &&
+            (error.message.includes("Invalid data structure") ||
+              error.message.includes("incomplete chord data") ||
+              error.message.includes("incomplete scale data"))
+          ? "Analysis returned incomplete data."
+          : "Analysis service may be temporarily unavailable.";
+
+    try {
+      return await enrichCustomProgressionLocally(
+        chords,
+        `${analysisError} Showing chord voicings without AI functions/scales.`
+      );
+    } catch (enrichError) {
+      console.warn("Client-side voicing enrichment failed:", enrichError);
+    }
+
+    if (
+      error instanceof Error &&
+      (error.message.includes("Invalid data structure") ||
+        error.message.includes("incomplete chord data") ||
+        error.message.includes("incomplete scale data"))
+    ) {
+      throw new InvalidAPIResponseError(
+        "ProgressionResult { progression: SimpleChord[], scales: SimpleScale[] }",
+        error.message
+      );
+    }
+
     if (error instanceof SyntaxError) {
       throw new InvalidAPIResponseError("Valid JSON", "SyntaxError during JSON parsing");
     }
 
     if (error instanceof MusicTheoryError) {
-      throw error; // Re-throw our custom errors
+      throw error;
     }
 
-    // Generic fallback for unexpected errors
     throw new Error(
       "Failed to analyze custom progression. The service may be temporarily unavailable."
     );
   }
+}
+
+/**
+ * Build a ProgressionResult from chord names using only the local voicing library.
+ * Used when AI analysis fails so users can still browse fingerings.
+ */
+export async function enrichCustomProgressionLocally(
+  chords: string[],
+  analysisError: string = "Analysis unavailable. Showing chord voicings only."
+): Promise<ProgressionResult> {
+  const progression: ChordInProgression[] = await Promise.all(
+    chords.map(async (chordName) => {
+      try {
+        const voicings = await getChordVoicingsAsync(chordName);
+        return {
+          chordName,
+          musicalFunction: "—",
+          relationToKey: "unanalyzed",
+          voicings,
+        };
+      } catch (voicingError) {
+        console.warn(`Failed to load voicings for "${chordName}":`, voicingError);
+        return {
+          chordName,
+          musicalFunction: "—",
+          relationToKey: "unanalyzed",
+          voicings: [{ frets: ["x", "x", "x", "x", "x", "x"], position: "Unavailable" }],
+        };
+      }
+    })
+  );
+
+  return {
+    progression,
+    scales: [],
+    analysisFailed: true,
+    analysisError,
+  };
 }

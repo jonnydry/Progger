@@ -86,7 +86,7 @@ const generateAutoName = (key: string, mode: string, progression: ChordInProgres
   });
 
   // Create chord progression string (limit to first 4 chords to keep it concise)
-  const chordNames = progression.slice(0, 4).map((p) => displayChordName(p.chordName, key));
+  const chordNames = progression.slice(0, 4).map((p) => displayChordName(p.chordName, key, mode));
   const progressionStr = chordNames.join(" - ");
   const suffix = progression.length > 4 ? "..." : "";
 
@@ -164,8 +164,8 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({
   }, [progressionResult, musicalKey, currentMode]);
 
   const progressionText = useMemo(
-    () => progression.map((p) => displayChordName(p.chordName, musicalKey)).join(" - "),
-    [progression, musicalKey]
+    () => progression.map((p) => displayChordName(p.chordName, musicalKey, currentMode)).join(" - "),
+    [progression, musicalKey, currentMode]
   );
 
   if (isLoading) {
@@ -284,7 +284,7 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({
 
           if (!currentVoicing) return null;
 
-          const displayedChordName = displayChordName(chord.chordName, musicalKey);
+          const displayedChordName = displayChordName(chord.chordName, musicalKey, currentMode);
           const isExpanded = expandedChordIndex === index;
           const nextChord = progression[index + 1];
 
@@ -370,6 +370,7 @@ export const VoicingsGrid: React.FC<VoicingsGridProps> = ({
         <ChordDetailView
           chord={progression[expandedChordIndex]}
           musicalKey={musicalKey}
+          mode={currentMode}
           onClose={() => setExpandedChordIndex(null)}
         />
       )}

@@ -18,9 +18,11 @@ export {
   // Chord lookup
   getChordVoicingsAsync,
   loadMultipleChords,
+  loadChordsByRoot,
 
   // Preloading / cache management
   preloadCommonKeys,
+  preloadRoots,
   preloadAllChords,
   getCacheStats,
   clearChordCache,

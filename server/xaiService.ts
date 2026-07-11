@@ -1,16 +1,21 @@
 import OpenAI from "openai";
 import type { ResponseFormatJSONSchema } from "openai/resources/shared";
-import { redisCache, getProgressionCacheKey } from "./cache";
-import { pendingRequests } from "./pendingRequests";
 import {
   buildOptimizedPrompt,
   estimateTokenUsage,
   type ProgressionRequest,
 } from "./promptOptimization";
-import { withRetry, xaiCircuitBreaker } from "./retryLogic";
+import { withRetry } from "./retryLogic";
 import { logger } from "./utils/logger";
 import { validateAPIResponse, APIValidationError } from "./utils/apiValidation";
-import { normalizeScaleDescriptor, normalizeModeCanonical } from "@shared/music/scaleModes";
+import { normalizeModeCanonical } from "@shared/music/scaleModes";
+import { getProgressionCacheKey } from "@shared/cacheUtils";
+import { toPitchClass } from "@shared/pitchClass";
+import type {
+  ProgressionResultFromAPI,
+  SimpleChord,
+  SimpleScale,
+} from "@shared/progressionTypes";
 import { env, isTest } from "./env";
 
 const XAI_REQUEST_TIMEOUT_MS = env.XAI_REQUEST_TIMEOUT_MS;
@@ -206,24 +211,6 @@ function cleanJsonResponse(text: string): string {
   return cleaned.trim();
 }
 
-interface SimpleChord {
-  chordName: string;
-  musicalFunction: string;
-  relationToKey: string;
-}
-
-interface SimpleScale {
-  name: string;
-  rootNote: string;
-}
-
-interface ProgressionResultFromAPI {
-  progression: SimpleChord[];
-  scales: SimpleScale[];
-  detectedKey?: string;
-  detectedMode?: string;
-}
-
 function isAdvancedChordSymbol(chordName: string): boolean {
   const normalized = chordName.trim();
   if (!normalized) return false;
@@ -256,52 +243,13 @@ function countAdvancedChords(progression: SimpleChord[]): number {
   }).length;
 }
 
-const ROOT_TO_PITCH_CLASS: Record<string, number> = {
-  C: 0,
-  "C#": 1,
-  Db: 1,
-  D: 2,
-  "D#": 3,
-  Eb: 3,
-  E: 4,
-  F: 5,
-  "F#": 6,
-  Gb: 6,
-  G: 7,
-  "G#": 8,
-  Ab: 8,
-  A: 9,
-  "A#": 10,
-  Bb: 10,
-  B: 11,
-};
-
-function normalizeRootToken(token: string): string {
-  const trimmed = token.trim();
-  if (trimmed.length <= 1) {
-    return trimmed.toUpperCase();
-  }
-  const first = trimmed.charAt(0).toUpperCase();
-  const second = trimmed.charAt(1);
-
-  if (second === "#" || second === "♯") return `${first}#`;
-  if (second === "b" || second === "♭" || second === "B") return `${first}b`;
-  return first + second.toLowerCase();
-}
-
-function toPitchClass(root: string): number | null {
-  const normalized = normalizeRootToken(root);
-  if (!(normalized in ROOT_TO_PITCH_CLASS)) return null;
-  return ROOT_TO_PITCH_CLASS[normalized];
-}
-
 function parseScaleName(scaleName: string): { root: string; descriptor: string } | null {
   const match = scaleName.trim().match(/^([A-G](?:[#b♯♭])?)(?:\s+)(.+)$/i);
   if (!match) return null;
   return { root: match[1], descriptor: match[2] };
 }
 
-function scaleMatchesRequest(
+function scaleMatchesRequestedMode(
   scale: SimpleScale,
   requestedPitchClass: number,
   requestedModeCanonical: string
@@ -330,13 +278,19 @@ function getPrimaryScaleAlignment(
     return { hasAnyMatch: false, firstIsMatch: false };
   }
 
-  const firstIsMatch = scaleMatchesRequest(scales[0], requestedPitchClass, requestedModeCanonical);
+  const firstIsMatch = scaleMatchesRequestedMode(
+    scales[0],
+    requestedPitchClass,
+    requestedModeCanonical
+  );
 
   const hasAnyMatch = firstIsMatch
     ? true
     : scales
         .slice(1)
-        .some((scale) => scaleMatchesRequest(scale, requestedPitchClass, requestedModeCanonical));
+        .some((scale) =>
+          scaleMatchesRequestedMode(scale, requestedPitchClass, requestedModeCanonical)
+        );
 
   return { hasAnyMatch, firstIsMatch };
 }
@@ -349,7 +303,6 @@ export async function generateChordProgression(
   numChords: number,
   selectedProgression: string
 ): Promise<ProgressionResultFromAPI> {
-  // Log incoming parameters for debugging chord count issues
   logger.info("generateChordProgression called", {
     key,
     mode,
@@ -359,7 +312,6 @@ export async function generateChordProgression(
     selectedProgression,
   });
 
-  // Create cache key using semantic fingerprinting
   const cacheKey = getProgressionCacheKey(
     key,
     mode,
@@ -368,37 +320,8 @@ export async function generateChordProgression(
     selectedProgression,
     generationStyle
   );
+  logger.debug("Request fingerprint", { cacheKey, numChords });
 
-  // Log the cache key to verify numChords is included
-  logger.debug("Cache key generated", { cacheKey, numChords });
-
-  // Step 1: Check if we have a similar request already pending (deduplication)
-  const pending = pendingRequests.get(cacheKey);
-  if (pending) {
-    logger.debug("Returning pending request", { cacheKey });
-    return pending;
-  }
-
-  // Step 2: Check Redis cache for existing result
-  const cachedResult = await redisCache.get<ProgressionResultFromAPI>(cacheKey);
-  if (cachedResult) {
-    const alignment = getPrimaryScaleAlignment(cachedResult.scales, key, mode);
-    if (!alignment.hasAnyMatch || !alignment.firstIsMatch) {
-      logger.warn("Ignoring stale cache entry with mismatched primary scale", {
-        cacheKey,
-        key,
-        mode,
-        hasAnyPrimaryMatch: alignment.hasAnyMatch,
-        primaryScaleFirst: alignment.firstIsMatch,
-      });
-      await redisCache.delete(cacheKey);
-    } else {
-      logger.debug("Cache hit", { cacheKey });
-      return cachedResult;
-    }
-  }
-
-  // Create request object for optimization
   const request: ProgressionRequest = {
     key,
     mode,
@@ -408,123 +331,110 @@ export async function generateChordProgression(
     selectedProgression,
   };
 
-  // Step 3: Build optimized prompt
   const promptComponents = buildOptimizedPrompt(request);
   logger.debug("Prompt built", {
     estimatedTokens: estimateTokenUsage(promptComponents),
     cacheKey,
   });
 
-  // Step 4: Create async operation with all optimizations
-  const generateWithOptimizations = async (): Promise<ProgressionResultFromAPI> => {
+  const generateOnce = async (): Promise<ProgressionResultFromAPI> => {
     logger.info("Generating chord progression with XAI Grok API", { cacheKey });
 
     const openai = getOpenAI();
 
-    return await xaiRequestLimiter.run(async () =>
-      xaiCircuitBreaker.execute(async () => {
-        const response = await openai.chat.completions.create({
-          model: env.XAI_MODEL,
-          messages: [
-            {
-              role: "system",
-              content:
-                "You are a jazz and contemporary guitar music theory expert. Respond with structured JSON matching the provided schema.",
-            },
-            {
-              role: "user",
-              content: promptComponents.fullPrompt,
-            },
-          ],
-          // Structured Outputs: schema enforces shape AND exact chord count
-          // (minItems/maxItems = numChords). The model can no longer return the
-          // wrong number of chords or omit fields.
-          response_format: buildProgressionResponseFormat(numChords),
-          temperature: 0.7,
-          max_tokens: 2048,
-        });
+    return await xaiRequestLimiter.run(async () => {
+      const response = await openai.chat.completions.create({
+        model: env.XAI_MODEL,
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are a jazz and contemporary guitar music theory expert. Respond with structured JSON matching the provided schema.",
+          },
+          {
+            role: "user",
+            content: promptComponents.fullPrompt,
+          },
+        ],
+        // Structured Outputs: schema enforces shape AND exact chord count
+        // (minItems/maxItems = numChords). The model can no longer return the
+        // wrong number of chords or omit fields.
+        response_format: buildProgressionResponseFormat(numChords),
+        temperature: 0.7,
+        max_tokens: 2048,
+      });
 
-        const rawText = response.choices[0].message.content?.trim();
-        if (!rawText) {
-          throw new Error("Empty response from API");
-        }
+      const rawText = response.choices[0].message.content?.trim();
+      if (!rawText) {
+        throw new Error("Empty response from API");
+      }
 
-        // Clean markdown code blocks if present
-        const jsonText = cleanJsonResponse(rawText);
-        const parsedResult = JSON.parse(jsonText);
+      // Clean markdown code blocks if present
+      const jsonText = cleanJsonResponse(rawText);
+      const parsedResult = JSON.parse(jsonText);
 
-        // Enhanced validation with format checking and chord count verification
-        logger.info("Validating API response", {
-          expectedChordCount: numChords,
-          actualChordCount: parsedResult?.progression?.length,
-          rawProgressionLength: Array.isArray(parsedResult?.progression)
-            ? parsedResult.progression.length
-            : "not an array",
-        });
+      logger.info("Validating API response", {
+        expectedChordCount: numChords,
+        actualChordCount: parsedResult?.progression?.length,
+        rawProgressionLength: Array.isArray(parsedResult?.progression)
+          ? parsedResult.progression.length
+          : "not an array",
+      });
 
-        const resultFromApi = validateAPIResponse(parsedResult, numChords);
-        const primaryScaleAlignment = getPrimaryScaleAlignment(resultFromApi.scales, key, mode);
-        if (!primaryScaleAlignment.hasAnyMatch) {
+      const resultFromApi = validateAPIResponse(parsedResult, numChords);
+      const primaryScaleAlignment = getPrimaryScaleAlignment(resultFromApi.scales, key, mode);
+      if (!primaryScaleAlignment.hasAnyMatch) {
+        throw new APIValidationError(
+          `AI response is missing a primary scale that matches requested mode: ${key} ${mode}.`
+        );
+      }
+      if (!primaryScaleAlignment.firstIsMatch) {
+        throw new APIValidationError(
+          `Primary scale must be listed first and match requested mode: ${key} ${mode}.`
+        );
+      }
+      if (includeTensions) {
+        const minimumAdvancedChords = Math.max(1, Math.floor(numChords * 0.2));
+        const advancedChordCount = countAdvancedChords(resultFromApi.progression);
+        if (advancedChordCount < minimumAdvancedChords) {
           throw new APIValidationError(
-            `AI response is missing a primary scale that matches requested mode: ${key} ${mode}.`
+            `includeTensions was enabled but only ${advancedChordCount} advanced chord(s) were returned. Expected at least ${minimumAdvancedChords}.`
           );
         }
-        if (!primaryScaleAlignment.firstIsMatch) {
-          throw new APIValidationError(
-            `Primary scale must be listed first and match requested mode: ${key} ${mode}.`
-          );
-        }
-        if (includeTensions) {
-          const minimumAdvancedChords = Math.max(1, Math.floor(numChords * 0.2));
-          const advancedChordCount = countAdvancedChords(resultFromApi.progression);
-          if (advancedChordCount < minimumAdvancedChords) {
-            throw new APIValidationError(
-              `includeTensions was enabled but only ${advancedChordCount} advanced chord(s) were returned. Expected at least ${minimumAdvancedChords}.`
-            );
-          }
-        }
+      }
 
-        logger.info("API response validated successfully", {
-          requestedChordCount: numChords,
-          returnedChordCount: resultFromApi.progression.length,
-          scaleCount: resultFromApi.scales.length,
-          chordCountMatch: resultFromApi.progression.length === numChords,
-        });
+      logger.info("API response validated successfully", {
+        requestedChordCount: numChords,
+        returnedChordCount: resultFromApi.progression.length,
+        scaleCount: resultFromApi.scales.length,
+        chordCountMatch: resultFromApi.progression.length === numChords,
+      });
 
-        return resultFromApi;
-      })
-    );
+      return resultFromApi;
+    });
   };
 
-  // Step 5: Create request promise once and share it for deduplication
-  const requestPromise = withRetry(
-    generateWithOptimizations,
-    {
-      maxRetries: 3,
-      initialDelay: 2000, // Start with 2 seconds
-      maxDelay: 15000, // Max 15 seconds
-      backoffMultiplier: 1.5,
-      jitterFactor: 0.2,
-    },
-    (stats) => {
-      logger.warn("Retrying chord progression generation", {
-        attempt: stats.attemptNumber,
-        totalRetries: stats.totalRetries,
-        delayMs: stats.totalDelay,
-        cacheKey,
-      });
-    }
-  );
-  pendingRequests.set(cacheKey, requestPromise);
-
   try {
-    // Step 6: Await shared request promise
-    const result = await requestPromise;
+    const result = await withRetry(
+      generateOnce,
+      {
+        maxRetries: 1,
+        initialDelay: 2000,
+        maxDelay: 15000,
+        backoffMultiplier: 1.5,
+        jitterFactor: 0.2,
+      },
+      (stats) => {
+        logger.warn("Retrying chord progression generation", {
+          attempt: stats.attemptNumber,
+          totalRetries: stats.totalRetries,
+          delayMs: stats.totalDelay,
+          cacheKey,
+        });
+      }
+    );
 
-    // Step 7: Cache successful result (24 hour TTL)
-    await redisCache.set(cacheKey, result, 86400);
-
-    logger.info("Chord progression generated and cached", {
+    logger.info("Chord progression generated", {
       cacheKey,
       tokens: estimateTokenUsage(promptComponents),
       chordCount: result.progression.length,
@@ -535,7 +445,6 @@ export async function generateChordProgression(
   } catch (error) {
     logger.error("Error generating chord progression", error, { cacheKey });
 
-    // Enhanced error classification
     if (error instanceof APIValidationError) {
       logger.error("API response validation failed", error, { cacheKey });
       throw new Error(`Invalid response from AI: ${error.message}`);
@@ -545,12 +454,6 @@ export async function generateChordProgression(
       throw new Error("Failed to parse the response from the AI. The format was invalid.");
     }
     if (error instanceof Error) {
-      // Enhance error messages with more context
-      if (error.message.includes("Circuit breaker is OPEN")) {
-        throw new Error(
-          "XAI API is temporarily unavailable (circuit breaker activated). Please try again later."
-        );
-      }
       if (error.message.includes("timed out")) {
         throw new Error("XAI API request timed out. The service may be busy.");
       }
@@ -558,32 +461,16 @@ export async function generateChordProgression(
     }
     throw new Error(`Unexpected error: ${JSON.stringify(error)}`);
   }
-  // Note: pendingRequests automatically cleans up via promise.finally()
 }
 
 export async function analyzeCustomProgression(
   chords: string[]
 ): Promise<ProgressionResultFromAPI> {
-  // Create cache key for custom progression
   const cacheKey = `custom:${chords.join("-")}`;
+  logger.debug("Custom progression request fingerprint", { cacheKey, chordCount: chords.length });
 
-  // Step 1: Check if we have a similar request already pending (deduplication)
-  const pending = pendingRequests.get(cacheKey);
-  if (pending) {
-    logger.debug("Returning pending custom progression request", { cacheKey });
-    return pending;
-  }
-
-  // Step 2: Check Redis cache for existing result
-  const cachedResult = await redisCache.get<ProgressionResultFromAPI>(cacheKey);
-  if (cachedResult) {
-    logger.debug("Cache hit for custom progression", { cacheKey });
-    return cachedResult;
-  }
-
-  // Step 3: Build prompt for custom progression analysis. JSON shape and field
-  // presence are enforced by the Structured Outputs schema, so this prompt
-  // focuses on the musical analysis itself.
+  // JSON shape and field presence are enforced by the Structured Outputs schema,
+  // so this prompt focuses on the musical analysis itself.
   const prompt = `Analyze this chord progression and produce a key detection plus full Roman-numeral analysis with compatible scales.
 
 CHORD PROGRESSION:
@@ -609,8 +496,7 @@ SCALE SUGGESTIONS:
 
 Respect key-signature accidentals throughout (prefer flats vs sharps based on the detected key).`;
 
-  // Step 4: Create async operation
-  const analyzeWithOptimizations = async (): Promise<ProgressionResultFromAPI> => {
+  const analyzeOnce = async (): Promise<ProgressionResultFromAPI> => {
     logger.info("Analyzing custom chord progression with XAI Grok API", {
       cacheKey,
       chordCount: chords.length,
@@ -618,79 +504,68 @@ Respect key-signature accidentals throughout (prefer flats vs sharps based on th
 
     const openai = getOpenAI();
 
-    return await xaiRequestLimiter.run(async () =>
-      xaiCircuitBreaker.execute(async () => {
-        const response = await openai.chat.completions.create({
-          model: env.XAI_MODEL,
-          messages: [
-            {
-              role: "system",
-              content:
-                "You are a jazz and contemporary guitar music theory expert. Respond with structured JSON matching the provided schema.",
-            },
-            {
-              role: "user",
-              content: prompt,
-            },
-          ],
-          response_format: ANALYSIS_RESPONSE_FORMAT,
-          // Lower temperature for analysis: key/mode detection should be
-          // deterministic, not creative.
-          temperature: 0.3,
-          max_tokens: 2048,
-        });
+    return await xaiRequestLimiter.run(async () => {
+      const response = await openai.chat.completions.create({
+        model: env.XAI_MODEL,
+        messages: [
+          {
+            role: "system",
+            content:
+              "You are a jazz and contemporary guitar music theory expert. Respond with structured JSON matching the provided schema.",
+          },
+          {
+            role: "user",
+            content: prompt,
+          },
+        ],
+        response_format: ANALYSIS_RESPONSE_FORMAT,
+        // Lower temperature for analysis: key/mode detection should be
+        // deterministic, not creative.
+        temperature: 0.3,
+        max_tokens: 2048,
+      });
 
-        const rawText = response.choices[0].message.content?.trim();
-        if (!rawText) {
-          throw new Error("Empty response from API");
-        }
+      const rawText = response.choices[0].message.content?.trim();
+      if (!rawText) {
+        throw new Error("Empty response from API");
+      }
 
-        // Clean markdown code blocks if present
-        const jsonText = cleanJsonResponse(rawText);
-        const parsedResult = JSON.parse(jsonText);
+      // Clean markdown code blocks if present
+      const jsonText = cleanJsonResponse(rawText);
+      const parsedResult = JSON.parse(jsonText);
 
-        // Enhanced validation with format checking
-        const resultFromApi = validateAPIResponse(parsedResult);
+      const resultFromApi = validateAPIResponse(parsedResult);
 
-        logger.debug("Custom progression analysis validated successfully", {
-          chordCount: resultFromApi.progression.length,
-          scaleCount: resultFromApi.scales.length,
-        });
+      logger.debug("Custom progression analysis validated successfully", {
+        chordCount: resultFromApi.progression.length,
+        scaleCount: resultFromApi.scales.length,
+      });
 
-        return resultFromApi;
-      })
-    );
+      return resultFromApi;
+    });
   };
 
-  // Step 5: Create request promise once and share it for deduplication
-  const requestPromise = withRetry(
-    analyzeWithOptimizations,
-    {
-      maxRetries: 3,
-      initialDelay: 2000,
-      maxDelay: 15000,
-      backoffMultiplier: 1.5,
-      jitterFactor: 0.2,
-    },
-    (stats) => {
-      logger.warn("Retrying custom progression analysis", {
-        attempt: stats.attemptNumber,
-        totalRetries: stats.totalRetries,
-        delayMs: stats.totalDelay,
-        cacheKey,
-      });
-    }
-  );
-  pendingRequests.set(cacheKey, requestPromise);
-
   try {
-    // Step 6: Await shared request promise
-    const result = await requestPromise;
+    const result = await withRetry(
+      analyzeOnce,
+      {
+        maxRetries: 1,
+        initialDelay: 2000,
+        maxDelay: 15000,
+        backoffMultiplier: 1.5,
+        jitterFactor: 0.2,
+      },
+      (stats) => {
+        logger.warn("Retrying custom progression analysis", {
+          attempt: stats.attemptNumber,
+          totalRetries: stats.totalRetries,
+          delayMs: stats.totalDelay,
+          cacheKey,
+        });
+      }
+    );
 
-    // Step 7: Cache successful result (24 hour TTL)
-    await redisCache.set(cacheKey, result, 86400);
-
-    logger.info("Custom progression analyzed and cached", {
+    logger.info("Custom progression analyzed", {
       cacheKey,
       chordCount: result.progression.length,
       scaleCount: result.scales.length,
@@ -700,7 +575,6 @@ Respect key-signature accidentals throughout (prefer flats vs sharps based on th
   } catch (error) {
     logger.error("Error analyzing custom progression", error, { cacheKey });
 
-    // Enhanced error classification
     if (error instanceof APIValidationError) {
       logger.error("API response validation failed", error, { cacheKey });
       throw new Error(`Invalid response from AI: ${error.message}`);
@@ -710,11 +584,6 @@ Respect key-signature accidentals throughout (prefer flats vs sharps based on th
       throw new Error("Failed to parse the response from the AI. The format was invalid.");
     }
     if (error instanceof Error) {
-      if (error.message.includes("Circuit breaker is OPEN")) {
-        throw new Error(
-          "XAI API is temporarily unavailable (circuit breaker activated). Please try again later."
-        );
-      }
       if (error.message.includes("timed out")) {
         throw new Error("XAI API request timed out. The service may be busy.");
       }

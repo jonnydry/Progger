@@ -19,8 +19,6 @@ const envSchema = z.object({
     )
     .optional(),
 
-  REDIS_URL: z.string().default("redis://localhost:6379"),
-
   SESSION_SECRET: z.string().min(16).optional(),
   REPL_ID: z.string().optional(),
   REPLIT_DOMAINS: z.string().optional(),

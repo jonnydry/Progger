@@ -1197,10 +1197,13 @@ function transposeFingering(fingering: number[][], semitones: number): number[][
 
   const adjustedSemitones = semitones + octaveAdjustment;
 
+  // Octave-wrap only — never clamp frets (clamping would change pitch class)
   return fingering.map((stringFrets) =>
     stringFrets.map((fret) => {
-      const newFret = fret + adjustedSemitones;
-      return Math.max(0, Math.min(newFret, 24));
+      let newFret = fret + adjustedSemitones;
+      while (newFret < 0) newFret += 12;
+      while (newFret > 24) newFret -= 12;
+      return newFret;
     })
   );
 }

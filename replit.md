@@ -1,7 +1,7 @@
 # PROGGER
 
 ## Overview
-PROGGER is an AI-powered chord progression and scale generator for guitarists. It features a glassmorphic UI, Replit Auth integration, and leverages xAI's Grok API to generate intelligent chord progressions with multiple guitar voicings and suggested scales for improvisation. The project aims to provide a comprehensive tool for guitarists to explore and create musical ideas, offering a full-stack application with a modern, responsive design and robust musical theory integration.
+PROGGER is a guitar chord and scale reference app first, with AI progression generation as a secondary inspiration layer. Curated client-side voicing and fingering libraries are the source of musical truth; xAI's Grok suggests novel progressions and scale ideas that the client then enriches with accurate frets. It features a glassmorphic UI, Replit Auth, PostgreSQL stash, and robust music-theory validation.
 
 ## User Preferences
 None documented yet.
@@ -39,7 +39,7 @@ The application is a full-stack project with a React frontend (Vite dev server o
 - Request size limits (10MB) for JSON and URL-encoded bodies.
 - CSRF protection using session-based tokens via `csrf-sync`.
 - Input sanitization with HTML entity escaping for user-provided text fields.
-- Robust error handling for Redis with graceful fallback to in-memory caching.
+- Robust error handling with graceful degradation when optional services are unavailable.
 - Server startup protection with `SESSION_SECRET` validation.
 
 ## External Dependencies

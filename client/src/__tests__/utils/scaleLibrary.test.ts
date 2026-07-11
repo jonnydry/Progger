@@ -405,42 +405,41 @@ describe("scaleLibrary", () => {
       expect(getScaleIntervals("mixolydian")).toEqual([0, 2, 4, 5, 7, 9, 10]);
     });
 
-    it("should match CAGED system positions for C Major", () => {
-      // C Major CAGED positions: Roots should be at standard fret locations
-      // Position 0: E-A-D-G-B-E = 4-9-14-intervals from C
-      // We'll test that scale notes appear at the expected fret positions
-      const cMajorPos0 = getScaleFingering("major", "C", 0);
-
-      // Position 1: Each position should start with different fret ranges
-      // (our algorithm ensures positions are distributed across the neck)
-      const positions = [0, 1, 2, 3, 4];
+    it("should distribute C Major 3NPS positions across the neck", () => {
+      // 3NPS: 7 positions, each a unique shape starting in a different neck region
+      const positions = [0, 1, 2, 3, 4, 5, 6];
       const positionPatterns = positions.map((pos) => getScaleFingering("major", "C", pos));
 
-      // Verify each position has different fret coverage
       for (let i = 0; i < positionPatterns.length - 1; i++) {
         expect(positionPatterns[i]).not.toEqual(positionPatterns[i + 1]);
       }
+
+      // Each string in each position should have exactly 3 notes
+      positionPatterns.forEach((fingering) => {
+        fingering.forEach((stringFrets) => {
+          expect(stringFrets.length).toBe(3);
+        });
+      });
     });
 
     it("should generate different fret locations per position", () => {
       // Test that different positions provide varied fret coverage across the neck
-      const cMajor = [0, 1, 2, 3, 4].map((pos) => getScaleFingering("major", "C", pos));
+      const cMajor = [0, 1, 2, 3, 4, 5, 6].map((pos) => getScaleFingering("major", "C", pos));
 
-      // Get the range of lowest frets for each position (excluding open strings)
+      // Get the range of lowest frets for each position
       const positionMinFrets = cMajor.map((fingering) => {
-        const allFrets = fingering.flat().filter((f) => f > 0);
+        const allFrets = fingering.flat();
         return Math.min(...allFrets);
       });
 
-      // Verify that positions have different starting points (at least somewhat different)
-      // This ensures the scales are spread across different neck regions
+      // 3NPS positions should start at distinct frets across the neck
       const uniqueStarts = new Set(positionMinFrets);
-      expect(uniqueStarts.size).toBeGreaterThan(1); // At least some variety
+      expect(uniqueStarts.size).toBe(7);
 
       // Verify all positions have notes (no empty positions)
       cMajor.forEach((fingering) => {
         const totalNotes = fingering.flat().length;
-        expect(totalNotes).toBeGreaterThan(0);
+        expect(totalNotes).toBe(18); // 6 strings × 3 notes
       });
     });
   });

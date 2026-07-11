@@ -140,10 +140,12 @@ export function formatChordName(chordName: string): string {
  * @param key - Musical key context for determining flat vs sharp spelling
  * @returns Formatted chord name with context-appropriate root spelling
  */
-export function formatChordDisplayNameForKey(root: string, quality: string, key: string): string {
-  // Get the appropriate root spelling for the key context
-  const contextualRoot = displayNote(root, key);
-
-  // Use the existing formatting logic with the contextual root
+export function formatChordDisplayNameForKey(
+  root: string,
+  quality: string,
+  key: string,
+  mode?: string
+): string {
+  const contextualRoot = displayNote(root, key, mode);
   return formatChordDisplayName(contextualRoot, quality);
 }

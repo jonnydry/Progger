@@ -15,6 +15,7 @@ import { valueToNote } from "@/utils/musicTheory";
 interface ChordDetailViewProps {
   chord: ChordInProgression;
   musicalKey: string;
+  mode?: string;
   onClose: () => void;
 }
 
@@ -88,7 +89,7 @@ const VoicingGroup: React.FC<{
         <>
           <div className="flex flex-row flex-wrap gap-6 overflow-x-auto">
             {displayedVoicings.map(({ voicing, chordName }, index) => {
-              const displayedVariantName = displayChordName(chordName, musicalKey);
+              const displayedVariantName = displayChordName(chordName, musicalKey, mode);
               const voicingKey = `${chordName}-${title}-${index}-${voicing.position || "std"}-${voicing.frets.join("-")}`;
               const voicingAnalysis = analyzeVoicing(voicing, chordName);
 
@@ -143,8 +144,13 @@ const VoicingGroup: React.FC<{
   );
 };
 
-export const ChordDetailView: React.FC<ChordDetailViewProps> = ({ chord, musicalKey, onClose }) => {
-  const displayedChordName = displayChordName(chord.chordName, musicalKey);
+export const ChordDetailView: React.FC<ChordDetailViewProps> = ({
+  chord,
+  musicalKey,
+  mode,
+  onClose,
+}) => {
+  const displayedChordName = displayChordName(chord.chordName, musicalKey, mode);
 
   // Analyze chord using our new utility
   const chordAnalysis = analyzeChord(chord.chordName, musicalKey);
@@ -488,7 +494,7 @@ export const ChordDetailView: React.FC<ChordDetailViewProps> = ({ chord, musical
                 return (
                   <div className="flex flex-row flex-wrap gap-4 justify-start">
                     {allVoicingsWithNames.map(({ voicing, chordName }, index) => {
-                      const displayedVariantName = displayChordName(chordName, musicalKey);
+                      const displayedVariantName = displayChordName(chordName, musicalKey, mode);
                       const voicingKey = `${chordName}-${index}-${voicing.position || "std"}-${voicing.frets.join("-")}`;
                       return (
                         <VoicingDiagram

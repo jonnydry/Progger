@@ -181,6 +181,34 @@ describe("validateAPIResponse", () => {
     expect(result.detectedMode).toBe("Minor");
   });
 
+  it("accepts Harmonic Minor and Melodic Minor as detectedMode", () => {
+    const harmonic = validateAPIResponse({
+      progression: [
+        {
+          chordName: "Am",
+          musicalFunction: "Tonic",
+          relationToKey: "i",
+        },
+      ],
+      scales: [{ name: "A Harmonic Minor", rootNote: "A" }],
+      detectedMode: "Harmonic Minor",
+    });
+    expect(harmonic.detectedMode).toBe("Harmonic Minor");
+
+    const melodic = validateAPIResponse({
+      progression: [
+        {
+          chordName: "Am",
+          musicalFunction: "Tonic",
+          relationToKey: "i",
+        },
+      ],
+      scales: [{ name: "A Melodic Minor", rootNote: "A" }],
+      detectedMode: "Melodic Minor",
+    });
+    expect(melodic.detectedMode).toBe("Melodic Minor");
+  });
+
   it("normalizes lowercase detectedMode names to canonical form", () => {
     const payload = {
       progression: [

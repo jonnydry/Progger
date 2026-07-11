@@ -67,22 +67,19 @@ describe("ScaleDiagram", () => {
     });
   });
 
-  it("displays position selector when multiple positions exist", () => {
-    const multiPositionScale: ScaleInfo = {
-      ...mockScaleInfo(),
-      fingering: [
-        [8, 10, 12],
-        [8, 10, 12],
-        [9, 10, 12],
-        [9, 10, 12],
-        [10, 12, 13],
-        [8, 10, 12],
-      ],
-    };
-
-    render(<ScaleDiagram scaleInfo={multiPositionScale} musicalKey="C" />);
+  it("displays position selector with fret labels when multiple positions exist", () => {
+    render(<ScaleDiagram scaleInfo={mockScaleInfo()} musicalKey="C" />);
 
     expect(screen.getByText(/Pos:/)).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /position 1/i })).toBeInTheDocument();
+  });
+
+  it("offers Pattern, All, and Map view modes", () => {
+    render(<ScaleDiagram scaleInfo={mockScaleInfo()} musicalKey="C" presentation="modal" />);
+
+    expect(screen.getByRole("button", { name: /pattern view/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /all positions overlay/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /map view/i })).toBeInTheDocument();
   });
 
   it("clamps selected position when scale changes to fewer positions", async () => {

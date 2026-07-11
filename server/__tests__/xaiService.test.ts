@@ -1,13 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import * as xaiService from "../xaiService";
-import { redisCache, getProgressionCacheKey } from "../cache";
-import { pendingRequests } from "../pendingRequests";
-import { xaiCircuitBreaker } from "../retryLogic";
 import OpenAI from "openai";
 
-// Mock dependencies
-vi.mock("../cache");
-vi.mock("../pendingRequests");
 vi.mock("openai");
 
 describe("xaiService", () => {
@@ -15,11 +9,10 @@ describe("xaiService", () => {
   const originalApiKey = process.env.XAI_API_KEY;
 
   beforeEach(() => {
-    // Reset all mocks
     vi.clearAllMocks();
     process.env.XAI_API_KEY = "xai-test-key";
+    xaiService.__resetXaiClientForTests();
 
-    // Setup OpenAI mock
     mockOpenAI = {
       chat: {
         completions: {
@@ -28,28 +21,9 @@ describe("xaiService", () => {
       },
     };
 
-    // Mock OpenAI constructor
     vi.mocked(OpenAI).mockImplementation(function () {
       return mockOpenAI;
     } as any);
-
-    // Mock cache methods
-    vi.mocked(redisCache.get).mockResolvedValue(null);
-    vi.mocked(redisCache.set).mockResolvedValue(undefined);
-    vi.mocked(redisCache.delete).mockResolvedValue(undefined);
-    vi.mocked(getProgressionCacheKey).mockReturnValue("progression:test-key");
-
-    // Mock pending requests
-    vi.mocked(pendingRequests.get).mockReturnValue(null);
-    vi.mocked(pendingRequests.set).mockReturnValue(undefined);
-
-    // Reset circuit breaker state
-    const state = xaiCircuitBreaker.getState();
-    if (state.state === "open") {
-      // Force reset by waiting or manually resetting internal state
-      (xaiCircuitBreaker as any).state = "closed";
-      (xaiCircuitBreaker as any).failureCount = 0;
-    }
   });
 
   afterEach(() => {
@@ -80,52 +54,9 @@ describe("xaiService", () => {
       ],
     };
 
-    it("should return cached result if available", async () => {
-      // Mock cache hit
-      vi.mocked(redisCache.get).mockResolvedValueOnce(validAPIResponse);
-
-      const result = await xaiService.generateChordProgression(
-        validRequest.key,
-        validRequest.mode,
-        validRequest.includeTensions,
-        validRequest.generationStyle,
-        validRequest.numChords,
-        validRequest.selectedProgression
-      );
-
-      expect(result).toEqual(validAPIResponse);
-      expect(redisCache.get).toHaveBeenCalledTimes(1);
-      expect(mockOpenAI.chat.completions.create).not.toHaveBeenCalled();
-    });
-
-    it("should return pending request if duplicate detected", async () => {
-      const pendingPromise = Promise.resolve(validAPIResponse);
-      vi.mocked(pendingRequests.get).mockReturnValueOnce(pendingPromise);
-
-      const result = await xaiService.generateChordProgression(
-        validRequest.key,
-        validRequest.mode,
-        validRequest.includeTensions,
-        validRequest.generationStyle,
-        validRequest.numChords,
-        validRequest.selectedProgression
-      );
-
-      expect(result).toEqual(validAPIResponse);
-      expect(pendingRequests.get).toHaveBeenCalledTimes(1);
-      expect(mockOpenAI.chat.completions.create).not.toHaveBeenCalled();
-    });
-
-    it("should generate progression via OpenAI when no cache or pending request", async () => {
-      // Mock successful API response
+    it("should generate progression via OpenAI", async () => {
       mockOpenAI.chat.completions.create.mockResolvedValueOnce({
-        choices: [
-          {
-            message: {
-              content: JSON.stringify(validAPIResponse),
-            },
-          },
-        ],
+        choices: [{ message: { content: JSON.stringify(validAPIResponse) } }],
       });
 
       const result = await xaiService.generateChordProgression(
@@ -139,22 +70,11 @@ describe("xaiService", () => {
 
       expect(result).toEqual(validAPIResponse);
       expect(mockOpenAI.chat.completions.create).toHaveBeenCalledTimes(1);
-      expect(redisCache.set).toHaveBeenCalledWith(
-        expect.stringContaining("progression:"),
-        validAPIResponse,
-        86400
-      );
     });
 
-    it("should call OpenAI with correct parameters", async () => {
+    it("should call OpenAI with structured output schema", async () => {
       mockOpenAI.chat.completions.create.mockResolvedValueOnce({
-        choices: [
-          {
-            message: {
-              content: JSON.stringify(validAPIResponse),
-            },
-          },
-        ],
+        choices: [{ message: { content: JSON.stringify(validAPIResponse) } }],
       });
 
       await xaiService.generateChordProgression(
@@ -178,45 +98,32 @@ describe("xaiService", () => {
           }),
           temperature: 0.7,
           max_tokens: 2048,
-          messages: expect.arrayContaining([
-            expect.objectContaining({ role: "system" }),
-            expect.objectContaining({ role: "user" }),
-          ]),
         })
       );
     });
 
     it("should enforce exact chord count in response_format schema", async () => {
       mockOpenAI.chat.completions.create.mockResolvedValueOnce({
-        choices: [
-          {
-            message: {
-              content: JSON.stringify(validAPIResponse),
-            },
-          },
-        ],
+        choices: [{ message: { content: JSON.stringify(validAPIResponse) } }],
       });
 
-      const numChords = 4;
       await xaiService.generateChordProgression(
         validRequest.key,
         validRequest.mode,
         validRequest.includeTensions,
         validRequest.generationStyle,
-        numChords,
+        4,
         validRequest.selectedProgression
       );
 
       const callArg = mockOpenAI.chat.completions.create.mock.calls[0][0];
       const progressionSchema = callArg.response_format.json_schema.schema.properties.progression;
-      expect(progressionSchema.minItems).toBe(numChords);
-      expect(progressionSchema.maxItems).toBe(numChords);
+      expect(progressionSchema.minItems).toBe(4);
+      expect(progressionSchema.maxItems).toBe(4);
     });
 
     it("should propagate varying numChords into response_format minItems/maxItems", async () => {
       for (const numChords of [2, 6, 8]) {
-        vi.mocked(redisCache.get).mockResolvedValueOnce(null);
-        vi.mocked(pendingRequests.get).mockReturnValueOnce(null);
         const progression = Array.from({ length: numChords }, (_, i) => ({
           chordName: "C",
           musicalFunction: `F${i}`,
@@ -254,13 +161,7 @@ describe("xaiService", () => {
 
     it("should throw error when API returns empty response", async () => {
       mockOpenAI.chat.completions.create.mockResolvedValueOnce({
-        choices: [
-          {
-            message: {
-              content: null,
-            },
-          },
-        ],
+        choices: [{ message: { content: null } }],
       });
 
       await expect(
@@ -277,13 +178,7 @@ describe("xaiService", () => {
 
     it("should throw error when API returns invalid JSON", async () => {
       mockOpenAI.chat.completions.create.mockResolvedValueOnce({
-        choices: [
-          {
-            message: {
-              content: "not valid json",
-            },
-          },
-        ],
+        choices: [{ message: { content: "not valid json" } }],
       });
 
       await expect(
@@ -299,22 +194,13 @@ describe("xaiService", () => {
     });
 
     it("should validate API response structure", async () => {
-      // Missing required fields
       const invalidResponse = {
-        progression: [
-          { chordName: "C" }, // Missing musicalFunction and relationToKey
-        ],
+        progression: [{ chordName: "C" }],
         scales: [],
       };
 
       mockOpenAI.chat.completions.create.mockResolvedValueOnce({
-        choices: [
-          {
-            message: {
-              content: JSON.stringify(invalidResponse),
-            },
-          },
-        ],
+        choices: [{ message: { content: JSON.stringify(invalidResponse) } }],
       });
 
       await expect(
@@ -327,51 +213,6 @@ describe("xaiService", () => {
           validRequest.selectedProgression
         )
       ).rejects.toThrow();
-    });
-
-    it("should handle circuit breaker open state", async () => {
-      // Force circuit breaker to open state
-      (xaiCircuitBreaker as any).state = "open";
-      (xaiCircuitBreaker as any).failureCount = 5;
-      (xaiCircuitBreaker as any).lastFailureTime = Date.now();
-
-      await expect(
-        xaiService.generateChordProgression(
-          validRequest.key,
-          validRequest.mode,
-          validRequest.includeTensions,
-          validRequest.generationStyle,
-          validRequest.numChords,
-          validRequest.selectedProgression
-        )
-      ).rejects.toThrow("XAI API is temporarily unavailable");
-    });
-
-    it("should cache successful results with 24hr TTL", async () => {
-      mockOpenAI.chat.completions.create.mockResolvedValueOnce({
-        choices: [
-          {
-            message: {
-              content: JSON.stringify(validAPIResponse),
-            },
-          },
-        ],
-      });
-
-      await xaiService.generateChordProgression(
-        validRequest.key,
-        validRequest.mode,
-        validRequest.includeTensions,
-        validRequest.generationStyle,
-        validRequest.numChords,
-        validRequest.selectedProgression
-      );
-
-      expect(redisCache.set).toHaveBeenCalledWith(
-        expect.any(String),
-        validAPIResponse,
-        86400 // 24 hours
-      );
     });
 
     it("should enforce advanced chord density when includeTensions is true", async () => {
@@ -419,65 +260,6 @@ describe("xaiService", () => {
         xaiService.generateChordProgression("C", "major", false, "balanced", 4, "auto")
       ).rejects.toThrow("Primary scale must be listed first");
     });
-
-    it("should invalidate stale cache when primary scale is not first and regenerate", async () => {
-      const staleCachedResponse = {
-        progression: [
-          { chordName: "C", musicalFunction: "Tonic", relationToKey: "I" },
-          { chordName: "Am", musicalFunction: "Relative Minor", relationToKey: "vi" },
-          { chordName: "F", musicalFunction: "Subdominant", relationToKey: "IV" },
-          { chordName: "G", musicalFunction: "Dominant", relationToKey: "V" },
-        ],
-        scales: [
-          { name: "A Minor", rootNote: "A" },
-          { name: "C Major", rootNote: "C" },
-        ],
-      };
-
-      vi.mocked(redisCache.get).mockResolvedValueOnce(staleCachedResponse);
-      mockOpenAI.chat.completions.create.mockResolvedValueOnce({
-        choices: [{ message: { content: JSON.stringify(validAPIResponse) } }],
-      });
-
-      const result = await xaiService.generateChordProgression(
-        validRequest.key,
-        validRequest.mode,
-        validRequest.includeTensions,
-        validRequest.generationStyle,
-        validRequest.numChords,
-        validRequest.selectedProgression
-      );
-
-      expect(redisCache.delete).toHaveBeenCalledWith("progression:test-key");
-      expect(mockOpenAI.chat.completions.create).toHaveBeenCalledTimes(1);
-      expect(result).toEqual(validAPIResponse);
-    });
-
-    it("should register pending request during generation", async () => {
-      mockOpenAI.chat.completions.create.mockResolvedValueOnce({
-        choices: [
-          {
-            message: {
-              content: JSON.stringify(validAPIResponse),
-            },
-          },
-        ],
-      });
-
-      await xaiService.generateChordProgression(
-        validRequest.key,
-        validRequest.mode,
-        validRequest.includeTensions,
-        validRequest.generationStyle,
-        validRequest.numChords,
-        validRequest.selectedProgression
-      );
-
-      expect(pendingRequests.set).toHaveBeenCalledWith(
-        expect.stringContaining("progression:"),
-        expect.any(Promise)
-      );
-    });
   });
 
   describe("analyzeCustomProgression", () => {
@@ -496,58 +278,20 @@ describe("xaiService", () => {
       ],
     };
 
-    it("should return cached result if available", async () => {
-      vi.mocked(redisCache.get).mockResolvedValueOnce(validAPIResponse);
-
-      const result = await xaiService.analyzeCustomProgression(validChords);
-
-      expect(result).toEqual(validAPIResponse);
-      expect(redisCache.get).toHaveBeenCalledTimes(1);
-      expect(mockOpenAI.chat.completions.create).not.toHaveBeenCalled();
-    });
-
-    it("should return pending request if duplicate detected", async () => {
-      const pendingPromise = Promise.resolve(validAPIResponse);
-      vi.mocked(pendingRequests.get).mockReturnValueOnce(pendingPromise);
-
-      const result = await xaiService.analyzeCustomProgression(validChords);
-
-      expect(result).toEqual(validAPIResponse);
-      expect(pendingRequests.get).toHaveBeenCalledTimes(1);
-      expect(mockOpenAI.chat.completions.create).not.toHaveBeenCalled();
-    });
-
-    it("should analyze progression via OpenAI when no cache or pending request", async () => {
+    it("should analyze progression via OpenAI", async () => {
       mockOpenAI.chat.completions.create.mockResolvedValueOnce({
-        choices: [
-          {
-            message: {
-              content: JSON.stringify(validAPIResponse),
-            },
-          },
-        ],
+        choices: [{ message: { content: JSON.stringify(validAPIResponse) } }],
       });
 
       const result = await xaiService.analyzeCustomProgression(validChords);
 
       expect(result).toEqual(validAPIResponse);
       expect(mockOpenAI.chat.completions.create).toHaveBeenCalledTimes(1);
-      expect(redisCache.set).toHaveBeenCalledWith(
-        expect.stringContaining("custom:"),
-        validAPIResponse,
-        86400
-      );
     });
 
-    it("should call OpenAI with correct parameters for custom analysis", async () => {
+    it("should call OpenAI with analysis schema and lower temperature", async () => {
       mockOpenAI.chat.completions.create.mockResolvedValueOnce({
-        choices: [
-          {
-            message: {
-              content: JSON.stringify(validAPIResponse),
-            },
-          },
-        ],
+        choices: [{ message: { content: JSON.stringify(validAPIResponse) } }],
       });
 
       await xaiService.analyzeCustomProgression(validChords);
@@ -564,55 +308,14 @@ describe("xaiService", () => {
           }),
           temperature: 0.3,
           max_tokens: 2048,
-          messages: expect.arrayContaining([
-            expect.objectContaining({ role: "system" }),
-            expect.objectContaining({
-              role: "user",
-              content: expect.stringContaining(validChords[0]),
-            }),
-          ]),
         })
       );
-    });
-
-    it("should create cache key from chord list", async () => {
-      mockOpenAI.chat.completions.create.mockResolvedValueOnce({
-        choices: [
-          {
-            message: {
-              content: JSON.stringify(validAPIResponse),
-            },
-          },
-        ],
-      });
-
-      await xaiService.analyzeCustomProgression(validChords);
-
-      // Cache key should be "custom:C-Am-F-G"
-      expect(redisCache.get).toHaveBeenCalledWith("custom:C-Am-F-G");
-      expect(redisCache.set).toHaveBeenCalledWith("custom:C-Am-F-G", validAPIResponse, 86400);
     });
 
     it("should handle API errors gracefully", async () => {
       mockOpenAI.chat.completions.create.mockRejectedValueOnce(new Error("API Error"));
 
       await expect(xaiService.analyzeCustomProgression(validChords)).rejects.toThrow();
-    });
-
-    it("should cache successful custom analysis results", async () => {
-      mockOpenAI.chat.completions.create.mockResolvedValueOnce({
-        choices: [
-          {
-            message: {
-              content: JSON.stringify(validAPIResponse),
-            },
-          },
-        ],
-      });
-
-      await xaiService.analyzeCustomProgression(validChords);
-
-      expect(redisCache.set).toHaveBeenCalledWith(expect.any(String), validAPIResponse, 86400);
     });
   });
 
@@ -630,9 +333,7 @@ describe("xaiService", () => {
           4,
           "auto"
         );
-        const assertion = expect(pending).rejects.toThrow(
-          /XAI API request timed out|XAI API is temporarily unavailable/
-        );
+        const assertion = expect(pending).rejects.toThrow(/XAI API request timed out|timed out/);
         await vi.runAllTimersAsync();
         await assertion;
       } finally {
@@ -646,7 +347,7 @@ describe("xaiService", () => {
           {
             message: {
               content: JSON.stringify({
-                progression: [], // Empty progression is invalid
+                progression: [],
                 scales: [],
               }),
             },
@@ -656,7 +357,7 @@ describe("xaiService", () => {
 
       await expect(
         xaiService.generateChordProgression("C", "major", false, "balanced", 4, "auto")
-      ).rejects.toThrow();
+      ).rejects.toThrow(/Invalid response from AI|Empty response|validation/i);
     });
   });
 });

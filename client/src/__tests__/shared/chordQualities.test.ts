@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { resolveChordQuality } from "@shared/music/chordQualities";
+import { resolveChordQuality, splitChordName } from "@shared/music/chordQualities";
 
 describe("shared/music/chordQualities", () => {
   it("normalizes complex dominant alterations", () => {
@@ -18,6 +18,24 @@ describe("shared/music/chordQualities", () => {
     const result = resolveChordQuality("Δ7");
     expect(result.normalized).toBe("maj7");
     expect(result.recognized).toBe(true);
+  });
+
+  it("normalizes flat roots without uppercasing the accidental", () => {
+    expect(splitChordName("Bbmaj9")).toEqual({
+      root: "Bb",
+      quality: "maj9",
+      bass: undefined,
+    });
+    expect(splitChordName("Eb7")).toEqual({
+      root: "Eb",
+      quality: "7",
+      bass: undefined,
+    });
+    expect(splitChordName("F#m7b5/A")).toEqual({
+      root: "F#",
+      quality: "min7b5",
+      bass: "A",
+    });
   });
 
   it("identifies unsupported qualities", () => {

@@ -62,7 +62,8 @@ export const STANDARD_TUNING_NAMES = ["E", "B", "G", "D", "A", "E"] as const;
 export function noteToValue(note: string, defaultValue: number = 0): number {
   if (!note || note.length === 0) return defaultValue;
 
-  const normalizedNote = note.charAt(0).toUpperCase() + note.slice(1).toLowerCase();
+  const ascii = note.replace(/♯/g, "#").replace(/♭/g, "b");
+  const normalizedNote = ascii.charAt(0).toUpperCase() + ascii.slice(1).toLowerCase();
 
   // Try sharp notation first
   let index = ALL_NOTES_SHARP.indexOf(normalizedNote as any);
@@ -129,8 +130,8 @@ export function areNotesEnharmonic(note1: string, note2: string): boolean {
 }
 
 /**
- * Define key signatures and their preferred accidental types
- * Sharp keys use flats when they contain fewer flats than sharps of the same key
+ * Define key signatures and their preferred accidental types.
+ * Values are for MAJOR keys (or the major key whose signature a mode inherits).
  */
 const KEY_ACCIDENTAL_PREFERENCES: Record<
   string,
@@ -153,62 +154,178 @@ const KEY_ACCIDENTAL_PREFERENCES: Record<
   Cb: { type: "flat", flats: 7, sharps: 0 },
 };
 
-/**
- * Determine if a key uses sharps or flats based on music theory
- * @param key - The musical key (e.g., 'C', 'G', 'F', 'Bb')
- * @returns 'sharp' if key uses sharps, 'flat' if key uses flats, 'natural' for C
- */
-export function getKeyAccidentalType(key: string): "sharp" | "flat" | "natural" {
-  const normalizedKey = key.charAt(0).toUpperCase() + key.slice(1).toLowerCase();
+/** Relative major for natural minor tonics (guitar key-signature spelling). */
+const MINOR_TO_RELATIVE_MAJOR: Record<string, string> = {
+  A: "C",
+  E: "G",
+  B: "D",
+  "F#": "A",
+  "C#": "E",
+  "G#": "B",
+  "D#": "F#",
+  "A#": "C#",
+  D: "F",
+  G: "Bb",
+  C: "Eb",
+  F: "Ab",
+  Bb: "Db",
+  Eb: "Gb",
+  Ab: "Cb",
+};
 
-  const keyInfo = KEY_ACCIDENTAL_PREFERENCES[normalizedKey];
+/**
+ * Normalize a key token for signature lookup (Bb not BB; strip trailing "m").
+ */
+function normalizeKeyToken(key: string): { tonic: string; impliedMinor: boolean } {
+  const ascii = key.replace(/♯/g, "#").replace(/♭/g, "b").trim();
+  const impliedMinor = /m$/i.test(ascii) || /\bminor\b/i.test(ascii);
+  const stripped = ascii
+    .replace(/\s*(natural|harmonic|melodic)?\s*minor\s*$/i, "")
+    .replace(/m$/i, "")
+    .trim();
+  if (!stripped) {
+    return { tonic: "C", impliedMinor };
+  }
+  const tonic =
+    stripped.length <= 1
+      ? stripped.toUpperCase()
+      : stripped.charAt(0).toUpperCase() + stripped.slice(1).toLowerCase();
+  // BB from legacy uppercase bugs → Bb
+  const fixed = tonic === "BB" ? "Bb" : tonic === "EB" ? "Eb" : tonic === "AB" ? "Ab" : tonic === "DB" ? "Db" : tonic === "GB" ? "Gb" : tonic;
+  return { tonic: fixed, impliedMinor };
+}
+
+/**
+ * Major-system mode → semitone shift from mode tonic to parent major tonic.
+ * Matches shared/music/scaleModes MAJOR_SYSTEM_MODE_PROFILES.parentMajorShift.
+ */
+const MODE_TO_PARENT_MAJOR_SHIFT: Record<string, number> = {
+  major: 0,
+  ionian: 0,
+  dorian: 10, // -2 mod 12: D dorian → C
+  phrygian: 8, // -4
+  lydian: 7, // -5
+  mixolydian: 5, // -7
+  minor: 3,
+  aeolian: 3,
+  locrian: 1,
+};
+
+/**
+ * Map scale-library names (e.g. "pentatonic minor") to a diatonic mode
+ * used only for guitar key-signature / accidental spelling on the neck.
+ */
+export function resolveSpellingMode(scaleOrMode: string): string {
+  const key = scaleOrMode.trim().toLowerCase();
+  if (MODE_TO_PARENT_MAJOR_SHIFT[key] !== undefined) {
+    return key;
+  }
+
+  if (/\bdorian\b/.test(key)) return "dorian";
+  if (/\bphrygian\b/.test(key) && !/\bdominant\b/.test(key)) return "phrygian";
+  if (/\blydian\b/.test(key) && !/\bdominant\b/.test(key)) return "lydian";
+  if (/\bmixolydian\b/.test(key) || key === "lydian dominant" || key === "bebop dominant") {
+    return "mixolydian";
+  }
+  if (/\blocrian\b/.test(key) || key === "super locrian" || key === "altered") {
+    return "locrian";
+  }
+  if (
+    /\bminor\b/.test(key) ||
+    key === "blues" ||
+    key === "gypsy" ||
+    key === "phrygian dominant"
+  ) {
+    return "minor";
+  }
+  if (/\bmajor\b/.test(key) || key === "whole tone" || key === "diminished" || key === "ionian") {
+    return "major";
+  }
+
+  return "major";
+}
+
+function parentMajorForMode(tonic: string, mode: string): string {
+  const modeKey = resolveSpellingMode(mode);
+  const shift = MODE_TO_PARENT_MAJOR_SHIFT[modeKey];
+  if (shift === undefined) {
+    return tonic;
+  }
+  if (modeKey === "minor" || modeKey === "aeolian") {
+    return MINOR_TO_RELATIVE_MAJOR[tonic] ?? valueToNote((noteToValue(tonic) + 3) % 12);
+  }
+  if (shift === 0) {
+    return tonic;
+  }
+  const parentPc = (noteToValue(tonic) + shift) % 12;
+  // Prefer a spelling that exists in our key-signature table
+  const sharp = ALL_NOTES_SHARP[parentPc];
+  const flat = ALL_NOTES_FLAT[parentPc];
+  if (KEY_ACCIDENTAL_PREFERENCES[sharp]) return sharp;
+  if (KEY_ACCIDENTAL_PREFERENCES[flat]) return flat;
+  return sharp;
+}
+
+/**
+ * Determine if a key uses sharps or flats based on guitar key signatures.
+ * Optional mode uses the parent-major signature (e.g. A minor → C = naturals).
+ * Scale-library names (e.g. "pentatonic minor") are mapped via resolveSpellingMode.
+ */
+export function getKeyAccidentalType(
+  key: string,
+  mode?: string
+): "sharp" | "flat" | "natural" {
+  const { tonic, impliedMinor } = normalizeKeyToken(key);
+  const effectiveMode = resolveSpellingMode(mode?.trim() || (impliedMinor ? "minor" : "major"));
+  const signatureTonic = parentMajorForMode(tonic, effectiveMode);
+
+  const keyInfo = KEY_ACCIDENTAL_PREFERENCES[signatureTonic];
   if (keyInfo) {
     return keyInfo.type;
   }
 
-  // Fallback for unknown keys - prefer sharps
+  // Enharmonic fallback (e.g. C# vs Db)
+  const pc = noteToValue(signatureTonic);
+  for (const [name, info] of Object.entries(KEY_ACCIDENTAL_PREFERENCES)) {
+    if (noteToValue(name) === pc) {
+      return info.type;
+    }
+  }
+
   return "sharp";
 }
 
 /**
- * Display a note using the appropriate accidental based on the key context
- * @param note - The note to display (can be sharp or flat notation)
- * @param key - The musical key context (determines sharp vs flat preference)
- * @returns Note name with context-appropriate accidental
+ * Display a note using the appropriate accidental based on the key/mode context
+ * (guitar neck labels should match the key signature the player is in).
  */
-export function displayNote(note: string, key: string): string {
+export function displayNote(note: string, key: string, mode?: string): string {
   const noteValue = noteToValue(note);
-  const accidentalType = getKeyAccidentalType(key);
+  const accidentalType = getKeyAccidentalType(key, mode);
 
-  // For C major (natural keys), use conventional spellings:
+  // For C major / A minor (natural keys), use conventional mixed spellings:
   // C, C#, D, Eb, E, F, F#, G, Ab, A, Bb, B
   if (accidentalType === "natural") {
     const cMajorSpellings = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
     return cMajorSpellings[noteValue];
   }
 
-  // For sharp keys, use sharp notation
   if (accidentalType === "sharp") {
     return ALL_NOTES_SHARP[noteValue];
   }
 
-  // For flat keys, use flat notation
   return ALL_NOTES_FLAT[noteValue];
 }
 
 /**
- * Transform a chord name to use the appropriate accidentals based on key context
- * @param chordName - The chord name (e.g., "C#maj7", "Gbmin")
- * @param key - The musical key context
- * @returns Chord name with context-appropriate accidental
+ * Transform a chord name to use the appropriate accidentals based on key/mode context
  */
-export function displayChordName(chordName: string, key: string): string {
-  // Extract the root note (first letter plus optional sharp/flat)
+export function displayChordName(chordName: string, key: string, mode?: string): string {
   const match = chordName.match(/^([A-G][#b]?)(.*)/i);
   if (!match) return chordName;
 
   const [, root, quality] = match;
-  const displayRoot = displayNote(root, key);
+  const displayRoot = displayNote(root, key, mode);
 
   return displayRoot + quality;
 }

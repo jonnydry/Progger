@@ -21,6 +21,13 @@ import NoteDot from "./NoteDot";
 interface ScaleDiagramProps {
   scaleInfo: ScaleInfo;
   musicalKey: string;
+  /** Mode for key-signature spelling on the neck (e.g. minor → relative major accidentals) */
+  mode?: string;
+  /**
+   * "inline" — page diagram with mobile expand-to-modal.
+   * "modal" — full 24-fret diagram for use inside ScaleDiagramModal (no nested modal).
+   */
+  presentation?: "inline" | "modal";
 }
 
 // Wrapper to return -1 for invalid notes (used as sentinel value in this component)
@@ -90,42 +97,47 @@ const FretInlay: React.FC<{ fret: number; fretCount: number }> = React.memo(
 FretInlay.displayName = "FretInlay";
 
 const ViewToggle: React.FC<{
-  viewMode: "pattern" | "map";
-  setViewMode: (mode: "pattern" | "map") => void;
+  viewMode: "pattern" | "all" | "map";
+  setViewMode: (mode: "pattern" | "all" | "map") => void;
 }> = React.memo(({ viewMode, setViewMode }) => {
+  const modes: Array<{ id: "pattern" | "all" | "map"; label: string; aria: string }> = [
+    { id: "pattern", label: "Pattern", aria: "Pattern view — one 3NPS position" },
+    { id: "all", label: "All", aria: "All positions overlay on full neck" },
+    { id: "map", label: "Map", aria: "Map view — all scale notes" },
+  ];
+
   return (
     <div className="flex items-center gap-1 sm:gap-2 bg-text/10 p-1 rounded-md">
-      <button
-        onClick={() => setViewMode("pattern")}
-        className={`px-2 sm:px-3 py-1 text-xs sm:text-sm font-semibold rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background ${
-          viewMode === "pattern" ? "bg-surface shadow" : "text-text/60 hover:text-text"
-        }`}
-        aria-label="Pattern view"
-        aria-pressed={viewMode === "pattern"}
-      >
-        Pattern
-      </button>
-      <button
-        onClick={() => setViewMode("map")}
-        className={`px-2 sm:px-3 py-1 text-xs sm:text-sm font-semibold rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background ${
-          viewMode === "map" ? "bg-surface shadow" : "text-text/60 hover:text-text"
-        }`}
-        aria-label="Map view"
-        aria-pressed={viewMode === "map"}
-      >
-        Map
-      </button>
+      {modes.map((mode) => (
+        <button
+          key={mode.id}
+          onClick={() => setViewMode(mode.id)}
+          className={`px-2 sm:px-3 py-1 text-xs sm:text-sm font-semibold rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background ${
+            viewMode === mode.id ? "bg-surface shadow" : "text-text/60 hover:text-text"
+          }`}
+          aria-label={mode.aria}
+          aria-pressed={viewMode === mode.id}
+        >
+          {mode.label}
+        </button>
+      ))}
     </div>
   );
 });
 ViewToggle.displayName = "ViewToggle";
 
+interface PositionTab {
+  label: string;
+  ariaLabel: string;
+  isRootPosition: boolean;
+}
+
 const PositionSelector: React.FC<{
-  positions: string[];
+  tabs: PositionTab[];
   currentPosition: number;
   setCurrentPosition: (position: number) => void;
-}> = React.memo(({ positions, currentPosition, setCurrentPosition }) => {
-  if (positions.length <= 1) return null;
+}> = React.memo(({ tabs, currentPosition, setCurrentPosition }) => {
+  if (tabs.length <= 1) return null;
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowLeft") {
@@ -133,35 +145,38 @@ const PositionSelector: React.FC<{
       setCurrentPosition(Math.max(0, currentPosition - 1));
     } else if (e.key === "ArrowRight") {
       e.preventDefault();
-      setCurrentPosition(Math.min(positions.length - 1, currentPosition + 1));
+      setCurrentPosition(Math.min(tabs.length - 1, currentPosition + 1));
     } else if (e.key === "Home") {
       e.preventDefault();
       setCurrentPosition(0);
     } else if (e.key === "End") {
       e.preventDefault();
-      setCurrentPosition(positions.length - 1);
+      setCurrentPosition(tabs.length - 1);
     }
   };
 
   return (
-    <div className="flex items-center gap-1 bg-text/10 p-1 rounded-md">
-      <span className="hidden sm:inline text-sm text-text/70 px-2">Pos:</span>
-      {positions.map((_position, index) => (
+    <div className="flex items-center gap-1 bg-text/10 p-1 rounded-md max-w-full overflow-x-auto">
+      <span className="hidden sm:inline text-sm text-text/70 px-2 shrink-0">Pos:</span>
+      {tabs.map((tab, index) => (
         <button
           key={index}
           onClick={() => setCurrentPosition(index)}
           onKeyDown={handleKeyDown}
-          className={`px-1.5 sm:px-2 py-1 text-xs sm:text-sm font-semibold rounded transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background ${
+          className={`px-1.5 sm:px-2 py-1 text-[10px] sm:text-xs font-semibold rounded whitespace-nowrap transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background ${
             currentPosition === index
               ? "bg-secondary text-background shadow"
-              : "text-text/60 hover:text-text hover:bg-surface/50"
+              : tab.isRootPosition
+                ? "text-primary hover:bg-surface/50"
+                : "text-text/60 hover:text-text hover:bg-surface/50"
           }`}
-          aria-label={`Position ${index + 1}`}
+          aria-label={tab.ariaLabel}
           aria-pressed={currentPosition === index}
           role="tab"
           tabIndex={currentPosition === index ? 0 : -1}
+          title={tab.ariaLabel}
         >
-          {index + 1}
+          {tab.label}
         </button>
       ))}
     </div>
@@ -174,22 +189,35 @@ const extractScaleDescriptor = (scaleName: string): string | null => {
   return match ? match[2] : null;
 };
 
-const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) => {
+const ScaleDiagram: React.FC<ScaleDiagramProps> = ({
+  scaleInfo,
+  musicalKey,
+  mode,
+  presentation = "inline",
+}) => {
+  const isModalPresentation = presentation === "modal";
   const { name, rootNote, notes } = scaleInfo;
-  const [viewMode, setViewMode] = useState<"pattern" | "map">("pattern");
+  const [viewMode, setViewMode] = useState<"pattern" | "all" | "map">("pattern");
   const [isMobile, setIsMobile] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [hoveredNoteId, setHoveredNoteId] = useState<string | null>(null);
 
-  // Detect mobile screen size
+  // Detect mobile screen size (inline only — modal always uses full fretboard)
   React.useEffect(() => {
+    if (isModalPresentation) return;
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
-  }, []);
+  }, [isModalPresentation]);
 
-  const fretCount = isMobile ? FRET_COUNT_MOBILE : FRET_COUNT_DESKTOP;
+  const fretCount = isModalPresentation
+    ? FRET_COUNT_DESKTOP
+    : isMobile
+      ? FRET_COUNT_MOBILE
+      : FRET_COUNT_DESKTOP;
+  const useCompactSizing = !isModalPresentation && isMobile;
+  const enableExpand = !isModalPresentation && isMobile;
 
   const rootNoteValue = useMemo(() => noteToValue(rootNote), [rootNote]);
   const scaleNoteValues = useMemo(() => {
@@ -208,27 +236,44 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) =>
 
   // Memoize grid template columns to avoid string interpolation on every render
   const gridTemplateColumns = useMemo(
-    () => `${isMobile ? "1.5rem" : "1.75rem"} repeat(${fretCount}, minmax(0, 1fr))`,
-    [isMobile, fretCount]
+    () => `${useCompactSizing ? "1.5rem" : "1.75rem"} repeat(${fretCount}, minmax(0, 1fr))`,
+    [useCompactSizing, fretCount]
   );
 
   // Get available positions for the current scale
   const availablePositions = useMemo(() => {
-    // Use proper scale name normalization to match SCALE_LIBRARY keys
     const scaleKey = normalizeScaleName(name);
     const scaleData = SCALE_LIBRARY[scaleKey];
     if (!scaleData) {
       return ["Position 1"];
     }
-    // Use getSortedPositions to ensure positions match the sorted fingerings order
-    // Pass scaleKey for caching optimization
     return getSortedPositions(scaleData, scaleKey);
   }, [name]);
+
+  // Position tabs: "1 · fret 0", "6 · root", etc.
+  const positionTabs = useMemo((): PositionTab[] => {
+    return availablePositions.map((_, index) => {
+      const fingering = getScaleFingering(name, rootNote, index);
+      const lowE = fingering[0] ?? [];
+      const minFret = lowE.length > 0 ? Math.min(...lowE) : 0;
+      const lowENoteValue =
+        lowE.length > 0 ? (noteToValueBase("E") + minFret) % 12 : -1;
+      const isRootPosition = lowENoteValue === rootNoteValue && rootNoteValue !== -1;
+      const label = isRootPosition ? `${index + 1} · root` : `${index + 1} · fret ${minFret}`;
+      return {
+        label,
+        ariaLabel: isRootPosition
+          ? `Position ${index + 1}, root position starting at fret ${minFret}`
+          : `Position ${index + 1}, starting at fret ${minFret}`,
+        isRootPosition,
+      };
+    });
+  }, [availablePositions, name, rootNote, rootNoteValue]);
 
   // Calculate the best starting position for mobile devices
   // Prioritizes positions that fit within the 15-fret mobile display
   const bestMobilePosition = useMemo(() => {
-    if (!isMobile) return 0;
+    if (!enableExpand) return 0;
 
     // Get all positions' fingerings and find their minimum fret
     const positionMinFrets = availablePositions.map((_, index) => {
@@ -254,7 +299,7 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) =>
     // If no position fits completely, choose the one with the lowest minimum fret
     const lowestMinFretIndex = positionMinFrets.indexOf(Math.min(...positionMinFrets));
     return lowestMinFretIndex;
-  }, [isMobile, name, rootNote, availablePositions]);
+  }, [enableExpand, name, rootNote, availablePositions]);
 
   const [currentPosition, setCurrentPosition] = useState(() => bestMobilePosition ?? 0);
 
@@ -284,28 +329,48 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) =>
     return currentFingering.map((frets) => new Set(frets ?? []));
   }, [currentFingering]);
 
+  // All-positions overlay: selected vs other position frets per string
+  const allPositionsLookup = useMemo(() => {
+    const selected: Set<number>[] = Array.from({ length: 6 }, () => new Set<number>());
+    const other: Set<number>[] = Array.from({ length: 6 }, () => new Set<number>());
+
+    availablePositions.forEach((_, index) => {
+      const fingering = getScaleFingering(name, rootNote, index);
+      fingering.forEach((frets, stringIndex) => {
+        const target = index === currentPosition ? selected : other;
+        frets.forEach((fret) => target[stringIndex].add(fret));
+      });
+    });
+
+    return { selected, other };
+  }, [availablePositions, name, rootNote, currentPosition]);
+
   // Display scale name with context-aware root note
   const displayedScaleName = useMemo(() => {
-    const displayRootNote = displayNote(rootNote, musicalKey);
+    const displayRootNote = displayNote(rootNote, musicalKey, mode);
     const descriptor = extractScaleDescriptor(name);
     return descriptor ? `${displayRootNote} ${descriptor}` : name;
-  }, [name, rootNote, musicalKey]);
+  }, [name, rootNote, musicalKey, mode]);
 
   return (
     <>
-      <div className="flex flex-col items-center w-full max-w-4xl mx-auto">
+      <div
+        className={`flex flex-col items-center w-full ${isModalPresentation ? "max-w-none" : "max-w-4xl"} mx-auto`}
+      >
         <div className="w-full flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 mb-3 px-1">
-          <h2 className="text-base sm:text-lg md:text-xl leading-tight font-semibold text-text/90">
+          <h2
+            className={`${isModalPresentation ? "text-xl md:text-2xl" : "text-base sm:text-lg md:text-xl"} leading-tight font-semibold text-text/90`}
+          >
             {displayedScaleName}
           </h2>
           <div className="w-full sm:w-auto flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-0">
             <PositionSelector
-              positions={availablePositions}
+              tabs={positionTabs}
               currentPosition={currentPosition}
               setCurrentPosition={setCurrentPosition}
             />
             <ViewToggle viewMode={viewMode} setViewMode={setViewMode} />
-            {isMobile && (
+            {enableExpand && (
               <button
                 onClick={() => setIsModalOpen(true)}
                 className="p-1.5 sm:p-2 rounded-md bg-text/10 hover:bg-text/20 text-text/70 hover:text-text transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
@@ -328,18 +393,18 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) =>
           scaleName={name}
           rootNote={rootNote}
           musicalKey={musicalKey}
-          className="mb-3 px-1"
+          className={`mb-3 px-1 ${isModalPresentation ? "mb-4" : ""}`}
         />
 
         <div
           className={`w-full bg-surface rounded-lg shadow-lg border border-border overflow-x-auto overflow-y-hidden transition-all duration-300 group relative ${
-            isMobile ? "cursor-pointer hover:shadow-xl hover:border-primary/50" : ""
-          }`}
-          onClick={isMobile ? () => setIsModalOpen(true) : undefined}
-          role={isMobile ? "button" : undefined}
-          tabIndex={isMobile ? 0 : undefined}
+            enableExpand ? "cursor-pointer hover:shadow-xl hover:border-primary/50" : ""
+          } ${isModalPresentation ? "shadow-none border-0 bg-transparent rounded-none" : ""}`}
+          onClick={enableExpand ? () => setIsModalOpen(true) : undefined}
+          role={enableExpand ? "button" : undefined}
+          tabIndex={enableExpand ? 0 : undefined}
           onKeyDown={
-            isMobile
+            enableExpand
               ? (e) => {
                   if (e.key === "Enter" || e.key === " ") {
                     e.preventDefault();
@@ -348,10 +413,10 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) =>
                 }
               : undefined
           }
-          aria-label={isMobile ? "Click to expand scale diagram" : undefined}
+          aria-label={enableExpand ? "Click to expand scale diagram" : undefined}
         >
-          {/* Expand hint overlay - only shown on mobile */}
-          {isMobile && (
+          {/* Expand hint overlay - only shown on mobile inline */}
+          {enableExpand && (
             <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-10">
               <div className="bg-background/90 backdrop-blur-sm px-4 py-2 rounded-lg shadow-lg border border-primary/50">
                 <p className="text-sm font-medium text-text/90 flex items-center gap-2">
@@ -370,7 +435,7 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) =>
           )}
 
           <div
-            className={`${isMobile ? "min-w-[600px]" : "w-full"} px-3 md:px-4 py-3 md:py-4 text-[10px] md:text-xs transition-all duration-300`}
+            className={`${useCompactSizing ? "min-w-[600px]" : isModalPresentation ? "min-w-[800px] w-full" : "w-full"} px-3 md:px-4 py-3 md:py-4 text-[10px] md:text-xs transition-all duration-300`}
           >
             {/* Main Fretboard Area with Fade Effect */}
             <div
@@ -378,7 +443,7 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) =>
               style={{
                 background:
                   "linear-gradient(to bottom, hsl(var(--color-primary) / 0.03), hsl(var(--color-secondary) / 0.04), hsl(var(--color-primary) / 0.05))",
-                ...(isMobile
+                ...(isModalPresentation || useCompactSizing
                   ? {}
                   : {
                       // Use WebKit prefixes for better browser support
@@ -398,7 +463,7 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) =>
                 {Array.from({ length: fretCount }, (_, idx) => idx + 1).map((fret) => (
                   <div
                     key={`fret-num-${fret}`}
-                    className="text-center text-text/50 pb-1 h-4 md:h-5 flex items-center justify-center font-semibold text-[9px] md:text-[10px]"
+                    className={`text-center text-text/50 pb-1 ${useCompactSizing ? "h-4" : "h-5"} flex items-center justify-center font-semibold ${useCompactSizing ? "text-[9px]" : "text-[10px]"}`}
                   >
                     {[3, 5, 7, 9, 12, 15, 17, 19, 21, 24].includes(fret) ? fret : ""}
                   </div>
@@ -406,7 +471,7 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) =>
               </div>
 
               {/* Strings and Notes */}
-              <div className="relative mt-[-16px] md:mt-[-20px]">
+              <div className={`relative ${useCompactSizing ? "mt-[-16px]" : "mt-[-20px]"}`}>
                 {/* Fret Inlays */}
                 {visibleInlays.map((fret) => (
                   <FretInlay key={`inlay-${fret}`} fret={fret} fretCount={fretCount} />
@@ -432,26 +497,38 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) =>
                 >
                   {/* String rows */}
                   {STANDARD_TUNING.map((stringName, stringIndex) => {
-                    // Check if open string (fret 0) has a note
+                    // Library is Low-E→High-E; UI is High-E→Low-E
+                    const libraryStringIndex = 5 - stringIndex;
                     const openStringNoteValue = noteToValue(stringName);
+
                     let hasOpenNote = false;
+                    let openDimmed = false;
                     if (viewMode === "pattern") {
-                      hasOpenNote = fingeringLookup[5 - stringIndex]?.has(0) ?? false;
+                      hasOpenNote = fingeringLookup[libraryStringIndex]?.has(0) ?? false;
+                    } else if (viewMode === "all") {
+                      const inSelected = allPositionsLookup.selected[libraryStringIndex]?.has(0);
+                      const inOther = allPositionsLookup.other[libraryStringIndex]?.has(0);
+                      hasOpenNote = Boolean(inSelected || inOther);
+                      openDimmed = !inSelected && Boolean(inOther);
                     } else {
                       hasOpenNote = scaleNoteValues.has(openStringNoteValue);
                     }
                     const isOpenRoot = openStringNoteValue === rootNoteValue;
-                    const displayedStringName = displayNote(stringName, musicalKey);
+                    const displayedStringName = displayNote(stringName, musicalKey, mode);
+                    const cellHeight = useCompactSizing ? "h-7" : "h-8";
+                    const labelSize = useCompactSizing ? "text-[10px]" : "text-xs";
 
                     return (
                       <React.Fragment key={`string-row-${stringIndex}`}>
-                        {/* String Name with optional open note */}
-                        <div className="flex items-center justify-center text-text/70 h-7 md:h-8 pr-1 font-bold relative text-[10px] md:text-xs">
+                        <div
+                          className={`flex items-center justify-center text-text/70 ${cellHeight} pr-1 font-bold relative ${labelSize}`}
+                        >
                           {hasOpenNote ? (
                             <NoteDot
                               noteName={displayedStringName}
                               fret={0}
-                              isRoot={isOpenRoot}
+                              isRoot={isOpenRoot && !openDimmed}
+                              dimmed={openDimmed}
                               isHovered={hoveredNoteId === `note-0-${stringIndex}`}
                               onMouseEnter={() => setHoveredNoteId(`note-0-${stringIndex}`)}
                               onMouseLeave={() => setHoveredNoteId(null)}
@@ -461,13 +538,21 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) =>
                           )}
                         </div>
 
-                        {/* Fret cells */}
                         {Array.from({ length: fretCount }, (_, idx) => idx + 1).map((fret) => {
                           const currentNoteValue = (noteToValue(stringName) + fret) % 12;
 
                           let isNotePresent = false;
+                          let dimmed = false;
                           if (viewMode === "pattern") {
-                            isNotePresent = fingeringLookup[5 - stringIndex]?.has(fret) ?? false;
+                            isNotePresent =
+                              fingeringLookup[libraryStringIndex]?.has(fret) ?? false;
+                          } else if (viewMode === "all") {
+                            const inSelected =
+                              allPositionsLookup.selected[libraryStringIndex]?.has(fret) ?? false;
+                            const inOther =
+                              allPositionsLookup.other[libraryStringIndex]?.has(fret) ?? false;
+                            isNotePresent = inSelected || inOther;
+                            dimmed = !inSelected && inOther;
                           } else {
                             isNotePresent = scaleNoteValues.has(currentNoteValue);
                           }
@@ -475,17 +560,16 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) =>
                           let isRoot = false;
                           let noteName = "";
                           if (isNotePresent) {
-                            isRoot = currentNoteValue === rootNoteValue;
+                            isRoot = currentNoteValue === rootNoteValue && !dimmed;
                             const rawNoteName = valueToNote(currentNoteValue);
-                            noteName = displayNote(rawNoteName, musicalKey);
+                            noteName = displayNote(rawNoteName, musicalKey, mode);
                           }
 
                           return (
                             <div
                               key={`fret-${stringIndex}-${fret}`}
-                              className="flex items-center justify-center relative h-7 md:h-8 group"
+                              className={`flex items-center justify-center relative ${cellHeight} group`}
                             >
-                              {/* Fret wire */}
                               {fret === 1 && (
                                 <div className="absolute top-0 bottom-0 left-0 w-1 bg-text/50 shadow-md"></div>
                               )}
@@ -500,6 +584,7 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) =>
                                   noteName={noteName}
                                   fret={fret}
                                   isRoot={isRoot}
+                                  dimmed={dimmed}
                                   isHovered={hoveredNoteId === `note-${fret}-${stringIndex}`}
                                   onMouseEnter={() =>
                                     setHoveredNoteId(`note-${fret}-${stringIndex}`)
@@ -520,17 +605,20 @@ const ScaleDiagram: React.FC<ScaleDiagramProps> = ({ scaleInfo, musicalKey }) =>
         </div>
       </div>
 
-      {/* Modal */}
-      <Suspense fallback={null}>
-        {isModalOpen && (
-          <LazyScaleDiagramModal
-            scaleInfo={scaleInfo}
-            musicalKey={musicalKey}
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-          />
-        )}
-      </Suspense>
+      {/* Modal — only for inline presentation */}
+      {!isModalPresentation && (
+        <Suspense fallback={null}>
+          {isModalOpen && (
+            <LazyScaleDiagramModal
+              scaleInfo={scaleInfo}
+              musicalKey={musicalKey}
+              mode={mode}
+              isOpen={isModalOpen}
+              onClose={() => setIsModalOpen(false)}
+            />
+          )}
+        </Suspense>
+      )}
     </>
   );
 };

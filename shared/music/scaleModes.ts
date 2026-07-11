@@ -48,6 +48,16 @@ const DESCRIPTIONS: ScaleDefinition[] = [
   { canonical: "Gypsy", libraryKey: "gypsy" },
   { canonical: "Bebop Dominant", libraryKey: "bebop dominant" },
   { canonical: "Bebop Major", libraryKey: "bebop major" },
+  {
+    canonical: "Harmonic Minor",
+    libraryKey: "harmonic minor",
+    aliases: ["Harmonic Minor Scale"],
+  },
+  {
+    canonical: "Melodic Minor",
+    libraryKey: "melodic minor",
+    aliases: ["Melodic Minor Scale"],
+  },
 ];
 
 const SANITIZE_STRIP_PATTERN = /[^a-z0-9#b]/g;

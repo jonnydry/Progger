@@ -9,25 +9,13 @@ import {
 import { db } from "./db";
 import { eq, and, desc } from "drizzle-orm";
 import { logger } from "./utils/logger";
-import { redisCache } from "./cache";
 
 // In-memory cache for frequently accessed user data (short TTL).
-// Map insertion order gives us LRU-by-insertion eviction for free.
 const userCache = new Map<string, { user: User; expires: number }>();
-const USER_CACHE_TTL = 60 * 1000; // 60 seconds
-const USER_CACHE_MAX_SIZE = 1000; // Maximum number of users to cache in memory
+const USER_CACHE_TTL = 60 * 1000;
+const USER_CACHE_MAX_SIZE = 1000;
 
-/**
- * Add an entry to the user cache with size-limit enforcement.
- *
- * Uses a single deterministic eviction step (drop the oldest entry) instead of
- * scanning the whole map for expired entries. This keeps the operation O(1) and
- * removes the small race window where the previous implementation could briefly
- * exceed USER_CACHE_MAX_SIZE under high concurrency. Stale entries are still
- * filtered on read via the `expires` check, so size never grows unbounded.
- */
 function setUserCache(id: string, user: User): void {
-  // Re-inserting moves the key to the end (most-recent), preserving LRU order.
   if (userCache.has(id)) {
     userCache.delete(id);
   } else if (userCache.size >= USER_CACHE_MAX_SIZE) {
@@ -50,29 +38,15 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
     try {
-      // Check in-memory cache first
       const cached = userCache.get(id);
       if (cached && cached.expires > Date.now()) {
         logger.debug("User cache hit", { userId: id });
         return cached.user;
       }
 
-      // Check Redis cache
-      const cacheKey = `user:${id}`;
-      const cachedUser = await redisCache.get<User>(cacheKey);
-      if (cachedUser) {
-        logger.debug("User Redis cache hit", { userId: id });
-        // Update in-memory cache
-        setUserCache(id, cachedUser);
-        return cachedUser;
-      }
-
-      // Fetch from database
       const [user] = await db.select().from(users).where(eq(users.id, id));
 
       if (user) {
-        // Cache in both Redis (longer TTL) and memory (shorter TTL)
-        await redisCache.set(cacheKey, user, 300); // 5 minutes in Redis
         setUserCache(id, user);
       }
 
@@ -97,14 +71,9 @@ export class DatabaseStorage implements IStorage {
         })
         .returning();
 
-      // Invalidate caches after update
-      const cacheKey = `user:${user.id}`;
       userCache.delete(user.id);
-      await redisCache.delete(cacheKey);
-
       return user;
     } catch (error) {
-      // Only log the user id — never the full userData (contains email/name PII).
       logger.error(
         "Error upserting user in database",
         error instanceof Error ? error.message : String(error),
@@ -118,7 +87,6 @@ export class DatabaseStorage implements IStorage {
 
   async getUserStashItems(userId: string, limit?: number, offset?: number): Promise<StashItem[]> {
     try {
-      // Validate pagination parameters: offset requires limit
       if (offset !== undefined && offset > 0 && (limit === undefined || limit <= 0)) {
         throw new Error("Offset requires a valid limit to be specified");
       }
@@ -129,7 +97,6 @@ export class DatabaseStorage implements IStorage {
         .where(eq(stash.userId, userId))
         .orderBy(desc(stash.createdAt));
 
-      // Apply pagination if limit is provided
       if (limit !== undefined && limit > 0) {
         query = query.limit(limit) as any;
 
@@ -151,7 +118,6 @@ export class DatabaseStorage implements IStorage {
       const [newItem] = await db.insert(stash).values(item).returning();
       return newItem;
     } catch (error) {
-      // Only log the userId — never the full item (may contain user-supplied content).
       logger.error(
         "Error creating stash item in database",
         error instanceof Error ? error.message : String(error),
@@ -170,7 +136,6 @@ export class DatabaseStorage implements IStorage {
         .where(and(eq(stash.id, id), eq(stash.userId, userId)))
         .returning({ id: stash.id });
 
-      // Check if any rows were deleted
       if (result.length === 0) {
         logger.warn("Attempted to delete non-existent or unauthorized stash item", {
           itemId: id,

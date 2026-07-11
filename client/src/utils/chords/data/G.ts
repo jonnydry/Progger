@@ -203,9 +203,8 @@ export const G_CHORDS: ChordVoicingsMap = {
   G_minor: [
     { frets: ["x", "x", 5, 3, 3, 3], position: "Partial 5th" },
     { frets: [1, 3, 3, 1, 1, 1], firstFret: 3, position: "Barre 3rd" },
-    { frets: ["x", 1, 3, 3, 2, 1], firstFret: 3, position: "Barre 3rd Alt" },
-    { frets: ["x", 1, 3, 3, 2, 1], firstFret: 10, position: "Barre 10th" },
-    { frets: [1, 3, 3, 1, 1, 1], firstFret: 10, position: "Barre 10th Alt" },
+    { frets: ["x", 1, 3, 3, 2, 1], firstFret: 10, position: "A-shape 10th" },
+    { frets: [1, 3, 3, 1, 1, 1], firstFret: 15, position: "Barre 15th" },
   ],
   G_minor_Aroot: [{ frets: [1, 4, 6, 6, 5, 4], firstFret: 7, position: "A-string Root" }],
   G_power_Aroot: [{ frets: ["x", 1, 3, 3, "x", "x"], firstFret: 10, position: "A-string Root" }],

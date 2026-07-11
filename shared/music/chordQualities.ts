@@ -203,7 +203,7 @@ export function splitChordName(chordName: string): {
   quality: string;
   bass?: string;
 } {
-  const match = chordName.match(/^([A-G][#b]?)(.*?)(?:\/([A-G][#b]?))?$/i);
+  const match = chordName.match(/^([A-G][#b♯♭]?)(.*?)(?:\/([A-G][#b♯♭]?))?$/i);
   if (!match) {
     return { root: "C", quality: "major" };
   }
@@ -212,8 +212,22 @@ export function splitChordName(chordName: string): {
   const normalizedQuality = normalizeChordQuality(rawQuality);
 
   return {
-    root: rawRoot.toUpperCase().replace("B#", "C").replace("E#", "F"),
+    root: normalizeNoteToken(rawRoot),
     quality: normalizedQuality,
-    bass: rawBass ? rawBass.toUpperCase() : undefined,
+    bass: rawBass ? normalizeNoteToken(rawBass) : undefined,
   };
+}
+
+/** Preserve accidental case: Bb stays Bb (not BB), F# stays F#. */
+function normalizeNoteToken(token: string): string {
+  const ascii = token.replace(/♯/g, "#").replace(/♭/g, "b");
+  if (ascii.length <= 1) {
+    return ascii.toUpperCase();
+  }
+  const normalized = ascii.charAt(0).toUpperCase() + ascii.slice(1).toLowerCase();
+  if (normalized === "B#") return "C";
+  if (normalized === "E#") return "F";
+  if (normalized === "Cb") return "B";
+  if (normalized === "Fb") return "E";
+  return normalized;
 }

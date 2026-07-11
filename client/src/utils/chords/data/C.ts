@@ -201,10 +201,9 @@ export const C_CHORDS: ChordVoicingsMap = {
   ],
   C_minor: [
     { frets: ["x", 3, 1, 0, 1, 3], position: "Open" },
-    { frets: [1, 3, 3, 1, 1, 1], firstFret: 3, position: "Barre 3rd" },
-    { frets: ["x", "x", 3, 1, 1, 1], firstFret: 3, position: "Partial 5th" },
-    { frets: ["x", 1, 3, 3, 2, 1], firstFret: 8, position: "Barre 8th" },
-    { frets: [1, 3, 3, 1, 1, 1], firstFret: 8, position: "Barre 8th Alt" },
+    { frets: ["x", 1, 3, 3, 2, 1], firstFret: 3, position: "A-shape 3rd" },
+    { frets: [1, 3, 3, 1, 1, 1], firstFret: 8, position: "Barre 8th" },
+    { frets: ["x", "x", 1, 3, 3, 2], firstFret: 8, position: "Partial 8th" },
   ],
   C_quartal: [
     { frets: ["x", "x", 3, 5, 3, 5], position: "Low Quartal" },

@@ -40,6 +40,7 @@ vi.mock("@/hooks/useProgression", () => ({
 vi.mock("@/utils/chordLibrary", () => ({
   validateChordLibrary: vi.fn().mockResolvedValue(undefined),
   preloadAllChords: vi.fn().mockResolvedValue(undefined),
+  preloadRoots: vi.fn(),
 }));
 
 vi.mock("@/components/Layout/MainLayout", () => ({
@@ -131,5 +132,33 @@ describe("App custom analyze flow", () => {
     });
 
     expect(screen.getByTestId("voicings-grid-props")).toHaveTextContent("A|Minor");
+  });
+
+  it("shows non-blocking warning and voicings when analysisFailed", async () => {
+    render(<App />);
+
+    fireEvent.click(screen.getByText("set-custom-progression"));
+    fireEvent.click(screen.getByText("analyze-custom"));
+
+    const mutationOptions = analyzeMutateMock.mock.calls[0][1];
+    await act(async () => {
+      mutationOptions.onSuccess({
+        progression: [
+          {
+            chordName: "F#7b9",
+            voicings: [{ frets: ["x", 1, 2, 1, 3, 1] }],
+            musicalFunction: "—",
+            relationToKey: "unanalyzed",
+          },
+        ],
+        scales: [],
+        analysisFailed: true,
+        analysisError: "Analysis service may be temporarily unavailable. Showing chord voicings without AI functions/scales.",
+      });
+    });
+
+    expect(screen.getByText("Analysis unavailable")).toBeInTheDocument();
+    expect(screen.getByText(/Showing chord voicings without AI/i)).toBeInTheDocument();
+    expect(screen.getByTestId("voicings-grid-props")).toBeInTheDocument();
   });
 });

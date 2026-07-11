@@ -9,7 +9,6 @@ import {
 import { logger } from "./utils/logger";
 import { isDevelopment } from "./env";
 import { db } from "./db";
-import { redisCache } from "./cache";
 import { createAIGenerationLimiter, getRateLimitStatus } from "./rateLimit";
 import { requestIdMiddleware } from "./middleware/requestId";
 import { handleGetUser } from "./controllers/authController";
@@ -56,7 +55,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       status: "healthy" as "healthy" | "degraded" | "unhealthy",
       timestamp: new Date().toISOString(),
       database: "disconnected" as "connected" | "disconnected",
-      redis: "unavailable" as "connected" | "disconnected" | "unavailable",
       rateLimit: rateLimitStatus,
       uptime: process.uptime(),
     };
@@ -67,29 +65,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       logger.warn("Database health check failed", { error });
       health.database = "disconnected";
-      health.status = "degraded";
-    }
-
-    try {
-      const testKey = `health:check:${Date.now()}`;
-      await redisCache.set(testKey, "ok", 1);
-      const result = await redisCache.get(testKey);
-      if (result === "ok") {
-        await redisCache.delete(testKey);
-        health.redis = "connected";
-      } else {
-        health.redis = "disconnected";
-      }
-    } catch (error) {
-      logger.debug("Redis health check failed (Redis may not be configured)", { error });
-      health.redis = "unavailable";
-    }
-
-    if (health.database === "disconnected") {
       health.status = "unhealthy";
     }
 
-    const statusCode = health.status === "healthy" ? 200 : health.status === "degraded" ? 200 : 503;
+    const statusCode = health.status === "healthy" ? 200 : 503;
     res.status(statusCode).json(health);
   });
 

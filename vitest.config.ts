@@ -9,6 +9,11 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: ['./client/src/__tests__/setup.ts'],
     include: ['**/__tests__/**/*.{test,spec}.{js,ts,jsx,tsx}'],
+    env: {
+      NODE_ENV: 'test',
+      XAI_API_KEY: 'xai-test-key-for-vitest',
+      VITEST: 'true',
+    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

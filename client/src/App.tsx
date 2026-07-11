@@ -4,12 +4,14 @@ import { VoicingsGrid } from "./components/VoicingsGrid";
 import { SkeletonScaleDiagram } from "./components/SkeletonScaleDiagram";
 import { MainLayout } from "./components/Layout/MainLayout";
 import { ErrorBoundary } from "./components/ErrorBoundary";
+import { ScaleReference } from "./components/ScaleReference";
 import { useAuth } from "./hooks/useAuth";
 import { useTheme } from "./hooks/useTheme";
 import { useGenerateProgression, useAnalyzeCustomProgression } from "./hooks/useProgression";
-import { validateChordLibrary, preloadAllChords } from "./utils/chordLibrary";
+import { preloadRoots } from "./utils/chordLibrary";
 import { splitChordName, isSupportedChordQuality } from "@shared/music/chordQualities";
 import { detectKey } from "./utils/smartChordSuggestions";
+import { transposeNote } from "./utils/musicTheory";
 import type { CustomChordInput, ProgressionResult } from "./types";
 import { KEYS, MODES, COMMON_PROGRESSIONS, MAX_CUSTOM_CHORDS } from "./constants";
 import proggerMascot from "./assets/progger-logo.webp";
@@ -17,6 +19,8 @@ import { PixelCard } from "./components/PixelCard";
 import { createChordId, toCanonicalChordNames } from "./utils/customProgression";
 
 const LazyScaleDiagram = lazy(() => import("./components/ScaleDiagram"));
+
+type WorkspaceMode = "generate" | "custom" | "scales";
 
 interface ResultContext {
   key: string;
@@ -30,6 +34,12 @@ const SectionErrorFallback: React.FC<{ label: string }> = ({ label }) => (
     </p>
   </div>
 );
+
+/** Relative major (+3) for minor modes, relative minor (−3) for major modes. */
+function getRelativeNeighborRoot(root: string, mode: string): string {
+  const isMinor = /minor|aeolian/i.test(mode);
+  return transposeNote(root, isMinor ? 3 : -3);
+}
 
 const App: React.FC = () => {
   const { user } = useAuth();
@@ -48,9 +58,11 @@ const App: React.FC = () => {
   const [generationStyle, setGenerationStyle] = useState<string>("balanced");
   const [progressionResult, setProgressionResult] = useState<ProgressionResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [analysisWarning, setAnalysisWarning] = useState<string | null>(null);
 
   const [isStashOpen, setIsStashOpen] = useState(false);
-  const [isCustomMode, setIsCustomMode] = useState(false);
+  const [workspaceMode, setWorkspaceMode] = useState<WorkspaceMode>("generate");
+  const isCustomMode = workspaceMode === "custom";
   const [customProgression, setCustomProgression] = useState<CustomChordInput[]>(() => [
     { id: createChordId(), root: "C", quality: "major" },
     { id: createChordId(), root: "A", quality: "minor" },
@@ -73,13 +85,20 @@ const App: React.FC = () => {
     window.location.href = "/api/logout";
   };
 
+  // On-demand preload: current key + relative major/minor neighbor
   useEffect(() => {
-    preloadAllChords()
-      .then(() => validateChordLibrary())
-      .catch((err) => {
-        console.warn("Chord library initialization failed:", err);
-      });
-  }, []);
+    const activeRoot = isCustomMode ? customKey : key;
+    const activeModeValue = isCustomMode ? customMode : mode;
+    const roots = [activeRoot, getRelativeNeighborRoot(activeRoot, activeModeValue)];
+
+    if (isCustomMode) {
+      for (const chord of customProgression) {
+        roots.push(chord.root);
+      }
+    }
+
+    preloadRoots(roots);
+  }, [key, mode, isCustomMode, customKey, customMode, customProgression]);
 
   const userProfile = useMemo(
     () =>
@@ -124,6 +143,8 @@ const App: React.FC = () => {
       setMode(loadedMode);
       setProgressionResult(progression);
       setResultContext({ key: loadedKey, mode: loadedMode });
+      setAnalysisWarning(null);
+      setError(null);
 
       setTimeout(() => {
         if (resultsRef.current) {
@@ -144,6 +165,7 @@ const App: React.FC = () => {
 
   const handleGenerate = useCallback(() => {
     setError(null);
+    setAnalysisWarning(null);
     setProgressionResult(null);
     setResultContext({ key, mode });
     generateMutation.mutate(
@@ -172,6 +194,7 @@ const App: React.FC = () => {
 
   const handleAnalyzeCustom = useCallback(() => {
     setError(null);
+    setAnalysisWarning(null);
     setProgressionResult(null);
     setResultContext({ key: customKey, mode: customMode });
 
@@ -199,6 +222,14 @@ const App: React.FC = () => {
     analyzeMutation.mutate(formattedChords, {
       onSuccess: (result) => {
         setProgressionResult(result);
+        if (result.analysisFailed) {
+          setAnalysisWarning(
+            result.analysisError ??
+              "Analysis unavailable. Showing chord voicings without AI functions/scales."
+          );
+        } else {
+          setAnalysisWarning(null);
+        }
         let nextKey = customKey;
         let nextMode = customMode;
         if (result.detectedKey && result.detectedMode) {
@@ -250,41 +281,77 @@ const App: React.FC = () => {
           PROGGER
         </h1>
         <p className="text-lg text-text/60 mt-2 max-w-2xl mx-auto">
-          Discover unique progressions and voicings with AI
+          Chord &amp; scale reference for guitar — with AI progression inspiration
         </p>
       </header>
 
+      <div className="mb-4 flex justify-center gap-1 bg-text/10 p-1 rounded-md w-fit mx-auto">
+        {(
+          [
+            { id: "generate", label: "Generate" },
+            { id: "custom", label: "Custom" },
+            { id: "scales", label: "Scales" },
+          ] as const
+        ).map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setWorkspaceMode(tab.id)}
+            className={`px-3 sm:px-4 py-1.5 text-sm font-semibold rounded transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background ${
+              workspaceMode === tab.id
+                ? "bg-surface text-text shadow"
+                : "text-text/60 hover:text-text"
+            }`}
+            aria-pressed={workspaceMode === tab.id}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       <PixelCard className="max-w-3xl mx-auto" noAnimate>
-        <Controls
-          selectedKey={key}
-          onKeyChange={setKey}
-          selectedMode={mode}
-          onModeChange={setMode}
-          selectedProgression={selectedProgression}
-          onProgressionChange={setSelectedProgression}
-          numChords={numChords}
-          onNumChordsChange={setNumChords}
-          includeTensions={includeTensions}
-          onTensionsChange={setIncludeTensions}
-          generationStyle={generationStyle}
-          onGenerationStyleChange={setGenerationStyle}
-          onGenerate={handleGenerate}
-          isLoading={isLoading}
-          isCustomMode={isCustomMode}
-          onCustomChange={setIsCustomMode}
-          customProgression={customProgression}
-          onCustomProgressionChange={setCustomProgression}
-          onAnalyzeCustom={handleAnalyzeCustom}
-          detectedKey={customKey}
-          detectedMode={customMode}
-        />
+        {workspaceMode === "scales" ? (
+          <ScaleReference />
+        ) : (
+          <Controls
+            selectedKey={key}
+            onKeyChange={setKey}
+            selectedMode={mode}
+            onModeChange={setMode}
+            selectedProgression={selectedProgression}
+            onProgressionChange={setSelectedProgression}
+            numChords={numChords}
+            onNumChordsChange={setNumChords}
+            includeTensions={includeTensions}
+            onTensionsChange={setIncludeTensions}
+            generationStyle={generationStyle}
+            onGenerationStyleChange={setGenerationStyle}
+            onGenerate={handleGenerate}
+            isLoading={isLoading}
+            isCustomMode={isCustomMode}
+            onCustomChange={(enabled) => setWorkspaceMode(enabled ? "custom" : "generate")}
+            customProgression={customProgression}
+            onCustomProgressionChange={setCustomProgression}
+            onAnalyzeCustom={handleAnalyzeCustom}
+            detectedKey={customKey}
+            detectedMode={customMode}
+          />
+        )}
       </PixelCard>
 
+      {workspaceMode !== "scales" && (
       <section ref={resultsRef} className="mt-16">
         {error && (
           <div className="text-center bg-red-400/20 border border-red-500/30 text-red-800 dark:bg-red-900/30 dark:border-red-700/50 dark:text-red-300 p-4 rounded-lg max-w-2xl mx-auto mb-8">
             <p className="font-semibold">Error</p>
             <p>{error}</p>
+          </div>
+        )}
+
+        {analysisWarning && !error && (
+          <div className="text-center bg-amber-400/15 border border-amber-500/30 text-amber-900 dark:bg-amber-900/20 dark:border-amber-700/40 dark:text-amber-200 p-4 rounded-lg max-w-2xl mx-auto mb-8">
+            <p className="font-semibold">Analysis unavailable</p>
+            <p className="text-sm mt-1">{analysisWarning}</p>
           </div>
         )}
 
@@ -318,29 +385,37 @@ const App: React.FC = () => {
               />
             </ErrorBoundary>
 
-            <div className="text-center border-t border-border pt-12">
-              <h2 className="font-bebas text-4xl font-semibold text-text/80 tracking-wide">
-                Suggested Scales
-              </h2>
-            </div>
-            <div className="space-y-12">
-              <Suspense fallback={<SkeletonScaleDiagram />}>
-                {progressionResult.scales.map((scale, index) => (
-                  <div
-                    key={index}
-                    className="animate-fade-scale-in"
-                    style={{
-                      animationDelay: `${index * 150}ms`,
-                      animationFillMode: "backwards",
-                    }}
-                  >
-                    <ErrorBoundary fallback={<SectionErrorFallback label="scale diagram" />}>
-                      <LazyScaleDiagram scaleInfo={scale} musicalKey={activeKey} />
-                    </ErrorBoundary>
-                  </div>
-                ))}
-              </Suspense>
-            </div>
+            {progressionResult.scales.length > 0 && (
+              <>
+                <div className="text-center border-t border-border pt-12">
+                  <h2 className="font-bebas text-4xl font-semibold text-text/80 tracking-wide">
+                    Suggested Scales
+                  </h2>
+                </div>
+                <div className="space-y-12">
+                  <Suspense fallback={<SkeletonScaleDiagram />}>
+                    {progressionResult.scales.map((scale, index) => (
+                      <div
+                        key={index}
+                        className="animate-fade-scale-in"
+                        style={{
+                          animationDelay: `${index * 150}ms`,
+                          animationFillMode: "backwards",
+                        }}
+                      >
+                        <ErrorBoundary fallback={<SectionErrorFallback label="scale diagram" />}>
+                          <LazyScaleDiagram
+                            scaleInfo={scale}
+                            musicalKey={activeKey}
+                            mode={activeMode}
+                          />
+                        </ErrorBoundary>
+                      </div>
+                    ))}
+                  </Suspense>
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -355,6 +430,7 @@ const App: React.FC = () => {
           />
         )}
       </section>
+      )}
     </MainLayout>
   );
 };

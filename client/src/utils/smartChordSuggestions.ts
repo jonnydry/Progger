@@ -19,7 +19,7 @@ export interface ChordInput {
  * Each degree has typical chord qualities for that scale degree
  */
 const MAJOR_SCALE_CHORDS = [
-  ["major", "maj7", "6", "maj9", "maj13", "add9"], // I - tonic
+  ["major", "maj7", "6", "maj9", "maj13", "add9", "7", "9", "13"], // I - tonic (incl. bluesy dominant)
   ["minor", "min7", "min9", "min11"], // ii
   ["minor", "min7", "min9"], // iii
   ["major", "maj7", "6", "maj9"], // IV
@@ -94,18 +94,17 @@ function calculateTiebreakerBonus(
   const firstChordRootValue = noteToValue(firstChord.root);
   const firstChordInterval = (firstChordRootValue - keyRootValue + 12) % 12;
 
-  // Strong bonus if first chord is the tonic
+  // Strong bonus if first chord is the tonic — enough to beat relative-key ties
   if (firstChordInterval === 0) {
-    // Extra bonus if quality matches expected tonic quality
     const expectedTonicQualities =
       mode === "major"
-        ? ["major", "maj7", "6", "maj9", "maj13", "add9"]
-        : ["minor", "min7", "min9", "min11", "min/maj7"];
+        ? ["major", "maj7", "6", "maj9", "maj13", "add9", "7", "9", "13", "sus2", "sus4"]
+        : ["minor", "min7", "min9", "min11", "min/maj7", "min6"];
 
     if (expectedTonicQualities.includes(firstChord.quality)) {
-      bonus += 0.5; // Strong match - first chord is proper tonic
+      bonus += 2; // First chord is tonic with compatible quality
     } else {
-      bonus += 0.3; // Partial match - first chord is on tonic but different quality
+      bonus += 1; // First chord root is tonic
     }
   }
 

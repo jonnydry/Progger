@@ -4,7 +4,6 @@ import compression from "compression";
 import path from "path";
 import { fileURLToPath } from "url";
 import { registerRoutes } from "./routes";
-import { pendingRequests } from "./pendingRequests";
 import { logger } from "./utils/logger";
 import { env, isProduction } from "./env";
 
@@ -96,7 +95,6 @@ async function main() {
   // Graceful shutdown handling
   const shutdown = () => {
     logger.info("Shutting down gracefully");
-    pendingRequests.destroy();
     server.close(() => {
       logger.info("Server closed");
       process.exit(0);

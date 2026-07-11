@@ -99,29 +99,7 @@ export const Controls: React.FC<ControlsProps> = ({
             disabled={selectedProgression !== "auto"}
           />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
-          <CustomSelect
-            label="Generation Style"
-            value={generationStyle}
-            onChange={onGenerationStyleChange}
-            options={GENERATION_STYLE_OPTIONS.map((option) => ({
-              name: option.name,
-              value: option.value,
-            }))}
-          />
-        </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6 pt-1 sm:pt-2">
-          <div className="flex items-center justify-start md:justify-center">
-            <ToggleSwitch
-              id="advanced-chords-toggle"
-              label="Advanced Chords"
-              checked={includeTensions}
-              onChange={onTensionsChange}
-              tooltip="Prioritize extended/altered chords in the generated progression (20-40%)"
-            />
-          </div>
-
           <div className="flex items-center justify-start md:justify-center">
             {onCustomChange && (
               <ToggleSwitch
@@ -133,6 +111,35 @@ export const Controls: React.FC<ControlsProps> = ({
             )}
           </div>
         </div>
+
+        <details className="group rounded-md border border-border/60 bg-text/[0.03] px-3 py-2">
+          <summary className="cursor-pointer list-none text-sm text-text/55 hover:text-text/80 transition-colors flex items-center gap-2 select-none [&::-webkit-details-marker]:hidden">
+            <span className="inline-block transition-transform group-open:rotate-90 text-text/40">
+              ▸
+            </span>
+            More options
+          </summary>
+          <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6 pb-1">
+            <CustomSelect
+              label="Generation Style"
+              value={generationStyle}
+              onChange={onGenerationStyleChange}
+              options={GENERATION_STYLE_OPTIONS.map((option) => ({
+                name: option.name,
+                value: option.value,
+              }))}
+            />
+            <div className="flex items-center justify-start md:justify-center">
+              <ToggleSwitch
+                id="advanced-chords-toggle"
+                label="Advanced Chords"
+                checked={includeTensions}
+                onChange={onTensionsChange}
+                tooltip="Prioritize extended/altered chords in the generated progression (20-40%)"
+              />
+            </div>
+          </div>
+        </details>
 
         <div className="pt-2">
           <PixelButton

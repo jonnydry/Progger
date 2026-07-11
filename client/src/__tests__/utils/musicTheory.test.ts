@@ -140,6 +140,17 @@ describe("musicTheory", () => {
       expect(getKeyAccidentalType("g")).toBe("sharp");
       expect(getKeyAccidentalType("BB")).toBe("flat");
     });
+
+    it("uses relative-major signature for minor keys (guitar neck spelling)", () => {
+      // A minor → C major signature (naturals), not A major (3 sharps)
+      expect(getKeyAccidentalType("A", "minor")).toBe("natural");
+      expect(getKeyAccidentalType("Am")).toBe("natural");
+      // E minor → G major (1 sharp)
+      expect(getKeyAccidentalType("E", "minor")).toBe("sharp");
+      // D minor → F major (1 flat)
+      expect(getKeyAccidentalType("D", "minor")).toBe("flat");
+      expect(getKeyAccidentalType("Bb", "minor")).toBe("flat");
+    });
   });
 
   describe("displayNote", () => {
@@ -157,6 +168,14 @@ describe("musicTheory", () => {
       expect(displayNote("C#", "C")).toBe("C#");
       expect(displayNote("Db", "C")).toBe("C#"); // C major uses C# spelling for chromatic value 1
       expect(displayNote("D#", "C")).toBe("Eb"); // C major uses Eb spelling for chromatic value 3
+    });
+
+    it("spells A minor like C major on the neck (not A major sharps)", () => {
+      expect(displayNote("F#", "A", "minor")).toBe("F#"); // chromatic still ok
+      expect(displayNote("C", "A", "minor")).toBe("C");
+      expect(displayNote("F", "A", "minor")).toBe("F");
+      // Pitch class 10 in A minor / C context → Bb not A#
+      expect(displayNote("A#", "A", "minor")).toBe("Bb");
     });
   });
 

@@ -134,32 +134,39 @@ export async function loadChordsByRoot(root: string): Promise<ChordVoicingsMap> 
 }
 
 /**
- * Preload chord data for common keys to improve perceived performance
- * Call this after initial app load with low priority
+ * Preload chord data for specific roots (deduped, idle-scheduled).
+ * Prefer this over preloadAllChords / preloadCommonKeys for on-demand loading.
  */
-export function preloadCommonKeys(): void {
-  // Preload in background with requestIdleCallback if available
-  const preload = () => {
-    // Most common keys in popular music
-    const commonKeys = ["C", "G", "D", "A", "E", "F"];
+export function preloadRoots(roots: string[]): void {
+  const uniqueRoots = Array.from(
+    new Set(roots.map((root) => root?.trim()).filter((root): root is string => Boolean(root)))
+  );
+  if (uniqueRoots.length === 0) return;
 
-    commonKeys.forEach((key) => {
-      const fileName = normalizeRootToFileName(key);
-      // Only preload if not already cached
+  const preload = () => {
+    uniqueRoots.forEach((root) => {
+      const fileName = normalizeRootToFileName(root);
       if (!chordCache.has(fileName) && !pendingImports.has(fileName)) {
         importChordData(fileName).catch((err) => {
-          console.debug(`Preload failed for ${key}:`, err);
+          console.debug(`Preload failed for ${root}:`, err);
         });
       }
     });
   };
 
-  if ("requestIdleCallback" in window) {
+  if (typeof window !== "undefined" && "requestIdleCallback" in window) {
     requestIdleCallback(preload);
   } else {
-    // Fallback for browsers without requestIdleCallback
-    setTimeout(preload, 1000);
+    setTimeout(preload, 100);
   }
+}
+
+/**
+ * Preload chord data for common keys to improve perceived performance
+ * Call this after initial app load with low priority
+ */
+export function preloadCommonKeys(): void {
+  preloadRoots(["C", "G", "D", "A", "E", "F"]);
 }
 
 /**

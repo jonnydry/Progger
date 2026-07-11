@@ -1,18 +1,18 @@
 # PROGGER
 
-**AI-Powered Chord Progression & Scale Generator for Guitarists**
+**Guitar chord & scale reference, with AI progression inspiration**
 
-PROGGER uses xAI's Grok to generate intelligent chord progressions with multiple guitar voicings, scale suggestions for improvisation, and context-aware music theory (enharmonic note display based on key signatures).
+PROGGER is a reliable chord voicing and scale fingering reference for guitarists. Curated client-side libraries are the source of musical truth. xAI's Grok can suggest novel progressions and scale ideas as a bonus inspiration layer—never as a substitute for accurate frets.
 
 ## Features
 
-- 🎸 **AI Chord Generation**: Powered by Grok-4-fast-reasoning
-- 🎵 **Guitar-Specific Voicings**: 200+ pre-defined chord shapes with automatic transposition
-- 🎼 **Scale Suggestions**: Multiple fingering patterns for improvisation
-- 💾 **Stash Feature**: Save and retrieve your favorite progressions
-- 🔐 **Replit Auth**: Secure user authentication
-- 🎨 **Glassmorphic UI**: Modern, clean design with Space Grotesk font
-- 🎯 **Context-Aware Music Theory**: Displays F# in D major, Gb in Db major, etc.
+- Guitar-specific voicings: 200+ curated chord shapes with transposition fallbacks
+- Scale fingerings: Multiple patterns for improvisation, validated against intervals
+- AI progression inspiration: Powered by Grok (`grok-4.3`)
+- BYO progressions: Enter your own chords and browse voicings/scales
+- Stash: Save and retrieve favorite progressions (Replit Auth)
+- Context-aware music theory: Enharmonic spelling based on key
+- Glassmorphic UI with light/dark themes
 
 ## Tech Stack
 
